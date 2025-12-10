@@ -196,9 +196,18 @@ async def handle_analyze_repository(args: dict) -> dict:
                     "message": f"Platform not supported: {platform}",
                 }
             
-            # Clone repository
-            repo_id = search._extract_repo_id(repo_url, platform)
-            await client.clone(repo_id, temp_path, depth=1)
+            # Clone repository with timeout protection
+            try:
+                repo_id = search._extract_repo_id(repo_url, platform)
+                await asyncio.wait_for(
+                    client.clone(repo_id, temp_path, depth=1),
+                    timeout=TIMEOUT_GIT_CLONE
+                )
+            except asyncio.TimeoutError:
+                return {
+                    "error": True,
+                    "message": f"Git clone timed out after {TIMEOUT_GIT_CLONE} seconds",
+                }
             
             # Analyze dependencies
             analyzer = get_dependency_analyzer()
@@ -455,12 +464,16 @@ async def handle_synthesize_project(args: dict) -> dict:
         _synthesis_jobs[job_id]["status"] = "cloning"
         _synthesis_jobs[job_id]["progress"] = 10
         
-        result = await builder.build(
-            repositories=repositories,
-            project_name=project_name,
-            output_path=Path(output_path),
-            template=template,
-            progress_callback=lambda p, s: _update_job(job_id, p, s),
+        # Add timeout protection to synthesis operation
+        result = await asyncio.wait_for(
+            builder.build(
+                repositories=repositories,
+                project_name=project_name,
+                output_path=Path(output_path),
+                template=template,
+                progress_callback=lambda p, s: _update_job(job_id, p, s),
+            ),
+            timeout=TIMEOUT_SYNTHESIS
         )
         
         _synthesis_jobs[job_id]["status"] = "complete"
@@ -478,6 +491,15 @@ async def handle_synthesize_project(args: dict) -> dict:
             "files_created": result.files_created,
             "documentation": result.docs_generated,
             "warnings": result.warnings,
+        }
+        
+    except asyncio.TimeoutError:
+        _synthesis_jobs[job_id]["status"] = "failed"
+        _synthesis_jobs[job_id]["error"] = f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds"
+        return {
+            "error": True,
+            "message": f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds",
+            "synthesis_id": job_id,
         }
         
     except Exception as e:
