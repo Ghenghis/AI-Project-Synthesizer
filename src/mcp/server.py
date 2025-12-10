@@ -309,7 +309,7 @@ async def main():
     logger.info(f"Environment: {settings.app.app_env}")
     logger.info(f"Debug mode: {settings.app.debug}")
     logger.info(f"Enabled platforms: {settings.platforms.get_enabled_platforms()}")
-    logger.info(f"LLM Provider: {settings.llm.provider}")
+    logger.info(f"LLM Host: {settings.llm.ollama_host}")
     logger.info("=" * 60)
     
     async with stdio_server() as (read_stream, write_stream):

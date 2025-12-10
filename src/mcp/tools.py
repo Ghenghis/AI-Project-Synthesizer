@@ -14,6 +14,12 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 import uuid
 
+# Timeout constants for different operations
+TIMEOUT_API_CALL = 30  # seconds
+TIMEOUT_GIT_CLONE = 300  # seconds (5 minutes)
+TIMEOUT_FILE_OPERATIONS = 60  # seconds
+TIMEOUT_SYNTHESIS = 600  # seconds (10 minutes)
+
 from src.discovery.unified_search import UnifiedSearch, create_unified_search
 from src.discovery.github_client import GitHubClient
 from src.discovery.huggingface_client import HuggingFaceClient
@@ -82,29 +88,29 @@ async def handle_search_repositories(args: dict) -> dict:
     
     try:
         search = get_unified_search()
-        result = await search.search(
-            query=query,
-            platforms=platforms,
-            max_results=max_results,
-            language_filter=language_filter,
-            min_stars=min_stars,
+        
+        # Add timeout protection to search operation
+        result = await asyncio.wait_for(
+            search.search(
+                query=query,
+                platforms=platforms,
+                max_results=max_results,
+                language_filter=language_filter,
+                min_stars=min_stars,
+            ),
+            timeout=TIMEOUT_API_CALL
         )
         
         return {
             "status": "success",
-            "query": result.query,
-            "platforms_searched": result.platforms_searched,
-            "total_count": result.total_count,
-            "search_time_ms": result.search_time_ms,
-            "repositories": [
+            "data": [
                 {
-                    "platform": repo.platform,
-                    "name": repo.full_name,
+                    "name": repo.name,
                     "url": repo.url,
                     "description": repo.description,
                     "stars": repo.stars,
                     "language": repo.language,
-                    "updated_at": str(repo.updated_at) if repo.updated_at else None,
+                    "updated_at": repo.updated_at.isoformat() if repo.updated_at else None,
                     "topics": list(repo.topics) if repo.topics else [],
                 }
                 for repo in result.repositories
@@ -113,6 +119,11 @@ async def handle_search_repositories(args: dict) -> dict:
             "errors": result.errors if result.errors else None,
         }
         
+    except asyncio.TimeoutError:
+        return {
+            "error": True,
+            "message": f"Search timed out after {TIMEOUT_API_CALL} seconds",
+        }
     except Exception as e:
         logger.exception("Search failed")
         return {
