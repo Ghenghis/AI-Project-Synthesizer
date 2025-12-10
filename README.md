@@ -6,7 +6,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-1.0-green.svg)](https://modelcontextprotocol.io/)
 [![Windsurf Compatible](https://img.shields.io/badge/Windsurf-Compatible-orange.svg)](https://windsurf.ai/)
-[![Status: Complete](https://img.shields.io/badge/Status-100%25%20Complete-brightgreen.svg)](docs/COMPLETION_SUMMARY.md)
+[![Status: Complete](https://img.shields.io/badge/Status-Core%20Functionality%20Complete-brightgreen.svg)](docs/COMPLETION_SUMMARY.md)
 
 ---
 
@@ -25,6 +25,35 @@ All core features implemented and tested:
 - ✅ Comprehensive error handling and validation
 
 **Turn hours of research into minutes of intelligent synthesis.**
+
+---
+
+## 🚀 Quick Start
+
+Get the AI Project Synthesizer running in 3 simple steps:
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/Ghenghis/AI-Project-Synthesizer.git
+cd AI-Project-Synthesizer
+pip install -r requirements.txt
+```
+
+### 2. Configure GitHub Token
+```bash
+# Create .env file from template
+cp .env.example .env
+
+# Add your GitHub token (create at github.com/settings/tokens)
+# GITHUB_TOKEN=ghp_your_token_here
+```
+
+### 3. Start the MCP Server
+```bash
+python -m src.mcp.server
+```
+
+That's it! The server is now running and ready to synthesize projects from GitHub repositories.
 
 ---
 
