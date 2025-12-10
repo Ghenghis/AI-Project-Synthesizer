@@ -1,0 +1,168 @@
+# AI Project Synthesizer - Docker Compose Configuration
+# Complete local development and production environment
+
+version: "3.9"
+
+services:
+  # ============================================
+  # Main Application
+  # ============================================
+  synthesizer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    container_name: ai-synthesizer
+    restart: unless-stopped
+    
+    environment:
+      # Application
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      
+      # Platform APIs (set in .env)
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      - KAGGLE_USERNAME=${KAGGLE_USERNAME}
+      - KAGGLE_KEY=${KAGGLE_KEY}
+      
+      # LLM
+      - OLLAMA_HOST=http://ollama:11434
+      - CLOUD_LLM_ENABLED=${CLOUD_LLM_ENABLED:-false}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # Cache
+      - REDIS_URL=redis://redis:6379/0
+      
+    volumes:
+      - ../output:/app/output
+      - ../temp:/app/temp
+      - ../logs:/app/logs
+      - ../.cache:/app/.cache
+      
+    depends_on:
+      - redis
+      - ollama
+      
+    networks:
+      - synthesizer-net
+      
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  # ============================================
+  # Ollama - Local LLM Server
+  # ============================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-synthesizer-ollama
+    restart: unless-stopped
+    
+    ports:
+      - "11434:11434"
+      
+    volumes:
+      - ollama-data:/root/.ollama
+      
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      
+    networks:
+      - synthesizer-net
+      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 32G
+
+  # ============================================
+  # Redis - Caching
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: ai-synthesizer-redis
+    restart: unless-stopped
+    
+    ports:
+      - "6379:6379"
+      
+    volumes:
+      - redis-data:/data
+      
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    
+    networks:
+      - synthesizer-net
+      
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Model Downloader (one-time setup)
+  # ============================================
+  model-setup:
+    image: ollama/ollama:latest
+    container_name: ai-synthesizer-model-setup
+    
+    depends_on:
+      - ollama
+      
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sleep 10
+        echo "Pulling Qwen2.5-Coder models..."
+        ollama pull qwen2.5-coder:7b-instruct-q8_0
+        ollama pull qwen2.5-coder:14b-instruct-q4_K_M
+        echo "Model setup complete!"
+        
+    networks:
+      - synthesizer-net
+      
+    profiles:
+      - setup
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  synthesizer-net:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  ollama-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ============================================
+# Usage:
+# ============================================
+# First-time setup (download models):
+#   docker-compose --profile setup up model-setup
+#
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f synthesizer
+#
+# Stop all:
+#   docker-compose down
+#
+# Full reset:
+#   docker-compose down -v

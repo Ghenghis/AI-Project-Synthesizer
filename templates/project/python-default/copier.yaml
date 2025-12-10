@@ -1,0 +1,62 @@
+# Python Default Project Template
+# For use with Copier or Jinja2
+
+_subdirectory: template
+
+# Questions for template customization
+project_name:
+  type: str
+  help: "Project name (lowercase, hyphens allowed)"
+  default: "my-project"
+
+project_description:
+  type: str
+  help: "Short project description"
+  default: "A Python project"
+
+author_name:
+  type: str
+  help: "Author name"
+  default: "Developer"
+
+author_email:
+  type: str
+  help: "Author email"
+  default: "dev@example.com"
+
+python_version:
+  type: str
+  help: "Minimum Python version"
+  default: "3.11"
+  choices:
+    - "3.10"
+    - "3.11"
+    - "3.12"
+
+license:
+  type: str
+  help: "Project license"
+  default: "MIT"
+  choices:
+    - "MIT"
+    - "Apache-2.0"
+    - "GPL-3.0"
+    - "BSD-3-Clause"
+
+use_docker:
+  type: bool
+  help: "Include Docker configuration?"
+  default: true
+
+use_github_actions:
+  type: bool
+  help: "Include GitHub Actions CI?"
+  default: true
+
+# Computed values
+_answers_file: .copier-answers.yml
+
+package_name:
+  type: str
+  default: "{{ project_name | replace('-', '_') }}"
+  when: false

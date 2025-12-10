@@ -1,0 +1,65 @@
+# {{ project_name }}
+
+> {{ project_description }}
+
+[![Python {{ python_version }}](https://img.shields.io/badge/python-{{ python_version }}-blue.svg)](https://www.python.org/)
+[![License: {{ license }}](https://img.shields.io/badge/License-{{ license }}-yellow.svg)](LICENSE)
+
+---
+
+## Installation
+
+```bash
+# Clone the repository
+git clone <repo-url>
+cd {{ project_name }}
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+.\.venv\Scripts\Activate.ps1  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Usage
+
+```python
+from {{ package_name }} import main
+
+# Your code here
+```
+
+## Development
+
+```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest tests/ -v
+
+# Run linters
+black src/ tests/
+ruff check src/ tests/
+```
+
+## Project Structure
+
+```
+{{ project_name }}/
+├── src/
+│   └── {{ package_name }}/
+│       ├── __init__.py
+│       └── main.py
+├── tests/
+│   └── test_main.py
+├── requirements.txt
+├── requirements-dev.txt
+└── README.md
+```
+
+## License
+
+{{ license }}

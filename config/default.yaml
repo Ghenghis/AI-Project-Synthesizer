@@ -1,0 +1,189 @@
+# AI Project Synthesizer - Default Configuration
+# Copy to config/local.yaml and customize for your environment
+
+# ============================================
+# Application Settings
+# ============================================
+app:
+  name: "AI Project Synthesizer"
+  version: "1.0.0"
+  env: "development"  # development, staging, production
+  debug: true
+
+# ============================================
+# Server Settings
+# ============================================
+server:
+  host: "localhost"
+  port: 8000
+  workers: 1
+
+# ============================================
+# Platform Configuration
+# ============================================
+platforms:
+  github:
+    enabled: true
+    rate_limit_buffer: 100  # Reserve tokens for burst
+    default_per_page: 30
+    max_results: 100
+    
+  huggingface:
+    enabled: true
+    default_limit: 20
+    
+  kaggle:
+    enabled: false
+    
+  gitlab:
+    enabled: false
+    url: "https://gitlab.com"
+    
+  arxiv:
+    enabled: true
+    delay_seconds: 3  # Required by arXiv
+    
+  papers_with_code:
+    enabled: true
+    
+  semantic_scholar:
+    enabled: false
+    rate_limit: 100  # Per minute
+
+# ============================================
+# LLM Configuration
+# ============================================
+llm:
+  # Primary: Local Ollama
+  local:
+    enabled: true
+    host: "http://localhost:11434"
+    models:
+      fast: "qwen2.5-coder:7b-instruct-q8_0"
+      balanced: "qwen2.5-coder:14b-instruct-q4_K_M"
+      powerful: "qwen2.5-coder:32b-instruct-q4_K_M"
+    timeout_seconds: 120
+    
+  # Fallback: Cloud APIs
+  cloud:
+    enabled: false
+    routing_threshold: 0.7  # Complexity score above this uses cloud
+    
+    openai:
+      enabled: false
+      model: "gpt-4-turbo-preview"
+      max_tokens: 4096
+      temperature: 0.7
+      
+    anthropic:
+      enabled: false
+      model: "claude-3-5-sonnet-20241022"
+      max_tokens: 4096
+      temperature: 0.7
+
+# ============================================
+# Synthesis Settings
+# ============================================
+synthesis:
+  max_repos_per_synthesis: 10
+  max_concurrent_clones: 3
+  clone_depth: 1  # Shallow clone
+  
+  # Code extraction
+  extraction:
+    preserve_history: false
+    include_tests: true
+    include_docs: true
+    
+  # Dependency resolution
+  resolution:
+    python_version: "3.11"
+    use_uv: true
+    strict_mode: false  # Fail on unresolvable conflicts
+
+# ============================================
+# Generation Settings
+# ============================================
+generation:
+  readme:
+    llm_enhanced: true
+    include_badges: true
+    include_toc: true
+    
+  diagrams:
+    format: "mermaid"
+    themes: ["default", "dark"]
+    
+  api_docs:
+    include_examples: true
+    format: "markdown"
+
+# ============================================
+# Caching
+# ============================================
+cache:
+  enabled: true
+  backend: "file"  # file, redis
+  ttl_seconds: 3600
+  max_size_mb: 500
+  
+  redis:
+    url: "redis://localhost:6379/0"
+    prefix: "synth:"
+
+# ============================================
+# Logging
+# ============================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"  # json, text
+  
+  file:
+    enabled: true
+    path: "logs/synthesizer.log"
+    rotation: "10MB"
+    retention: 7  # days
+    
+  console:
+    enabled: true
+    colorize: true
+
+# ============================================
+# Paths
+# ============================================
+paths:
+  output: "./output"
+  temp: "./temp"
+  cache: "./.cache"
+  templates: "./templates"
+
+# ============================================
+# Ranking Weights
+# ============================================
+ranking:
+  weights:
+    stars: 0.15
+    recency: 0.20
+    activity: 0.15
+    documentation: 0.10
+    tests: 0.10
+    compatibility: 0.30
+    
+  # Thresholds
+  min_stars: 10
+  max_age_days: 365
+  min_quality_score: 0.3
+
+# ============================================
+# Network Settings
+# ============================================
+network:
+  timeout_seconds: 30
+  max_retries: 3
+  retry_delay_seconds: 1
+  verify_ssl: true
+  
+  proxy:
+    enabled: false
+    http: ""
+    https: ""

@@ -1,0 +1,77 @@
+# AI Project Synthesizer - Windsurf Rules
+# Instructions for Cascade AI when working with this project
+
+## Project Overview
+This is an MCP (Model Context Protocol) server that synthesizes code from multiple repositories.
+It integrates with Windsurf IDE to provide intelligent project generation capabilities.
+
+## Architecture
+- **src/mcp/** - MCP server and tool definitions
+- **src/discovery/** - Platform API clients (GitHub, HuggingFace, etc.)
+- **src/analysis/** - Code analysis with Tree-sitter
+- **src/resolution/** - Dependency resolution with uv
+- **src/synthesis/** - Code merging and transformation
+- **src/generation/** - Documentation generation
+- **src/llm/** - LLM orchestration with Ollama
+
+## Key Technologies
+- Python 3.11+
+- FastMCP for MCP server
+- ghapi for GitHub API
+- Tree-sitter for AST parsing
+- uv for dependency resolution
+- Ollama for local LLM (Qwen2.5-Coder)
+
+## Coding Standards
+- Use type hints on all functions
+- Follow Google docstring style
+- Maximum line length: 88 characters
+- Use async/await for I/O operations
+- Handle errors with custom exceptions in src/core/exceptions.py
+
+## Testing
+- Run tests with: `pytest tests/ -v`
+- Minimum 80% coverage target
+- Use fixtures from tests/conftest.py
+
+## Common Commands
+```bash
+# Activate environment
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux
+
+# Run MCP server
+python -m src.mcp.server
+
+# Run tests
+pytest tests/ -v
+
+# Lint code
+ruff check src/ --fix
+ruff format src/
+
+# Type check
+mypy src/
+```
+
+## Entry Points
+- Main server: `src/mcp/server.py`
+- Configuration: `src/core/config.py`
+- Discovery: `src/discovery/unified_search.py`
+
+## Environment Variables
+Required in .env:
+- GITHUB_TOKEN - GitHub API access
+- OLLAMA_HOST - Ollama server URL (default: http://localhost:11434)
+
+Optional:
+- HUGGINGFACE_TOKEN - HuggingFace access
+- OPENAI_API_KEY - Cloud fallback
+- ANTHROPIC_API_KEY - Cloud fallback
+
+## When Making Changes
+1. Check existing patterns in similar files
+2. Add tests for new functionality
+3. Update docstrings and type hints
+4. Run linting before committing
+5. Update CHANGELOG.md for significant changes
