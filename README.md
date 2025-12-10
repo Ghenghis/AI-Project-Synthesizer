@@ -6,6 +6,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-1.0-green.svg)](https://modelcontextprotocol.io/)
 [![Windsurf Compatible](https://img.shields.io/badge/Windsurf-Compatible-orange.svg)](https://windsurf.ai/)
+[![CI](https://github.com/Ghenghis/AI-Project-Synthesizer/workflows/CI/badge.svg)](https://github.com/Ghenghis/AI-Project-Synthesizer/actions)
 [![Status: Complete](https://img.shields.io/badge/Status-Core%20Functionality%20Complete-brightgreen.svg)](docs/COMPLETION_SUMMARY.md)
 
 ---
