@@ -72,7 +72,7 @@ class TestMCPToolsIntegration:
     @pytest.mark.asyncio
     async def test_search_repositories_tool(self):
         """Test the search_repositories MCP tool."""
-        from src.mcp.tools import search_repositories
+        from src.mcp_server.tools import search_repositories
         
         result = await search_repositories(
             query="python http client",
@@ -86,7 +86,7 @@ class TestMCPToolsIntegration:
     @pytest.mark.asyncio
     async def test_analyze_repository_tool(self):
         """Test the analyze_repository MCP tool."""
-        from src.mcp.tools import analyze_repository
+        from src.mcp_server.tools import analyze_repository
         
         result = await analyze_repository(
             repo_url="https://github.com/psf/requests",

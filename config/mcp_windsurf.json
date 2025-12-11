@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "ai-project-synthesizer": {
+      "command": "C:\\Users\\Admin\\AI_Synthesizer\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "C:\\Users\\Admin\\AI_Synthesizer",
+      "env": {
+        "PYTHONPATH": "C:\\Users\\Admin\\AI_Synthesizer",
+        "LLM_PREFERRED_PROVIDER": "lmstudio",
+        "LMSTUDIO_HOST": "http://localhost:1234",
+        "LLM_MODEL_SIZE_PREFERENCE": "medium"
+      }
+    },
+    "lmstudio": {
+      "command": "npx",
+      "args": ["-y", "@lmstudio/mcp-server"],
+      "env": {
+        "LMSTUDIO_HOST": "http://localhost:1234"
+      }
+    }
+  }
+}

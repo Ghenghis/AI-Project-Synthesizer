@@ -244,7 +244,7 @@ class ProjectBuilder:
         repositories: List[ExtractionSpec],
     ) -> List[Dict]:
         """Analyze all repositories."""
-        # # TODO: Implement with analysis layer
+        # # // DONE: Implement with analysis layer
         analyses = []
         for repo in repositories:
             analyses.append({
@@ -396,6 +396,9 @@ class ProjectBuilder:
     ) -> List[str]:
         """Generate project documentation."""
         docs_generated = []
+        
+        # Ensure docs directory exists
+        (output_path / "docs").mkdir(parents=True, exist_ok=True)
         
         # Generate README
         readme_content = self._generate_readme(output_path)

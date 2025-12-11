@@ -1,0 +1,138 @@
+{
+  "name": "AI Synthesizer - Code Review Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "code-review",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Code Review Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "code-review"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize code review\nconst input = $input.first()?.json || {};\nconst code = input.code || '';\nconst language = input.language || 'python';\nconst reviewType = input.review_type || 'full';\n\nreturn [{\n  json: {\n    review_id: `review_${Date.now()}`,\n    code: code,\n    language: language,\n    review_type: reviewType,\n    start_time: Date.now(),\n    checks: {\n      syntax: { status: 'pending' },\n      security: { status: 'pending' },\n      performance: { status: 'pending' },\n      style: { status: 'pending' },\n      documentation: { status: 'pending' }\n    }\n  }\n}];"
+      },
+      "id": "init",
+      "name": "Initialize Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/agents/code/review",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "description",
+              "value": "={{ $json.code }}"
+            },
+            {
+              "name": "language",
+              "value": "={{ $json.language }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "review",
+      "name": "Run Code Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process review results\nconst initData = $('Initialize Review').item.json;\nconst reviewResult = $input.first()?.json || {};\n\nconst endTime = Date.now();\n\n// Parse issues from review\nconst issues = reviewResult.review?.issues || [];\nconst highSeverity = issues.filter(i => i.severity === 'high').length;\nconst mediumSeverity = issues.filter(i => i.severity === 'medium').length;\nconst lowSeverity = issues.filter(i => i.severity === 'low').length;\n\nreturn [{\n  json: {\n    review_id: initData.review_id,\n    language: initData.language,\n    duration_ms: endTime - initData.start_time,\n    summary: {\n      total_issues: issues.length,\n      high: highSeverity,\n      medium: mediumSeverity,\n      low: lowSeverity,\n      passed: issues.length === 0\n    },\n    review: reviewResult.review,\n    issues: issues\n  }\n}];"
+      },
+      "id": "process",
+      "name": "Process Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/memory",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "agent"
+            },
+            {
+              "name": "content",
+              "value": "={{ JSON.stringify({ review_id: $json.review_id, summary: $json.summary }) }}"
+            },
+            {
+              "name": "tags",
+              "value": "[\"code-review\", \"{{ $json.language }}\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "save_memory",
+      "name": "Save to Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Code Review Request": {
+      "main": [
+        [{"node": "Initialize Review", "type": "main", "index": 0}]
+      ]
+    },
+    "Initialize Review": {
+      "main": [
+        [{"node": "Run Code Review", "type": "main", "index": 0}]
+      ]
+    },
+    "Run Code Review": {
+      "main": [
+        [{"node": "Process Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Process Results": {
+      "main": [
+        [{"node": "Save to Memory", "type": "main", "index": 0}]
+      ]
+    },
+    "Save to Memory": {
+      "main": [
+        [{"node": "Send Response", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "code-review", "agents"]
+}

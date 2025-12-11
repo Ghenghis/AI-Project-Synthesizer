@@ -5,12 +5,15 @@ Abstract base class and data models for all platform API clients.
 Each platform (GitHub, HuggingFace, etc.) implements this interface.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class Platform(str, Enum):
@@ -330,7 +333,8 @@ class PlatformClient(ABC):
             try:
                 content = await self.get_file(repo_id, name)
                 return content.text
-            except Exception:
+            except Exception as e:
+                logger.debug("README %s not found: %s", name, e)
                 continue
         
         return None
@@ -351,7 +355,8 @@ class PlatformClient(ABC):
             try:
                 content = await self.get_file(repo_id, name)
                 return content.text
-            except Exception:
+            except Exception as e:
+                logger.debug("License %s not found: %s", name, e)
                 continue
         
         return None

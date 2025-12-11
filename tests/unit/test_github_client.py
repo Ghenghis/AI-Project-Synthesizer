@@ -150,10 +150,21 @@ class TestGitHubClient:
     @pytest.mark.asyncio
     async def test_get_contents_directory(self, client):
         """Test getting directory contents."""
-        mock_contents = [
-            MagicMock(name="src", path="src", sha="abc", type="dir", size=0),
-            MagicMock(name="README.md", path="README.md", sha="def", type="file", size=100),
-        ]
+        mock_src = MagicMock()
+        mock_src.name = "src"
+        mock_src.path = "src"
+        mock_src.sha = "abc"
+        mock_src.type = "dir"
+        mock_src.size = 0
+        
+        mock_readme = MagicMock()
+        mock_readme.name = "README.md"
+        mock_readme.path = "README.md"
+        mock_readme.sha = "def"
+        mock_readme.type = "file"
+        mock_readme.size = 100
+        
+        mock_contents = [mock_src, mock_readme]
         client._api.repos.get_content.return_value = mock_contents
         
         result = await client.get_contents("owner/repo", "")

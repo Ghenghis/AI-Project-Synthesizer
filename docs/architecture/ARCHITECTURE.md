@@ -1,8 +1,9 @@
 # 🏛️ AI Project Synthesizer - Architecture Documentation
 
-> **Version:** 1.0.0  
+> **Version:** 2.0.0  
 > **Last Updated:** December 2024  
-> **Status:** Development  
+> **Status:** Production Ready  
+> **Tests:** 245+ Passing
 
 ---
 
@@ -11,11 +12,15 @@
 1. [System Overview](#system-overview)
 2. [Core Architecture](#core-architecture)
 3. [Layer Descriptions](#layer-descriptions)
-4. [Data Flow](#data-flow)
-5. [Component Interactions](#component-interactions)
-6. [Technology Stack](#technology-stack)
-7. [Deployment Architecture](#deployment-architecture)
-8. [Security Architecture](#security-architecture)
+4. [AI Agents Architecture](#ai-agents-architecture)
+5. [Voice System Architecture](#voice-system-architecture)
+6. [Real-Time Event System](#real-time-event-system)
+7. [Memory & Persistence](#memory--persistence)
+8. [Data Flow](#data-flow)
+9. [Component Interactions](#component-interactions)
+10. [Technology Stack](#technology-stack)
+11. [Deployment Architecture](#deployment-architecture)
+12. [Security Architecture](#security-architecture)
 
 ---
 
@@ -125,10 +130,10 @@ The AI Project Synthesizer is designed to solve the "cold start" problem in soft
 | **Prompts** | Pre-defined prompt templates | FastMCP `@mcp.prompt()` |
 
 **Key Files:**
-- `src/mcp/server.py` - Server initialization
-- `src/mcp/tools.py` - Tool definitions
-- `src/mcp/resources.py` - Resource handlers
-- `src/mcp/prompts.py` - Prompt templates
+- `src/mcp_server/server.py` - Server initialization
+- `src/mcp_server/tools.py` - Tool definitions (8 tools)
+- `src/mcp_server/resources.py` - Resource handlers
+- `src/mcp_server/prompts.py` - Prompt templates
 
 ### 2. Orchestration Layer
 

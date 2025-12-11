@@ -124,6 +124,7 @@ result = await handle_generate_documentation({
 ```
 
 ### 7. get_synthesis_status
+
 Get the status of an ongoing synthesis operation.
 
 **Parameters:**
@@ -135,6 +136,60 @@ result = await handle_get_synthesis_status({
     "synthesis_id": "12345678-1234-1234-1234-123456789012"
 })
 ```
+
+**Response:**
+```json
+{
+    "synthesis_id": "12345678-1234-1234-1234-123456789012",
+    "status": "in_progress",
+    "progress": 65,
+    "current_step": "resolving_dependencies",
+    "steps_completed": ["cloning", "analyzing"],
+    "steps_remaining": ["synthesizing", "generating_docs"]
+}
+```
+
+### 8. get_platforms
+
+Get available platforms for repository search.
+
+**Parameters:** None
+
+**Example:**
+```python
+result = await handle_get_platforms({})
+```
+
+**Response:**
+```json
+{
+    "platforms": [
+        {
+            "name": "github",
+            "enabled": true,
+            "authenticated": true,
+            "rate_limit_remaining": 4500
+        },
+        {
+            "name": "huggingface",
+            "enabled": true,
+            "authenticated": false
+        },
+        {
+            "name": "kaggle",
+            "enabled": false,
+            "authenticated": false
+        },
+        {
+            "name": "arxiv",
+            "enabled": true,
+            "authenticated": false
+        }
+    ]
+}
+```
+
+---
 
 ## Response Format
 
@@ -170,22 +225,76 @@ The system handles the following error cases:
 
 ## Rate Limits
 
-- GitHub API: 60 requests/hour (unauthenticated)
-- Search operations: 100 requests/minute
-- Synthesis operations: 10 concurrent jobs
+| Service | Unauthenticated | Authenticated | Notes |
+|---------|-----------------|---------------|-------|
+| GitHub API | 60/hour | 5,000/hour | Token required for higher limits |
+| HuggingFace | Generous | Generous | Optional token |
+| Kaggle | N/A | Undocumented | API key required |
+| arXiv | 3s delay | 3s delay | No authentication |
+
+The synthesizer implements:
+- **Token bucket rate limiting** for GitHub API
+- **Exponential backoff** on rate limit errors
+- **Automatic retry** with configurable limits
+
+---
 
 ## Authentication
 
 Configure tokens in `.env` file:
+
 ```env
+# Required for GitHub API access
 GITHUB_TOKEN=ghp_your_token_here
+
+# Optional for HuggingFace
 HUGGINGFACE_TOKEN=hf_your_token_here
+
+# Optional for Kaggle
+KAGGLE_USERNAME=your_username
+KAGGLE_KEY=your_api_key
+
+# Optional for Ollama (local LLM)
+OLLAMA_HOST=http://localhost:11434
 ```
+
+---
 
 ## Templates
 
 Available project templates:
-- `python-default`: Standard Python project
-- `python-ml`: Machine learning project with ML dependencies
-- `python-web`: Web application with Flask/FastAPI
-- `minimal`: Bare bones project structure
+
+| Template | Description | Includes |
+|----------|-------------|----------|
+| `python-default` | Standard Python project | pyproject.toml, src/, tests/, README.md |
+| `python-ml` | Machine learning project | + notebooks/, data/, models/ |
+| `python-web` | Web application | + FastAPI/Flask, Docker, API docs |
+| `minimal` | Bare bones structure | pyproject.toml, src/ only |
+
+---
+
+## CLI Usage
+
+All MCP tools are also available via the CLI:
+
+```bash
+# Search repositories
+python -m src.cli search "machine learning" --platforms github --min-stars 100
+
+# Analyze repository
+python -m src.cli analyze https://github.com/user/repo
+
+# Synthesize project
+python -m src.cli synthesize --repos url1,url2 --name my-project --output ./output
+
+# Resolve dependencies
+python -m src.cli resolve --repos url1,url2 --python 3.11
+
+# Generate documentation
+python -m src.cli docs ./my-project
+
+# Start MCP server
+python -m src.cli serve
+```
+
+See [CLI Reference](guides/CLI_REFERENCE.md) for complete documentation.

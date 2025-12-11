@@ -1,0 +1,159 @@
+{
+  "name": "AI Synthesizer - Scheduled Research",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/research/topics",
+        "options": {}
+      },
+      "id": "get_topics",
+      "name": "Get Research Topics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split",
+      "name": "Split Topics",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.topic }}"
+            },
+            {
+              "name": "platforms",
+              "value": "[\"github\", \"huggingface\", \"arxiv\"]"
+            },
+            {
+              "name": "max_results",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "search",
+      "name": "Search Topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "wait",
+      "name": "Rate Limit Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate all results\nconst items = $input.all();\nconst allResults = [];\n\nfor (const item of items) {\n  if (item.json.results) {\n    allResults.push(...item.json.results);\n  }\n}\n\n// Deduplicate by URL\nconst seen = new Set();\nconst unique = allResults.filter(r => {\n  if (seen.has(r.url)) return false;\n  seen.add(r.url);\n  return true;\n});\n\nreturn [{\n  json: {\n    total_results: unique.length,\n    results: unique,\n    researched_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/research/save",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "results",
+              "value": "={{ JSON.stringify($json.results) }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.researched_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "save",
+      "name": "Save Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [{"node": "Get Research Topics", "type": "main", "index": 0}]
+      ]
+    },
+    "Get Research Topics": {
+      "main": [
+        [{"node": "Split Topics", "type": "main", "index": 0}]
+      ]
+    },
+    "Split Topics": {
+      "main": [
+        [{"node": "Search Topic", "type": "main", "index": 0}],
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Search Topic": {
+      "main": [
+        [{"node": "Rate Limit Wait", "type": "main", "index": 0}]
+      ]
+    },
+    "Rate Limit Wait": {
+      "main": [
+        [{"node": "Split Topics", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Save Results", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "scheduled", "research"]
+}

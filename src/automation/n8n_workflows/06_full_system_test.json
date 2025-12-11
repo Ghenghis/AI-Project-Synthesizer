@@ -1,0 +1,333 @@
+{
+  "name": "AI Synthesizer - Full System Test",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "full-test",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Start Test",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "webhookId": "full-system-test"
+    },
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize test suite\nconst testId = `test_${Date.now()}`;\nconst startTime = Date.now();\n\nreturn [{\n  json: {\n    test_id: testId,\n    start_time: startTime,\n    start_timestamp: new Date().toISOString(),\n    tests: {\n      health: { status: 'pending' },\n      lm_studio: { status: 'pending' },\n      github_api: { status: 'pending' },\n      huggingface_api: { status: 'pending' },\n      cache: { status: 'pending' },\n      search: { status: 'pending' },\n      voice: { status: 'pending' },\n      metrics: { status: 'pending' }\n    }\n  }\n}];"
+      },
+      "id": "init",
+      "name": "Initialize Tests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/health",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_health",
+      "name": "Test: Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 100]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/health/lm_studio",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_lm_studio",
+      "name": "Test: LM Studio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/health/github",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_github",
+      "name": "Test: GitHub API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/health/huggingface",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_huggingface",
+      "name": "Test: HuggingFace API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/test/cache",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_cache",
+      "name": "Test: Cache",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/test/search",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "test_search",
+      "name": "Test: Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/metrics",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "test_metrics",
+      "name": "Test: Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 700]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Collect all test results\nconst initData = $('Initialize Tests').item.json;\nconst results = {\n  test_id: initData.test_id,\n  start_timestamp: initData.start_timestamp,\n  tests: {}\n};\n\n// Process each test result\nconst testNodes = [\n  { name: 'Test: Health Check', key: 'health' },\n  { name: 'Test: LM Studio', key: 'lm_studio' },\n  { name: 'Test: GitHub API', key: 'github_api' },\n  { name: 'Test: HuggingFace API', key: 'huggingface_api' },\n  { name: 'Test: Cache', key: 'cache' },\n  { name: 'Test: Search', key: 'search' },\n  { name: 'Test: Metrics', key: 'metrics' }\n];\n\nlet passed = 0;\nlet failed = 0;\n\nfor (const test of testNodes) {\n  try {\n    const nodeData = $(test.name).item?.json;\n    const status = nodeData?.status === 'healthy' || \n                   nodeData?.status === 'pass' || \n                   nodeData?.uptime_seconds !== undefined ||\n                   (nodeData && !nodeData.error);\n    \n    results.tests[test.key] = {\n      status: status ? 'passed' : 'failed',\n      data: nodeData\n    };\n    \n    if (status) passed++;\n    else failed++;\n  } catch (e) {\n    results.tests[test.key] = {\n      status: 'error',\n      error: e.message\n    };\n    failed++;\n  }\n}\n\n// Calculate summary\nconst endTime = Date.now();\nresults.summary = {\n  total: testNodes.length,\n  passed: passed,\n  failed: failed,\n  success_rate: ((passed / testNodes.length) * 100).toFixed(1) + '%',\n  duration_ms: endTime - initData.start_time,\n  completed_at: new Date().toISOString()\n};\n\nreturn [{ json: results }];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.summary.failed }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check_failures",
+      "name": "Any Failures?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/alerts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "full_test_failures"
+            },
+            {
+              "name": "test_id",
+              "value": "={{ $json.test_id }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ JSON.stringify($json.summary) }}"
+            },
+            {
+              "name": "failed_tests",
+              "value": "={{ JSON.stringify(Object.entries($json.tests).filter(([k,v]) => v.status !== 'passed').map(([k,v]) => k)) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics/tests",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "test_run_id",
+              "value": "={{ $json.test_id }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ JSON.stringify($json.summary) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "record_metrics",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate final report\nconst results = $input.first().json;\n\nconst report = {\n  title: 'AI Synthesizer - Full System Test Report',\n  test_id: results.test_id,\n  timestamp: results.summary.completed_at,\n  duration: `${results.summary.duration_ms}ms`,\n  overall_status: results.summary.failed === 0 ? 'PASSED' : 'FAILED',\n  summary: results.summary,\n  details: results.tests,\n  recommendations: []\n};\n\n// Add recommendations based on failures\nfor (const [test, result] of Object.entries(results.tests)) {\n  if (result.status !== 'passed') {\n    switch (test) {\n      case 'lm_studio':\n        report.recommendations.push('Start LM Studio: Open LM Studio app and load a model');\n        break;\n      case 'github_api':\n        report.recommendations.push('Check GitHub token in .env file');\n        break;\n      case 'huggingface_api':\n        report.recommendations.push('Verify HuggingFace API is accessible');\n        break;\n      case 'cache':\n        report.recommendations.push('Check cache configuration');\n        break;\n      case 'search':\n        report.recommendations.push('Verify search service dependencies');\n        break;\n    }\n  }\n}\n\nreturn [{ json: report }];"
+      },
+      "id": "report",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1700, 400]
+    }
+  ],
+  "connections": {
+    "Start Test": {
+      "main": [
+        [{"node": "Initialize Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [{"node": "Initialize Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Initialize Tests": {
+      "main": [
+        [
+          {"node": "Test: Health Check", "type": "main", "index": 0},
+          {"node": "Test: LM Studio", "type": "main", "index": 0},
+          {"node": "Test: GitHub API", "type": "main", "index": 0},
+          {"node": "Test: HuggingFace API", "type": "main", "index": 0},
+          {"node": "Test: Cache", "type": "main", "index": 0},
+          {"node": "Test: Search", "type": "main", "index": 0},
+          {"node": "Test: Metrics", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Test: Health Check": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: LM Studio": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: GitHub API": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: HuggingFace API": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: Cache": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: Search": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Test: Metrics": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Any Failures?", "type": "main", "index": 0}]
+      ]
+    },
+    "Any Failures?": {
+      "main": [
+        [{"node": "Send Alert", "type": "main", "index": 0}],
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Send Alert": {
+      "main": [
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Metrics": {
+      "main": [
+        [{"node": "Generate Report", "type": "main", "index": 0}]
+      ]
+    },
+    "Generate Report": {
+      "main": [
+        [{"node": "Send Response", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "testing", "full-system"]
+}

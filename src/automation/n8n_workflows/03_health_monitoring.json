@@ -1,0 +1,186 @@
+{
+  "name": "AI Synthesizer - Health Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/health",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "health_check",
+      "name": "Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "healthy"
+            }
+          ]
+        }
+      },
+      "id": "check_status",
+      "name": "Is Healthy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log healthy status\nreturn [{\n  json: {\n    status: 'healthy',\n    timestamp: new Date().toISOString(),\n    components: $json.components?.length || 0\n  }\n}];"
+      },
+      "id": "log_healthy",
+      "name": "Log Healthy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare alert data\nconst unhealthyComponents = ($json.components || []).filter(c => c.status !== 'healthy');\n\nreturn [{\n  json: {\n    alert: true,\n    status: $json.status,\n    unhealthy_components: unhealthyComponents.map(c => c.name),\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "prepare_alert",
+      "name": "Prepare Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/alerts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "health_degraded"
+            },
+            {
+              "name": "components",
+              "value": "={{ JSON.stringify($json.unhealthy_components) }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send_alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/recovery/attempt",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "components",
+              "value": "={{ JSON.stringify($json.unhealthy_components) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "auto_recover",
+      "name": "Attempt Recovery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics/health",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "record_metrics",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 200]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [{"node": "Health Check", "type": "main", "index": 0}]
+      ]
+    },
+    "Health Check": {
+      "main": [
+        [{"node": "Is Healthy?", "type": "main", "index": 0}]
+      ]
+    },
+    "Is Healthy?": {
+      "main": [
+        [{"node": "Log Healthy", "type": "main", "index": 0}],
+        [{"node": "Prepare Alert", "type": "main", "index": 0}]
+      ]
+    },
+    "Log Healthy": {
+      "main": [
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Alert": {
+      "main": [
+        [{"node": "Send Alert", "type": "main", "index": 0}]
+      ]
+    },
+    "Send Alert": {
+      "main": [
+        [{"node": "Attempt Recovery", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "monitoring", "health"]
+}

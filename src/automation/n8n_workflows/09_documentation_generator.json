@@ -1,0 +1,138 @@
+{
+  "name": "AI Synthesizer - Documentation Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "generate-docs",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Generate Docs Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "generate-docs"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize documentation generation\nconst input = $input.first()?.json || {};\nconst projectPath = input.project_path || '';\nconst docTypes = input.doc_types || ['readme', 'api', 'architecture'];\n\nreturn [{\n  json: {\n    doc_id: `docs_${Date.now()}`,\n    project_path: projectPath,\n    doc_types: docTypes,\n    start_time: Date.now(),\n    documents: []\n  }\n}];"
+      },
+      "id": "init",
+      "name": "Initialize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/docs/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "project_path",
+              "value": "={{ $json.project_path }}"
+            },
+            {
+              "name": "doc_types",
+              "value": "={{ JSON.stringify($json.doc_types) }}"
+            },
+            {
+              "name": "llm_enhanced",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "generate",
+      "name": "Generate Documentation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process generated docs\nconst initData = $('Initialize').item.json;\nconst genResult = $input.first()?.json || {};\n\nconst endTime = Date.now();\n\nreturn [{\n  json: {\n    doc_id: initData.doc_id,\n    project_path: initData.project_path,\n    duration_ms: endTime - initData.start_time,\n    documents: genResult.documents || [],\n    success: genResult.success || false\n  }\n}];"
+      },
+      "id": "process",
+      "name": "Process Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/events/emit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "notification"
+            },
+            {
+              "name": "data",
+              "value": "={{ JSON.stringify({ title: 'Documentation Generated', message: 'Generated ' + $json.documents.length + ' documents', level: 'success' }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify",
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Generate Docs Request": {
+      "main": [
+        [{"node": "Initialize", "type": "main", "index": 0}]
+      ]
+    },
+    "Initialize": {
+      "main": [
+        [{"node": "Generate Documentation", "type": "main", "index": 0}]
+      ]
+    },
+    "Generate Documentation": {
+      "main": [
+        [{"node": "Process Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Process Results": {
+      "main": [
+        [{"node": "Send Notification", "type": "main", "index": 0}]
+      ]
+    },
+    "Send Notification": {
+      "main": [
+        [{"node": "Send Response", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "documentation", "generation"]
+}

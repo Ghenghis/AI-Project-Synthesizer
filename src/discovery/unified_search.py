@@ -134,8 +134,21 @@ class UnifiedSearch:
             except Exception as e:
                 logger.warning(f"Failed to initialize HuggingFace client: {e}")
         
-        # // DONE: Add Kaggle client when implemented
-        # // DONE: Add arXiv client when implemented
+        # Kaggle client
+        if settings.platforms.kaggle_username and settings.platforms.kaggle_key.get_secret_value():
+            try:
+                from src.discovery.kaggle_client import KaggleClient
+                kaggle_creds = kaggle_credentials or {
+                    "username": settings.platforms.kaggle_username,
+                    "key": settings.platforms.kaggle_key.get_secret_value(),
+                }
+                self._clients["kaggle"] = KaggleClient(
+                    username=kaggle_creds.get("username"),
+                    key=kaggle_creds.get("key"),
+                )
+                logger.info("Kaggle client initialized")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Kaggle client: {e}")
     
     @property
     def available_platforms(self) -> List[str]:
@@ -367,8 +380,8 @@ class UnifiedSearch:
                 days_ago = (now - updated).days
                 recency_score = math.exp(-days_ago / 180)  # 6-month half-life
                 score += 0.15 * recency_score
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to calculate recency score: %s", e)
         
         return score
     
@@ -387,7 +400,7 @@ class UnifiedSearch:
             "min_stars": min_stars,
         }
         key_str = json.dumps(key_data, sort_keys=True)
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.sha256(key_str.encode()).hexdigest()
     
     def clear_cache(self):
         """Clear the search cache."""

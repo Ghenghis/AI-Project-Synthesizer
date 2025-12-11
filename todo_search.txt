@@ -1,0 +1,3 @@
+FINDSTR: Cannot open N:/
+FINDSTR: Cannot open TODO FIXME XXX HACK
+FINDSTR: Cannot open src*.py

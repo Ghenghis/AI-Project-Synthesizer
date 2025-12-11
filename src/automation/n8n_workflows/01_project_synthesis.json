@@ -1,0 +1,205 @@
+{
+  "name": "AI Synthesizer - Full Project Synthesis",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "path": "synthesize",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "webhookId": "synthesize-project"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validate input\nconst idea = $input.first().json.idea || $input.first().json.body?.idea;\nconst name = $input.first().json.name || $input.first().json.body?.name;\n\nif (!idea) {\n  throw new Error('Missing required field: idea');\n}\n\nreturn [{\n  json: {\n    idea: idea,\n    name: name || null,\n    timestamp: new Date().toISOString(),\n    workflow_id: 'project_synthesis'\n  }\n}];"
+      },
+      "id": "validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.idea }}"
+            },
+            {
+              "name": "platforms",
+              "value": "[\"github\", \"huggingface\", \"kaggle\"]"
+            },
+            {
+              "name": "max_results",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "search",
+      "name": "Search Resources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Record timing\nconst startTime = Date.now();\nconst searchResults = $input.first().json;\n\nreturn [{\n  json: {\n    ...searchResults,\n    search_duration_ms: Date.now() - startTime,\n    step: 'search_complete'\n  }\n}];"
+      },
+      "id": "timing_search",
+      "name": "Record Search Timing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/assemble",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idea",
+              "value": "={{ $('Validate Input').item.json.idea }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $('Validate Input').item.json.name }}"
+            },
+            {
+              "name": "resources",
+              "value": "={{ JSON.stringify($json.results) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "assemble",
+      "name": "Assemble Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Final result with all timings\nconst result = $input.first().json;\nconst searchData = $('Record Search Timing').item.json;\n\nreturn [{\n  json: {\n    success: true,\n    project: result.project,\n    resources: result.resources,\n    timings: {\n      search_ms: searchData.search_duration_ms,\n      total_ms: Date.now() - new Date($('Validate Input').item.json.timestamp).getTime()\n    },\n    workflow: 'project_synthesis',\n    completed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "finalize",
+      "name": "Finalize Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "workflow",
+              "value": "project_synthesis"
+            },
+            {
+              "name": "timings",
+              "value": "={{ JSON.stringify($json.timings) }}"
+            },
+            {
+              "name": "success",
+              "value": "={{ $json.success }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "metrics",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{"node": "Validate Input", "type": "main", "index": 0}]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [{"node": "Validate Input", "type": "main", "index": 0}]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [{"node": "Search Resources", "type": "main", "index": 0}]
+      ]
+    },
+    "Search Resources": {
+      "main": [
+        [{"node": "Record Search Timing", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Search Timing": {
+      "main": [
+        [{"node": "Assemble Project", "type": "main", "index": 0}]
+      ]
+    },
+    "Assemble Project": {
+      "main": [
+        [{"node": "Finalize Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Finalize Result": {
+      "main": [
+        [
+          {"node": "Respond to Webhook", "type": "main", "index": 0},
+          {"node": "Record Metrics", "type": "main", "index": 0}
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["synthesizer", "automation", "project"]
+}

@@ -94,6 +94,7 @@ class PythonResolver:
     def _check_uv(self) -> bool:
         """Check if uv is available."""
         try:
+            # nosec B603 B607 - hardcoded safe command, no user input
             result = subprocess.run(
                 ["uv", "--version"],
                 capture_output=True,
@@ -106,6 +107,7 @@ class PythonResolver:
     def _check_pip_compile(self) -> bool:
         """Check if pip-compile is available."""
         try:
+            # nosec B603 B607 - hardcoded safe command, no user input
             result = subprocess.run(
                 ["pip-compile", "--version"],
                 capture_output=True,

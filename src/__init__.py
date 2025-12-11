@@ -10,7 +10,7 @@ This package provides:
 - Automated documentation generation
 
 Example:
-    from src.mcp.server import main
+    from src.mcp_server.server import main
     import asyncio
     asyncio.run(main())
 """

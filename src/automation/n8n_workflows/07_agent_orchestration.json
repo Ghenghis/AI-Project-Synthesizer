@@ -1,0 +1,199 @@
+{
+  "name": "AI Synthesizer - Agent Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "orchestrate",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Start Orchestration",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "agent-orchestration"
+    },
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize orchestration\nconst input = $input.first()?.json || {};\nconst task = input.task || 'research';\nconst query = input.query || 'AI automation tools';\n\nreturn [{\n  json: {\n    orchestration_id: `orch_${Date.now()}`,\n    task: task,\n    query: query,\n    start_time: Date.now(),\n    agents: {\n      research: { status: 'pending' },\n      synthesis: { status: 'pending' },\n      code: { status: 'pending' },\n      automation: { status: 'pending' }\n    }\n  }\n}];"
+      },
+      "id": "init",
+      "name": "Initialize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 225]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.task }}",
+              "operation": "equals",
+              "value2": "research"
+            }
+          ]
+        }
+      },
+      "id": "check_task",
+      "name": "Check Task Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 225]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/agents/research",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "topic",
+              "value": "={{ $json.query }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "research_agent",
+      "name": "Research Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/agents/synthesis",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idea",
+              "value": "={{ $json.query }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "synthesis_agent",
+      "name": "Synthesis Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate agent results\nconst initData = $('Initialize').item.json;\nconst researchResult = $('Research Agent').item?.json;\nconst synthesisResult = $('Synthesis Agent').item?.json;\n\nconst endTime = Date.now();\n\nreturn [{\n  json: {\n    orchestration_id: initData.orchestration_id,\n    task: initData.task,\n    query: initData.query,\n    duration_ms: endTime - initData.start_time,\n    results: {\n      research: researchResult || null,\n      synthesis: synthesisResult || null\n    },\n    success: true\n  }\n}];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 225]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "workflow",
+              "value": "agent_orchestration"
+            },
+            {
+              "name": "timings",
+              "value": "={{ JSON.stringify({ total: $json.duration_ms }) }}"
+            },
+            {
+              "name": "success",
+              "value": "={{ $json.success }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "record_metrics",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 225]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 225]
+    }
+  ],
+  "connections": {
+    "Start Orchestration": {
+      "main": [
+        [{"node": "Initialize", "type": "main", "index": 0}]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [{"node": "Initialize", "type": "main", "index": 0}]
+      ]
+    },
+    "Initialize": {
+      "main": [
+        [{"node": "Check Task Type", "type": "main", "index": 0}]
+      ]
+    },
+    "Check Task Type": {
+      "main": [
+        [{"node": "Research Agent", "type": "main", "index": 0}],
+        [{"node": "Synthesis Agent", "type": "main", "index": 0}]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Synthesis Agent": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Metrics": {
+      "main": [
+        [{"node": "Send Response", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "agents", "orchestration"]
+}

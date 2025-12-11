@@ -1,0 +1,36 @@
+{
+  "name": "AI Project Synthesizer",
+  "description": "MCP server for AI-powered project synthesis, repository search, and code analysis",
+  "version": "1.0.0",
+  
+  "server": {
+    "command": "python",
+    "args": ["-m", "src.mcp_server.server"],
+    "workingDirectory": "C:\\Users\\Admin\\AI_Synthesizer",
+    "env": {
+      "PYTHONPATH": "C:\\Users\\Admin\\AI_Synthesizer",
+      "LLM_PREFERRED_PROVIDER": "lmstudio",
+      "LMSTUDIO_HOST": "http://localhost:1234",
+      "LLM_MODEL_SIZE_PREFERENCE": "medium"
+    }
+  },
+  
+  "tools": [
+    {
+      "name": "search_repositories",
+      "description": "Search GitHub, HuggingFace, Kaggle for repositories"
+    },
+    {
+      "name": "analyze_repository", 
+      "description": "Analyze code structure and quality"
+    },
+    {
+      "name": "synthesize_project",
+      "description": "Generate new project from multiple sources"
+    },
+    {
+      "name": "generate_documentation",
+      "description": "Generate README and documentation"
+    }
+  ]
+}

@@ -1,8 +1,11 @@
 # 📊 AI Project Synthesizer - System Diagrams
 
 > **Professional Architecture Visualizations**  
-> **Format:** Mermaid, PlantUML Compatible  
-> **Last Updated:** December 2024
+> **Format:** Mermaid (GitHub/GitLab Compatible)  
+> **Version:** 2.0.0  
+> **Last Updated:** December 2024  
+> **Status:** Production Ready  
+> **Tests:** 245+ Passing
 
 ---
 
@@ -10,12 +13,16 @@
 
 1. [System Overview Diagram](#1-system-overview-diagram)
 2. [Component Architecture](#2-component-architecture)
-3. [Data Flow Diagrams](#3-data-flow-diagrams)
-4. [Sequence Diagrams](#4-sequence-diagrams)
-5. [State Machine Diagrams](#5-state-machine-diagrams)
-6. [Class Diagrams](#6-class-diagrams)
-7. [Deployment Diagrams](#7-deployment-diagrams)
-8. [Entity Relationship Diagrams](#8-entity-relationship-diagrams)
+3. [AI Agents Architecture](#3-ai-agents-architecture)
+4. [Voice System Flow](#4-voice-system-flow)
+5. [Real-Time Event System](#5-real-time-event-system)
+6. [Memory & Persistence](#6-memory--persistence)
+7. [Data Flow Diagrams](#7-data-flow-diagrams)
+8. [Sequence Diagrams](#8-sequence-diagrams)
+9. [State Machine Diagrams](#9-state-machine-diagrams)
+10. [Class Diagrams](#10-class-diagrams)
+11. [Deployment Diagrams](#11-deployment-diagrams)
+12. [Entity Relationship Diagrams](#12-entity-relationship-diagrams)
 
 ---
 
@@ -160,7 +167,280 @@ flowchart TB
 
 ---
 
-## 3. Data Flow Diagrams
+## 3. AI Agents Architecture
+
+### Agent System Overview
+
+```mermaid
+flowchart TB
+    subgraph AGENTS["🤖 AI Agents"]
+        direction TB
+        
+        subgraph RESEARCH["ResearchAgent"]
+            R_SEARCH["Platform Search"]
+            R_TRENDS["Trend Analysis"]
+            R_FILTER["Result Filtering"]
+        end
+        
+        subgraph SYNTHESIS["SynthesisAgent"]
+            S_MERGE["Code Merging"]
+            S_DEPS["Dependency Resolution"]
+            S_CONFLICT["Conflict Handling"]
+        end
+        
+        subgraph VOICE["VoiceAgent"]
+            V_LISTEN["Speech Recognition"]
+            V_PROCESS["Command Processing"]
+            V_SPEAK["Text-to-Speech"]
+        end
+        
+        subgraph AUTOMATION["AutomationAgent"]
+            A_SCHEDULE["Task Scheduling"]
+            A_MONITOR["Health Monitoring"]
+            A_RECOVER["Auto Recovery"]
+        end
+        
+        subgraph CODE["CodeAgent"]
+            C_ANALYZE["Code Analysis"]
+            C_REFACTOR["Refactoring"]
+            C_DOCS["Documentation"]
+        end
+    end
+    
+    subgraph CORE["Core Services"]
+        LLM["LLM Router"]
+        MEMORY["Memory Store"]
+        EVENTS["Event Bus"]
+    end
+    
+    RESEARCH --> LLM
+    SYNTHESIS --> LLM
+    VOICE --> LLM
+    CODE --> LLM
+    
+    AGENTS --> MEMORY
+    AGENTS --> EVENTS
+```
+
+### Agent State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Initializing: start()
+    Initializing --> Ready: initialized
+    Ready --> Running: execute()
+    Running --> Waiting: await_input
+    Waiting --> Running: input_received
+    Running --> Completed: success
+    Running --> Failed: error
+    Completed --> Ready: reset()
+    Failed --> Ready: reset()
+    Ready --> Stopped: stop()
+    Stopped --> [*]
+```
+
+---
+
+## 4. Voice System Flow
+
+### Voice Interaction Pipeline
+
+```mermaid
+flowchart LR
+    subgraph INPUT["🎤 Input"]
+        MIC["Microphone"]
+        HOTKEY["Hotkey\nTrigger"]
+    end
+    
+    subgraph PROCESS["🧠 Processing"]
+        STT["Speech-to-Text"]
+        NLU["Intent\nRecognition"]
+        CMD["Command\nRouter"]
+    end
+    
+    subgraph EXECUTE["⚡ Execute"]
+        SEARCH_CMD["Search"]
+        CREATE_CMD["Create"]
+        SETTINGS_CMD["Settings"]
+        CHAT_CMD["Chat"]
+    end
+    
+    subgraph OUTPUT["🔊 Output"]
+        TTS["Text-to-Speech"]
+        SPEAKER["Audio\nPlayback"]
+    end
+    
+    MIC --> STT
+    HOTKEY --> STT
+    STT --> NLU
+    NLU --> CMD
+    CMD --> SEARCH_CMD
+    CMD --> CREATE_CMD
+    CMD --> SETTINGS_CMD
+    CMD --> CHAT_CMD
+    EXECUTE --> TTS
+    TTS --> SPEAKER
+```
+
+### Voice Modes
+
+```mermaid
+stateDiagram-v2
+    [*] --> Disabled
+    Disabled --> PushToTalk: enable_ptt
+    Disabled --> Continuous: enable_continuous
+    PushToTalk --> Listening: hotkey_pressed
+    Listening --> Processing: hotkey_released
+    Processing --> PushToTalk: complete
+    Continuous --> Listening: voice_detected
+    Listening --> Processing: silence_detected
+    Processing --> Continuous: complete
+    PushToTalk --> Disabled: disable
+    Continuous --> Disabled: disable
+```
+
+---
+
+## 5. Real-Time Event System
+
+### Event Bus Architecture
+
+```mermaid
+flowchart TB
+    subgraph PUBLISHERS["📤 Publishers"]
+        AGENT_PUB["Agents"]
+        WORKFLOW_PUB["Workflows"]
+        SYSTEM_PUB["System"]
+        USER_PUB["User Actions"]
+    end
+    
+    subgraph BUS["🚌 Event Bus"]
+        QUEUE["Event Queue"]
+        ROUTER["Event Router"]
+        HISTORY["Event History"]
+    end
+    
+    subgraph SUBSCRIBERS["📥 Subscribers"]
+        DASHBOARD["Dashboard"]
+        SSE["SSE Clients"]
+        WEBHOOKS["Webhooks"]
+        MEMORY["Memory Store"]
+    end
+    
+    PUBLISHERS --> QUEUE
+    QUEUE --> ROUTER
+    ROUTER --> HISTORY
+    ROUTER --> SUBSCRIBERS
+```
+
+### Event Types
+
+```mermaid
+classDiagram
+    class EventType {
+        <<enumeration>>
+        WORKFLOW_STARTED
+        WORKFLOW_PROGRESS
+        WORKFLOW_COMPLETED
+        WORKFLOW_FAILED
+        AGENT_STARTED
+        AGENT_STEP
+        AGENT_COMPLETED
+        AGENT_ERROR
+        SEARCH_STARTED
+        SEARCH_RESULT
+        SEARCH_COMPLETED
+        NOTIFICATION
+        LOG
+        SYSTEM
+    }
+```
+
+---
+
+## 6. Memory & Persistence
+
+### Memory Store Architecture
+
+```mermaid
+flowchart TB
+    subgraph APP["Application Layer"]
+        AGENTS["Agents"]
+        DASHBOARD["Dashboard"]
+        CLI["CLI"]
+    end
+    
+    subgraph MEMORY["Memory System"]
+        STORE["MemoryStore"]
+        
+        subgraph TABLES["SQLite Tables"]
+            MEMORIES["memories"]
+            SEARCHES["search_history"]
+            BOOKMARKS["bookmarks"]
+            CONVERSATIONS["conversations"]
+            WORKFLOW_STATE["workflow_state"]
+        end
+    end
+    
+    subgraph STORAGE["Storage"]
+        DB["data/memory.db"]
+        SETTINGS["config/settings.json"]
+    end
+    
+    APP --> STORE
+    STORE --> TABLES
+    TABLES --> DB
+```
+
+### Data Model
+
+```mermaid
+erDiagram
+    MEMORY {
+        string id PK
+        string type
+        json content
+        string[] tags
+        datetime created_at
+        datetime updated_at
+    }
+    
+    SEARCH_HISTORY {
+        string id PK
+        string query
+        string[] platforms
+        int results_count
+        datetime timestamp
+    }
+    
+    BOOKMARK {
+        string id PK
+        string name
+        string url
+        string type
+        string[] tags
+        datetime created_at
+    }
+    
+    CONVERSATION {
+        string id PK
+        string session_id
+        string role
+        string content
+        datetime timestamp
+    }
+    
+    WORKFLOW_STATE {
+        string workflow_id PK
+        json state
+        datetime updated_at
+    }
+```
+
+---
+
+## 7. Data Flow Diagrams
 
 ### Synthesis Pipeline Flow
 

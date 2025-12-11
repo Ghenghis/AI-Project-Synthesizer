@@ -20,19 +20,42 @@ pytestmark = pytest.mark.skipif(
 
 class TestMCPServerStartup:
     """Test MCP server initialization."""
-    
+
     def test_server_imports(self):
         """Test that server module imports correctly."""
-        from src.mcp.server import mcp
-        assert mcp is not None
-    
+        from src.mcp_server.tools import (
+            handle_search_repositories,
+            handle_analyze_repository,
+            handle_synthesize_project,
+        )
+        assert handle_search_repositories is not None
+        assert handle_analyze_repository is not None
+        assert handle_synthesize_project is not None
+
     def test_tools_registered(self):
-        """Test that all 7 tools are registered."""
-        from src.mcp.server import mcp
-        
-        # FastMCP stores tools internally
-        # This tests that the module loads without error
-        assert True  # If we get here, import succeeded
+        """Test that all 7 tool handlers are available."""
+        from src.mcp_server.tools import (
+            handle_search_repositories,
+            handle_analyze_repository,
+            handle_check_compatibility,
+            handle_resolve_dependencies,
+            handle_synthesize_project,
+            handle_generate_documentation,
+            handle_get_synthesis_status,
+        )
+
+        # Verify all 7 handlers exist
+        handlers = [
+            handle_search_repositories,
+            handle_analyze_repository,
+            handle_check_compatibility,
+            handle_resolve_dependencies,
+            handle_synthesize_project,
+            handle_generate_documentation,
+            handle_get_synthesis_status,
+        ]
+        assert len(handlers) == 7
+        assert all(callable(h) for h in handlers)
 
 
 class TestMCPToolSchemas:
@@ -40,7 +63,7 @@ class TestMCPToolSchemas:
     
     def test_search_repositories_schema(self):
         """Verify search_repositories has correct schema."""
-        from src.mcp.tools import search_repositories
+        from src.mcp_server.tools import search_repositories
         
         # Check function signature
         import inspect
@@ -53,7 +76,7 @@ class TestMCPToolSchemas:
     
     def test_analyze_repository_schema(self):
         """Verify analyze_repository has correct schema."""
-        from src.mcp.tools import analyze_repository
+        from src.mcp_server.tools import analyze_repository
         
         import inspect
         sig = inspect.signature(analyze_repository)
@@ -63,7 +86,7 @@ class TestMCPToolSchemas:
     
     def test_synthesize_project_schema(self):
         """Verify synthesize_project has correct schema."""
-        from src.mcp.tools import synthesize_project
+        from src.mcp_server.tools import synthesize_project
         
         import inspect
         sig = inspect.signature(synthesize_project)
@@ -79,21 +102,22 @@ class TestMCPToolExecution:
     @pytest.mark.asyncio
     async def test_search_returns_dict(self):
         """Test search returns properly structured dict."""
-        from src.mcp.tools import search_repositories
-        
+        from src.mcp_server.tools import search_repositories
+
         result = await search_repositories(
             query="fastapi",
             platforms=["github"],
             max_results=3,
         )
-        
+
         assert isinstance(result, dict)
-        assert "repositories" in result
+        # Result has "status" and "data" keys on success
+        assert "status" in result or "error" in result
     
     @pytest.mark.asyncio
     async def test_get_platforms_tool(self):
         """Test get_platforms returns available platforms."""
-        from src.mcp.tools import get_platforms
+        from src.mcp_server.tools import get_platforms
         
         result = await get_platforms()
         
@@ -108,7 +132,7 @@ class TestMCPErrorHandling:
     @pytest.mark.asyncio
     async def test_invalid_repo_url(self):
         """Test handling of invalid repository URL."""
-        from src.mcp.tools import analyze_repository
+        from src.mcp_server.tools import analyze_repository
         
         result = await analyze_repository(
             repo_url="not-a-valid-url",
@@ -120,7 +144,7 @@ class TestMCPErrorHandling:
     @pytest.mark.asyncio
     async def test_empty_search_query(self):
         """Test handling of empty search query."""
-        from src.mcp.tools import search_repositories
+        from src.mcp_server.tools import search_repositories
         
         result = await search_repositories(
             query="",

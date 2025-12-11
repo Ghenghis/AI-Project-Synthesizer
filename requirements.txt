@@ -8,6 +8,7 @@
 mcp>=1.0.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
+pydantic-ai>=0.0.14             # Pydantic AI - Type-safe AI agents
 
 # ============================================
 # Platform API Clients
@@ -18,7 +19,7 @@ huggingface-hub>=0.20.0         # HuggingFace Hub
 kaggle>=1.6.0                   # Kaggle API
 arxiv>=2.1.0                    # arXiv API
 semanticscholar>=0.8.0          # Semantic Scholar API
-paperswithcode-client>=0.3.0    # Papers with Code API
+# paperswithcode-client - DISABLED: incompatible with pydantic v2
 
 # ============================================
 # AST Parsing & Code Analysis
@@ -40,14 +41,45 @@ deptry>=0.16.0                  # Unused dependency detection
 GitPython>=3.1.0                # Git interface
 
 # ============================================
-# LLM Integration
+# LLM Integration - Core
 # ============================================
 ollama>=0.3.0                   # Ollama client
 openai>=1.0.0                   # OpenAI client
 anthropic>=0.30.0               # Anthropic client
-langchain>=0.2.0                # LangChain framework
-langchain-ollama>=0.1.0         # LangChain Ollama integration
+google-generativeai>=0.8.0      # Google Gemini
 tiktoken>=0.7.0                 # Token counting
+
+# ============================================
+# LangChain Ecosystem
+# ============================================
+langchain>=0.3.0                # LangChain framework
+langchain-core>=0.3.0           # LangChain core
+langchain-community>=0.3.0      # Community integrations
+langchain-openai>=0.2.0         # OpenAI integration
+langchain-anthropic>=0.2.0      # Anthropic integration
+langchain-ollama>=0.2.0         # Ollama integration
+langchain-google-genai>=2.0.0   # Google Gemini integration
+langgraph>=0.2.0                # LangGraph for workflows
+langsmith>=0.1.0                # LangSmith for tracing
+
+# ============================================
+# AI/ML Tools
+# ============================================
+transformers>=4.40.0            # HuggingFace Transformers
+sentence-transformers>=3.0.0    # Sentence embeddings
+chromadb>=0.5.0                 # Vector database
+faiss-cpu>=1.8.0                # Fast similarity search
+numpy>=1.26.0                   # Numerical computing
+pandas>=2.2.0                   # Data manipulation
+
+# ============================================
+# Voice & Audio
+# ============================================
+elevenlabs>=1.0.0               # ElevenLabs TTS
+pyaudio>=0.2.14                 # Audio I/O
+sounddevice>=0.4.6              # Audio playback
+pydub>=0.25.1                   # Audio processing
+speechrecognition>=3.10.0       # Speech recognition
 
 # ============================================
 # HTTP & Networking
@@ -55,6 +87,14 @@ tiktoken>=0.7.0                 # Token counting
 httpx>=0.27.0                   # Async HTTP client
 aiofiles>=23.2.0                # Async file operations
 tenacity>=8.2.0                 # Retry logic
+websockets>=12.0                # WebSocket support
+
+# ============================================
+# Web Framework (Dashboard)
+# ============================================
+fastapi>=0.115.0                # FastAPI framework
+uvicorn>=0.30.0                 # ASGI server
+python-multipart>=0.0.9         # Form data parsing
 
 # ============================================
 # Utilities
@@ -65,8 +105,17 @@ typer>=0.12.0                   # CLI framework
 python-dotenv>=1.0.0            # Environment management
 pyyaml>=6.0.0                   # YAML parsing
 toml>=0.10.0                    # TOML parsing
+jinja2>=3.1.0                   # Templating
 
 # ============================================
-# Data Validation
+# Data Validation & Serialization
 # ============================================
 email-validator>=2.1.0          # Email validation
+orjson>=3.10.0                  # Fast JSON
+msgpack>=1.0.0                  # MessagePack serialization
+
+# ============================================
+# Caching & Storage
+# ============================================
+redis>=5.0.0                    # Redis client (optional)
+diskcache>=5.6.0                # Disk-based caching

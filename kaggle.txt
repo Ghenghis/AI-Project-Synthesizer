@@ -1,0 +1,9 @@
+KGAT_e9c5899ee2f4bcf7d0f39878a3da2b28
+API TOKEN
+
+To use this token, set the KAGGLE_API_TOKEN environment variable:
+
+export KAGGLE_API_TOKEN=KGAT_e9c5899ee2f4bcf7d0f39878a3da2b28
+After setting KAGGLE_API_TOKEN, you can use the client as follows:
+
+kaggle competitions list

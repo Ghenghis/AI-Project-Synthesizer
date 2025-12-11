@@ -115,11 +115,16 @@ logs/
 
 # Data files
 *.csv
-*.json
-!config/*.json
-!package.json
 *.sqlite
 *.db
+
+# JSON files - allow specific directories
+*.json
+!config/**/*.json
+!package.json
+!docker/**/*.json
+!src/automation/n8n_workflows/*.json
+!templates/**/*.json
 
 # Model files
 *.bin
@@ -182,3 +187,5 @@ yarn-error.log
 *.tmp
 *.temp
 .~lock.*
+
+.env.local.user4

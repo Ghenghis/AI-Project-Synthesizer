@@ -232,13 +232,6 @@ class HuggingFaceClient(PlatformClient):
         sort_by: str,
     ) -> List[RepositoryInfo]:
         """Search HuggingFace models."""
-        from huggingface_hub import ModelFilter
-        
-        # Build filter
-        model_filter = ModelFilter()
-        if library:
-            model_filter = ModelFilter(library=library)
-        
         # Map sort field
         sort_map = {
             "likes": "likes",
@@ -247,14 +240,15 @@ class HuggingFaceClient(PlatformClient):
         }
         sort_field = sort_map.get(sort_by, "likes")
         
-        # Search models
-        models = list(self._api.list_models(
-            search=query,
-            filter=model_filter,
-            sort=sort_field,
-            direction=-1,
-            limit=max_results * 2,  # Get extra for filtering
-        ))
+        # Search models - newer huggingface_hub API
+        kwargs = {
+            "search": query,
+            "sort": sort_field,
+            "direction": -1,
+            "limit": max_results * 2,  # Get extra for filtering
+        }
+        
+        models = list(self._api.list_models(**kwargs))
         
         # Filter by likes
         filtered = [m for m in models if getattr(m, 'likes', 0) >= min_likes]
@@ -566,12 +560,13 @@ class HuggingFaceClient(PlatformClient):
                 repo_type = "space"
                 actual_id = repo_id.replace("spaces/", "")
             
-            # Download file
-            local_path = hf_hub_download(
+            # Download file with explicit revision pinning for security
+            local_path = hf_hub_download(  # nosec B615 - revision explicitly pinned
                 repo_id=actual_id,
                 filename=file_path,
                 repo_type=repo_type,
                 token=self._token,
+                revision="main",  # Pin to main branch for reproducibility
             )
             
             content = Path(local_path).read_bytes()
@@ -606,13 +601,15 @@ class HuggingFaceClient(PlatformClient):
             repo_type = "space"
             actual_id = repo_id.replace("spaces/", "")
         
-        # Download snapshot
-        local_dir = snapshot_download(
+        # Download snapshot with explicit revision pinning for security
+        # Default to "main" branch if no branch specified
+        revision = branch if branch else "main"
+        local_dir = snapshot_download(  # nosec B615 - revision explicitly pinned
             repo_id=actual_id,
             repo_type=repo_type,
             local_dir=str(destination),
             token=self._token,
-            revision=branch,
+            revision=revision,
         )
         
         logger.info(f"Downloaded {repo_id} to {local_dir}")

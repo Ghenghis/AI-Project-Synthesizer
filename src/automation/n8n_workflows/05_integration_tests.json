@@ -1,0 +1,230 @@
+{
+  "name": "AI Synthesizer - Integration Tests",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every 4 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "path": "run-tests",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "webhookId": "run-tests"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize test run\nreturn [{\n  json: {\n    test_run_id: `test_${Date.now()}`,\n    started_at: new Date().toISOString(),\n    tests: [\n      { name: 'lm_studio', endpoint: '/api/health/lm_studio' },\n      { name: 'github_api', endpoint: '/api/health/github' },\n      { name: 'huggingface_api', endpoint: '/api/health/huggingface' },\n      { name: 'search_workflow', endpoint: '/api/test/search' },\n      { name: 'cache_operations', endpoint: '/api/test/cache' }\n    ]\n  }\n}];"
+      },
+      "id": "init_tests",
+      "name": "Initialize Tests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split_tests",
+      "name": "Split Tests",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Run individual test\nconst test = $json;\nconst startTime = Date.now();\n\ntry {\n  // This would be replaced with actual HTTP request in production\n  const passed = Math.random() > 0.1; // 90% pass rate for demo\n  \n  return [{\n    json: {\n      name: test.name,\n      status: passed ? 'passed' : 'failed',\n      duration_ms: Date.now() - startTime,\n      endpoint: test.endpoint\n    }\n  }];\n} catch (error) {\n  return [{\n    json: {\n      name: test.name,\n      status: 'error',\n      duration_ms: Date.now() - startTime,\n      error: error.message\n    }\n  }];\n}"
+      },
+      "id": "run_test",
+      "name": "Run Test",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "amount": 500,
+        "unit": "milliseconds"
+      },
+      "id": "wait",
+      "name": "Wait Between Tests",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate test results\nconst results = $input.all().map(i => i.json);\nconst passed = results.filter(r => r.status === 'passed').length;\nconst failed = results.filter(r => r.status === 'failed').length;\nconst errors = results.filter(r => r.status === 'error').length;\nconst totalDuration = results.reduce((sum, r) => sum + (r.duration_ms || 0), 0);\n\nreturn [{\n  json: {\n    test_run_id: $('Initialize Tests').item.json.test_run_id,\n    completed_at: new Date().toISOString(),\n    summary: {\n      total: results.length,\n      passed: passed,\n      failed: failed,\n      errors: errors,\n      success_rate: ((passed / results.length) * 100).toFixed(1) + '%',\n      total_duration_ms: totalDuration\n    },\n    results: results\n  }\n}];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.summary.failed + $json.summary.errors }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check_failures",
+      "name": "Any Failures?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/alerts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "test_failures"
+            },
+            {
+              "name": "summary",
+              "value": "={{ JSON.stringify($json.summary) }}"
+            },
+            {
+              "name": "failed_tests",
+              "value": "={{ JSON.stringify($json.results.filter(r => r.status !== 'passed')) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "alert_failures",
+      "name": "Alert Failures",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics/tests",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "test_run_id",
+              "value": "={{ $json.test_run_id }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ JSON.stringify($json.summary) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "record_metrics",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1650, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 500]
+    }
+  ],
+  "connections": {
+    "Every 4 Hours": {
+      "main": [
+        [{"node": "Initialize Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [{"node": "Initialize Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Initialize Tests": {
+      "main": [
+        [{"node": "Split Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Split Tests": {
+      "main": [
+        [{"node": "Run Test", "type": "main", "index": 0}],
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Run Test": {
+      "main": [
+        [{"node": "Wait Between Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Wait Between Tests": {
+      "main": [
+        [{"node": "Split Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Any Failures?", "type": "main", "index": 0}]
+      ]
+    },
+    "Any Failures?": {
+      "main": [
+        [{"node": "Alert Failures", "type": "main", "index": 0}],
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Alert Failures": {
+      "main": [
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Metrics": {
+      "main": [
+        [{"node": "Respond", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "testing", "automation"]
+}

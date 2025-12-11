@@ -9,7 +9,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
-from src.mcp.tools import (
+from src.mcp_server.tools import (
     handle_search_repositories,
     handle_analyze_repository,
     handle_check_compatibility,

@@ -23,8 +23,11 @@ from src.discovery.base_client import (
     RepositoryNotFoundError,
 )
 from src.utils.rate_limiter import RateLimiter
+from src.core.circuit_breaker import circuit_breaker, GITHUB_BREAKER_CONFIG
+from src.core.security import InputValidator, SecurityConfig, get_secure_logger
+from src.core.observability import correlation_manager, track_performance, metrics
 
-logger = logging.getLogger(__name__)
+secure_logger = get_secure_logger(__name__)
 
 
 class GitHubClient(PlatformClient):
@@ -71,9 +74,9 @@ class GitHubClient(PlatformClient):
         try:
             from ghapi.all import GhApi
             self._api = GhApi(token=self._token)
-            logger.info("GitHub API client initialized")
+            secure_logger.info("GitHub API client initialized")
         except ImportError:
-            logger.warning("ghapi not installed, using fallback")
+            secure_logger.warning("ghapi not installed, using fallback")
             self._api = None
     
     @property
@@ -84,6 +87,15 @@ class GitHubClient(PlatformClient):
     def is_authenticated(self) -> bool:
         return self._token is not None
     
+    @circuit_breaker(
+        name="github_search",
+        failure_threshold=GITHUB_BREAKER_CONFIG.failure_threshold,
+        recovery_timeout=GITHUB_BREAKER_CONFIG.recovery_timeout,
+        success_threshold=GITHUB_BREAKER_CONFIG.success_threshold,
+        timeout=GITHUB_BREAKER_CONFIG.timeout,
+        expected_exception=Exception
+    )
+    @track_performance("github_search")
     async def search(
         self,
         query: str,
@@ -99,7 +111,21 @@ class GitHubClient(PlatformClient):
         Uses GitHub's search API with intelligent query construction.
         Supports filtering by language, stars, and other criteria.
         """
+        # Input validation
+        if not InputValidator.validate_search_query(query):
+            raise ValueError(f"Invalid search query: {query}")
+        
+        correlation_id = correlation_manager.get_correlation_id()
         start_time = time.time()
+        
+        secure_logger.info(
+            f"Searching GitHub repositories",
+            correlation_id=correlation_id,
+            query=query[:100],  # Limit query length in logs
+            language=language,
+            min_stars=min_stars,
+            max_results=max_results
+        )
         
         # Wait for rate limit
         await self._rate_limiter.acquire()
@@ -131,11 +157,11 @@ class GitHubClient(PlatformClient):
                 )
                 
                 repositories = []
-                for item in results.items[:max_results]:
+                for item in results['items'][:max_results]:
                     repo = self._convert_repo(item)
                     repositories.append(repo)
                 
-                return SearchResult(
+                search_result = SearchResult(
                     query=query,
                     platform=self.platform_name,
                     total_count=results.total_count,
@@ -143,6 +169,19 @@ class GitHubClient(PlatformClient):
                     search_time_ms=int((time.time() - start_time) * 1000),
                     has_more=results.total_count > max_results,
                 )
+                
+                secure_logger.info(
+                    f"GitHub search completed successfully",
+                    correlation_id=correlation_id,
+                    result_count=len(repositories),
+                    total_count=results.total_count,
+                    search_time_ms=search_result.search_time_ms
+                )
+                
+                metrics.increment("github_search_success_total", tags={"language": language or "none"})
+                metrics.record_histogram("github_search_results_count", len(repositories))
+                
+                return search_result
             else:
                 # Fallback to httpx
                 return await self._search_fallback(
@@ -152,14 +191,32 @@ class GitHubClient(PlatformClient):
         except Exception as e:
             error_msg = str(e).lower()
             if "rate limit" in error_msg or "403" in error_msg:
+                secure_logger.warning(
+                    f"GitHub rate limit exceeded",
+                    correlation_id=correlation_id,
+                    error=str(e)[:200]
+                )
+                metrics.increment("github_rate_limit_total")
                 raise RateLimitError(
                     "GitHub rate limit exceeded",
                     retry_after=3600,
                 )
             elif "401" in error_msg or "authentication" in error_msg:
+                secure_logger.error(
+                    f"GitHub authentication failed",
+                    correlation_id=correlation_id,
+                    error=str(e)[:200]
+                )
+                metrics.increment("github_auth_error_total")
                 raise AuthenticationError("GitHub authentication failed")
             else:
-                logger.exception("GitHub search error")
+                secure_logger.error(
+                    f"GitHub search error",
+                    correlation_id=correlation_id,
+                    error=str(e)[:200],
+                    error_type=type(e).__name__
+                )
+                metrics.increment("github_search_error_total", tags={"error_type": type(e).__name__})
                 raise
     
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
@@ -294,7 +351,7 @@ class GitHubClient(PlatformClient):
         if process.returncode != 0:
             raise RuntimeError(f"Git clone failed: {stderr.decode()}")
         
-        logger.info(f"Cloned {repo_id} to {destination}")
+        secure_logger.info(f"Cloned {repo_id} to {destination}")
         return destination
     
     def _convert_repo(self, data: Any) -> RepositoryInfo:

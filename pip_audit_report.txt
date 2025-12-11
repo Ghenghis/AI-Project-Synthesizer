@@ -1,0 +1,114 @@
+Name                     Version       ID                  Fix Versions
+------------------------ ------------- ------------------- ------------
+aiohttp                  3.11.11       GHSA-9548-qrrj-x5pj 3.12.14
+authlib                  1.5.2         GHSA-9ggr-2464-2j32 1.6.4
+authlib                  1.5.2         GHSA-pq5p-34cr-23v9 1.6.5
+authlib                  1.5.2         GHSA-g7f3-828f-7h7m 1.6.5
+binwalk                  2.1.0         GHSA-8m3f-g62j-3vx8 2.3.3
+brotli                   1.1.0         GHSA-2qfp-q593-8484 1.2.0
+browser-use              0.1.40        GHSA-x39x-9qw5-ghrf 0.1.45
+ecdsa                    0.19.1        GHSA-wj6h-64fc-37mp
+eventlet                 0.39.1        GHSA-hw6f-rjfj-j7j7 0.40.3
+fastmcp                  0.4.1         GHSA-mxxr-jv3v-6pgc 2.13.0
+fastmcp                  0.4.1         GHSA-rj5c-58rq-j5g5 2.13.0
+flask-cors               4.0.0         PYSEC-2024-71       4.0.2
+flask-cors               4.0.0         GHSA-84pr-m4jr-85g5 4.0.1
+flask-cors               4.0.0         GHSA-8vgw-p6qm-5gr7 6.0.0
+flask-cors               4.0.0         GHSA-43qf-4rqw-9q2g 6.0.0
+flask-cors               4.0.0         GHSA-7rxf-gvfg-47g4 6.0.0
+fonttools                4.56.0        GHSA-768j-98cg-p3fv 4.60.2
+h11                      0.14.0        GHSA-vqfr-h8mv-ghfj 0.16.0
+h2                       4.2.0         GHSA-847f-9342-265h 4.3.0
+jupyter-core             5.7.2         GHSA-33p9-3p43-82vq 5.8.1
+jupyterlab               4.4.1         GHSA-vvfj-2jqx-52jm 4.4.8
+keras                    3.9.2         GHSA-c9rc-mg46-23w3 3.11.0
+keras                    3.9.2         GHSA-36fq-jgmw-4r9c 3.11.0
+keras                    3.9.2         GHSA-36rr-ww3j-vrjv 3.11.3
+keras                    3.9.2         GHSA-mq84-hjqx-cwf2 3.12.0
+keras                    3.9.2         GHSA-hjqc-jx6g-rwp9 3.12.0
+langchain-community      0.3.18        GHSA-pc6w-59fv-rh23 0.3.27
+langchain-core           0.3.43        GHSA-6qv9-48xg-fc7f 0.3.80,1.0.7
+langchain-text-splitters 0.3.6         GHSA-m42m-m8cr-8m58 0.3.9
+llama-index              0.12.24       GHSA-v3c8-3pr6-gr7p 0.12.28
+llama-index              0.12.24       GHSA-5hq9-5r78-2gjh 0.12.41
+llama-index              0.12.24       GHSA-rg9h-vx28-xxp5 0.13.0
+llama-index-core         0.12.24.post1 GHSA-m84c-4c34-28gf 0.12.41
+llama-index-core         0.12.24.post1 GHSA-3wxx-q3gv-pvvv 0.12.38
+llama-index-core         0.12.24.post1 GHSA-2rhq-96q8-4vjq 0.12.41
+llama-index-core         0.12.24.post1 GHSA-7753-xrfw-ch36 0.12.38
+llama-index-core         0.12.24.post1 GHSA-cr7q-2w66-hjcm 0.13.0
+mcp                      1.6.0         GHSA-3qhf-m339-9g5v 1.9.4
+mcp                      1.6.0         GHSA-j975-95f5-7wqh 1.10.0
+mcp                      1.6.0         GHSA-9h52-p55h-vw2f 1.23.0
+open-webui               0.6.2         GHSA-w7xj-8fx7-wfch 0.6.35
+open-webui               0.6.2         GHSA-frv8-gffc-37px
+open-webui               0.6.2         GHSA-c6xv-rcvw-v685 0.6.37
+opencv-python            4.8.0.76      PYSEC-2023-183      4.8.1.78
+opencv-python            4.8.0.76      GHSA-qr4w-53vh-m672 4.8.1.78
+pip                      25.2          GHSA-4xh5-x5gv-qwph 25.3
+pypdf                    5.6.0         GHSA-7hfw-26vp-jp8m 6.0.0
+pypdf                    5.6.0         GHSA-vr63-x8vc-m265 6.1.3
+pypdf                    5.6.0         GHSA-jfx9-29x2-rv3j 6.1.3
+pypdf                    5.6.0         GHSA-m449-cwjh-6pw7 6.4.0
+python-socketio          5.13.0        GHSA-g8c6-8fjj-2r4m 5.14.0
+ray                      2.43.0        GHSA-6wgj-66m2-xxp2
+ray                      2.43.0        GHSA-q279-jhrf-cc6v 2.52.0
+ray                      2.43.0        GHSA-gx77-xgc2-4888
+starlette                0.46.2        GHSA-2c2j-9gv5-cj73 0.47.2
+starlette                0.46.2        GHSA-7f5h-v6xp-fcq8 0.49.1
+text-generation          0.7.0         GHSA-qq99-p57r-g3v7 2.0.0
+torch                    2.1.0         PYSEC-2025-41       2.6.0
+torch                    2.1.0         PYSEC-2024-250      2.2.0
+torch                    2.1.0         PYSEC-2024-251      2.2.0
+torch                    2.1.0         PYSEC-2024-252      2.2.0
+torch                    2.1.0         PYSEC-2024-259      2.5.0
+torch                    2.1.0         GHSA-3749-ghw9-m3mg 2.7.1rc1
+torch                    2.1.0         GHSA-887c-mr87-cxwp 2.8.0
+tornado                  6.4.2         GHSA-7cx3-6m66-7c5m 6.5
+transformers             4.46.3        PYSEC-2024-227      4.48.0
+transformers             4.46.3        PYSEC-2024-229      4.48.0
+transformers             4.46.3        PYSEC-2024-228      4.48.0
+transformers             4.46.3        PYSEC-2025-40       4.49.0
+transformers             4.46.3        GHSA-6rvg-6v2m-4j46 4.48.0
+transformers             4.46.3        GHSA-fpwr-67px-3qhx 4.50.0
+transformers             4.46.3        GHSA-q2wp-rjmx-x6x9 4.51.0
+transformers             4.46.3        GHSA-jjph-296x-mrcr 4.51.0
+transformers             4.46.3        GHSA-phhr-52qp-3mj4 4.52.1
+transformers             4.46.3        GHSA-37mw-44qp-f5jm 4.52.1
+transformers             4.46.3        GHSA-9356-575x-2w9m 4.53.0
+transformers             4.46.3        GHSA-59p9-h35m-wg4g 4.53.0
+transformers             4.46.3        GHSA-rcv9-qm8p-9p6j 4.53.0
+transformers             4.46.3        GHSA-4w7r-h757-3r74 4.53.0
+urllib3                  2.3.0         GHSA-48p4-8xcf-vxj5 2.5.0
+urllib3                  2.3.0         GHSA-pq67-6m6q-mj2v 2.5.0
+urllib3                  2.3.0         GHSA-gm62-xv2j-4w53 2.6.0
+urllib3                  2.3.0         GHSA-2xpw-w6gg-jr37 2.6.0
+uv                       0.6.10        GHSA-8qf3-x8v5-2pj8 0.8.6
+uv                       0.6.10        GHSA-w476-p2h3-79g9 0.9.5
+uv                       0.6.10        GHSA-pqhf-p39g-3x64 0.9.6
+vllm                     0.8.4         PYSEC-2025-42       0.8.5
+vllm                     0.8.4         PYSEC-2025-43       0.9.0
+vllm                     0.8.4         PYSEC-2025-50       0.9.0
+vllm                     0.8.4         PYSEC-2025-54       0.9.0
+vllm                     0.8.4         PYSEC-2025-53       0.9.0
+vllm                     0.8.4         PYSEC-2025-55       0.9.0
+vllm                     0.8.4         GHSA-9f8f-2vmf-885j 0.8.5
+vllm                     0.8.4         GHSA-vc6m-hm49-g9qg 0.8.5
+vllm                     0.8.4         GHSA-9pcc-gvx5-r5wm 0.10.0
+vllm                     0.8.4         GHSA-hjq4-87xh-g4fv 0.8.5
+vllm                     0.8.4         GHSA-j828-28rj-hfhp 0.9.0
+vllm                     0.8.4         GHSA-vrq3-r879-7m65 0.9.0
+vllm                     0.8.4         GHSA-rxc4-3w6r-4v47 0.10.1.1
+vllm                     0.8.4         GHSA-wr9h-g72x-mwhm 0.11.0
+vllm                     0.8.4         GHSA-6fvq-23cw-5628 0.11.0
+vllm                     0.8.4         GHSA-3f6c-7fw2-ppm4 0.11.0
+vllm                     0.8.4         GHSA-69j4-grxj-j64p 0.11.1
+vllm                     0.8.4         GHSA-pmqf-x6x8-p7qw 0.11.1
+vllm                     0.8.4         GHSA-8fr4-5q9j-m8gm 0.11.1
+werkzeug                 3.1.3         GHSA-hgf8-39gv-g3f2 3.1.4
+Name              Skip Reason
+----------------- --------------------------------------------------------------------------------
+gym-slitherio     Dependency not found on PyPI and could not be audited: gym-slitherio (0.0.1)
+openrouter        Dependency not found on PyPI and could not be audited: openrouter (1.0)
+samloader         Dependency not found on PyPI and could not be audited: samloader (0.4.1)
+teracopy-unpacker Dependency not found on PyPI and could not be audited: teracopy-unpacker (1.0.0)

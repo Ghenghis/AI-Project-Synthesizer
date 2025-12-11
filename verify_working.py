@@ -117,7 +117,7 @@ async def verify_mcp_tools():
     print("\n🔍 Verifying MCP server...")
     
     try:
-        from src.mcp.server import server
+        from src.mcp_server.server import server
         
         # List tools
         tools = await server.list_tools()

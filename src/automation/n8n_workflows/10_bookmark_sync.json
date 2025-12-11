@@ -1,0 +1,190 @@
+{
+  "name": "AI Synthesizer - Bookmark Sync & Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every 12 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/bookmarks",
+        "options": {}
+      },
+      "id": "get_bookmarks",
+      "name": "Get Bookmarks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Filter bookmarks that need checking\nconst bookmarks = $input.first()?.json?.bookmarks || [];\n\n// Only check repo bookmarks\nconst repoBookmarks = bookmarks.filter(b => b.type === 'repo');\n\nreturn repoBookmarks.map(b => ({ json: b }));"
+      },
+      "id": "filter",
+      "name": "Filter Repos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "batch",
+      "name": "Batch Process",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url.replace('github.com', 'api.github.com/repos') }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "check_repo",
+      "name": "Check Repo Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate results\nconst items = $input.all();\n\nconst results = {\n  checked: items.length,\n  updated: 0,\n  errors: 0,\n  updates: []\n};\n\nfor (const item of items) {\n  if (item.json.error) {\n    results.errors++;\n  } else if (item.json.pushed_at) {\n    results.updates.push({\n      name: item.json.full_name,\n      stars: item.json.stargazers_count,\n      updated: item.json.pushed_at\n    });\n    results.updated++;\n  }\n}\n\nreturn [{ json: results }];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.updated }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check_updates",
+      "name": "Any Updates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/events/emit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "notification"
+            },
+            {
+              "name": "data",
+              "value": "={{ JSON.stringify({ title: 'Bookmark Updates', message: $json.updated + ' bookmarked repos have updates', level: 'info' }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify",
+      "name": "Notify Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/metrics",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "workflow",
+              "value": "bookmark_sync"
+            },
+            {
+              "name": "timings",
+              "value": "={{ JSON.stringify({ checked: $json.checked, updated: $json.updated }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "record",
+      "name": "Record Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1650, 400]
+    }
+  ],
+  "connections": {
+    "Every 12 Hours": {
+      "main": [
+        [{"node": "Get Bookmarks", "type": "main", "index": 0}]
+      ]
+    },
+    "Get Bookmarks": {
+      "main": [
+        [{"node": "Filter Repos", "type": "main", "index": 0}]
+      ]
+    },
+    "Filter Repos": {
+      "main": [
+        [{"node": "Batch Process", "type": "main", "index": 0}]
+      ]
+    },
+    "Batch Process": {
+      "main": [
+        [{"node": "Check Repo Status", "type": "main", "index": 0}]
+      ]
+    },
+    "Check Repo Status": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Any Updates?", "type": "main", "index": 0}]
+      ]
+    },
+    "Any Updates?": {
+      "main": [
+        [{"node": "Notify Updates", "type": "main", "index": 0}],
+        [{"node": "Record Metrics", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["synthesizer", "bookmarks", "monitoring"]
+}

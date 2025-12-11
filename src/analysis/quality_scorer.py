@@ -334,8 +334,8 @@ class QualityScorer:
                     type_hint_count += 1
                 if re.search(r'->\s*\w+', content):
                     type_hint_count += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to analyze type hints in {py_file}: {e}")
         
         if type_hint_count > len(py_files) * 0.5:
             details["has_type_hints"] = True
@@ -460,8 +460,8 @@ class QualityScorer:
                 # Exponential decay - recent updates score higher
                 score = math.exp(-days_ago / 90)  # 3-month half-life
                 
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to calculate recency score: %s", e)
         
         return min(1.0, score)
     
@@ -503,8 +503,8 @@ class QualityScorer:
                     has_docstring += 1
                 
                 total += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to analyze docstrings: %s", e)
         
         return has_docstring / max(total, 1)
     

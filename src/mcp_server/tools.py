@@ -33,8 +33,11 @@ from src.generation.readme_generator import ReadmeGenerator
 from src.generation.diagram_generator import DiagramGenerator
 from src.core.config import get_settings
 from src.llm.ollama_client import OllamaClient
+from src.core.security import InputValidator, get_secure_logger
+from src.core.observability import correlation_manager, track_performance, metrics
+from src.core.circuit_breaker import circuit_breaker, OLLAMA_BREAKER_CONFIG
 
-logger = logging.getLogger(__name__)
+secure_logger = get_secure_logger(__name__)
 
 # Global instances (initialized on first use)
 _unified_search: Optional[UnifiedSearch] = None
@@ -58,6 +61,7 @@ def get_dependency_analyzer() -> DependencyAnalyzer:
     return _dependency_analyzer
 
 
+@track_performance("tool_search_repositories")
 async def handle_search_repositories(args: dict) -> dict:
     """
     Handle repository search across platforms.
@@ -78,13 +82,47 @@ async def handle_search_repositories(args: dict) -> dict:
     language_filter = args.get("language_filter")
     min_stars = args.get("min_stars", 10)
     
+    correlation_id = correlation_manager.get_correlation_id()
+    settings = get_settings()
+    
+    # Input validation
     if not query:
         return {
             "error": True,
             "message": "Query is required",
+            "correlation_id": correlation_id
         }
     
-    logger.info(f"Searching repositories: {query} on {platforms}")
+    if not InputValidator.validate_search_query(query):
+        return {
+            "error": True,
+            "message": f"Invalid search query: exceeds maximum length of {settings.app.max_query_length} characters",
+            "correlation_id": correlation_id
+        }
+    
+    if max_results < 1 or max_results > 100:
+        return {
+            "error": True,
+            "message": "max_results must be between 1 and 100",
+            "correlation_id": correlation_id
+        }
+    
+    if min_stars < 0:
+        return {
+            "error": True,
+            "message": "min_stars must be non-negative",
+            "correlation_id": correlation_id
+        }
+    
+    secure_logger.info(
+        f"Searching repositories",
+        correlation_id=correlation_id,
+        query=query[:100],  # Limit in logs
+        platforms=platforms,
+        max_results=max_results
+    )
+    
+    metrics.increment("search_requests_total", tags={"platforms": ",".join(platforms)})
     
     try:
         search = get_unified_search()
@@ -101,34 +139,61 @@ async def handle_search_repositories(args: dict) -> dict:
             timeout=TIMEOUT_API_CALL
         )
         
+        secure_logger.info(
+            f"Search completed successfully",
+            correlation_id=correlation_id,
+            result_count=len(result.repositories),
+            total_results=result.total_count
+        )
+        
+        metrics.increment("search_success_total", tags={"platforms": ",".join(platforms)})
+        metrics.record_histogram("search_results_count", len(result.repositories))
+        
         return {
-            "status": "success",
-            "data": [
+            "success": True,
+            "query": query,
+            "platforms": platforms,
+            "total_count": result.total_count,
+            "repositories": [
                 {
                     "name": repo.name,
+                    "full_name": repo.full_name,
                     "url": repo.url,
                     "description": repo.description,
                     "stars": repo.stars,
                     "language": repo.language,
-                    "updated_at": repo.updated_at.isoformat() if repo.updated_at else None,
-                    "topics": list(repo.topics) if repo.topics else [],
+                    "platform": repo.platform,
+                    "updated_at": repo.updated_at.isoformat() if hasattr(repo.updated_at, 'isoformat') else repo.updated_at,
                 }
                 for repo in result.repositories
             ],
-            "platform_counts": result.platform_counts,
-            "errors": result.errors if result.errors else None,
+            "search_time_ms": result.search_time_ms,
+            "correlation_id": correlation_id
         }
         
     except asyncio.TimeoutError:
+        secure_logger.error(
+            f"Search timed out after {TIMEOUT_API_CALL}s",
+            correlation_id=correlation_id
+        )
+        metrics.increment("search_timeout_total")
         return {
             "error": True,
             "message": f"Search timed out after {TIMEOUT_API_CALL} seconds",
+            "correlation_id": correlation_id
         }
+        
     except Exception as e:
-        logger.exception("Search failed")
+        secure_logger.error(
+            f"Search failed: {str(e)[:200]}",
+            correlation_id=correlation_id,
+            error_type=type(e).__name__
+        )
+        metrics.increment("search_error_total", tags={"error_type": type(e).__name__})
         return {
             "error": True,
-            "message": str(e),
+            "message": f"Search failed: {str(e)[:200]}",
+            "correlation_id": correlation_id
         }
 
 
@@ -648,6 +713,444 @@ async def handle_get_synthesis_status(args: dict) -> dict:
         "completed_at": job.get("completed_at"),
         "error": job.get("error"),
     }
+
+
+# ============================================
+# Direct Tool Functions (for CLI and testing)
+# ============================================
+
+async def search_repositories(
+    query: str,
+    platforms: List[str] = None,
+    max_results: int = 20,
+    language_filter: Optional[str] = None,
+    min_stars: int = 10,
+) -> dict:
+    """
+    Search for repositories across platforms.
+
+    Direct function wrapper for handle_search_repositories.
+    """
+    return await handle_search_repositories({
+        "query": query,
+        "platforms": platforms or ["github", "huggingface"],
+        "max_results": max_results,
+        "language_filter": language_filter,
+        "min_stars": min_stars,
+    })
+
+
+async def analyze_repository(
+    repo_url: str,
+    include_transitive_deps: bool = True,
+    extract_components: bool = True,
+) -> dict:
+    """
+    Analyze a repository.
+
+    Direct function wrapper for handle_analyze_repository.
+    """
+    return await handle_analyze_repository({
+        "repo_url": repo_url,
+        "include_transitive_deps": include_transitive_deps,
+        "extract_components": extract_components,
+    })
+
+
+async def check_compatibility(
+    repo_urls: List[str],
+    target_python_version: str = "3.11",
+) -> dict:
+    """
+    Check compatibility between repositories.
+
+    Direct function wrapper for handle_check_compatibility.
+    """
+    return await handle_check_compatibility({
+        "repo_urls": repo_urls,
+        "target_python_version": target_python_version,
+    })
+
+
+async def resolve_dependencies(
+    repositories: List[str],
+    constraints: List[str] = None,
+    python_version: str = "3.11",
+) -> dict:
+    """
+    Resolve dependencies across repositories.
+
+    Direct function wrapper for handle_resolve_dependencies.
+    """
+    return await handle_resolve_dependencies({
+        "repositories": repositories,
+        "constraints": constraints or [],
+        "python_version": python_version,
+    })
+
+
+async def synthesize_project(
+    repositories: List[dict],
+    project_name: str,
+    output_path: str,
+    template: str = "python-default",
+) -> dict:
+    """
+    Synthesize a project from multiple repositories.
+
+    Direct function wrapper for handle_synthesize_project.
+    """
+    return await handle_synthesize_project({
+        "repositories": repositories,
+        "project_name": project_name,
+        "output_path": output_path,
+        "template": template,
+    })
+
+
+async def generate_documentation(
+    project_path: str,
+    doc_types: List[str] = None,
+    llm_enhanced: bool = True,
+) -> dict:
+    """
+    Generate documentation for a project.
+
+    Direct function wrapper for handle_generate_documentation.
+    """
+    return await handle_generate_documentation({
+        "project_path": project_path,
+        "doc_types": doc_types or ["readme", "architecture", "api"],
+        "llm_enhanced": llm_enhanced,
+    })
+
+
+async def get_synthesis_status(synthesis_id: str) -> dict:
+    """
+    Get the status of a synthesis operation.
+
+    Direct function wrapper for handle_get_synthesis_status.
+    """
+    return await handle_get_synthesis_status({
+        "synthesis_id": synthesis_id,
+    })
+
+
+async def get_platforms() -> dict:
+    """
+    Get available platforms for repository search.
+
+    Returns:
+        Dictionary with platform information
+    """
+    settings = get_settings()
+    enabled = settings.platforms.get_enabled_platforms()
+
+    return {
+        "status": "success",
+        "platforms": {
+            "github": {
+                "enabled": "github" in enabled,
+                "description": "GitHub repositories",
+            },
+            "huggingface": {
+                "enabled": "huggingface" in enabled,
+                "description": "HuggingFace models, datasets, and spaces",
+            },
+            "kaggle": {
+                "enabled": "kaggle" in enabled,
+                "description": "Kaggle datasets and notebooks",
+            },
+            "arxiv": {
+                "enabled": "arxiv" in enabled,
+                "description": "arXiv papers with code",
+            },
+        },
+    }
+
+
+# ==================== ASSISTANT TOOLS ====================
+
+_assistant = None
+
+def get_assistant():
+    """Get or create assistant instance."""
+    global _assistant
+    if _assistant is None:
+        from src.assistant.core import ConversationalAssistant, AssistantConfig
+        _assistant = ConversationalAssistant(AssistantConfig(
+            voice_enabled=True,
+            auto_speak=False,  # Don't auto-generate audio for MCP
+        ))
+    return _assistant
+
+
+async def handle_assistant_chat(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Chat with the AI assistant.
+    
+    The assistant will:
+    - Understand your request
+    - Ask clarifying questions if needed
+    - Search for projects
+    - Provide recommendations
+    
+    Args:
+        message: Your message to the assistant
+        voice_enabled: Whether to generate voice audio (default: false)
+    
+    Returns:
+        Assistant's response with text and optional audio
+    """
+    correlation_id = correlation_manager.get_correlation_id()
+    
+    message = arguments.get("message", "")
+    voice_enabled = arguments.get("voice_enabled", False)
+    
+    if not message:
+        return {
+            "error": True,
+            "message": "Please provide a message",
+        }
+    
+    try:
+        assistant = get_assistant()
+        assistant.config.voice_enabled = voice_enabled
+        
+        response = await assistant.chat(message)
+        
+        return {
+            "success": True,
+            "response": response["text"],
+            "has_audio": response["audio"] is not None,
+            "state": response["state"],
+            "suggested_actions": response["actions"],
+            "correlation_id": correlation_id,
+        }
+        
+    except Exception as e:
+        secure_logger.error(f"Assistant error: {e}", correlation_id=correlation_id)
+        return {
+            "error": True,
+            "message": f"Assistant error: {str(e)}",
+            "correlation_id": correlation_id,
+        }
+
+
+async def handle_assistant_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Generate voice audio for text AND auto-play it.
+    
+    LM STUDIO INTEGRATION:
+    LM Studio doesn't have native audio playback, so this tool
+    automatically plays the generated audio through system speakers.
+    
+    Args:
+        text: Text to convert to speech
+        voice: Voice name (rachel, josh, adam, etc.) or voice ID
+        auto_play: Whether to auto-play (default: true for LM Studio)
+    
+    Returns:
+        Audio data as base64 + playback status
+    """
+    import base64
+    
+    text = arguments.get("text", "")
+    voice = arguments.get("voice", "rachel")
+    auto_play = arguments.get("auto_play", True)  # Default ON for LM Studio
+    
+    if not text:
+        return {"error": True, "message": "Please provide text"}
+    
+    try:
+        from src.voice.elevenlabs_client import ElevenLabsClient
+        client = ElevenLabsClient()
+        
+        audio = await client.text_to_speech(text, voice=voice)
+        audio_base64 = base64.b64encode(audio).decode()
+        
+        # Auto-play for LM Studio
+        playback_status = "skipped"
+        if auto_play:
+            try:
+                from src.voice.player import play_audio
+                result = await play_audio(audio_base64, format="mp3", wait=False)
+                playback_status = "playing" if result.success else f"failed: {result.error}"
+            except Exception as e:
+                playback_status = f"error: {e}"
+        
+        await client.close()
+        
+        return {
+            "success": True,
+            "audio_base64": audio_base64,
+            "format": "mp3",
+            "voice": voice,
+            "text_length": len(text),
+            "audio_size_bytes": len(audio),
+            "playback_status": playback_status,
+            "note": "Audio is playing through your speakers" if auto_play and playback_status == "playing" else None,
+        }
+        
+    except Exception as e:
+        return {"error": True, "message": f"Voice error: {str(e)}"}
+
+
+async def handle_assistant_toggle_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Toggle voice on/off for the assistant.
+    
+    Args:
+        enabled: Whether voice should be enabled
+    
+    Returns:
+        Current voice status
+    """
+    enabled = arguments.get("enabled", True)
+    
+    assistant = get_assistant()
+    assistant.set_voice_enabled(enabled)
+    
+    return {
+        "success": True,
+        "voice_enabled": assistant.config.voice_enabled,
+        "message": f"Voice {'enabled' if enabled else 'disabled'}",
+    }
+
+
+async def handle_get_voices(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Get available voices for text-to-speech.
+    
+    Returns:
+        List of available voices with descriptions
+    """
+    from src.voice.elevenlabs_client import PREMADE_VOICES
+    
+    voices = []
+    for name, voice in PREMADE_VOICES.items():
+        voices.append({
+            "name": name,
+            "voice_id": voice.voice_id,
+            "description": voice.description,
+        })
+    
+    return {
+        "success": True,
+        "voices": voices,
+        "default": "rachel",
+    }
+
+
+async def handle_speak_fast(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    FAST streaming voice - optimized for speed and smooth playback.
+    
+    LM STUDIO INTEGRATION:
+    Uses turbo model + streaming for lowest latency.
+    Audio plays as it's generated - no waiting, no gaps.
+    
+    Args:
+        text: Text to speak
+        voice: Voice name (rachel, josh, adam, etc.)
+    
+    Returns:
+        Success status
+    """
+    text = arguments.get("text", "")
+    voice = arguments.get("voice", "rachel")
+    
+    if not text:
+        return {"error": True, "message": "Please provide text"}
+    
+    try:
+        from src.voice.streaming_player import speak_fast
+        
+        success = await speak_fast(text, voice)
+        
+        return {
+            "success": success,
+            "voice": voice,
+            "mode": "streaming",
+            "model": "eleven_turbo_v2_5",
+            "note": "Audio streamed directly to speakers" if success else "Playback failed",
+        }
+        
+    except Exception as e:
+        return {"error": True, "message": f"Streaming error: {str(e)}"}
+
+
+async def handle_assemble_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Assemble a complete project from an idea.
+    
+    Automatically:
+    1. Searches GitHub, HuggingFace, Kaggle for compatible resources
+    2. Downloads code, models (.safetensors), datasets, papers
+    3. Creates organized folder structure
+    4. Generates README, requirements.txt
+    5. Creates GitHub repo
+    6. Prepares for Windsurf IDE
+    
+    Args:
+        idea: Project idea/description
+        name: Project name (optional, auto-generated)
+        output_dir: Output directory (default: G:/)
+        create_github: Create GitHub repo (default: true)
+    
+    Returns:
+        Project details and location
+    """
+    idea = arguments.get("idea", "")
+    name = arguments.get("name")
+    output_dir = arguments.get("output_dir", "G:/")
+    create_github = arguments.get("create_github", True)
+    
+    if not idea:
+        return {"error": True, "message": "Please provide a project idea"}
+    
+    try:
+        from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
+        from pathlib import Path
+        
+        config = AssemblerConfig(
+            base_output_dir=Path(output_dir),
+            create_github_repo=create_github,
+        )
+        
+        assembler = ProjectAssembler(config)
+        project = await assembler.assemble(idea, name)
+        
+        return {
+            "success": True,
+            "project": {
+                "name": project.name,
+                "path": str(project.base_path),
+                "github_url": project.github_repo_url,
+                "ready_for_windsurf": project.ready_for_windsurf,
+            },
+            "resources": {
+                "code_repos": len(project.code_repos),
+                "models": len(project.models),
+                "datasets": len(project.datasets),
+                "papers": len(project.papers),
+            },
+            "downloaded": {
+                "code": [r.name for r in project.code_repos if r.downloaded],
+                "models": [m.name for m in project.models if m.downloaded],
+                "datasets": [d.name for d in project.datasets if d.downloaded],
+            },
+            "next_steps": [
+                f"Open {project.base_path} in Windsurf IDE",
+                "Review assembled resources in src/, models/, data/",
+                "Run: pip install -r requirements.txt",
+                "Let Windsurf help integrate everything!",
+            ],
+        }
+        
+    except Exception as e:
+        secure_logger.error(f"Project assembly error: {e}")
+        return {"error": True, "message": f"Assembly error: {str(e)}"}
 
 
 # Register tools with MCP server

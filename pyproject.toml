@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ai-project-synthesizer"
-version = "1.0.0"
+version = "2.0.0"
 description = "Intelligent multi-repository code synthesis platform for Windsurf IDE"
 readme = "README.md"
 license = {text = "MIT"}
@@ -45,7 +45,7 @@ dependencies = [
     "kaggle>=1.6.0",
     "arxiv>=2.1.0",
     "semanticscholar>=0.8.0",
-    "paperswithcode-client>=0.3.0",
+    # paperswithcode-client removed - incompatible with typer>=0.12.0
     
     # AST Parsing & Analysis
     "tree-sitter>=0.22.0",
@@ -71,7 +71,7 @@ dependencies = [
     "langchain-ollama>=0.1.0",
     
     # Documentation Generation
-    "readme-ai>=0.1.0",
+    # Note: readme-ai removed - not compatible with Python 3.13
     
     # Utilities
     "pydantic>=2.5.0",
