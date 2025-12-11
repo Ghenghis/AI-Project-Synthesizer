@@ -30,10 +30,10 @@ class CompletionResult:
 class LMStudioClient:
     """
     Client for LM Studio local LLM inference.
-    
+
     Uses OpenAI-compatible API to communicate with LM Studio.
     Supports any model loaded in LM Studio.
-    
+
     Usage:
         client = LMStudioClient()
         result = await client.complete("Explain this code: def foo(): pass")
@@ -49,7 +49,7 @@ class LMStudioClient:
     ):
         """
         Initialize LM Studio client.
-        
+
         Args:
             host: LM Studio server URL (default: localhost:1234)
             api_key: API key (LM Studio accepts any string)
@@ -173,7 +173,7 @@ class LMStudioClient:
     ) -> CompletionResult:
         """
         Generate completion from prompt.
-        
+
         Args:
             prompt: User prompt
             model: Model to use (defaults to configured default)
@@ -181,7 +181,7 @@ class LMStudioClient:
             temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens to generate
             stream: Whether to stream response
-            
+
         Returns:
             CompletionResult with generated content
         """
@@ -278,12 +278,12 @@ class LMStudioClient:
     ) -> str:
         """
         Analyze code with appropriate prompt.
-        
+
         Args:
             code: Source code to analyze
             language: Programming language
             task: Analysis task (explain, review, refactor, etc.)
-            
+
         Returns:
             Analysis result as string
         """
@@ -323,12 +323,12 @@ class LMStudioClient:
     ) -> str:
         """
         Generate code from description.
-        
+
         Args:
             description: What to generate
             language: Target language
             context: Optional context code
-            
+
         Returns:
             Generated code
         """
@@ -375,10 +375,10 @@ class LMStudioClient:
     async def get_model_info(self, model: str = None) -> Dict[str, Any]:
         """
         Get information about a specific model.
-        
+
         Args:
             model: Model name (uses default if None)
-            
+
         Returns:
             Model information dictionary
         """

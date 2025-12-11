@@ -100,18 +100,18 @@ class ResearchConfig:
 class ProactiveResearchEngine:
     """
     Automatically researches when user is idle.
-    
+
     Gathers projects, papers, and ideas based on conversation context.
     Ready to present when user returns.
-    
+
     Usage:
         engine = ProactiveResearchEngine()
         engine.set_context("I want to build a RAG chatbot")
         engine.start_monitoring()
-        
+
         # ... user goes idle ...
         # Engine automatically researches in background
-        
+
         # When user returns:
         results = engine.get_latest_research()
         print(results.summary())

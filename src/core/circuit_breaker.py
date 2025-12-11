@@ -80,7 +80,7 @@ class CircuitTimeoutError(CircuitBreakerError):
 class CircuitBreaker:
     """
     Circuit breaker for protecting external service calls.
-    
+
     Implements the circuit breaker pattern to prevent cascade failures.
     Automatically opens when failures exceed threshold, closes when service recovers.
     """
@@ -88,7 +88,7 @@ class CircuitBreaker:
     def __init__(self, config: Optional[CircuitBreakerConfig] = None, name: str = "default"):
         """
         Initialize circuit breaker.
-        
+
         Args:
             config: Circuit breaker configuration
             name: Name for logging and monitoring
@@ -167,15 +167,15 @@ class CircuitBreaker:
     async def call(self, func: Callable, *args, **kwargs) -> Any:
         """
         Execute function with circuit breaker protection.
-        
+
         Args:
             func: Function to call
             *args: Function arguments
             **kwargs: Function keyword arguments
-            
+
         Returns:
             Function return value
-            
+
         Raises:
             CircuitOpenError: If circuit is open
             CircuitTimeoutError: If call times out
@@ -262,11 +262,11 @@ class CircuitBreakerRegistry:
     def get_breaker(self, name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
         """
         Get or create circuit breaker by name.
-        
+
         Args:
             name: Circuit breaker name
             config: Configuration for new breaker
-            
+
         Returns:
             Circuit breaker instance
         """
@@ -298,7 +298,7 @@ def circuit_breaker(
 ):
     """
     Decorator for applying circuit breaker to async functions.
-    
+
     Args:
         name: Circuit breaker name
         failure_threshold: Failures before opening
@@ -306,7 +306,7 @@ def circuit_breaker(
         success_threshold: Successes needed to close
         timeout: Call timeout
         expected_exception: Exception type that counts as failure
-        
+
     Returns:
         Decorated function
     """
@@ -338,10 +338,10 @@ def circuit_breaker(
 def get_circuit_breaker(name: str) -> Optional[CircuitBreaker]:
     """
     Get circuit breaker from global registry.
-    
+
     Args:
         name: Circuit breaker name
-        
+
     Returns:
         Circuit breaker or None if not found
     """

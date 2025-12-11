@@ -497,19 +497,19 @@ def get_dashboard_html() -> str:
             <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
                 <h2 class="text-lg font-semibold mb-4">🔍 Search Projects</h2>
                 <div class="flex space-x-4">
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         id="search-input"
                         placeholder="Enter project idea (e.g., RAG chatbot with local LLM)"
                         class="flex-1 bg-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                    <button 
+                    <button
                         onclick="searchProjects()"
                         class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition"
                     >
                         Search
                     </button>
-                    <button 
+                    <button
                         onclick="assembleProject()"
                         class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition"
                     >
@@ -574,12 +574,12 @@ def get_dashboard_html() -> str:
             try {
                 const res = await fetch('/api/health');
                 const data = await res.json();
-                
+
                 document.getElementById('health-status').innerHTML = `
                     <span class="w-3 h-3 ${data.status === 'healthy' ? 'bg-green-400' : 'bg-yellow-400'} rounded-full animate-pulse"></span>
                     <span class="text-sm">${data.status} | v${data.version}</span>
                 `;
-                
+
                 const container = document.getElementById('health-container');
                 container.innerHTML = data.components.map(c => `
                     <div class="bg-gray-700 rounded-lg p-4">
@@ -599,7 +599,7 @@ def get_dashboard_html() -> str:
             try {
                 const res = await fetch('/api/projects');
                 const data = await res.json();
-                
+
                 const container = document.getElementById('projects-container');
                 if (data.projects.length === 0) {
                     container.innerHTML = '<p class="text-gray-400">No projects assembled yet. Try assembling one!</p>';
@@ -620,12 +620,12 @@ def get_dashboard_html() -> str:
         async function searchProjects() {
             const query = document.getElementById('search-input').value;
             if (!query) return;
-            
+
             const platforms = [];
             if (document.getElementById('platform-github').checked) platforms.push('github');
             if (document.getElementById('platform-huggingface').checked) platforms.push('huggingface');
             if (document.getElementById('platform-kaggle').checked) platforms.push('kaggle');
-            
+
             try {
                 const res = await fetch('/api/search', {
                     method: 'POST',
@@ -633,7 +633,7 @@ def get_dashboard_html() -> str:
                     body: JSON.stringify({query, platforms, max_results: 12})
                 });
                 const data = await res.json();
-                
+
                 document.getElementById('results-section').classList.remove('hidden');
                 document.getElementById('results-container').innerHTML = data.results.map(r => `
                     <div class="bg-gray-700 rounded-lg p-4">
@@ -657,9 +657,9 @@ def get_dashboard_html() -> str:
                 alert('Please enter a project idea');
                 return;
             }
-            
+
             if (!confirm(`Assemble project: "${idea}"?`)) return;
-            
+
             try {
                 const res = await fetch('/api/assemble', {
                     method: 'POST',
@@ -667,7 +667,7 @@ def get_dashboard_html() -> str:
                     body: JSON.stringify({idea})
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     alert(`Project assembled!\\n\\nPath: ${data.project.path}\\nGitHub: ${data.project.github_url || 'N/A'}`);
                     loadProjects();

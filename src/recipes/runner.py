@@ -37,13 +37,13 @@ class RecipeRunner:
     ) -> RecipeResult:
         """
         Run a recipe to create a project.
-        
+
         Args:
             recipe_name: Name of the recipe to run
             output_path: Where to create the project
             variables: Override recipe variables
             dry_run: If True, only show what would be done
-            
+
         Returns:
             RecipeResult with status and details
         """

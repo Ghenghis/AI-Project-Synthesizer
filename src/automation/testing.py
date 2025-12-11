@@ -97,17 +97,17 @@ class TestSuiteResult:
 class IntegrationTester:
     """
     Integrated testing framework.
-    
+
     Features:
     - Async test execution
     - Dependency ordering
     - Timeout handling
     - Metrics integration
     - Detailed reporting
-    
+
     Usage:
         tester = IntegrationTester()
-        
+
         # Register tests
         tester.register(TestCase(
             name="test_github_search",
@@ -115,10 +115,10 @@ class IntegrationTester:
             test_func=test_github_search,
             category="api",
         ))
-        
+
         # Run all tests
         results = await tester.run_all()
-        
+
         # Run specific category
         results = await tester.run_category("api")
     """

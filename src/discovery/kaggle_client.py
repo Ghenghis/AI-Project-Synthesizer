@@ -105,7 +105,7 @@ class KaggleModel:
 class KaggleClient(PlatformClient):
     """
     Kaggle API client for discovering datasets, competitions, notebooks, and models.
-    
+
     Features:
     - Search datasets by query, tags, file types
     - Search competitions (active, completed, all)
@@ -114,16 +114,16 @@ class KaggleClient(PlatformClient):
     - Download datasets and notebooks
     - Get detailed metadata
     - Trending and popular content discovery
-    
+
     Example:
         client = KaggleClient(username="user", key="xxx")
-        
+
         # Search datasets
         results = await client.search("machine learning", resource_type="dataset")
-        
+
         # Search competitions
         comps = await client.search_competitions(category="featured")
-        
+
         # Get trending notebooks
         notebooks = await client.get_trending_notebooks(language="python")
     """
@@ -135,7 +135,7 @@ class KaggleClient(PlatformClient):
     ):
         """
         Initialize Kaggle client.
-        
+
         Args:
             username: Kaggle username
             key: Kaggle API key
@@ -189,7 +189,7 @@ class KaggleClient(PlatformClient):
     ) -> SearchResult:
         """
         Search Kaggle for datasets, competitions, notebooks, or models.
-        
+
         Args:
             query: Search query
             language: Filter by language (for notebooks)
@@ -198,7 +198,7 @@ class KaggleClient(PlatformClient):
             sort_by: Sort field (votes, updated, hotness, relevance)
             order: Sort order
             resource_type: Type of resource (dataset, competition, notebook, model)
-        
+
         Returns:
             SearchResult with matching resources
         """
@@ -482,10 +482,10 @@ class KaggleClient(PlatformClient):
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
         """
         Get detailed information about a Kaggle dataset.
-        
+
         Args:
             repo_id: Dataset reference (owner/dataset-slug)
-        
+
         Returns:
             RepositoryInfo with dataset details
         """
@@ -572,7 +572,7 @@ class KaggleClient(PlatformClient):
     ) -> FileContent:
         """
         Get content of a file from a Kaggle dataset.
-        
+
         Note: This downloads the entire dataset to get a single file.
         For large datasets, consider using download_dataset instead.
         """
@@ -613,11 +613,11 @@ class KaggleClient(PlatformClient):
     ) -> DirectoryListing:
         """
         List files in a Kaggle dataset.
-        
+
         Args:
             repo_id: Dataset reference (owner/dataset-slug)
             path: Not used for Kaggle (always lists root)
-        
+
         Returns:
             DirectoryListing with dataset files
         """
@@ -694,7 +694,7 @@ class KaggleClient(PlatformClient):
     ) -> List[KaggleCompetition]:
         """
         Get active competitions.
-        
+
         Args:
             category: Filter by category (featured, research, playground, etc.)
             max_results: Maximum results
@@ -740,7 +740,7 @@ class KaggleClient(PlatformClient):
     ) -> List[KaggleNotebook]:
         """
         Get trending notebooks.
-        
+
         Args:
             language: Filter by language (python, r, etc.)
             max_results: Maximum results
@@ -785,12 +785,12 @@ class KaggleClient(PlatformClient):
     ) -> Path:
         """
         Download a Kaggle dataset.
-        
+
         Args:
             dataset_ref: Dataset reference (owner/dataset-slug)
             destination: Download destination directory
             unzip: Whether to unzip the downloaded files
-        
+
         Returns:
             Path to downloaded dataset
         """
@@ -820,11 +820,11 @@ class KaggleClient(PlatformClient):
     ) -> Path:
         """
         Download competition data files.
-        
+
         Args:
             competition_ref: Competition reference
             destination: Download destination directory
-        
+
         Returns:
             Path to downloaded data
         """

@@ -20,7 +20,7 @@ secure_logger = get_secure_logger(__name__)
 class SynthesisAgent(BaseAgent):
     """
     Synthesis agent for assembling projects.
-    
+
     Capabilities:
     - Plan project structure
     - Generate code files
@@ -125,7 +125,7 @@ Be specific and practical."""
                 plan = json.loads(response[start:end])
             else:
                 plan = {"raw": response}
-        except:
+        except Exception:
             plan = {"raw": response}
 
         return {"success": True, "plan": plan}
@@ -330,7 +330,7 @@ SUMMARY: <what was created>
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)
-            except:
+            except Exception:
                 params = {}
 
         # Execute tool
@@ -361,11 +361,11 @@ SUMMARY: <what was created>
     async def synthesize(self, idea: str, output_dir: str = "G:/") -> Dict[str, Any]:
         """
         Convenience method to synthesize a project.
-        
+
         Args:
             idea: Project idea
             output_dir: Output directory
-            
+
         Returns:
             Synthesis results
         """

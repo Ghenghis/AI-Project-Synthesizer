@@ -79,7 +79,7 @@ class RepairPlan:
 class AutoRepair:
     """
     Automatic repair system for identified gaps.
-    
+
     Features:
     - Creates repair plans
     - Executes repairs safely

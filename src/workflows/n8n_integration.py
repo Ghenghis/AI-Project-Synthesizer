@@ -75,21 +75,21 @@ class WorkflowExecution:
 class N8NClient:
     """
     Client for interacting with local n8n instance.
-    
+
     Features:
     - Create/manage workflows
     - Execute workflows via API
     - Webhook integration
     - Workflow templates for common tasks
-    
+
     Usage:
         client = N8NClient()
-        
+
         # Check connection
         if await client.health_check():
             # List workflows
             workflows = await client.list_workflows()
-            
+
             # Execute a workflow
             result = await client.execute_workflow("workflow-id", {"input": "data"})
     """
@@ -254,7 +254,7 @@ class N8NClient:
 class N8NWorkflowTemplates:
     """
     Pre-built n8n workflow templates for common tasks.
-    
+
     Templates:
     - Project research workflow
     - Scheduled search workflow
@@ -266,7 +266,7 @@ class N8NWorkflowTemplates:
     def research_workflow(name: str = "Project Research") -> N8NWorkflow:
         """
         Create a research workflow template.
-        
+
         Trigger → Search GitHub → Search HuggingFace → Merge Results → Notify
         """
         return N8NWorkflow(
@@ -340,7 +340,7 @@ class N8NWorkflowTemplates:
     ) -> N8NWorkflow:
         """
         Create a scheduled search workflow.
-        
+
         Cron Trigger → Search → Save Results → Notify
         """
         return N8NWorkflow(
@@ -384,7 +384,7 @@ class N8NWorkflowTemplates:
     def webhook_assembly_workflow(name: str = "Webhook Assembly") -> N8NWorkflow:
         """
         Create a webhook-triggered assembly workflow.
-        
+
         Webhook → Validate → Assemble Project → Notify
         """
         return N8NWorkflow(
@@ -456,7 +456,7 @@ class N8NWorkflowTemplates:
     def voice_notification_workflow(name: str = "Voice Notification") -> N8NWorkflow:
         """
         Create a voice notification workflow.
-        
+
         Trigger → Generate Speech → Play Audio
         """
         return N8NWorkflow(
@@ -492,7 +492,7 @@ class N8NWorkflowTemplates:
 async def setup_n8n_workflows(client: N8NClient) -> Dict[str, str]:
     """
     Set up default workflows in n8n.
-    
+
     Returns:
         Dict mapping workflow names to IDs
     """

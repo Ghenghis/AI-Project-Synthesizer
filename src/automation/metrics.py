@@ -95,7 +95,7 @@ class ActionMetrics:
 class ActionTimer:
     """
     Context manager for timing actions.
-    
+
     Usage:
         async with ActionTimer("search_github") as timer:
             results = await search()
@@ -154,7 +154,7 @@ class ActionTimer:
 class MetricsCollector:
     """
     Collects and aggregates timing metrics.
-    
+
     Features:
     - Per-action metrics
     - Percentile calculations
@@ -248,7 +248,7 @@ def get_metrics_collector() -> MetricsCollector:
 def timed(action: str):
     """
     Decorator to time async functions.
-    
+
     Usage:
         @timed("search_github")
         async def search_github(query: str):

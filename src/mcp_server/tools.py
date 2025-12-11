@@ -6,6 +6,7 @@ These handle the actual business logic for each tool.
 """
 
 import asyncio
+import logging
 import tempfile
 import re
 import threading
@@ -13,12 +14,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 import uuid
-
-# Timeout constants for different operations
-TIMEOUT_API_CALL = 30  # seconds
-TIMEOUT_GIT_CLONE = 300  # seconds (5 minutes)
-TIMEOUT_FILE_OPERATIONS = 60  # seconds
-TIMEOUT_SYNTHESIS = 600  # seconds (10 minutes)
 
 from src.discovery.unified_search import UnifiedSearch, create_unified_search
 from src.analysis.dependency_analyzer import DependencyAnalyzer
@@ -32,6 +27,14 @@ from src.generation.diagram_generator import DiagramGenerator
 from src.core.config import get_settings
 from src.core.security import InputValidator, get_secure_logger
 from src.core.observability import correlation_manager, track_performance, metrics
+
+logger = logging.getLogger(__name__)
+
+# Timeout constants for different operations
+TIMEOUT_API_CALL = 30  # seconds
+TIMEOUT_GIT_CLONE = 300  # seconds (5 minutes)
+TIMEOUT_FILE_OPERATIONS = 60  # seconds
+TIMEOUT_SYNTHESIS = 600  # seconds (10 minutes)
 
 secure_logger = get_secure_logger(__name__)
 
@@ -81,14 +84,14 @@ def get_dependency_analyzer() -> DependencyAnalyzer:
 async def handle_search_repositories(args: dict) -> dict:
     """
     Handle repository search across platforms.
-    
+
     Args:
         query: Search query string
         platforms: List of platforms to search
         max_results: Maximum results per platform
         language_filter: Optional language filter
         min_stars: Minimum star count
-    
+
     Returns:
         Search results with repository information
     """
@@ -216,17 +219,17 @@ async def handle_search_repositories(args: dict) -> dict:
 async def handle_analyze_repository(args: dict) -> dict:
     """
     Handle deep repository analysis.
-    
+
     Args:
         repo_url: Repository URL to analyze
         include_transitive_deps: Whether to include transitive dependencies
         extract_components: Whether to identify extractable components
-    
+
     Returns:
         Analysis results with dependencies, components, and quality score
     """
     repo_url = args.get("repo_url", "")
-    include_transitive = args.get("include_transitive_deps", True)
+    args.get("include_transitive_deps", True)
     extract_components = args.get("extract_components", True)
 
     if not repo_url:
@@ -337,11 +340,11 @@ async def handle_analyze_repository(args: dict) -> dict:
 async def handle_check_compatibility(args: dict) -> dict:
     """
     Handle compatibility check between repositories.
-    
+
     Args:
         repo_urls: List of repository URLs to check
         target_python_version: Target Python version
-    
+
     Returns:
         Compatibility report with conflicts and suggestions
     """
@@ -417,12 +420,12 @@ async def handle_check_compatibility(args: dict) -> dict:
 async def handle_resolve_dependencies(args: dict) -> dict:
     """
     Handle dependency resolution across repositories.
-    
+
     Args:
         repositories: List of repository URLs
         constraints: Additional version constraints
         python_version: Target Python version
-    
+
     Returns:
         Resolved dependencies with unified requirements
     """
@@ -476,13 +479,13 @@ async def handle_resolve_dependencies(args: dict) -> dict:
 async def handle_synthesize_project(args: dict) -> dict:
     """
     Handle project synthesis from multiple repositories.
-    
+
     Args:
         repositories: List of repo configs (url, components, destination)
         project_name: Name for the synthesized project
         output_path: Output directory path
         template: Project template to use
-    
+
     Returns:
         Synthesis result with project path and status
     """
@@ -598,12 +601,12 @@ def _update_job(job_id: str, progress: int, status: str):
 async def handle_generate_documentation(args: dict) -> dict:
     """
     Handle documentation generation for a project.
-    
+
     Args:
         project_path: Path to the project
         doc_types: Types of documentation to generate
         llm_enhanced: Whether to use LLM for enhanced docs
-    
+
     Returns:
         Generated documentation paths
     """
@@ -690,10 +693,10 @@ async def handle_generate_documentation(args: dict) -> dict:
 async def handle_get_synthesis_status(args: dict) -> dict:
     """
     Handle status query for synthesis operations.
-    
+
     Args:
         synthesis_id: ID of the synthesis operation
-    
+
     Returns:
         Current status of the synthesis operation
     """
@@ -896,17 +899,17 @@ def get_assistant():
 async def handle_assistant_chat(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     Chat with the AI assistant.
-    
+
     The assistant will:
     - Understand your request
     - Ask clarifying questions if needed
     - Search for projects
     - Provide recommendations
-    
+
     Args:
         message: Your message to the assistant
         voice_enabled: Whether to generate voice audio (default: false)
-    
+
     Returns:
         Assistant's response with text and optional audio
     """
@@ -948,16 +951,16 @@ async def handle_assistant_chat(arguments: Dict[str, Any]) -> Dict[str, Any]:
 async def handle_assistant_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate voice audio for text AND auto-play it.
-    
+
     LM STUDIO INTEGRATION:
     LM Studio doesn't have native audio playback, so this tool
     automatically plays the generated audio through system speakers.
-    
+
     Args:
         text: Text to convert to speech
         voice: Voice name (rachel, josh, adam, etc.) or voice ID
         auto_play: Whether to auto-play (default: true for LM Studio)
-    
+
     Returns:
         Audio data as base64 + playback status
     """
@@ -1007,10 +1010,10 @@ async def handle_assistant_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
 async def handle_assistant_toggle_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     Toggle voice on/off for the assistant.
-    
+
     Args:
         enabled: Whether voice should be enabled
-    
+
     Returns:
         Current voice status
     """
@@ -1029,7 +1032,7 @@ async def handle_assistant_toggle_voice(arguments: Dict[str, Any]) -> Dict[str, 
 async def handle_get_voices(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     Get available voices for text-to-speech.
-    
+
     Returns:
         List of available voices with descriptions
     """
@@ -1053,15 +1056,15 @@ async def handle_get_voices(arguments: Dict[str, Any]) -> Dict[str, Any]:
 async def handle_speak_fast(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     FAST streaming voice - optimized for speed and smooth playback.
-    
+
     LM STUDIO INTEGRATION:
     Uses turbo model + streaming for lowest latency.
     Audio plays as it's generated - no waiting, no gaps.
-    
+
     Args:
         text: Text to speak
         voice: Voice name (rachel, josh, adam, etc.)
-    
+
     Returns:
         Success status
     """
@@ -1091,7 +1094,7 @@ async def handle_speak_fast(arguments: Dict[str, Any]) -> Dict[str, Any]:
 async def handle_assemble_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     Assemble a complete project from an idea.
-    
+
     Automatically:
     1. Searches GitHub, HuggingFace, Kaggle for compatible resources
     2. Downloads code, models (.safetensors), datasets, papers
@@ -1099,13 +1102,13 @@ async def handle_assemble_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
     4. Generates README, requirements.txt
     5. Creates GitHub repo
     6. Prepares for Windsurf IDE
-    
+
     Args:
         idea: Project idea/description
         name: Project name (optional, auto-generated)
         output_dir: Output directory (default: G:/)
         create_github: Create GitHub repo (default: true)
-    
+
     Returns:
         Project details and location
     """

@@ -61,22 +61,22 @@ class TelemetryConfig:
 class TelemetryCollector:
     """
     Opt-in telemetry collector.
-    
+
     PRIVACY FIRST:
     - Disabled by default
     - No personal data
     - No code content
     - Only aggregate metrics
-    
+
     Usage:
         telemetry = TelemetryCollector()
-        
+
         # Enable (opt-in)
         telemetry.enable()
-        
+
         # Track events
         telemetry.track("search", {"platform": "github", "results": 10})
-        
+
         # Disable anytime
         telemetry.disable()
     """
@@ -140,7 +140,7 @@ class TelemetryCollector:
     def track(self, event_type: str, properties: Dict[str, Any] = None):
         """
         Track an event.
-        
+
         Only tracks if telemetry is enabled.
         No personal data is included.
         """

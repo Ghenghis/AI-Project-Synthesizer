@@ -1,7 +1,7 @@
 """
 AI Project Synthesizer - Quality Scorer
 
-Scores repository quality based on documentation, tests, 
+Scores repository quality based on documentation, tests,
 code organization, activity, and maintenance.
 """
 
@@ -80,7 +80,7 @@ class QualityScore:
 class QualityScorer:
     """
     Scores repository quality across multiple dimensions.
-    
+
     Scoring criteria:
     - Documentation (25%): README, docstrings, guides
     - Tests (25%): Test files, coverage indicators
@@ -88,7 +88,7 @@ class QualityScorer:
     - CI/CD (15%): Automation, workflows
     - Maintenance (10%): Activity, responsiveness
     - Community (5%): Adoption metrics
-    
+
     Example:
         scorer = QualityScorer()
         score = await scorer.score(Path("./repo"), repo_info)
@@ -116,11 +116,11 @@ class QualityScorer:
     ) -> QualityScore:
         """
         Calculate quality score for a repository.
-        
+
         Args:
             repo_path: Path to repository
             repo_info: Optional RepositoryInfo with metadata
-            
+
         Returns:
             QualityScore with breakdown
         """

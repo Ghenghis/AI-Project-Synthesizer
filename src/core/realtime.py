@@ -83,7 +83,7 @@ class Event:
 class EventBus:
     """
     Central event bus for real-time communication.
-    
+
     Features:
     - Pub/sub pattern
     - Async event handling

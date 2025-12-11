@@ -39,7 +39,7 @@ class ShutdownTask:
 class LifecycleManager:
     """
     Manages application lifecycle with graceful shutdown.
-    
+
     Handles signal registration, shutdown tasks, and cleanup procedures.
     Ensures all components shutdown properly without data loss.
     """
@@ -47,7 +47,7 @@ class LifecycleManager:
     def __init__(self, shutdown_timeout: float = 60.0):
         """
         Initialize lifecycle manager.
-        
+
         Args:
             shutdown_timeout: Maximum time to wait for shutdown
         """
@@ -109,7 +109,7 @@ class LifecycleManager:
     ):
         """
         Add shutdown task.
-        
+
         Args:
             name: Task name for logging
             func: Async function to execute
@@ -136,7 +136,7 @@ class LifecycleManager:
     def track_task(self, task: asyncio.Task):
         """
         Track a running task for shutdown.
-        
+
         Args:
             task: Task to track
         """
@@ -151,7 +151,7 @@ class LifecycleManager:
             except Exception:
                 pass
 
-        task_ref = weakref.ref(task, cleanup)
+        weakref.ref(task, cleanup)
 
     async def wait_for_shutdown(self):
         """Wait for shutdown signal."""
@@ -168,7 +168,7 @@ class LifecycleManager:
     async def shutdown(self, reason: Optional[str] = None):
         """
         Execute graceful shutdown.
-        
+
         Args:
             reason: Optional shutdown reason
         """
@@ -303,7 +303,7 @@ class ResourceManager:
     def register(self, name: str, cleanup_func: Callable):
         """
         Register resource for cleanup.
-        
+
         Args:
             name: Resource name
             cleanup_func: Async cleanup function
@@ -349,7 +349,7 @@ resources = ResourceManager()
 async def managed_resource(name: str, cleanup_func: Callable):
     """
     Context manager for managed resources.
-    
+
     Args:
         name: Resource name
         cleanup_func: Cleanup function
@@ -367,10 +367,10 @@ async def managed_resource(name: str, cleanup_func: Callable):
 def track_async_task(coro):
     """
     Decorator to track async tasks for shutdown.
-    
+
     Args:
         coro: Coroutine to track
-        
+
     Returns:
         Tracked task
     """
@@ -382,11 +382,11 @@ def track_async_task(coro):
 def shutdown_on_signal(shutdown_func: Callable, priority: int = 0):
     """
     Decorator to register function for shutdown.
-    
+
     Args:
         shutdown_func: Function to call during shutdown
         priority: Shutdown priority
-        
+
     Returns:
         Original function
     """
@@ -463,11 +463,11 @@ class BackgroundTaskManager:
     async def submit(self, coro, name: Optional[str] = None):
         """
         Submit background task.
-        
+
         Args:
             coro: Coroutine to run
             name: Optional task name
-            
+
         Returns:
             Task handle
         """

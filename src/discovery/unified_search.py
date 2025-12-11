@@ -67,14 +67,14 @@ class UnifiedSearchResult:
 class UnifiedSearch:
     """
     Unified search across multiple code hosting platforms.
-    
+
     Features:
     - Parallel search across platforms
     - Result deduplication
     - Intelligent ranking
     - Caching
     - Error handling per platform
-    
+
     Example:
         search = UnifiedSearch()
         results = await search.search(
@@ -94,7 +94,7 @@ class UnifiedSearch:
     ):
         """
         Initialize unified search with platform credentials.
-        
+
         Args:
             github_token: GitHub personal access token
             huggingface_token: HuggingFace API token
@@ -167,7 +167,7 @@ class UnifiedSearch:
     ) -> UnifiedSearchResult:
         """
         Search across multiple platforms.
-        
+
         Args:
             query: Natural language search query
             platforms: Platforms to search (defaults to all available)
@@ -176,7 +176,7 @@ class UnifiedSearch:
             min_stars: Minimum star/like count
             sort_by: Sort method (relevance, stars, updated)
             use_cache: Whether to use cached results
-        
+
         Returns:
             UnifiedSearchResult with aggregated results
         """
@@ -413,7 +413,7 @@ class UnifiedSearch:
     ) -> Optional[RepositoryInfo]:
         """
         Get repository info from URL.
-        
+
         Automatically detects platform and routes to appropriate client.
         """
         # Detect platform from URL

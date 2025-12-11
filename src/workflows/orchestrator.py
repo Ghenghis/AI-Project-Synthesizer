@@ -76,22 +76,22 @@ class WorkflowResult:
 class WorkflowOrchestrator:
     """
     Unified workflow orchestrator.
-    
+
     Coordinates multiple workflow engines:
     - LangChain for LLM chains
     - Pydantic AI for type-safe agents
     - n8n for visual automation
     - Native Python for custom logic
-    
+
     Usage:
         orchestrator = WorkflowOrchestrator()
-        
+
         # Run a research workflow
         result = await orchestrator.research("machine learning chatbot")
-        
+
         # Run a full synthesis workflow
         result = await orchestrator.synthesize_project("RAG chatbot", create_github=True)
-        
+
         # Execute custom workflow
         result = await orchestrator.execute(workflow_definition)
     """
@@ -130,7 +130,7 @@ class WorkflowOrchestrator:
     ) -> WorkflowResult:
         """
         Research workflow - Find resources for a project idea.
-        
+
         Steps:
         1. Analyze query with LLM
         2. Search platforms in parallel
@@ -195,7 +195,7 @@ class WorkflowOrchestrator:
     ) -> WorkflowResult:
         """
         Full project synthesis workflow.
-        
+
         Steps:
         1. Research resources
         2. Plan synthesis with LLM
@@ -275,7 +275,7 @@ class WorkflowOrchestrator:
     ) -> WorkflowResult:
         """
         Conversation workflow with optional voice.
-        
+
         Steps:
         1. Process message with Pydantic AI agent
         2. Execute detected action
@@ -357,7 +357,7 @@ class WorkflowOrchestrator:
     async def execute(self, workflow: WorkflowDefinition) -> WorkflowResult:
         """
         Execute a custom workflow definition.
-        
+
         Supports mixed engines (LangChain, Pydantic AI, n8n).
         """
         start_time = asyncio.get_event_loop().time()

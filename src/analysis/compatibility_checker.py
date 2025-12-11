@@ -71,13 +71,13 @@ class CompatibilityMatrix:
 class CompatibilityChecker:
     """
     Checks compatibility between multiple repositories.
-    
+
     Analyzes:
     - Dependency conflicts
     - Python version requirements
     - Language compatibility
     - License compatibility
-    
+
     Usage:
         checker = CompatibilityChecker()
         matrix = await checker.check([repo_a, repo_b, repo_c])
@@ -108,11 +108,11 @@ class CompatibilityChecker:
     ) -> CompatibilityMatrix:
         """
         Check compatibility between repositories.
-        
+
         Args:
             repositories: List of repository info objects
             target_python: Target Python version
-            
+
         Returns:
             CompatibilityMatrix with analysis results
         """

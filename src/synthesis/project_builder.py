@@ -95,14 +95,14 @@ class BuildResult:
 class ProjectBuilder:
     """
     Orchestrates project synthesis from multiple repositories.
-    
+
     Pipeline:
     1. Discovery - Find relevant repositories
     2. Analysis - Understand code and dependencies
     3. Resolution - Resolve dependency conflicts
     4. Synthesis - Merge and transform code
     5. Generation - Create documentation
-    
+
     Example:
         builder = ProjectBuilder()
         result = await builder.synthesize(
@@ -117,7 +117,7 @@ class ProjectBuilder:
     def __init__(self, work_dir: Optional[Path] = None):
         """
         Initialize project builder.
-        
+
         Args:
             work_dir: Working directory for temp files
         """
@@ -133,10 +133,10 @@ class ProjectBuilder:
     ) -> SynthesisResult:
         """
         Execute full synthesis pipeline.
-        
+
         Args:
             request: Synthesis request specification
-            
+
         Returns:
             SynthesisResult with outcome
         """
@@ -303,7 +303,7 @@ class ProjectBuilder:
         files_created += 2
 
         search = UnifiedSearch()
-        extractor = CodeExtractor()
+        CodeExtractor()
 
         for repo_spec in repositories:
             try:
@@ -529,16 +529,16 @@ MIT
     ) -> BuildResult:
         """
         Build a project from repository specifications.
-        
+
         This is the main entry point used by MCP tools.
-        
+
         Args:
             repositories: List of repo configs with url, components, destination
             project_name: Name for the synthesized project
             output_path: Where to create the project
             template: Project template to use
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             BuildResult with details about created project
         """

@@ -79,24 +79,24 @@ class AssistantConfig:
 class ConversationalAssistant:
     """
     The main conversational AI assistant.
-    
+
     Features:
     - Natural language understanding
     - Voice + text output (always both)
     - Clarifying questions for ambiguous requests
     - Multi-step task completion
     - Context-aware responses
-    
+
     Example:
         assistant = ConversationalAssistant()
-        
+
         # Start conversation
         response = await assistant.chat("I want to build a chatbot")
         # Assistant asks: "What kind of chatbot? Web-based, Discord, Telegram?"
-        
+
         response = await assistant.chat("Discord bot with AI")
         # Assistant asks: "Should it use a local LLM or cloud API?"
-        
+
         response = await assistant.chat("Local LLM")
         # Assistant: "I found these projects that could help..."
     """
@@ -149,7 +149,7 @@ When responding:
     async def _get_llm(self):
         """Get or initialize LLM client."""
         if self._llm is None:
-            settings = get_settings()
+            get_settings()
 
             # Try LM Studio first (local)
             try:
@@ -203,10 +203,10 @@ When responding:
     async def chat(self, user_input: str) -> Dict[str, Any]:
         """
         Process user input and generate response.
-        
+
         Args:
             user_input: User's message (text)
-        
+
         Returns:
             Dict with:
             - text: Response text
@@ -453,7 +453,7 @@ When responding:
             return """I can help you with:
 
 • **Search** - Find projects on GitHub, HuggingFace, and Kaggle
-• **Analyze** - Review a repository's quality and structure  
+• **Analyze** - Review a repository's quality and structure
 • **Synthesize** - Combine multiple projects into one
 • **Generate** - Create new code or documentation
 

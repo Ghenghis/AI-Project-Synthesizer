@@ -34,7 +34,7 @@ async def github_webhook(
 ):
     """
     Handle GitHub webhooks.
-    
+
     Supported events:
     - push: Code pushed to repository
     - pull_request: PR opened/closed/merged
@@ -125,7 +125,7 @@ async def github_webhook(
 async def n8n_webhook(workflow_name: str, request: Request):
     """
     Handle n8n workflow callbacks.
-    
+
     Used for:
     - Workflow completion notifications
     - Error reporting
@@ -170,7 +170,7 @@ async def n8n_webhook(workflow_name: str, request: Request):
 async def custom_webhook(hook_id: str, request: Request):
     """
     Handle custom webhooks.
-    
+
     Can be used for:
     - CI/CD notifications
     - Monitoring alerts

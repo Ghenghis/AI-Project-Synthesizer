@@ -127,22 +127,22 @@ class AudioSession:
 class VoiceManager:
     """
     Central voice management system.
-    
+
     Features:
     - Voice profile management
     - Text-to-speech generation
     - Audio playback control
     - Session management
-    
+
     Usage:
         manager = VoiceManager()
-        
+
         # Speak with default voice
         await manager.speak("Hello, world!")
-        
+
         # Speak with specific voice
         await manager.speak("Hello!", voice="josh")
-        
+
         # Get available voices
         voices = manager.list_voices()
     """
@@ -185,12 +185,12 @@ class VoiceManager:
     ) -> Optional[Path]:
         """
         Generate and play speech.
-        
+
         Args:
             text: Text to speak
             voice: Voice profile ID (uses default if not specified)
             stream: Whether to stream audio
-            
+
         Returns:
             Path to audio file if not streaming
         """

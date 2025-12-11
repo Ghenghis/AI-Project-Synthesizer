@@ -53,7 +53,7 @@ class RepositoryNotFoundError(DiscoveryError):
 class RepositoryInfo:
     """
     Standard repository information across all platforms.
-    
+
     This is the unified data model that all platform clients
     convert their responses to.
     """
@@ -176,16 +176,16 @@ class DirectoryListing:
 class PlatformClient(ABC):
     """
     Abstract base class for platform API clients.
-    
+
     All platform clients (GitHub, HuggingFace, etc.) must implement
     this interface to ensure consistent behavior across the discovery layer.
-    
+
     Example implementation:
         class GitHubClient(PlatformClient):
             @property
             def platform_name(self) -> str:
                 return "github"
-            
+
             async def search(self, query: str, ...) -> SearchResult:
                 # Implementation
                 pass
@@ -196,7 +196,7 @@ class PlatformClient(ABC):
     def platform_name(self) -> str:
         """
         Return the platform identifier.
-        
+
         Returns:
             Platform name (e.g., "github", "huggingface")
         """
@@ -206,7 +206,7 @@ class PlatformClient(ABC):
     def is_authenticated(self) -> bool:
         """
         Check if client is authenticated.
-        
+
         Returns:
             True if authenticated, False otherwise
         """
@@ -224,7 +224,7 @@ class PlatformClient(ABC):
     ) -> SearchResult:
         """
         Search for repositories matching the query.
-        
+
         Args:
             query: Search query string
             language: Filter by programming language
@@ -232,10 +232,10 @@ class PlatformClient(ABC):
             max_results: Maximum number of results
             sort_by: Sort field (stars, updated, relevance)
             order: Sort order (asc, desc)
-            
+
         Returns:
             SearchResult with matching repositories
-            
+
         Raises:
             AuthenticationError: If authentication fails
             RateLimitError: If rate limit exceeded
@@ -246,13 +246,13 @@ class PlatformClient(ABC):
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
         """
         Get detailed information about a specific repository.
-        
+
         Args:
             repo_id: Repository identifier (e.g., "owner/repo")
-            
+
         Returns:
             RepositoryInfo with full details
-            
+
         Raises:
             RepositoryNotFoundError: If repository doesn't exist
         """
@@ -266,11 +266,11 @@ class PlatformClient(ABC):
     ) -> DirectoryListing:
         """
         Get contents of a directory in the repository.
-        
+
         Args:
             repo_id: Repository identifier
             path: Path within repository (empty for root)
-            
+
         Returns:
             DirectoryListing with files and subdirectories
         """
@@ -284,11 +284,11 @@ class PlatformClient(ABC):
     ) -> FileContent:
         """
         Get contents of a specific file.
-        
+
         Args:
             repo_id: Repository identifier
             file_path: Path to file within repository
-            
+
         Returns:
             FileContent with file data
         """
@@ -304,13 +304,13 @@ class PlatformClient(ABC):
     ) -> Path:
         """
         Clone repository to local filesystem.
-        
+
         Args:
             repo_id: Repository identifier
             destination: Local path for clone
             depth: Git clone depth (1 for shallow)
             branch: Specific branch to clone
-            
+
         Returns:
             Path to cloned repository
         """
@@ -319,10 +319,10 @@ class PlatformClient(ABC):
     async def get_readme(self, repo_id: str) -> Optional[str]:
         """
         Get repository README content.
-        
+
         Args:
             repo_id: Repository identifier
-            
+
         Returns:
             README content as string, or None if not found
         """
@@ -341,10 +341,10 @@ class PlatformClient(ABC):
     async def get_license(self, repo_id: str) -> Optional[str]:
         """
         Get repository license content.
-        
+
         Args:
             repo_id: Repository identifier
-            
+
         Returns:
             License content as string, or None if not found
         """
@@ -363,7 +363,7 @@ class PlatformClient(ABC):
     async def check_health(self) -> bool:
         """
         Check if the platform API is accessible.
-        
+
         Returns:
             True if API is healthy, False otherwise
         """

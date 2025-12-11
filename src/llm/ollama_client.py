@@ -26,9 +26,9 @@ class CompletionResult:
 class OllamaClient:
     """
     Client for Ollama local LLM inference.
-    
+
     Supports Qwen2.5-Coder and other code-focused models.
-    
+
     Usage:
         client = OllamaClient()
         result = await client.complete("Explain this code: def foo(): pass")
@@ -49,7 +49,7 @@ class OllamaClient:
     ):
         """
         Initialize Ollama client.
-        
+
         Args:
             host: Ollama server URL
             default_model: Default model to use
@@ -107,7 +107,7 @@ class OllamaClient:
     ) -> CompletionResult:
         """
         Generate completion from prompt.
-        
+
         Args:
             prompt: User prompt
             model: Model to use (defaults to balanced)
@@ -115,7 +115,7 @@ class OllamaClient:
             temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
             stream: Whether to stream response
-            
+
         Returns:
             CompletionResult with generated content
         """
@@ -177,12 +177,12 @@ class OllamaClient:
     ) -> str:
         """
         Analyze code with appropriate prompt.
-        
+
         Args:
             code: Source code to analyze
             language: Programming language
             task: Analysis task (explain, review, refactor, etc.)
-            
+
         Returns:
             Analysis result as string
         """
@@ -211,12 +211,12 @@ class OllamaClient:
     ) -> str:
         """
         Generate code from description.
-        
+
         Args:
             description: What to generate
             language: Target language
             context: Optional context code
-            
+
         Returns:
             Generated code
         """

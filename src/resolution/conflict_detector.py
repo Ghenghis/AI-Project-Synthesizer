@@ -64,13 +64,13 @@ class ConflictReport:
 class ConflictDetector:
     """
     Detects dependency conflicts between multiple dependency graphs.
-    
+
     Analyzes:
     - Version conflicts
     - Python version requirements
     - Extra dependencies
     - Platform-specific requirements
-    
+
     Usage:
         detector = ConflictDetector()
         report = detector.detect([graph_a, graph_b, graph_c])
@@ -85,11 +85,11 @@ class ConflictDetector:
     ) -> ConflictReport:
         """
         Detect conflicts between dependency graphs.
-        
+
         Args:
             graphs: List of dependency graphs to analyze
             sources: Optional source names for each graph
-            
+
         Returns:
             ConflictReport with all detected conflicts
         """
@@ -207,7 +207,7 @@ class ConflictDetector:
     def _ranges_compatible(self, specs: List[str]) -> bool:
         """
         Check if version ranges might be compatible.
-        
+
         This is a simplified check - full resolution needs SAT solver.
         """
         # If any spec is empty (no constraint), it's compatible
@@ -251,5 +251,5 @@ class ConflictDetector:
 
         try:
             return to_tuple(v1) > to_tuple(v2)
-        except:
+        except Exception:
             return False

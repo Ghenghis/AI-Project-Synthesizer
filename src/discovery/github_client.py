@@ -31,7 +31,7 @@ secure_logger = get_secure_logger(__name__)
 class GitHubClient(PlatformClient):
     """
     GitHub API client using ghapi.
-    
+
     Features:
     - Full GitHub API coverage
     - Automatic pagination
@@ -39,7 +39,7 @@ class GitHubClient(PlatformClient):
     - Repository search and analysis
     - File and directory access
     - Clone operations
-    
+
     Example:
         client = GitHubClient(token="ghp_xxx")
         results = await client.search("machine learning python")
@@ -54,7 +54,7 @@ class GitHubClient(PlatformClient):
     ):
         """
         Initialize GitHub client.
-        
+
         Args:
             token: GitHub personal access token
             requests_per_hour: Rate limit (5000 for authenticated)
@@ -105,7 +105,7 @@ class GitHubClient(PlatformClient):
     ) -> SearchResult:
         """
         Search GitHub repositories.
-        
+
         Uses GitHub's search API with intelligent query construction.
         Supports filtering by language, stars, and other criteria.
         """

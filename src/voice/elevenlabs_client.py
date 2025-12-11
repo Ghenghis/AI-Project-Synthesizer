@@ -65,23 +65,23 @@ PREMADE_VOICES = {
 class ElevenLabsClient:
     """
     ElevenLabs API client for voice synthesis.
-    
+
     Features:
     - Text-to-Speech with multiple voices
     - Real-time streaming for low latency
     - Voice selection and management
     - Custom voice settings
-    
+
     Example:
         client = ElevenLabsClient()
-        
+
         # Simple TTS
         audio = await client.text_to_speech("Hello world!")
-        
+
         # Stream audio in real-time
         async for chunk in client.stream_speech("Long text here..."):
             play_audio(chunk)
-        
+
         # Use specific voice
         audio = await client.text_to_speech(
             "Hello!",
@@ -153,14 +153,14 @@ class ElevenLabsClient:
     ) -> bytes:
         """
         Convert text to speech audio.
-        
+
         Args:
             text: Text to convert
             voice: Voice name (rachel, josh, etc.) or voice_id
             model: TTS model to use
             settings: Voice settings
             output_format: Audio format
-        
+
         Returns:
             Audio bytes
         """
@@ -210,14 +210,14 @@ class ElevenLabsClient:
     ) -> AsyncIterator[bytes]:
         """
         Stream text-to-speech audio in real-time.
-        
+
         Args:
             text: Text to convert
             voice: Voice name or ID
             model: TTS model (defaults to realtime model)
             settings: Voice settings
             chunk_size: Size of audio chunks
-        
+
         Yields:
             Audio chunks as bytes
         """
@@ -308,13 +308,13 @@ class ElevenLabsClient:
     ) -> Path:
         """
         Generate and save audio to file.
-        
+
         Args:
             text: Text to convert
             output_path: Path to save audio
             voice: Voice name or ID
             **kwargs: Additional TTS arguments
-        
+
         Returns:
             Path to saved file
         """

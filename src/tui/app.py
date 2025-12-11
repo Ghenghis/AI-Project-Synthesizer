@@ -26,7 +26,7 @@ console = Console()
 class SynthesizerTUI:
     """
     Terminal UI for AI Project Synthesizer.
-    
+
     Features:
     - Interactive menus
     - Real-time status

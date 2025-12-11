@@ -33,7 +33,7 @@ class VoiceState:
 class VoiceAgent(BaseAgent):
     """
     Voice agent for speech interactions.
-    
+
     Features:
     - No pause limits (continuous listening)
     - Hotkey activation
@@ -191,7 +191,7 @@ Conversation history:
 User said: {task}
 
 Respond in a conversational way. Keep responses brief for voice output.
-If the user wants to perform an action (search, create project, etc.), 
+If the user wants to perform an action (search, create project, etc.),
 indicate the action clearly.
 
 Response:"""
@@ -257,10 +257,10 @@ Response:"""
     async def process_text(self, text: str) -> str:
         """
         Process text input and return response.
-        
+
         Args:
             text: User input text
-            
+
         Returns:
             Agent response
         """

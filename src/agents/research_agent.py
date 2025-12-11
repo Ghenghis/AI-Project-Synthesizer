@@ -19,7 +19,7 @@ secure_logger = get_secure_logger(__name__)
 class ResearchAgent(BaseAgent):
     """
     Research agent for discovering and analyzing resources.
-    
+
     Capabilities:
     - Search GitHub, HuggingFace, Kaggle
     - Analyze code quality and patterns
@@ -222,7 +222,7 @@ RECOMMENDATIONS: <list of recommendations>
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)
-            except:
+            except Exception:
                 params = {}
 
         # Execute tool
@@ -253,10 +253,10 @@ RECOMMENDATIONS: <list of recommendations>
     async def research(self, topic: str) -> Dict[str, Any]:
         """
         Convenience method to research a topic.
-        
+
         Args:
             topic: Research topic
-            
+
         Returns:
             Research results
         """

@@ -76,9 +76,9 @@ class ConversationConfig:
 class RealtimeConversation:
     """
     Real-time voice conversation with AI.
-    
+
     Listens continuously, detects pauses, responds with voice.
-    
+
     Usage:
         conv = RealtimeConversation()
         await conv.start()
@@ -376,15 +376,15 @@ async def start_voice_chat(
 ):
     """
     Start a real-time voice conversation.
-    
+
     Speak naturally, pause for 3.5 seconds, AI responds.
-    
+
     Args:
         pause_threshold: Seconds of silence before AI responds
         voice: Voice to use for responses
         on_user_speech: Callback when user speaks
         on_assistant_response: Callback when AI responds
-    
+
     Example:
         await start_voice_chat(
             pause_threshold=3.5,

@@ -23,7 +23,7 @@ def setup_logging(
 ) -> None:
     """
     Configure application logging.
-    
+
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         json_format: Output logs as JSON (useful for production)
@@ -87,13 +87,13 @@ def setup_logging(
 def get_logger(name: str) -> structlog.BoundLogger:
     """
     Get a logger instance for the specified module.
-    
+
     Args:
         name: Logger name (typically __name__)
-        
+
     Returns:
         Configured structlog logger
-        
+
     Example:
         >>> logger = get_logger(__name__)
         >>> logger.info("Processing started", repo="owner/repo")
@@ -104,7 +104,7 @@ def get_logger(name: str) -> structlog.BoundLogger:
 class LogContext:
     """
     Context manager for adding temporary context to logs.
-    
+
     Example:
         >>> with LogContext(request_id="abc123", user="john"):
         ...     logger.info("Processing request")

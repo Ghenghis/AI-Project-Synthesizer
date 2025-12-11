@@ -10,10 +10,10 @@ from typing import Optional, Any, Dict
 class SynthesizerError(Exception):
     """
     Base exception for all AI Synthesizer errors.
-    
+
     All custom exceptions inherit from this class, allowing
     for catch-all error handling when needed.
-    
+
     Attributes:
         message: Human-readable error description
         code: Machine-readable error code

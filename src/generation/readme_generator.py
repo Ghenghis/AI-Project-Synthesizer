@@ -38,14 +38,14 @@ class ProjectInfo:
 class ReadmeGenerator:
     """
     Generates README.md documentation for projects.
-    
+
     Features:
     - Project structure analysis
     - Dependency extraction
     - LLM-enhanced descriptions
     - Template-based generation
     - Badge generation
-    
+
     Example:
         generator = ReadmeGenerator()
         readme_path = await generator.generate(Path("./my-project"))
@@ -112,7 +112,7 @@ class ReadmeGenerator:
     def __init__(self, use_llm: bool = True):
         """
         Initialize the README generator.
-        
+
         Args:
             use_llm: Whether to use LLM for enhanced generation
         """
@@ -133,11 +133,11 @@ class ReadmeGenerator:
     ) -> Path:
         """
         Generate README for a project.
-        
+
         Args:
             project_path: Path to project root
             output_path: Custom output path (default: project_path/README.md)
-            
+
         Returns:
             Path to generated README
         """

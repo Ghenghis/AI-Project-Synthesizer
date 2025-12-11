@@ -40,23 +40,23 @@ class ProviderInfo:
 class ProviderRegistry:
     """
     Central registry for LLM providers.
-    
+
     Features:
     - Register multiple providers
     - Health monitoring with automatic status updates
     - Intelligent fallback between providers
     - Priority-based provider selection
     - Metrics and logging
-    
+
     Usage:
         registry = ProviderRegistry()
         registry.register_provider(ollama_config)
         registry.register_provider(lmstudio_config)
-        
+
         # Get best available provider
         provider = await registry.get_best_provider()
         result = await provider.complete("Hello!")
-        
+
         # Or use unified completion with automatic fallback
         result = await registry.complete("Hello!")
     """
@@ -113,10 +113,10 @@ class ProviderRegistry:
     def register_provider(self, config: ProviderConfig) -> str:
         """
         Register a new provider with the registry.
-        
+
         Args:
             config: Provider configuration
-            
+
         Returns:
             Provider name/ID
         """
@@ -215,11 +215,11 @@ class ProviderRegistry:
     ) -> Optional[LLMProvider]:
         """
         Get the best available provider.
-        
+
         Args:
             require_local: Only consider local providers
             exclude: Provider names to exclude
-            
+
         Returns:
             Best available provider or None
         """
@@ -263,7 +263,7 @@ class ProviderRegistry:
     ) -> CompletionResult:
         """
         Complete prompt with automatic provider selection and fallback.
-        
+
         Args:
             prompt: User prompt
             model: Model to use (optional)
@@ -273,7 +273,7 @@ class ProviderRegistry:
             provider_name: Specific provider to use
             fallback: Enable fallback to other providers
             **kwargs: Additional provider-specific arguments
-            
+
         Returns:
             CompletionResult from successful provider
         """

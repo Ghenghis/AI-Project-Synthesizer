@@ -45,10 +45,10 @@ class Component:
 class CodeExtractor:
     """
     Extracts code components from repositories.
-    
+
     Identifies standalone modules, packages, classes, and functions
     that can be extracted and reused in other projects.
-    
+
     Example:
         extractor = CodeExtractor()
         components = await extractor.identify_components(Path("./repo"))
@@ -66,10 +66,10 @@ class CodeExtractor:
     ) -> List[Component]:
         """
         Identify extractable components in a repository.
-        
+
         Args:
             repo_path: Path to repository root
-            
+
         Returns:
             List of identified components
         """

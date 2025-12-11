@@ -81,21 +81,21 @@ class AutomationConfig:
 class AutomationCoordinator:
     """
     Central automation coordinator.
-    
+
     Manages:
     - n8n workflow orchestration
     - Event handling and routing
     - Scheduled tasks
     - Health monitoring
     - Auto-recovery
-    
+
     Usage:
         coordinator = AutomationCoordinator()
         await coordinator.start()
-        
+
         # Emit events
         coordinator.emit(EventType.SEARCH_COMPLETED, {"results": 10})
-        
+
         # Get status
         status = coordinator.get_status()
     """

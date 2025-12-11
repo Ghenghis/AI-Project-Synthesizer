@@ -64,7 +64,7 @@ class HotkeyBinding:
 class HotkeyManager:
     """
     Global hotkey management system.
-    
+
     Features:
     - Register/unregister hotkeys
     - Hold-to-activate mode (for voice)
@@ -176,7 +176,7 @@ class HotkeyManager:
             if self._running and KEYBOARD_AVAILABLE:
                 try:
                     keyboard.remove_hotkey(old_keys)
-                except:
+                except Exception:
                     pass
                 self._register_keyboard_hotkey(self._bindings[action])
 

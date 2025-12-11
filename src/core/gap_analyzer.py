@@ -133,7 +133,7 @@ class AnalysisReport:
 class GapAnalyzer:
     """
     Comprehensive gap analyzer and auto-repair system.
-    
+
     Features:
     - Progressive gap detection
     - Auto-repair capabilities
@@ -189,10 +189,10 @@ class GapAnalyzer:
     async def analyze(self, auto_fix: bool = True) -> AnalysisReport:
         """
         Run full gap analysis.
-        
+
         Args:
             auto_fix: Automatically fix auto-fixable gaps
-            
+
         Returns:
             AnalysisReport with all findings
         """
@@ -534,7 +534,7 @@ class GapAnalyzer:
         """Check LLM connectivity."""
         try:
             from src.llm import LMStudioClient
-            client = LMStudioClient()
+            LMStudioClient()
             # Don't actually call, just check import
         except Exception as e:
             self.add_gap(Gap(

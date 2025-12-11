@@ -98,7 +98,7 @@ def search_repositories(
 ) -> None:
     """
     Search for repositories across multiple platforms.
-    
+
     Examples:
         ai-synthesizer search "machine learning transformers"
         ai-synthesizer search "web scraping" --platforms github,kaggle --min-stars 100
@@ -216,7 +216,7 @@ def analyze_repository(
 ) -> None:
     """
     Perform deep analysis of a repository.
-    
+
     Examples:
         ai-synthesizer analyze https://github.com/user/repo
         ai-synthesizer analyze https://github.com/user/repo --extract-components
@@ -328,7 +328,7 @@ def synthesize_project(
 ) -> None:
     """
     Synthesize a unified project from multiple repositories.
-    
+
     Examples:
         ai-synthesizer synthesize --repos url1,url2 --name my-project --output ./projects
         ai-synthesizer synthesize -r url1,url2 -n ml-toolkit -t python-ml
@@ -399,7 +399,7 @@ def resolve_dependencies(
 ) -> None:
     """
     Resolve and merge dependencies from multiple repositories.
-    
+
     Examples:
         ai-synthesizer resolve --repos url1,url2
         ai-synthesizer resolve -r url1,url2 --python 3.12 --output requirements.txt
@@ -485,7 +485,7 @@ def generate_documentation(
 ) -> None:
     """
     Generate comprehensive documentation for a project.
-    
+
     Examples:
         ai-synthesizer docs ./my-project
         ai-synthesizer docs ./my-project --types readme,api
@@ -548,7 +548,7 @@ def show_config(
 ) -> None:
     """
     Show current configuration settings.
-    
+
     Examples:
         ai-synthesizer config
         ai-synthesizer config --all
@@ -650,13 +650,13 @@ def run_gap_check(
 ) -> None:
     """
     Run gap analysis and auto-repair.
-    
+
     Checks for:
     - Missing files and directories
     - Configuration issues
     - Import errors
     - Integration problems
-    
+
     Examples:
         ai-synthesizer check
         ai-synthesizer check --no-fix
@@ -724,7 +724,7 @@ def run_gap_check(
 def start_tui() -> None:
     """
     Start the Terminal UI for interactive control.
-    
+
     Full-featured terminal interface with:
     - Dashboard view
     - Search and assembly
@@ -774,7 +774,7 @@ def manage_settings(
 ) -> None:
     """
     Manage system settings from the command line.
-    
+
     Examples:
         ai-synthesizer settings --show
         ai-synthesizer settings --tab voice --show
@@ -844,7 +844,7 @@ def manage_settings(
 def start_mcp_server() -> None:
     """
     Start the MCP server for Windsurf IDE integration.
-    
+
     This command starts the Model Context Protocol server that allows
     Windsurf IDE to interact with AI Project Synthesizer.
     """
@@ -869,7 +869,7 @@ def start_mcp_server() -> None:
 def wizard_command() -> None:
     """
     Interactive project creation wizard.
-    
+
     Guides you through creating a new project step-by-step:
     1. Select project type (MCP, CLI, API, ML, etc.)
     2. Enter project name
@@ -877,7 +877,7 @@ def wizard_command() -> None:
     4. Add example repositories
     5. Select output location
     6. Confirm and create
-    
+
     Example:
         ai-synthesizer wizard
     """
@@ -920,13 +920,13 @@ def recipe_command(
 ) -> None:
     """
     Manage and run synthesis recipes.
-    
+
     Actions:
         list     - List all available recipes
         show     - Show details of a specific recipe
         run      - Run a recipe to create a project
         validate - Validate a recipe file
-    
+
     Examples:
         ai-synthesizer recipe list
         ai-synthesizer recipe show mcp-server-starter
@@ -1007,7 +1007,7 @@ def recipe_command(
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-            task = progress.add_task(f"Running recipe: {name}...", total=None)
+            progress.add_task(f"Running recipe: {name}...", total=None)
 
             result = asyncio.run(runner.run(
                 recipe_name=name,

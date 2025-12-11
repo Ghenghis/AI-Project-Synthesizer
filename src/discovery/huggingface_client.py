@@ -107,14 +107,14 @@ class HFDatasetInfo:
 class HuggingFaceClient(PlatformClient):
     """
     HuggingFace Hub API client.
-    
+
     Features:
     - Model search and discovery
     - Dataset search
     - Space search
     - File access
     - Clone operations
-    
+
     Example:
         client = HuggingFaceClient(token="hf_xxx")
         results = await client.search("text classification bert")
@@ -129,7 +129,7 @@ class HuggingFaceClient(PlatformClient):
     ):
         """
         Initialize HuggingFace client.
-        
+
         Args:
             token: HuggingFace API token
             requests_per_minute: Rate limit
@@ -171,7 +171,7 @@ class HuggingFaceClient(PlatformClient):
     ) -> SearchResult:
         """
         Search HuggingFace Hub.
-        
+
         Args:
             query: Search query
             language: Filter by library (transformers, diffusers, etc.)

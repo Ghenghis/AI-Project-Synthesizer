@@ -23,7 +23,7 @@ secure_logger = get_secure_logger(__name__)
 class AutomationAgent(BaseAgent):
     """
     Automation agent for workflow management.
-    
+
     Features:
     - Workflow orchestration
     - Scheduled task execution
@@ -290,7 +290,7 @@ SUMMARY: <summary>
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)
-            except:
+            except Exception:
                 params = {}
 
         # Execute tool
@@ -338,10 +338,10 @@ SUMMARY: <summary>
     async def automate(self, task: str) -> Dict[str, Any]:
         """
         Run automation task.
-        
+
         Args:
             task: Automation task description
-            
+
         Returns:
             Automation results
         """

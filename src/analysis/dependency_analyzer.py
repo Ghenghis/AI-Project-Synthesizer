@@ -97,12 +97,12 @@ class DependencyGraph:
 class DependencyAnalyzer:
     """
     Analyzes project dependencies across multiple package managers.
-    
+
     Supported:
     - Python: requirements.txt, pyproject.toml, setup.py, Pipfile
     - Node.js: package.json
     - Rust: Cargo.toml
-    
+
     Usage:
         analyzer = DependencyAnalyzer()
         graph = await analyzer.analyze(Path("./my-project"))
@@ -140,10 +140,10 @@ class DependencyAnalyzer:
     async def analyze(self, repo_path: Path) -> DependencyGraph:
         """
         Analyze all dependencies in a repository.
-        
+
         Args:
             repo_path: Path to repository root
-            
+
         Returns:
             DependencyGraph with all discovered dependencies
         """

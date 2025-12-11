@@ -40,14 +40,14 @@ OPENAI_COMPAT_BREAKER = CircuitBreakerConfig(
 class OpenAICompatibleProvider(LLMProvider):
     """
     Generic provider for OpenAI-compatible APIs.
-    
+
     Works with any server that implements the OpenAI API spec:
     - LM Studio (localhost:1234)
     - LocalAI (localhost:8080)
     - vLLM (localhost:8000)
     - Text Generation WebUI (localhost:5000)
     - Ollama OpenAI mode (localhost:11434/v1)
-    
+
     Usage:
         config = ProviderConfig(
             provider_type=ProviderType.OPENAI_COMPATIBLE,

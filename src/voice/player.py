@@ -32,11 +32,11 @@ class PlaybackResult:
 class VoicePlayer:
     """
     Cross-platform audio player for voice output.
-    
+
     LM STUDIO INTEGRATION:
     LM Studio's MCP implementation doesn't auto-play audio.
     This player decodes base64 audio and plays it through system speakers.
-    
+
     Usage:
         player = VoicePlayer()
         await player.play_base64(audio_base64, format="mp3")
@@ -57,12 +57,12 @@ class VoicePlayer:
     ) -> PlaybackResult:
         """
         Play base64-encoded audio.
-        
+
         Args:
             audio_base64: Base64-encoded audio data
             format: Audio format (mp3, wav, etc.)
             wait: Wait for playback to complete
-        
+
         Returns:
             PlaybackResult with success status
         """
@@ -82,12 +82,12 @@ class VoicePlayer:
     ) -> PlaybackResult:
         """
         Play audio from bytes.
-        
+
         Args:
             audio_bytes: Raw audio data
             format: Audio format
             wait: Wait for playback to complete
-        
+
         Returns:
             PlaybackResult with success status
         """
@@ -104,11 +104,11 @@ class VoicePlayer:
     ) -> PlaybackResult:
         """
         Play audio file through system speakers.
-        
+
         Args:
             file_path: Path to audio file
             wait: Wait for playback to complete
-        
+
         Returns:
             PlaybackResult with success status
         """
@@ -255,14 +255,14 @@ def get_voice_player() -> VoicePlayer:
 async def play_audio(audio_base64: str, format: str = "mp3", wait: bool = True) -> PlaybackResult:
     """
     Convenience function to play base64 audio.
-    
+
     LM STUDIO: Call this after assistant_speak to hear the voice.
-    
+
     Args:
         audio_base64: Base64-encoded audio
         format: Audio format
         wait: Wait for completion
-    
+
     Returns:
         PlaybackResult
     """

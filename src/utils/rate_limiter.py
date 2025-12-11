@@ -26,17 +26,17 @@ class RateLimitState:
 class RateLimiter:
     """
     Token bucket rate limiter.
-    
+
     Implements token bucket algorithm for smooth rate limiting.
     Supports configurable rates and burst sizes.
-    
+
     Example:
         limiter = RateLimiter(requests_per_hour=5000, burst_size=100)
-        
+
         async def make_request():
             await limiter.acquire()
             # Make API call
-            
+
     Attributes:
         requests_per_hour: Maximum requests per hour
         burst_size: Maximum burst of requests
@@ -50,7 +50,7 @@ class RateLimiter:
     ):
         """
         Initialize rate limiter.
-        
+
         Args:
             requests_per_hour: Maximum requests allowed per hour
             burst_size: Maximum tokens that can accumulate
@@ -105,10 +105,10 @@ class RateLimiter:
     async def acquire(self, tokens: int = 1) -> float:
         """
         Acquire tokens, waiting if necessary.
-        
+
         Args:
             tokens: Number of tokens to acquire
-            
+
         Returns:
             Time waited in seconds
         """
@@ -138,10 +138,10 @@ class RateLimiter:
     def try_acquire(self, tokens: int = 1) -> bool:
         """
         Try to acquire tokens without waiting.
-        
+
         Args:
             tokens: Number of tokens to acquire
-            
+
         Returns:
             True if acquired, False if would need to wait
         """
@@ -158,10 +158,10 @@ class RateLimiter:
     def time_until_available(self, tokens: int = 1) -> float:
         """
         Calculate time until tokens will be available.
-        
+
         Args:
             tokens: Number of tokens needed
-            
+
         Returns:
             Seconds until available (0 if available now)
         """
@@ -195,13 +195,13 @@ class RateLimiter:
 class MultiRateLimiter:
     """
     Manages rate limiters for multiple endpoints.
-    
+
     Example:
         limiter = MultiRateLimiter({
             "search": RateLimiter(requests_per_hour=30),
             "repos": RateLimiter(requests_per_hour=5000),
         })
-        
+
         await limiter.acquire("search")
     """
 
@@ -227,7 +227,7 @@ class MultiRateLimiter:
 class AdaptiveRateLimiter(RateLimiter):
     """
     Rate limiter that adapts based on API responses.
-    
+
     Automatically adjusts rate based on 429 responses and
     rate limit headers.
     """

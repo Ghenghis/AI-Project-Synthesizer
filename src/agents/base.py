@@ -118,7 +118,7 @@ class AgentTool:
 class BaseAgent(ABC):
     """
     Base class for all AI agents.
-    
+
     Features:
     - LLM integration with multiple providers
     - Tool execution
@@ -178,11 +178,11 @@ class BaseAgent(ABC):
     async def run(self, task: str, context: Optional[Dict[str, Any]] = None) -> AgentResult:
         """
         Run the agent on a task.
-        
+
         Args:
             task: Task description
             context: Optional context data
-            
+
         Returns:
             AgentResult with output and metadata
         """

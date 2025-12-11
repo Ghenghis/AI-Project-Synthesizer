@@ -314,13 +314,13 @@ class RedisCache(CacheBackend):
 class CacheManager:
     """
     Unified cache manager with multiple backends.
-    
+
     Usage:
         cache = CacheManager()
-        
+
         # Cache search results
         await cache.set("search:ml", results, ttl=3600)
-        
+
         # Get cached results
         results = await cache.get("search:ml")
     """
@@ -328,7 +328,7 @@ class CacheManager:
     def __init__(self, backend: str = "sqlite"):
         """
         Initialize cache manager.
-        
+
         Args:
             backend: "memory", "sqlite", or "redis"
         """
@@ -382,7 +382,7 @@ def get_cache(backend: str = "sqlite") -> CacheManager:
 def cached(ttl_seconds: int = 3600, key_prefix: str = ""):
     """
     Decorator to cache function results.
-    
+
     Usage:
         @cached(ttl_seconds=3600, key_prefix="search")
         async def search_repos(query: str):

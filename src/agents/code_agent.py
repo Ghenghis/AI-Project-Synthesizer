@@ -20,7 +20,7 @@ secure_logger = get_secure_logger(__name__)
 class CodeAgent(BaseAgent):
     """
     Code agent for code-related tasks.
-    
+
     Features:
     - Generate code from descriptions
     - Fix bugs and errors
@@ -384,7 +384,7 @@ OUTPUT: <final output>
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)
-            except:
+            except Exception:
                 params = {}
 
         # Execute tool
@@ -413,11 +413,11 @@ OUTPUT: <final output>
     async def generate(self, description: str, language: str = "python") -> str:
         """
         Generate code from description.
-        
+
         Args:
             description: What the code should do
             language: Programming language
-            
+
         Returns:
             Generated code
         """
@@ -427,11 +427,11 @@ OUTPUT: <final output>
     async def fix(self, code: str, error: str) -> str:
         """
         Fix code with error.
-        
+
         Args:
             code: Broken code
             error: Error message
-            
+
         Returns:
             Fixed code
         """

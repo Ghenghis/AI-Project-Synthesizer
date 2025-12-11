@@ -73,19 +73,19 @@ class ChainConfig:
 class LangChainOrchestrator:
     """
     Orchestrates LangChain workflows for the synthesizer.
-    
+
     Features:
     - Multi-provider LLM support (LM Studio, Ollama, OpenAI)
     - Pre-built chains for common tasks
     - Custom chain creation
     - Agent-based autonomous workflows
-    
+
     Usage:
         orchestrator = LangChainOrchestrator()
-        
+
         # Run research chain
         result = await orchestrator.research("machine learning project ideas")
-        
+
         # Run synthesis chain
         result = await orchestrator.synthesize(project_idea, resources)
     """
@@ -138,7 +138,7 @@ class LangChainOrchestrator:
     async def research(self, query: str) -> Dict[str, Any]:
         """
         Run research chain to discover resources.
-        
+
         Steps:
         1. Analyze query to understand intent
         2. Generate search queries for each platform
@@ -162,7 +162,7 @@ class LangChainOrchestrator:
     ) -> Dict[str, Any]:
         """
         Run synthesis chain to plan project assembly.
-        
+
         Steps:
         1. Analyze resources for compatibility
         2. Plan integration strategy
@@ -191,7 +191,7 @@ class LangChainOrchestrator:
         llm = self._get_llm()
 
         prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are an AI Project Synthesizer assistant. 
+            ("system", """You are an AI Project Synthesizer assistant.
             You help users discover, combine, and build projects from open-source resources.
             You have access to GitHub, HuggingFace, and Kaggle for searching.
             Be helpful, concise, and proactive in suggesting improvements."""),
@@ -220,10 +220,10 @@ class LangChainOrchestrator:
     def create_agent(self, tools: List[Tool]) -> AgentExecutor:
         """
         Create a ReAct agent with custom tools.
-        
+
         Args:
             tools: List of LangChain tools
-        
+
         Returns:
             AgentExecutor ready to run
         """
@@ -263,7 +263,7 @@ Thought:{agent_scratchpad}""")
 def create_research_chain(llm):
     """
     Create a research chain for discovering resources.
-    
+
     Chain flow:
     1. Query Analysis → Understanding what user wants
     2. Search Query Generation → Platform-specific queries
@@ -338,7 +338,7 @@ Provide 3-5 specific recommendations for finding the best resources:""")
 def create_synthesis_chain(llm):
     """
     Create a synthesis chain for project assembly planning.
-    
+
     Chain flow:
     1. Compatibility Analysis → Check if resources work together
     2. Integration Planning → How to combine them

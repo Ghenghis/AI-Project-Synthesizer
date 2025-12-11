@@ -235,7 +235,7 @@ class AllSettings(BaseModel):
 class SettingsManager:
     """
     Central settings management system.
-    
+
     Features:
     - Load/save settings to file
     - Settings validation

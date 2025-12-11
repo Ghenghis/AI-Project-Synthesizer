@@ -71,7 +71,7 @@ class SystemHealth:
 class HealthChecker:
     """
     System health checker.
-    
+
     Monitors all components and provides health status.
     """
 

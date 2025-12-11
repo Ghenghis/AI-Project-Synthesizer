@@ -26,13 +26,13 @@ class ScaffoldResult:
 class Scaffolder:
     """
     Project scaffolder for creating standard project structures.
-    
+
     Templates:
     - python-default: Standard Python package
     - python-fastapi: FastAPI web application
     - python-ml: Machine learning project
     - fullstack: Frontend + Backend
-    
+
     Usage:
         scaffolder = Scaffolder()
         result = await scaffolder.scaffold(
@@ -107,7 +107,7 @@ async def health_check():
     ) -> ScaffoldResult:
         """
         Apply project template scaffolding.
-        
+
         Args:
             output_path: Project output directory
             template: Template name
@@ -116,7 +116,7 @@ async def health_check():
             include_docker: Include Docker files
             include_tests: Include test scaffolding
             include_ci: Include CI/CD configuration
-            
+
         Returns:
             ScaffoldResult with scaffolding details
         """
@@ -379,27 +379,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio ruff mypy
-      
+
       - name: Lint
         run: ruff check .
-      
+
       - name: Type check
         run: mypy src/ --ignore-missing-imports
-      
+
       - name: Test
         run: pytest tests/ -v
 '''

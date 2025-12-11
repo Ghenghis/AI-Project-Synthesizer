@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class SecretManager:
     """
     Manages secure handling of sensitive data.
-    
+
     Provides utilities for masking secrets in logs,
     validating input, and sanitizing data.
     """
@@ -44,11 +44,11 @@ class SecretManager:
     def mask_secrets(text: str, mask_char: str = "*") -> str:
         """
         Mask potential secrets in text.
-        
+
         Args:
             text: Text that might contain secrets
             mask_char: Character to use for masking
-            
+
         Returns:
             Text with secrets masked
         """
@@ -75,10 +75,10 @@ class SecretManager:
     def hash_secret(secret: str) -> str:
         """
         Create a secure hash of a secret for comparison.
-        
+
         Args:
             secret: Secret to hash
-            
+
         Returns:
             SHA-256 hash of the secret
         """
@@ -88,10 +88,10 @@ class SecretManager:
     def generate_secure_id(length: int = 32) -> str:
         """
         Generate a cryptographically secure random ID.
-        
+
         Args:
             length: Length of the ID to generate
-            
+
         Returns:
             Secure random string
         """
@@ -122,10 +122,10 @@ class InputValidator:
     def validate_repository_url(url: str) -> bool:
         """
         Validate repository URL format.
-        
+
         Args:
             url: Repository URL to validate
-            
+
         Returns:
             True if valid, False otherwise
         """
@@ -149,10 +149,10 @@ class InputValidator:
     def sanitize_filename(filename: str) -> str:
         """
         Sanitize filename to prevent path traversal.
-        
+
         Args:
             filename: Filename to sanitize
-            
+
         Returns:
             Sanitized filename
         """
@@ -178,10 +178,10 @@ class InputValidator:
     def validate_search_query(query: str) -> bool:
         """
         Validate search query to prevent injection.
-        
+
         Args:
             query: Search query to validate
-            
+
         Returns:
             True if valid, False otherwise
         """
@@ -203,10 +203,10 @@ class InputValidator:
     def sanitize_path(path: str) -> str:
         """
         Sanitize file system path to prevent traversal.
-        
+
         Args:
             path: Path to sanitize
-            
+
         Returns:
             Sanitized path
         """
@@ -237,11 +237,11 @@ class SecureLogger:
     def _sanitize_message(self, message: str, **kwargs) -> tuple[str, Dict[str, Any]]:
         """
         Sanitize message and kwargs for logging.
-        
+
         Args:
             message: Log message
             **kwargs: Additional context
-            
+
         Returns:
             Tuple of sanitized message and context
         """
@@ -287,10 +287,10 @@ class SecureLogger:
 def secure_input(validation_func=None):
     """
     Decorator for validating and sanitizing function inputs.
-    
+
     Args:
         validation_func: Optional function to validate inputs
-        
+
     Returns:
         Decorated function
     """
@@ -353,10 +353,10 @@ class SecurityConfig:
     def is_domain_allowed(cls, url: str) -> bool:
         """
         Check if URL domain is in allowed list.
-        
+
         Args:
             url: URL to check
-            
+
         Returns:
             True if domain is allowed
         """

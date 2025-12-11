@@ -57,13 +57,13 @@ class ResolutionResult:
 class PythonResolver:
     """
     Python dependency resolver using uv SAT solver.
-    
+
     Features:
     - Fast resolution with uv (10-100x faster than pip)
     - Fallback to pip-compile
     - Conflict detection and resolution
     - Lock file generation
-    
+
     Example:
         resolver = PythonResolver()
         result = await resolver.resolve([
@@ -81,7 +81,7 @@ class PythonResolver:
     ):
         """
         Initialize the Python resolver.
-        
+
         Args:
             python_version: Target Python version
             prefer_uv: Try uv first, fallback to pip-tools
@@ -125,12 +125,12 @@ class PythonResolver:
     ) -> ResolutionResult:
         """
         Resolve dependencies to exact versions.
-        
+
         Args:
             requirements: List of requirement strings
             python_version: Override Python version
             constraints: Additional version constraints
-            
+
         Returns:
             ResolutionResult with resolved packages
         """
@@ -360,10 +360,10 @@ class PythonResolver:
     ) -> List[str]:
         """
         Check for potential conflicts without full resolution.
-        
+
         Args:
             requirements: List of requirements to check
-            
+
         Returns:
             List of potential conflict descriptions
         """

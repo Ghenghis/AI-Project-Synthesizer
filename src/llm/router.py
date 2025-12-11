@@ -41,17 +41,17 @@ class RoutingDecision:
 class LLMRouter:
     """
     Intelligent router between local and cloud LLMs.
-    
+
     Routing strategy:
     - Simple tasks → Local (Ollama 7B or LM Studio fast model)
     - Moderate tasks → Local (Ollama 14B or LM Studio balanced model)
     - Complex tasks → Cloud API when enabled, else largest local
-    
+
     Supports multiple providers with intelligent fallback:
     - Preferred provider (configurable: ollama, lmstudio, openai, anthropic)
     - Fallback between local providers (Ollama ↔ LM Studio)
     - Cloud fallback when enabled
-    
+
     Usage:
         router = LLMRouter()
         result = await router.complete(
@@ -77,7 +77,7 @@ class LLMRouter:
     ):
         """
         Initialize the router.
-        
+
         Args:
             preferred_provider: Preferred provider (ollama, lmstudio, openai, anthropic)
             ollama_client: Ollama client instance
@@ -118,10 +118,10 @@ class LLMRouter:
     async def check_provider_health(self, provider: ProviderType) -> bool:
         """
         Check if a provider is available.
-        
+
         Args:
             provider: Provider to check
-            
+
         Returns:
             True if provider is healthy
         """
@@ -141,7 +141,7 @@ class LLMRouter:
     async def get_best_provider(self) -> ProviderType:
         """
         Get the best available provider with fallback logic.
-        
+
         Returns:
             Best available provider
         """
@@ -176,7 +176,7 @@ class LLMRouter:
     ) -> TaskComplexity:
         """
         Estimate task complexity from prompt.
-        
+
         Heuristics:
         - Short prompts with simple questions → Simple
         - Code review, single file analysis → Moderate
@@ -216,12 +216,12 @@ class LLMRouter:
     ) -> RoutingDecision:
         """
         Decide which model to use based on size preference and task complexity.
-        
+
         Args:
             complexity: Task complexity
             context_length: Estimated context length in tokens
             preferred_provider: Override preferred provider
-            
+
         Returns:
             RoutingDecision with model selection
         """
@@ -293,14 +293,14 @@ class LLMRouter:
     ) -> CompletionResult:
         """
         Complete prompt with automatic routing and fallback.
-        
+
         Args:
             prompt: User prompt
             complexity: Override complexity (auto-detected if None)
             system_prompt: Optional system prompt
             temperature: Sampling temperature
             max_tokens: Maximum tokens
-            
+
         Returns:
             CompletionResult from chosen model
         """

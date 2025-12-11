@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class CorrelationManager:
     """
     Manages correlation IDs for request tracing across the pipeline.
-    
+
     Provides context for tracking operations across multiple components
     and external API calls.
     """
@@ -50,7 +50,7 @@ class CorrelationManager:
     def correlation_context(self, correlation_id: Optional[str] = None):
         """
         Context manager for correlation ID.
-        
+
         Args:
             correlation_id: Optional correlation ID, generates if None
         """
@@ -92,7 +92,7 @@ class MetricType:
 class MetricsCollector:
     """
     Collects and manages application metrics.
-    
+
     Supports counters, gauges, histograms, and timers with
     configurable retention and aggregation.
     """
@@ -100,7 +100,7 @@ class MetricsCollector:
     def __init__(self, max_history: int = 1000):
         """
         Initialize metrics collector.
-        
+
         Args:
             max_history: Maximum values to keep per metric
         """
@@ -112,7 +112,7 @@ class MetricsCollector:
     def increment(self, name: str, value: float = 1.0, tags: Optional[Dict[str, str]] = None):
         """
         Increment counter metric.
-        
+
         Args:
             name: Metric name
             value: Increment value
@@ -125,7 +125,7 @@ class MetricsCollector:
     def set_gauge(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
         """
         Set gauge metric value.
-        
+
         Args:
             name: Metric name
             value: Gauge value
@@ -138,7 +138,7 @@ class MetricsCollector:
     def record_timer(self, name: str, duration: float, tags: Optional[Dict[str, str]] = None):
         """
         Record timer metric.
-        
+
         Args:
             name: Metric name
             duration: Duration in seconds
@@ -150,7 +150,7 @@ class MetricsCollector:
     def record_histogram(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
         """
         Record histogram value.
-        
+
         Args:
             name: Metric name
             value: Value to record
@@ -170,11 +170,11 @@ class MetricsCollector:
     def get_metric_values(self, name: str, since: Optional[float] = None) -> List[MetricValue]:
         """
         Get metric values.
-        
+
         Args:
             name: Metric name
             since: Optional timestamp filter
-            
+
         Returns:
             List of metric values
         """
@@ -186,11 +186,11 @@ class MetricsCollector:
     def get_metric_summary(self, name: str, since: Optional[float] = None) -> Dict[str, Any]:
         """
         Get metric summary statistics.
-        
+
         Args:
             name: Metric name
             since: Optional timestamp filter
-            
+
         Returns:
             Summary statistics
         """
@@ -248,7 +248,7 @@ class HealthCheck:
     def __init__(self, name: str, check_func: Callable, timeout: float = 10.0):
         """
         Initialize health check.
-        
+
         Args:
             name: Check name
             check_func: Async function that returns True if healthy
@@ -264,7 +264,7 @@ class HealthCheck:
     async def check(self) -> Dict[str, Any]:
         """
         Execute health check.
-        
+
         Returns:
             Health check result
         """
@@ -336,7 +336,7 @@ class HealthChecker:
     async def check_all(self) -> Dict[str, Any]:
         """
         Execute all health checks.
-        
+
         Returns:
             Overall health status and individual check results
         """
@@ -480,7 +480,7 @@ performance = PerformanceTracker()
 def track_performance(operation: str):
     """
     Context manager for tracking operation performance.
-    
+
     Args:
         operation: Operation name
     """
@@ -499,19 +499,19 @@ def track_performance(operation: str):
 def track_metrics(metric_type: str, name: str, tags: Optional[Dict[str, str]] = None):
     """
     Decorator for tracking function metrics.
-    
+
     Args:
         metric_type: Type of metric (counter, timer, histogram)
         name: Metric name
         tags: Optional tags
-        
+
     Returns:
         Decorated function
     """
     def decorator(func: Callable) -> Callable:
         async def async_wrapper(*args, **kwargs):
             start_time = time.time()
-            correlation_id = correlation_manager.get_correlation_id()
+            correlation_manager.get_correlation_id()
 
             try:
                 result = await func(*args, **kwargs)
@@ -549,7 +549,7 @@ def set_correlation_id(correlation_id: str):
 async def check_lmstudio_health() -> Dict[str, Any]:
     """
     Health check for LM Studio service.
-    
+
     Returns:
         Health check result with status and details
     """

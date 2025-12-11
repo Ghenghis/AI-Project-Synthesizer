@@ -70,7 +70,7 @@ class Plugin(ABC):
 class PlatformPlugin(Plugin):
     """
     Plugin for adding new search platforms.
-    
+
     Example:
         class GitLabPlugin(PlatformPlugin):
             @property
@@ -81,7 +81,7 @@ class PlatformPlugin(Plugin):
                     description="GitLab repository search",
                     plugin_type=PluginType.PLATFORM,
                 )
-            
+
             async def search(self, query, max_results=10):
                 # Implement GitLab search
                 ...
@@ -147,14 +147,14 @@ class HookPlugin(Plugin):
 class PluginManager:
     """
     Manages plugin discovery, loading, and lifecycle.
-    
+
     Usage:
         manager = PluginManager()
         await manager.discover_plugins()
-        
+
         # Get all platform plugins
         platforms = manager.get_plugins(PluginType.PLATFORM)
-        
+
         # Search across all platforms
         for plugin in platforms:
             results = await plugin.search("machine learning")
@@ -172,7 +172,7 @@ class PluginManager:
     async def discover_plugins(self) -> int:
         """
         Discover and load all plugins.
-        
+
         Returns:
             Number of plugins loaded
         """

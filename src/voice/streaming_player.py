@@ -51,10 +51,10 @@ class StreamConfig:
 class StreamingVoicePlayer:
     """
     Real-time streaming voice player.
-    
+
     Plays audio as it's generated - no waiting for full audio.
     Optimized for smooth transitions without gaps.
-    
+
     Usage:
         player = StreamingVoicePlayer()
         await player.speak("Hello, this plays immediately!")
@@ -88,15 +88,15 @@ class StreamingVoicePlayer:
     ) -> bool:
         """
         Speak text with streaming playback.
-        
+
         Audio starts playing as soon as first chunks arrive.
         No gaps between chunks for smooth output.
-        
+
         Args:
             text: Text to speak
             voice_id: ElevenLabs voice ID
             on_chunk: Optional callback for each audio chunk
-        
+
         Returns:
             True if successful
         """
@@ -314,13 +314,13 @@ async def speak_fast(
 ) -> bool:
     """
     Quick function for fast, smooth voice output.
-    
+
     Uses turbo model + streaming for lowest latency.
-    
+
     Args:
         text: Text to speak
         voice: Voice name or ID
-    
+
     Returns:
         True if successful
     """

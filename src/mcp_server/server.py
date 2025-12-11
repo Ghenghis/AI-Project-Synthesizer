@@ -101,7 +101,7 @@ settings = get_settings()
 async def list_tools() -> list[Tool]:
     """
     List all available MCP tools.
-    
+
     Returns tools for:
     - Repository discovery and search
     - Code analysis
@@ -409,7 +409,7 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """
     Handle tool calls from Windsurf.
-    
+
     Dispatches to the appropriate handler based on tool name.
     All handlers are implemented in src/mcp/tools.py
     """
@@ -418,7 +418,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     correlation_manager.set_correlation_id(correlation_id)
 
     # Mask secrets in arguments before logging
-    sanitized_args = SecretManager.mask_secrets(str(arguments))
+    SecretManager.mask_secrets(str(arguments))
 
     secure_logger.info(
         f"Tool called: {name}",
@@ -507,7 +507,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 async def main():
     """
     Main entry point for the MCP server.
-    
+
     Starts the server using stdio transport for Windsurf integration.
     """
     secure_logger.info("=" * 60)

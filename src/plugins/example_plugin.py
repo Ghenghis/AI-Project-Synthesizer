@@ -14,7 +14,7 @@ from src.core.plugins import PlatformPlugin, PluginMetadata, PluginType
 class GitLabPlugin(PlatformPlugin):
     """
     GitLab repository search plugin.
-    
+
     This is an example - implement your own logic for real use.
     """
 
@@ -42,7 +42,7 @@ class GitLabPlugin(PlatformPlugin):
     async def search(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """
         Search GitLab repositories.
-        
+
         Returns list of repositories matching query.
         """
         # Example implementation - replace with real GitLab API calls

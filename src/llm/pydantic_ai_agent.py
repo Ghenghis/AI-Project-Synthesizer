@@ -120,7 +120,7 @@ research_agent = Agent(
     create_lmstudio_model(),
     result_type=List[ResourceRecommendation],
     system_prompt="""You are a research agent that finds relevant open-source resources.
-    
+
 Given a project idea or query, recommend the best resources from:
 - GitHub repositories
 - HuggingFace models and datasets
@@ -275,7 +275,7 @@ class AgentFactory:
     ) -> Agent:
         """
         Create a configured agent.
-        
+
         Args:
             agent_type: Type of agent (research, synthesis, conversation)
             model_provider: LLM provider (lmstudio, openai, anthropic)

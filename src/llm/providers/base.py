@@ -110,7 +110,7 @@ class StreamChunk:
 class LLMProvider(ABC):
     """
     Abstract base class for LLM providers.
-    
+
     All provider implementations must inherit from this class
     and implement the required methods.
     """

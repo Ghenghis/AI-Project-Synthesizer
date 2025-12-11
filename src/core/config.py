@@ -503,7 +503,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    
+
     Uses lru_cache to ensure settings are only loaded once.
     """
     return Settings()

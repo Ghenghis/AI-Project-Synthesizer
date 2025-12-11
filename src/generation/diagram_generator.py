@@ -24,13 +24,13 @@ class DiagramConfig:
 class DiagramGenerator:
     """
     Generates Mermaid diagrams for documentation.
-    
+
     Diagram types:
     - architecture: High-level system overview
     - flow: Data flow diagram
     - class: Class relationships
     - sequence: Interaction sequences
-    
+
     Usage:
         generator = DiagramGenerator()
         diagrams = generator.generate(config)
@@ -44,10 +44,10 @@ class DiagramGenerator:
     ) -> Dict[str, str]:
         """
         Generate diagrams based on configuration.
-        
+
         Args:
             config: Diagram configuration
-            
+
         Returns:
             Dictionary of diagram_name -> mermaid_content
         """
@@ -97,7 +97,7 @@ class DiagramGenerator:
     subgraph Input["📥 Input"]
         USER[User Request]
     end
-    
+
     subgraph Processing["⚙️ Processing"]
 """
 
@@ -110,11 +110,11 @@ class DiagramGenerator:
             prev_id = safe_id
 
         diagram += """    end
-    
+
     subgraph Output["📤 Output"]
         RESULT[Result]
     end
-    
+
 """
         diagram += f"    {prev_id} --> RESULT\n"
 
@@ -141,10 +141,10 @@ class DiagramGenerator:
     ) -> Dict[str, str]:
         """
         Auto-generate diagrams by analyzing codebase.
-        
+
         Args:
             project_path: Path to project
-            
+
         Returns:
             Generated diagrams
         """
@@ -175,11 +175,11 @@ class DiagramGenerator:
     ) -> List[Path]:
         """
         Save diagrams to files.
-        
+
         Args:
             diagrams: Diagram content by name
             output_dir: Output directory
-            
+
         Returns:
             List of created file paths
         """

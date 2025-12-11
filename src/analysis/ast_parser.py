@@ -67,10 +67,10 @@ class ParsedFile:
 class ASTParser:
     """
     Multi-language AST parser.
-    
+
     Supports Python, JavaScript, TypeScript, and more via tree-sitter.
     Falls back to regex-based parsing when tree-sitter is unavailable.
-    
+
     Example:
         parser = ASTParser()
         parsed = await parser.parse_file(Path("main.py"))
@@ -113,10 +113,10 @@ class ASTParser:
     async def parse_file(self, file_path: Path) -> ParsedFile:
         """
         Parse a single source file.
-        
+
         Args:
             file_path: Path to the source file
-            
+
         Returns:
             ParsedFile with extracted structure
         """
@@ -158,10 +158,10 @@ class ASTParser:
     async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
         """
         Analyze entire project structure.
-        
+
         Args:
             project_path: Path to project root
-            
+
         Returns:
             Dictionary with project analysis results
         """
@@ -304,7 +304,7 @@ class ASTParser:
         # Calculate line counts
         lines = content.splitlines()
         loc = len(lines)
-        sloc = len([l for l in lines if l.strip() and not l.strip().startswith("#")])
+        sloc = len([line for line in lines if line.strip() and not line.strip().startswith("#")])
 
         return ParsedFile(
             path=str(file_path),
@@ -410,7 +410,7 @@ class ASTParser:
 
         lines = content.splitlines()
         loc = len(lines)
-        sloc = len([l for l in lines if l.strip() and not l.strip().startswith("//")])
+        sloc = len([line for line in lines if line.strip() and not line.strip().startswith("//")])
 
         return ParsedFile(
             path=str(file_path),
@@ -431,7 +431,7 @@ class ASTParser:
         """Generic parsing for unsupported languages."""
         lines = content.splitlines()
         loc = len(lines)
-        sloc = len([l for l in lines if l.strip()])
+        sloc = len([line for line in lines if line.strip()])
 
         return ParsedFile(
             path=str(file_path),

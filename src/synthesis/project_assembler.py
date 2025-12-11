@@ -97,14 +97,14 @@ class AssemblerConfig:
 class ProjectAssembler:
     """
     Automated project assembler.
-    
+
     Takes a project idea and:
     1. Searches for compatible resources
     2. Downloads everything
     3. Organizes into folder structure
     4. Creates GitHub repo
     5. Prepares for Windsurf
-    
+
     Usage:
         assembler = ProjectAssembler()
         project = await assembler.assemble(
@@ -137,12 +137,12 @@ class ProjectAssembler:
     ) -> AssembledProject:
         """
         Assemble a complete project from an idea.
-        
+
         Args:
             idea: Project idea/description
             name: Project name (auto-generated if not provided)
             description: Project description
-        
+
         Returns:
             AssembledProject ready for development
         """
@@ -820,16 +820,16 @@ async def assemble_project(
 ) -> AssembledProject:
     """
     Quick function to assemble a project.
-    
+
     Args:
         idea: Project idea/description
         name: Project name
         output_dir: Where to create project
         create_github: Create GitHub repo
-    
+
     Returns:
         AssembledProject ready for Windsurf
-    
+
     Example:
         project = await assemble_project(
             "RAG chatbot with local LLM and vector database",

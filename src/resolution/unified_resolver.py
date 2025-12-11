@@ -51,14 +51,14 @@ class UnifiedResolutionResult:
 class UnifiedResolver:
     """
     Unified dependency resolver for multiple repositories.
-    
+
     Workflow:
     1. Clone/access repositories
     2. Extract dependencies from each
     3. Merge and deduplicate
     4. Resolve conflicts with SAT solver
     5. Generate unified requirements
-    
+
     Example:
         resolver = UnifiedResolver()
         result = await resolver.resolve(
@@ -80,12 +80,12 @@ class UnifiedResolver:
     ) -> UnifiedResolutionResult:
         """
         Resolve dependencies from multiple repositories.
-        
+
         Args:
             repository_urls: List of repository URLs
             python_version: Target Python version
             additional_constraints: Extra version constraints
-            
+
         Returns:
             UnifiedResolutionResult with merged dependencies
         """
@@ -198,11 +198,11 @@ class UnifiedResolver:
     ) -> UnifiedResolutionResult:
         """
         Resolve from pre-analyzed dependency graphs.
-        
+
         Args:
             dependency_graphs: List of analyzed DependencyGraph objects
             python_version: Target Python version
-            
+
         Returns:
             UnifiedResolutionResult
         """
@@ -229,12 +229,12 @@ class UnifiedResolver:
     ) -> str:
         """
         Generate pyproject.toml content from resolution.
-        
+
         Args:
             result: Resolution result
             project_name: Project name
             project_version: Project version
-            
+
         Returns:
             pyproject.toml content string
         """

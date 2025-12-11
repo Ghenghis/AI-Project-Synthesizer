@@ -91,7 +91,7 @@ class Bookmark:
 class MemoryStore:
     """
     SQLite-based persistent memory store.
-    
+
     Features:
     - Conversation history
     - Search history with replay
@@ -193,7 +193,7 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT OR REPLACE INTO memories 
+            INSERT OR REPLACE INTO memories
             (id, type, content, tags, created_at, updated_at, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
@@ -296,7 +296,7 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT INTO searches 
+            INSERT INTO searches
             (id, query, platforms, results_count, timestamp, filters)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
@@ -366,7 +366,7 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT OR REPLACE INTO bookmarks 
+            INSERT OR REPLACE INTO bookmarks
             (id, name, url, type, description, tags, created_at, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
@@ -457,7 +457,7 @@ class MemoryStore:
         msg_id = f"msg_{datetime.now().timestamp()}"
 
         cursor.execute("""
-            INSERT INTO conversations 
+            INSERT INTO conversations
             (id, session_id, role, content, timestamp, metadata)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
@@ -483,8 +483,8 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT role, content, timestamp, metadata 
-            FROM conversations 
+            SELECT role, content, timestamp, metadata
+            FROM conversations
             WHERE session_id = ?
             ORDER BY timestamp ASC
             LIMIT ?
@@ -515,7 +515,7 @@ class MemoryStore:
         state_id = f"state_{workflow_id}"
 
         cursor.execute("""
-            INSERT OR REPLACE INTO workflow_states 
+            INSERT OR REPLACE INTO workflow_states
             (id, workflow_id, state, updated_at)
             VALUES (?, ?, ?, ?)
         """, (

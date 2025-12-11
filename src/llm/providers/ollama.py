@@ -34,13 +34,13 @@ OLLAMA_BREAKER = CircuitBreakerConfig(
 class OllamaProvider(LLMProvider):
     """
     Native Ollama provider using Ollama's REST API.
-    
+
     Features:
     - Native Ollama API support
     - Model pulling and management
     - Streaming completions
     - Model information retrieval
-    
+
     Usage:
         config = ProviderConfig(
             provider_type=ProviderType.OLLAMA,
