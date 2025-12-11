@@ -1,0 +1,40 @@
+{
+  "name": "Synthesis Complete Hook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "synthesis-complete"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#synthesizer-alerts",
+        "text": "✅ Synthesis Complete!\n\nProject: {{ $json.project_name }}\nPath: {{ $json.output_path }}\nRepositories: {{ $json.repository_count }}\nDuration: {{ $json.duration_seconds }}s"
+      },
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/projects/{{ $json.project_id }}/generate-docs",
+        "method": "POST"
+      },
+      "name": "Generate Documentation",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Slack Notification", "type": "main", "index": 0 }]] },
+    "Slack Notification": { "main": [[{ "node": "Generate Documentation", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "description": "Triggered when a synthesis operation completes successfully"
+  }
+}

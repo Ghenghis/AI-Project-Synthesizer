@@ -148,7 +148,7 @@
 
 | Metric | Value |
 |--------|-------|
-| **Version** | 1.1.0 |
+| **Version** | 2.0.0 |
 | **Python** | 3.11+ |
 | **Source Files** | ~50 |
 | **Lines of Code** | ~15,000 |

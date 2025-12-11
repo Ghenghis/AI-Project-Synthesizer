@@ -1,0 +1,58 @@
+{
+  "name": "GitHub Repo Sweep",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 24 }]
+        }
+      },
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/search",
+        "method": "POST",
+        "body": {
+          "query": "{{ $json.query }}",
+          "platforms": ["github"],
+          "max_results": 50
+        }
+      },
+      "name": "Search Repositories",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [{ "value1": "={{ $json.results.length }}", "operation": "larger", "value2": 0 }]
+        }
+      },
+      "name": "Has Results?",
+      "type": "n8n-nodes-base.if",
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analyze",
+        "method": "POST",
+        "body": { "repo_url": "={{ $json.url }}" }
+      },
+      "name": "Analyze Each Repo",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [850, 200]
+    }
+  ],
+  "connections": {
+    "Daily Trigger": { "main": [[{ "node": "Search Repositories", "type": "main", "index": 0 }]] },
+    "Search Repositories": { "main": [[{ "node": "Has Results?", "type": "main", "index": 0 }]] },
+    "Has Results?": { "main": [[{ "node": "Analyze Each Repo", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "description": "Daily sweep of GitHub for trending repositories matching search criteria"
+  }
+}

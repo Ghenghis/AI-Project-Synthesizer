@@ -126,6 +126,7 @@ logs/
 !src/automation/n8n_workflows/*.json
 !templates/**/*.json
 !recipes/**/*.json
+!workflows/**/*.json
 
 # Model files
 *.bin
