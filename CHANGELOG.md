@@ -85,6 +85,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Agent tests
   - Settings/hotkey tests
   - Automation metrics tests
+  - Edge case tests (`tests/test_edge_cases.py`)
+  - MCP server tests (`tests/test_mcp_server.py`)
+
+- **Recipe System**
+  - Pre-configured project templates
+  - 3 built-in recipes: MCP Server, RAG Chatbot, Web Scraper
+  - Recipe CLI commands: list, show, run, validate
+  - YAML-based recipe definitions with JSON schema
+
+- **Wizard Mode**
+  - Interactive guided project creation
+  - Step-by-step configuration
+  - Tech stack recommendations
+  - Repository selection
+
+- **Plugin System Documentation**
+  - Platform plugins for new code hosts
+  - Analysis plugins for custom metrics
+  - Synthesis plugins for custom generation
+  - Plugin manager and lifecycle
+
+- **Web Dashboard Documentation**
+  - API endpoint reference
+  - WebSocket real-time updates
+  - Authentication and security
+  - Deployment guides
+
+- **Finalization Script**
+  - `scripts/finalize.ps1` for hardening
+  - Security scan with bandit
+  - Dependency upgrades
+  - pip-audit vulnerability check
+  - Integration test runner
+
+- **Thread-Safe Synthesis Jobs**
+  - `threading.Lock` for job management
+  - `get_synthesis_job()`, `set_synthesis_job()`, `update_synthesis_job()`
+  - Concurrent job safety
+
+- **LM Studio Integration**
+  - Windows + LM Studio setup docs
+  - `scripts/start_with_lmstudio.ps1` helper
+  - Auto-detection of local LLM
 
 ### Changed
 
@@ -92,6 +135,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated all documentation
 - Enhanced architecture diagrams
 - Improved error handling across agents
+- Fixed placeholder URLs in pyproject.toml
+- Fixed placeholder email in pyproject.toml
+- Updated PROJECT_STATUS.md with metrics table
 
 ---
 
