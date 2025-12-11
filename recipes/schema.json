@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Synthesizer Recipe",
+  "description": "Schema for AI Synthesizer recipe files",
+  "type": "object",
+  "required": ["name", "version", "description", "sources", "synthesis"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique recipe identifier",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Recipe version (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description"
+    },
+    "author": {
+      "type": "string",
+      "description": "Recipe author"
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Tags for categorization"
+    },
+    "sources": {
+      "type": "array",
+      "description": "Source repositories",
+      "items": {
+        "type": "object",
+        "required": ["repo"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "description": "Repository URL"
+          },
+          "branch": {
+            "type": "string",
+            "default": "main",
+            "description": "Branch to use"
+          },
+          "extract": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Paths to extract"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "path": {"type": "string"}
+              }
+            }
+          },
+          "rename": {
+            "type": "object",
+            "additionalProperties": {"type": "string"},
+            "description": "Path renaming rules"
+          }
+        }
+      }
+    },
+    "synthesis": {
+      "type": "object",
+      "required": ["strategy"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["merge", "copy", "selective"],
+          "description": "Synthesis strategy"
+        },
+        "output_name": {
+          "type": "string",
+          "description": "Default output project name"
+        },
+        "template": {
+          "type": "string",
+          "enum": ["python-default", "python-ml", "python-web", "minimal"],
+          "default": "python-default"
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "merge": {"type": "boolean", "default": true},
+            "python_version": {"type": "string", "default": "3.11"}
+          }
+        },
+        "conflicts": {
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "type": "string",
+              "enum": ["prefer_first", "prefer_last", "manual"],
+              "default": "prefer_first"
+            }
+          }
+        }
+      }
+    },
+    "post_synthesis": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["generate_readme", "generate_api_docs", "generate_diagrams", "run_tests", "create_github_repo", "install_dependencies"]
+      },
+      "description": "Post-synthesis steps to run"
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {"type": "string"},
+          "default": {"type": "string"},
+          "required": {"type": "boolean", "default": false}
+        }
+      },
+      "description": "User-configurable variables"
+    }
+  }
+}

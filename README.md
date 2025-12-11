@@ -184,6 +184,43 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
+### Windows + LM Studio Setup (No Docker)
+
+If you're on Windows with LM Studio as your local LLM:
+
+```powershell
+# 1. Start LM Studio and load a model (e.g., Qwen2.5-Coder)
+# 2. Enable the local server in LM Studio (default: http://localhost:1234)
+
+# 3. Use the helper script
+.\scripts\start_with_lmstudio.ps1
+
+# Or manually:
+$env:LMSTUDIO_HOST = "http://localhost:1234"
+$env:LLM_PROVIDER = "lmstudio"
+python -m src.mcp_server.server
+```
+
+The synthesizer auto-detects LM Studio and uses it as the primary LLM provider.
+
+<details>
+<summary><b>LM Studio Configuration</b></summary>
+
+| Setting | Value |
+|---------|-------|
+| Default URL | `http://localhost:1234` |
+| API Format | OpenAI-compatible |
+| Recommended Models | Qwen2.5-Coder-14B, DeepSeek-Coder-V2 |
+| Context Window | 32K+ recommended |
+
+Environment variables:
+```bash
+LMSTUDIO_HOST=http://localhost:1234
+LLM_PROVIDER=lmstudio
+```
+
+</details>
+
 ---
 
 ## 🛠️ CLI Commands

@@ -1,0 +1,55 @@
+# MCP Server Starter Recipe
+# Creates a basic MCP server with example tools
+
+name: mcp-server-starter
+version: 1.0.0
+description: Basic MCP server template with example tools for Windsurf IDE
+author: AI Synthesizer
+tags:
+  - mcp
+  - windsurf
+  - starter
+  - template
+
+sources:
+  - repo: https://github.com/jlowin/fastmcp
+    branch: main
+    extract:
+      - src/fastmcp/
+      - examples/
+    rename:
+      src/fastmcp/: mcp/
+
+  - repo: https://github.com/anthropics/anthropic-cookbook
+    branch: main
+    extract:
+      - misc/mcp/
+    components:
+      - name: mcp_examples
+        path: misc/mcp/
+
+synthesis:
+  strategy: selective
+  output_name: my-mcp-server
+  template: python-default
+  
+  dependencies:
+    merge: true
+    python_version: "3.11"
+    
+  conflicts:
+    strategy: prefer_first
+
+post_synthesis:
+  - generate_readme
+  - generate_api_docs
+  - install_dependencies
+
+variables:
+  project_name:
+    description: Name for your MCP server
+    default: my-mcp-server
+  
+  tools_count:
+    description: Number of example tools to include
+    default: "5"

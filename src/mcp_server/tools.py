@@ -9,6 +9,7 @@ import asyncio
 import logging
 import tempfile
 import re
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -43,6 +44,26 @@ secure_logger = get_secure_logger(__name__)
 _unified_search: Optional[UnifiedSearch] = None
 _dependency_analyzer: Optional[DependencyAnalyzer] = None
 _synthesis_jobs: Dict[str, Dict[str, Any]] = {}
+_synthesis_jobs_lock = threading.Lock()  # Thread-safe access to synthesis jobs
+
+
+def get_synthesis_job(job_id: str) -> Optional[Dict[str, Any]]:
+    """Thread-safe getter for synthesis job."""
+    with _synthesis_jobs_lock:
+        return _synthesis_jobs.get(job_id)
+
+
+def set_synthesis_job(job_id: str, job_data: Dict[str, Any]) -> None:
+    """Thread-safe setter for synthesis job."""
+    with _synthesis_jobs_lock:
+        _synthesis_jobs[job_id] = job_data
+
+
+def update_synthesis_job(job_id: str, **updates) -> None:
+    """Thread-safe update for synthesis job."""
+    with _synthesis_jobs_lock:
+        if job_id in _synthesis_jobs:
+            _synthesis_jobs[job_id].update(updates)
 
 
 def get_unified_search() -> UnifiedSearch:
@@ -510,24 +531,23 @@ async def handle_synthesize_project(args: dict) -> dict:
                 "message": f"Invalid repository URL: {repo_url}",
             }
     
-    # Create synthesis job
+    # Create synthesis job (thread-safe)
     job_id = str(uuid.uuid4())
-    _synthesis_jobs[job_id] = {
+    set_synthesis_job(job_id, {
         "id": job_id,
         "status": "started",
         "progress": 0,
         "started_at": datetime.now().isoformat(),
         "repositories": len(repositories),
-    }
+    })
     
     logger.info(f"Starting synthesis job {job_id}: {project_name}")
     
     try:
         builder = ProjectBuilder()
         
-        # Update progress
-        _synthesis_jobs[job_id]["status"] = "cloning"
-        _synthesis_jobs[job_id]["progress"] = 10
+        # Update progress (thread-safe)
+        update_synthesis_job(job_id, status="cloning", progress=10)
         
         # Add timeout protection to synthesis operation
         result = await asyncio.wait_for(
@@ -541,9 +561,7 @@ async def handle_synthesize_project(args: dict) -> dict:
             timeout=TIMEOUT_SYNTHESIS
         )
         
-        _synthesis_jobs[job_id]["status"] = "complete"
-        _synthesis_jobs[job_id]["progress"] = 100
-        _synthesis_jobs[job_id]["completed_at"] = datetime.now().isoformat()
+        update_synthesis_job(job_id, status="complete", progress=100, completed_at=datetime.now().isoformat())
         
         return {
             "status": "success",
@@ -559,8 +577,7 @@ async def handle_synthesize_project(args: dict) -> dict:
         }
         
     except asyncio.TimeoutError:
-        _synthesis_jobs[job_id]["status"] = "failed"
-        _synthesis_jobs[job_id]["error"] = f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds"
+        update_synthesis_job(job_id, status="failed", error=f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds")
         return {
             "error": True,
             "message": f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds",
@@ -569,8 +586,7 @@ async def handle_synthesize_project(args: dict) -> dict:
         
     except Exception as e:
         logger.exception("Synthesis failed")
-        _synthesis_jobs[job_id]["status"] = "failed"
-        _synthesis_jobs[job_id]["error"] = str(e)
+        update_synthesis_job(job_id, status="failed", error=str(e))
         
         return {
             "error": True,
@@ -580,10 +596,8 @@ async def handle_synthesize_project(args: dict) -> dict:
 
 
 def _update_job(job_id: str, progress: int, status: str):
-    """Update synthesis job progress."""
-    if job_id in _synthesis_jobs:
-        _synthesis_jobs[job_id]["progress"] = progress
-        _synthesis_jobs[job_id]["status"] = status
+    """Update synthesis job progress (thread-safe)."""
+    update_synthesis_job(job_id, progress=progress, status=status)
 
 
 async def handle_generate_documentation(args: dict) -> dict:
@@ -696,13 +710,12 @@ async def handle_get_synthesis_status(args: dict) -> dict:
             "message": "Synthesis ID is required",
         }
     
-    if synthesis_id not in _synthesis_jobs:
+    job = get_synthesis_job(synthesis_id)
+    if job is None:
         return {
             "error": True,
             "message": f"Synthesis job not found: {synthesis_id}",
         }
-    
-    job = _synthesis_jobs[synthesis_id]
     
     return {
         "status": "success",

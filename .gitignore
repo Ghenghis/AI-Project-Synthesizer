@@ -125,6 +125,7 @@ logs/
 !docker/**/*.json
 !src/automation/n8n_workflows/*.json
 !templates/**/*.json
+!recipes/**/*.json
 
 # Model files
 *.bin

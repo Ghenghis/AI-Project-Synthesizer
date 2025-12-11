@@ -862,6 +862,202 @@ def start_mcp_server() -> None:
 
 
 # ============================================
+# WIZARD COMMAND
+# ============================================
+
+@app.command("wizard")
+def wizard_command() -> None:
+    """
+    Interactive project creation wizard.
+    
+    Guides you through creating a new project step-by-step:
+    1. Select project type (MCP, CLI, API, ML, etc.)
+    2. Enter project name
+    3. Choose tech stack
+    4. Add example repositories
+    5. Select output location
+    6. Confirm and create
+    
+    Example:
+        ai-synthesizer wizard
+    """
+    from src.tui.wizard import run_wizard, execute_wizard_config
+    
+    config = run_wizard()
+    
+    if config:
+        # Execute the configuration
+        success = asyncio.run(execute_wizard_config(config))
+        
+        if success:
+            console.print("\n[bold green]🎉 Project ready![/bold green]")
+            console.print(f"\nNext steps:")
+            console.print(f"  cd {config['full_path']}")
+            console.print(f"  pip install -r requirements.txt")
+            console.print(f"  python -m src.main")
+        else:
+            raise typer.Exit(code=1)
+
+
+# ============================================
+# RECIPE COMMANDS
+# ============================================
+
+@app.command("recipe")
+def recipe_command(
+    action: str = typer.Argument(..., help="Action: list, show, run, validate"),
+    name: Optional[str] = typer.Argument(None, help="Recipe name (for show/run/validate)"),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Output directory for run action"
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be done without executing"
+    ),
+) -> None:
+    """
+    Manage and run synthesis recipes.
+    
+    Actions:
+        list     - List all available recipes
+        show     - Show details of a specific recipe
+        run      - Run a recipe to create a project
+        validate - Validate a recipe file
+    
+    Examples:
+        ai-synthesizer recipe list
+        ai-synthesizer recipe show mcp-server-starter
+        ai-synthesizer recipe run rag-chatbot --output G:/projects
+    """
+    from src.recipes import RecipeLoader, RecipeRunner
+    
+    loader = RecipeLoader()
+    
+    if action == "list":
+        recipes = loader.list_recipes()
+        
+        if not recipes:
+            console.print("[yellow]No recipes found in recipes/ directory[/yellow]")
+            return
+        
+        table = Table(title="Available Recipes")
+        table.add_column("Name", style="cyan")
+        table.add_column("Version", style="green")
+        table.add_column("Description")
+        table.add_column("Tags", style="dim")
+        
+        for recipe in recipes:
+            table.add_row(
+                recipe["name"],
+                recipe["version"],
+                recipe["description"][:50] + "..." if len(recipe["description"]) > 50 else recipe["description"],
+                ", ".join(recipe["tags"][:3])
+            )
+        
+        console.print(table)
+    
+    elif action == "show":
+        if not name:
+            console.print("[red]Recipe name required for 'show' action[/red]")
+            raise typer.Exit(code=1)
+        
+        recipe = loader.load_recipe(name)
+        if not recipe:
+            console.print(f"[red]Recipe not found: {name}[/red]")
+            raise typer.Exit(code=1)
+        
+        console.print(Panel(f"[bold]{recipe.name}[/bold] v{recipe.version}", title="Recipe"))
+        console.print(f"\n[bold]Description:[/bold] {recipe.description}")
+        console.print(f"[bold]Author:[/bold] {recipe.author or 'Unknown'}")
+        console.print(f"[bold]Tags:[/bold] {', '.join(recipe.tags)}")
+        
+        console.print("\n[bold]Sources:[/bold]")
+        for source in recipe.sources:
+            console.print(f"  - {source.repo}")
+            if source.extract:
+                console.print(f"    Extract: {', '.join(source.extract[:3])}")
+        
+        console.print(f"\n[bold]Synthesis:[/bold]")
+        console.print(f"  Strategy: {recipe.synthesis.strategy}")
+        console.print(f"  Template: {recipe.synthesis.template}")
+        
+        if recipe.post_synthesis:
+            console.print(f"\n[bold]Post-synthesis:[/bold] {', '.join(recipe.post_synthesis)}")
+        
+        if recipe.variables:
+            console.print("\n[bold]Variables:[/bold]")
+            for var_name, var_config in recipe.variables.items():
+                default = var_config.get("default", "")
+                console.print(f"  - {var_name}: {var_config.get('description', '')} (default: {default})")
+    
+    elif action == "run":
+        if not name:
+            console.print("[red]Recipe name required for 'run' action[/red]")
+            raise typer.Exit(code=1)
+        
+        output_path = Path(output) if output else Path.cwd()
+        
+        runner = RecipeRunner()
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task(f"Running recipe: {name}...", total=None)
+            
+            result = asyncio.run(runner.run(
+                recipe_name=name,
+                output_path=output_path,
+                dry_run=dry_run,
+            ))
+        
+        if result.success:
+            console.print(f"\n[green]✅ Recipe completed successfully![/green]")
+            console.print(f"   Project: {result.project_path}")
+            console.print(f"   Repos cloned: {result.repos_cloned}")
+            console.print(f"   Files created: {result.files_created}")
+            
+            if result.warnings:
+                console.print("\n[yellow]Warnings:[/yellow]")
+                for warning in result.warnings:
+                    console.print(f"  - {warning}")
+        else:
+            console.print(f"\n[red]❌ Recipe failed[/red]")
+            for error in result.errors:
+                console.print(f"  - {error}")
+            raise typer.Exit(code=1)
+    
+    elif action == "validate":
+        if not name:
+            console.print("[red]Recipe name required for 'validate' action[/red]")
+            raise typer.Exit(code=1)
+        
+        recipe = loader.load_recipe(name)
+        if not recipe:
+            console.print(f"[red]Recipe not found: {name}[/red]")
+            raise typer.Exit(code=1)
+        
+        errors = loader.validate_recipe(recipe)
+        
+        if errors:
+            console.print(f"[red]❌ Recipe validation failed:[/red]")
+            for error in errors:
+                console.print(f"  - {error}")
+            raise typer.Exit(code=1)
+        else:
+            console.print(f"[green]✅ Recipe '{name}' is valid[/green]")
+    
+    else:
+        console.print(f"[red]Unknown action: {action}[/red]")
+        console.print("Valid actions: list, show, run, validate")
+        raise typer.Exit(code=1)
+
+
+# ============================================
 # MAIN ENTRY POINT
 # ============================================
 

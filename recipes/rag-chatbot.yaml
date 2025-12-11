@@ -1,0 +1,72 @@
+# RAG Chatbot Recipe
+# Creates a RAG chatbot with local LLM support
+
+name: rag-chatbot
+version: 1.0.0
+description: RAG chatbot with ChromaDB vector store and local LLM (Ollama/LM Studio)
+author: AI Synthesizer
+tags:
+  - rag
+  - chatbot
+  - llm
+  - chromadb
+  - langchain
+
+sources:
+  - repo: https://github.com/langchain-ai/langchain
+    branch: master
+    extract:
+      - libs/langchain/langchain/chains/
+      - libs/langchain/langchain/vectorstores/
+      - libs/langchain/langchain/embeddings/
+    components:
+      - name: chains
+        path: libs/langchain/langchain/chains/
+      - name: vectorstores
+        path: libs/langchain/langchain/vectorstores/
+
+  - repo: https://github.com/chroma-core/chroma
+    branch: main
+    extract:
+      - chromadb/
+    components:
+      - name: chromadb
+        path: chromadb/
+
+  - repo: https://github.com/ollama/ollama-python
+    branch: main
+    extract:
+      - ollama/
+    components:
+      - name: ollama_client
+        path: ollama/
+
+synthesis:
+  strategy: selective
+  output_name: rag-chatbot
+  template: python-ml
+  
+  dependencies:
+    merge: true
+    python_version: "3.11"
+    
+  conflicts:
+    strategy: prefer_first
+
+post_synthesis:
+  - generate_readme
+  - generate_api_docs
+  - generate_diagrams
+
+variables:
+  project_name:
+    description: Name for your RAG chatbot
+    default: rag-chatbot
+  
+  embedding_model:
+    description: Embedding model to use
+    default: all-MiniLM-L6-v2
+  
+  llm_provider:
+    description: LLM provider (ollama, lmstudio, openai)
+    default: ollama

@@ -1,0 +1,58 @@
+# Web Scraper Recipe
+# Creates an async web scraper with proxy support
+
+name: web-scraper
+version: 1.0.0
+description: Async web scraper with Playwright, proxy rotation, and data extraction
+author: AI Synthesizer
+tags:
+  - scraper
+  - playwright
+  - async
+  - proxy
+
+sources:
+  - repo: https://github.com/playwright-community/playwright-python
+    branch: main
+    extract:
+      - playwright/
+    components:
+      - name: playwright
+        path: playwright/
+
+  - repo: https://github.com/aio-libs/aiohttp
+    branch: master
+    extract:
+      - aiohttp/
+    components:
+      - name: aiohttp
+        path: aiohttp/
+
+synthesis:
+  strategy: selective
+  output_name: web-scraper
+  template: python-default
+  
+  dependencies:
+    merge: true
+    python_version: "3.11"
+    
+  conflicts:
+    strategy: prefer_first
+
+post_synthesis:
+  - generate_readme
+  - install_dependencies
+
+variables:
+  project_name:
+    description: Name for your scraper project
+    default: web-scraper
+  
+  use_proxy:
+    description: Enable proxy rotation
+    default: "false"
+  
+  headless:
+    description: Run browser in headless mode
+    default: "true"
