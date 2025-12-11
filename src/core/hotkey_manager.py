@@ -10,9 +10,8 @@ Global hotkey system for:
 
 import asyncio
 from typing import Optional, Dict, Callable, Any, List
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-import threading
 
 from src.core.security import get_secure_logger
 
@@ -33,20 +32,20 @@ class HotkeyAction(str, Enum):
     VOICE_TOGGLE = "voice_toggle"
     VOICE_PUSH_TO_TALK = "voice_push_to_talk"
     VOICE_CANCEL = "voice_cancel"
-    
+
     # Quick actions
     QUICK_SEARCH = "quick_search"
     QUICK_ASSEMBLE = "quick_assemble"
     QUICK_CHAT = "quick_chat"
-    
+
     # Navigation
     OPEN_SETTINGS = "open_settings"
     OPEN_DASHBOARD = "open_dashboard"
-    
+
     # Automation
     PAUSE_AUTOMATION = "pause_automation"
     RESUME_AUTOMATION = "resume_automation"
-    
+
     # System
     EMERGENCY_STOP = "emergency_stop"
 
@@ -72,14 +71,14 @@ class HotkeyManager:
     - Action callbacks
     - Enable/disable individual hotkeys
     """
-    
+
     def __init__(self):
         self._bindings: Dict[HotkeyAction, HotkeyBinding] = {}
         self._active_holds: Dict[str, bool] = {}
         self._running = False
         self._callbacks: Dict[HotkeyAction, List[Callable]] = {}
         self._setup_default_bindings()
-    
+
     def _setup_default_bindings(self):
         """Set up default hotkey bindings."""
         defaults = [
@@ -140,10 +139,10 @@ class HotkeyManager:
                 description="Emergency stop all",
             ),
         ]
-        
+
         for binding in defaults:
             self._bindings[binding.action] = binding
-    
+
     def register(
         self,
         action: HotkeyAction,
@@ -154,10 +153,10 @@ class HotkeyManager:
         if action not in self._callbacks:
             self._callbacks[action] = []
         self._callbacks[action].append(callback)
-        
+
         if keys and action in self._bindings:
             self._bindings[action].keys = keys
-    
+
     def unregister(self, action: HotkeyAction, callback: Optional[Callable] = None):
         """Unregister a callback."""
         if callback and action in self._callbacks:
@@ -166,13 +165,13 @@ class HotkeyManager:
             ]
         elif action in self._callbacks:
             self._callbacks[action] = []
-    
+
     def set_keys(self, action: HotkeyAction, keys: str):
         """Update hotkey binding."""
         if action in self._bindings:
             old_keys = self._bindings[action].keys
             self._bindings[action].keys = keys
-            
+
             # Re-register if running
             if self._running and KEYBOARD_AVAILABLE:
                 try:
@@ -180,25 +179,25 @@ class HotkeyManager:
                 except:
                     pass
                 self._register_keyboard_hotkey(self._bindings[action])
-    
+
     def enable(self, action: HotkeyAction):
         """Enable a hotkey."""
         if action in self._bindings:
             self._bindings[action].enabled = True
-    
+
     def disable(self, action: HotkeyAction):
         """Disable a hotkey."""
         if action in self._bindings:
             self._bindings[action].enabled = False
-    
+
     def _trigger_action(self, action: HotkeyAction, **kwargs):
         """Trigger callbacks for an action."""
         binding = self._bindings.get(action)
         if not binding or not binding.enabled:
             return
-        
+
         secure_logger.debug(f"Hotkey triggered: {action.value}")
-        
+
         for callback in self._callbacks.get(action, []):
             try:
                 result = callback(**kwargs)
@@ -207,12 +206,12 @@ class HotkeyManager:
                     asyncio.create_task(result)
             except Exception as e:
                 secure_logger.error(f"Hotkey callback error: {e}")
-    
+
     def _register_keyboard_hotkey(self, binding: HotkeyBinding):
         """Register a single keyboard hotkey."""
         if not KEYBOARD_AVAILABLE:
             return
-        
+
         if binding.is_hold:
             # Hold-to-activate (push to talk)
             keyboard.on_press_key(
@@ -232,41 +231,41 @@ class HotkeyManager:
                 lambda a=binding.action: self._trigger_action(a),
                 suppress=False,
             )
-    
+
     def _on_hold_start(self, action: HotkeyAction):
         """Handle hold key press."""
         self._active_holds[action.value] = True
         self._trigger_action(action, held=True, started=True)
-    
+
     def _on_hold_end(self, action: HotkeyAction):
         """Handle hold key release."""
         if self._active_holds.get(action.value):
             self._active_holds[action.value] = False
             self._trigger_action(action, held=False, ended=True)
-    
+
     def start(self):
         """Start listening for hotkeys."""
         if not KEYBOARD_AVAILABLE:
             secure_logger.warning("Keyboard library not available, hotkeys disabled")
             return
-        
+
         self._running = True
-        
+
         for binding in self._bindings.values():
             if binding.enabled:
                 self._register_keyboard_hotkey(binding)
-        
+
         secure_logger.info("Hotkey manager started")
-    
+
     def stop(self):
         """Stop listening for hotkeys."""
         self._running = False
-        
+
         if KEYBOARD_AVAILABLE:
             keyboard.unhook_all()
-        
+
         secure_logger.info("Hotkey manager stopped")
-    
+
     def get_bindings(self) -> List[Dict[str, Any]]:
         """Get all hotkey bindings."""
         return [
@@ -279,7 +278,7 @@ class HotkeyManager:
             }
             for b in self._bindings.values()
         ]
-    
+
     def is_holding(self, action: HotkeyAction) -> bool:
         """Check if a hold key is currently held."""
         return self._active_holds.get(action.value, False)

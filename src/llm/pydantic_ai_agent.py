@@ -78,7 +78,7 @@ class AgentDeps:
     user_id: str = "default"
     session_id: str = ""
     context: Dict[str, Any] = None
-    
+
     def __post_init__(self):
         if self.context is None:
             self.context = {}
@@ -266,7 +266,7 @@ async def chat(message: str, context: Dict[str, Any] = None) -> ConversationResp
 
 class AgentFactory:
     """Factory for creating configured agents."""
-    
+
     @staticmethod
     def create_agent(
         agent_type: str,
@@ -288,14 +288,14 @@ class AgentFactory:
             model = create_anthropic_model()
         else:
             model = create_lmstudio_model()
-        
+
         # Select system prompt
         prompts = {
             "research": "You are a research agent that finds relevant resources.",
             "synthesis": "You are a synthesis agent that plans project assembly.",
             "conversation": "You are a helpful AI assistant.",
         }
-        
+
         return Agent(
             model,
             result_type=result_type,

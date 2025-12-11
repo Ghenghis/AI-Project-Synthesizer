@@ -9,7 +9,7 @@ from src.synthesis.scaffolder import Scaffolder
 
 __all__ = [
     "ProjectBuilder",
-    "SynthesisRequest", 
+    "SynthesisRequest",
     "SynthesisResult",
     "BuildResult",
     "Scaffolder",

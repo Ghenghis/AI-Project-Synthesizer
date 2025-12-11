@@ -6,7 +6,6 @@ Intelligent routing between local and cloud LLMs based on task complexity.
 
 import logging
 from enum import Enum
-from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
 from src.llm.ollama_client import OllamaClient, CompletionResult
@@ -26,7 +25,7 @@ class ProviderType(Enum):
 class TaskComplexity(Enum):
     """Task complexity levels for routing decisions."""
     SIMPLE = "simple"      # Formatting, simple questions
-    MODERATE = "moderate"  # Code review, basic analysis  
+    MODERATE = "moderate"  # Code review, basic analysis
     COMPLEX = "complex"    # Architecture, multi-file reasoning
 
 
@@ -60,12 +59,12 @@ class LLMRouter:
             complexity=TaskComplexity.SIMPLE
         )
     """
-    
+
     # Token thresholds for routing
     CONTEXT_THRESHOLD_LOCAL = 32000  # Max context for local models
     CONTEXT_THRESHOLD_7B = 8000      # Recommended for 7B
     CONTEXT_THRESHOLD_14B = 16000    # Recommended for 14B
-    
+
     def __init__(
         self,
         preferred_provider: str = "ollama",
@@ -93,16 +92,16 @@ class LLMRouter:
         self.cloud_enabled = cloud_enabled
         self.cloud_threshold = cloud_threshold
         self.model_size_preference = model_size_preference
-        
+
         # Initialize clients
         self.ollama_client = ollama_client or OllamaClient()
         self.lmstudio_client = lmstudio_client or LMStudioClient()
-        
+
         # Size-based model configurations (optimized for 7B and smaller)
         self.local_models = {
             "ollama": {
                 "tiny": "qwen2.5-coder:1.5b-instruct",      # < 2B parameters
-                "small": "qwen2.5-coder:3b-instruct",      # 2-4B parameters  
+                "small": "qwen2.5-coder:3b-instruct",      # 2-4B parameters
                 "medium": "qwen2.5-coder:7b-instruct-q8_0", # 4-7B parameters (DEFAULT)
                 "large": "qwen2.5-coder:14b-instruct-q4_K_M", # 8-14B parameters
             },
@@ -113,9 +112,9 @@ class LLMRouter:
                 "large": "local-model-large",    # User's 8-14B model
             }
         }
-        
+
         self._cloud_client = None  # Lazy initialization
-    
+
     async def check_provider_health(self, provider: ProviderType) -> bool:
         """
         Check if a provider is available.
@@ -138,7 +137,7 @@ class LLMRouter:
         except Exception as e:
             logger.warning(f"Health check failed for {provider}: {e}")
             return False
-    
+
     async def get_best_provider(self) -> ProviderType:
         """
         Get the best available provider with fallback logic.
@@ -149,27 +148,27 @@ class LLMRouter:
         # Try preferred provider first
         if await self.check_provider_health(self.preferred_provider):
             return self.preferred_provider
-        
+
         if not self.fallback_enabled:
             logger.warning(f"Preferred provider {self.preferred_provider} unavailable, fallback disabled")
             return self.preferred_provider
-        
+
         # Try other local providers
         local_providers = [ProviderType.OLLAMA, ProviderType.LMSTUDIO]
         for provider in local_providers:
             if provider != self.preferred_provider and await self.check_provider_health(provider):
                 logger.info(f"Falling back from {self.preferred_provider} to {provider}")
                 return provider
-        
+
         # Fall back to cloud if enabled
         if self.cloud_enabled:
             logger.info("Local providers unavailable, falling back to cloud")
             return ProviderType.OPENAI  # Default to OpenAI for cloud fallback
-        
+
         # No providers available
         logger.error("No LLM providers available")
         return self.preferred_provider
-    
+
     def estimate_complexity(
         self,
         prompt: str,
@@ -186,21 +185,21 @@ class LLMRouter:
         # Estimate context length
         if context_length is None:
             context_length = len(prompt) // 4  # Rough token estimate
-        
+
         # Simple heuristics
         keywords_simple = ["format", "fix typo", "rename", "what is", "explain briefly"]
         keywords_complex = ["architecture", "design", "refactor entire", "across files", "system"]
-        
+
         prompt_lower = prompt.lower()
-        
+
         # Check for simple tasks
         if any(kw in prompt_lower for kw in keywords_simple):
             return TaskComplexity.SIMPLE
-        
+
         # Check for complex tasks
         if any(kw in prompt_lower for kw in keywords_complex):
             return TaskComplexity.COMPLEX
-        
+
         # Context-based routing
         if context_length > self.CONTEXT_THRESHOLD_14B:
             return TaskComplexity.COMPLEX
@@ -208,7 +207,7 @@ class LLMRouter:
             return TaskComplexity.MODERATE
         else:
             return TaskComplexity.SIMPLE
-    
+
     def route(
         self,
         complexity: TaskComplexity,
@@ -227,10 +226,10 @@ class LLMRouter:
             RoutingDecision with model selection
         """
         provider = preferred_provider or self.preferred_provider
-        
+
         # Get model based on size preference
         model = self.local_models.get(provider.value, {}).get(self.model_size_preference, "local-model")
-        
+
         # Adjust model selection based on task complexity and size preference
         if complexity == TaskComplexity.SIMPLE:
             # For simple tasks, use smaller models for speed
@@ -242,7 +241,7 @@ class LLMRouter:
                 size_to_use = self.model_size_preference
             model = self.local_models.get(provider.value, {}).get(size_to_use, model)
             reason = f"Simple task → {size_to_use} {provider.value} model for speed"
-            
+
         elif complexity == TaskComplexity.MODERATE:
             # For moderate tasks, use preferred size but consider context
             if context_length > self.CONTEXT_THRESHOLD_7B and self.model_size_preference == "small":
@@ -253,7 +252,7 @@ class LLMRouter:
                 size_to_use = self.model_size_preference
                 model = self.local_models.get(provider.value, {}).get(size_to_use, model)
                 reason = f"Moderate task → {size_to_use} {provider.value} model"
-                
+
         else:  # COMPLEX
             # For complex tasks, use larger models if available
             if self.model_size_preference == "tiny":
@@ -264,7 +263,7 @@ class LLMRouter:
                 size_to_use = "large"
             else:
                 size_to_use = self.model_size_preference
-                
+
             # Fall back to cloud if enabled and we need more power
             if size_to_use == "large" and self.cloud_enabled:
                 return RoutingDecision(
@@ -273,17 +272,17 @@ class LLMRouter:
                     reason="Complex task → cloud API (GPT-4)",
                     estimated_tokens=context_length,
                 )
-            
+
             model = self.local_models.get(provider.value, {}).get(size_to_use, model)
             reason = f"Complex task → {size_to_use} {provider.value} model"
-        
+
         return RoutingDecision(
             provider=provider,
             model=model,
             reason=reason,
             estimated_tokens=context_length,
         )
-    
+
     async def complete(
         self,
         prompt: str,
@@ -308,16 +307,16 @@ class LLMRouter:
         # Estimate complexity if not provided
         if complexity is None:
             complexity = self.estimate_complexity(prompt)
-        
+
         # Get best available provider
         best_provider = await self.get_best_provider()
-        
+
         # Get routing decision
         context_length = len(prompt) // 4
         decision = self.route(complexity, context_length, best_provider)
-        
+
         logger.info(f"Routing: {decision.reason}")
-        
+
         # Execute with chosen provider
         try:
             if decision.provider == ProviderType.OLLAMA:
@@ -347,21 +346,21 @@ class LLMRouter:
                 )
             else:
                 raise ValueError(f"Unknown provider: {decision.provider}")
-                
+
         except Exception as e:
             logger.error(f"Completion failed with {decision.provider}: {e}")
-            
+
             # Try fallback if enabled and this wasn't already a fallback
             if self.fallback_enabled and decision.provider == self.preferred_provider:
                 logger.info("Primary provider failed, trying fallback providers")
-                
+
                 # Try other local providers
                 for fallback_provider in [ProviderType.OLLAMA, ProviderType.LMSTUDIO]:
                     if fallback_provider != decision.provider:
                         try:
                             if await self.check_provider_health(fallback_provider):
                                 logger.info(f"Falling back to {fallback_provider}")
-                                
+
                                 if fallback_provider == ProviderType.OLLAMA:
                                     return await self.ollama_client.complete(
                                         prompt=prompt,
@@ -381,7 +380,7 @@ class LLMRouter:
                         except Exception as fallback_error:
                             logger.warning(f"Fallback to {fallback_provider} also failed: {fallback_error}")
                             continue
-                
+
                 # Try cloud as last resort
                 if self.cloud_enabled:
                     logger.info("Local fallbacks failed, trying cloud")
@@ -392,10 +391,10 @@ class LLMRouter:
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
-            
+
             # No fallback worked, re-raise original error
             raise
-    
+
     async def _cloud_complete(
         self,
         prompt: str,

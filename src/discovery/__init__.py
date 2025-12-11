@@ -32,7 +32,7 @@ from src.discovery.unified_search import UnifiedSearch, create_unified_search
 __all__ = [
     # Base
     "PlatformClient",
-    "RepositoryInfo", 
+    "RepositoryInfo",
     "SearchResult",
     "DiscoveryError",
     # Clients

@@ -10,13 +10,11 @@ Robust progressive gap filling:
 
 import asyncio
 import importlib
-import sys
 from typing import Optional, Dict, Any, List, Tuple, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from enum import Enum
-import json
 import traceback
 
 from src.core.security import get_secure_logger
@@ -59,7 +57,7 @@ class Gap:
     fix_function: Optional[Callable] = None
     fixed: bool = False
     error: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -81,19 +79,19 @@ class AnalysisReport:
     gaps: List[Gap] = field(default_factory=list)
     fixed_count: int = 0
     failed_count: int = 0
-    
+
     @property
     def total_gaps(self) -> int:
         return len(self.gaps)
-    
+
     @property
     def critical_gaps(self) -> List[Gap]:
         return [g for g in self.gaps if g.severity == GapSeverity.CRITICAL]
-    
+
     @property
     def unfixed_gaps(self) -> List[Gap]:
         return [g for g in self.gaps if not g.fixed]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "timestamp": self.timestamp,
@@ -102,25 +100,25 @@ class AnalysisReport:
             "failed_count": self.failed_count,
             "gaps": [g.to_dict() for g in self.gaps],
         }
-    
+
     def to_markdown(self) -> str:
         """Generate markdown report."""
         lines = [
             "# Gap Analysis Report",
             f"\n**Generated:** {self.timestamp}",
-            f"\n## Summary",
+            "\n## Summary",
             f"- **Total Gaps:** {self.total_gaps}",
             f"- **Fixed:** {self.fixed_count}",
             f"- **Failed:** {self.failed_count}",
             f"- **Remaining:** {len(self.unfixed_gaps)}",
         ]
-        
+
         if self.critical_gaps:
             lines.append("\n## ⚠️ Critical Issues")
             for gap in self.critical_gaps:
                 status = "✅" if gap.fixed else "❌"
                 lines.append(f"- {status} **{gap.description}** ({gap.location})")
-        
+
         for severity in [GapSeverity.HIGH, GapSeverity.MEDIUM, GapSeverity.LOW]:
             gaps = [g for g in self.gaps if g.severity == severity]
             if gaps:
@@ -128,7 +126,7 @@ class AnalysisReport:
                 for gap in gaps:
                     status = "✅" if gap.fixed else "⬜"
                     lines.append(f"- {status} {gap.description}")
-        
+
         return "\n".join(lines)
 
 
@@ -142,12 +140,12 @@ class GapAnalyzer:
     - Validation checks
     - Report generation
     """
-    
+
     def __init__(self):
         self._gaps: List[Gap] = []
         self._checks: List[Tuple[str, Callable]] = []
         self._setup_checks()
-    
+
     def _setup_checks(self):
         """Set up all gap checks."""
         # Import checks
@@ -157,37 +155,37 @@ class GapAnalyzer:
             ("dashboard_imports", self._check_dashboard_imports),
             ("workflow_imports", self._check_workflow_imports),
         ])
-        
+
         # Config checks
         self._checks.extend([
             ("env_file", self._check_env_file),
             ("settings_file", self._check_settings_file),
             ("api_keys", self._check_api_keys),
         ])
-        
+
         # File checks
         self._checks.extend([
             ("directories", self._check_directories),
             ("n8n_workflows", self._check_n8n_workflows),
             ("init_files", self._check_init_files),
         ])
-        
+
         # Integration checks
         self._checks.extend([
             ("database", self._check_database),
             ("llm_connection", self._check_llm_connection),
             ("voice_system", self._check_voice_system),
         ])
-        
+
         # Test checks
         self._checks.extend([
             ("test_coverage", self._check_test_coverage),
         ])
-    
+
     def add_gap(self, gap: Gap):
         """Add a gap to the list."""
         self._gaps.append(gap)
-    
+
     async def analyze(self, auto_fix: bool = True) -> AnalysisReport:
         """
         Run full gap analysis.
@@ -199,9 +197,9 @@ class GapAnalyzer:
             AnalysisReport with all findings
         """
         self._gaps = []
-        
+
         secure_logger.info("Starting gap analysis...")
-        
+
         # Run all checks
         for check_name, check_func in self._checks:
             try:
@@ -215,24 +213,24 @@ class GapAnalyzer:
                     location=check_name,
                     error=traceback.format_exc(),
                 ))
-        
+
         # Auto-fix if enabled
         report = AnalysisReport(gaps=self._gaps)
-        
+
         if auto_fix:
             await self._auto_fix_gaps(report)
-        
+
         secure_logger.info(f"Gap analysis complete: {report.total_gaps} gaps found, {report.fixed_count} fixed")
-        
+
         return report
-    
+
     async def _run_check(self, name: str, func: Callable):
         """Run a single check."""
         if asyncio.iscoroutinefunction(func):
             await func()
         else:
             func()
-    
+
     async def _auto_fix_gaps(self, report: AnalysisReport):
         """Auto-fix all fixable gaps."""
         for gap in report.gaps:
@@ -249,11 +247,11 @@ class GapAnalyzer:
                     gap.error = str(e)
                     report.failed_count += 1
                     secure_logger.error(f"Failed to fix gap: {gap.description} - {e}")
-    
+
     # ============================================
     # Import Checks
     # ============================================
-    
+
     def _check_core_imports(self):
         """Check core module imports."""
         modules = [
@@ -266,7 +264,7 @@ class GapAnalyzer:
             ("src.core.hotkey_manager", "get_hotkey_manager"),
             ("src.core.plugins", "get_plugin_manager"),
         ]
-        
+
         for module_name, attr_name in modules:
             try:
                 module = importlib.import_module(module_name)
@@ -286,7 +284,7 @@ class GapAnalyzer:
                     description=f"Cannot import {module_name}: {e}",
                     location=module_name,
                 ))
-    
+
     def _check_agent_imports(self):
         """Check agent imports."""
         agents = [
@@ -296,7 +294,7 @@ class GapAnalyzer:
             "AutomationAgent",
             "CodeAgent",
         ]
-        
+
         try:
             from src import agents as agents_module
             for agent_name in agents:
@@ -316,7 +314,7 @@ class GapAnalyzer:
                 description=f"Cannot import agents module: {e}",
                 location="src.agents",
             ))
-    
+
     def _check_dashboard_imports(self):
         """Check dashboard imports."""
         try:
@@ -333,7 +331,7 @@ class GapAnalyzer:
                 description=f"Dashboard import error: {e}",
                 location="src.dashboard",
             ))
-    
+
     def _check_workflow_imports(self):
         """Check workflow imports."""
         try:
@@ -346,15 +344,15 @@ class GapAnalyzer:
                 description=f"Workflow import error: {e}",
                 location="src.workflows",
             ))
-    
+
     # ============================================
     # Config Checks
     # ============================================
-    
+
     def _check_env_file(self):
         """Check .env file exists and has required keys."""
         env_path = Path(".env")
-        
+
         if not env_path.exists():
             self.add_gap(Gap(
                 id="missing_env_file",
@@ -367,10 +365,10 @@ class GapAnalyzer:
                 fix_function=self._fix_create_env,
             ))
             return
-        
+
         content = env_path.read_text()
         required_keys = ["GITHUB_TOKEN"]
-        
+
         for key in required_keys:
             if key not in content:
                 self.add_gap(Gap(
@@ -380,21 +378,21 @@ class GapAnalyzer:
                     description=f"Missing {key} in .env",
                     location=".env",
                 ))
-    
+
     def _fix_create_env(self):
         """Create .env from .env.example."""
         example_path = Path(".env.example")
         env_path = Path(".env")
-        
+
         if example_path.exists():
             env_path.write_text(example_path.read_text())
         else:
             env_path.write_text("# AI Project Synthesizer Environment\nGITHUB_TOKEN=\n")
-    
+
     def _check_settings_file(self):
         """Check settings file exists."""
         settings_path = Path("config/settings.json")
-        
+
         if not settings_path.exists():
             self.add_gap(Gap(
                 id="missing_settings_file",
@@ -406,28 +404,28 @@ class GapAnalyzer:
                 fix_action="Create default settings",
                 fix_function=self._fix_create_settings,
             ))
-    
+
     def _fix_create_settings(self):
         """Create default settings file."""
         from src.core.settings_manager import get_settings_manager
         manager = get_settings_manager()
         manager.save()
-    
+
     def _check_api_keys(self):
         """Check API keys are configured."""
         import os
         from dotenv import load_dotenv
-        
+
         # Load .env file
         load_dotenv()
-        
+
         keys = {
             "GITHUB_TOKEN": GapSeverity.HIGH,
             "ELEVENLABS_API_KEY": GapSeverity.MEDIUM,
             "OPENAI_API_KEY": GapSeverity.LOW,
             "ANTHROPIC_API_KEY": GapSeverity.LOW,
         }
-        
+
         for key, severity in keys.items():
             value = os.environ.get(key, "")
             if not value or value == "your_token_here" or value.startswith("your_"):
@@ -438,11 +436,11 @@ class GapAnalyzer:
                     description=f"API key {key} not configured",
                     location=".env",
                 ))
-    
+
     # ============================================
     # File Checks
     # ============================================
-    
+
     def _check_directories(self):
         """Check required directories exist."""
         dirs = [
@@ -451,7 +449,7 @@ class GapAnalyzer:
             ("logs", "Log files"),
             ("cache", "Cache storage"),
         ]
-        
+
         for dir_name, description in dirs:
             dir_path = Path(dir_name)
             if not dir_path.exists():
@@ -465,11 +463,11 @@ class GapAnalyzer:
                     fix_action=f"Create {dir_name} directory",
                     fix_function=lambda d=dir_name: Path(d).mkdir(exist_ok=True),
                 ))
-    
+
     def _check_n8n_workflows(self):
         """Check n8n workflow files exist."""
         workflow_dir = Path("src/automation/n8n_workflows")
-        
+
         if not workflow_dir.exists():
             self.add_gap(Gap(
                 id="missing_n8n_workflows_dir",
@@ -479,7 +477,7 @@ class GapAnalyzer:
                 location="src/automation/n8n_workflows",
             ))
             return
-        
+
         workflows = list(workflow_dir.glob("*.json"))
         if len(workflows) < 5:
             self.add_gap(Gap(
@@ -489,11 +487,11 @@ class GapAnalyzer:
                 description=f"Only {len(workflows)} n8n workflows found",
                 location="src/automation/n8n_workflows",
             ))
-    
+
     def _check_init_files(self):
         """Check __init__.py files exist in all packages."""
         src_path = Path("src")
-        
+
         for dir_path in src_path.rglob("*"):
             if dir_path.is_dir() and not dir_path.name.startswith("__"):
                 init_file = dir_path / "__init__.py"
@@ -511,11 +509,11 @@ class GapAnalyzer:
                             fix_action="Create __init__.py",
                             fix_function=lambda p=init_file: p.write_text('"""Package."""\n'),
                         ))
-    
+
     # ============================================
     # Integration Checks
     # ============================================
-    
+
     async def _check_database(self):
         """Check database connectivity."""
         try:
@@ -531,7 +529,7 @@ class GapAnalyzer:
                 description=f"Database error: {e}",
                 location="data/memory.db",
             ))
-    
+
     async def _check_llm_connection(self):
         """Check LLM connectivity."""
         try:
@@ -546,7 +544,7 @@ class GapAnalyzer:
                 description=f"LLM connection issue: {e}",
                 location="src.llm",
             ))
-    
+
     async def _check_voice_system(self):
         """Check voice system."""
         try:
@@ -569,15 +567,15 @@ class GapAnalyzer:
                 description=f"Voice system error: {e}",
                 location="src.voice",
             ))
-    
+
     # ============================================
     # Test Checks
     # ============================================
-    
+
     def _check_test_coverage(self):
         """Check test coverage."""
         test_dir = Path("tests")
-        
+
         if not test_dir.exists():
             self.add_gap(Gap(
                 id="missing_tests_dir",
@@ -587,7 +585,7 @@ class GapAnalyzer:
                 location="tests/",
             ))
             return
-        
+
         test_files = list(test_dir.glob("test_*.py"))
         if len(test_files) < 5:
             self.add_gap(Gap(
@@ -597,14 +595,14 @@ class GapAnalyzer:
                 description=f"Only {len(test_files)} test files found",
                 location="tests/",
             ))
-        
+
         # Check for key test files
         required_tests = [
             "test_core_memory.py",
             "test_settings_manager.py",
             "test_agents.py",
         ]
-        
+
         for test_file in required_tests:
             if not (test_dir / test_file).exists():
                 self.add_gap(Gap(

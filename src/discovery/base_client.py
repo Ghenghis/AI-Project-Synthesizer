@@ -8,7 +8,6 @@ Each platform (GitHub, HuggingFace, etc.) implements this interface.
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -39,7 +38,7 @@ class AuthenticationError(DiscoveryError):
 
 class RateLimitError(DiscoveryError):
     """Rate limit exceeded."""
-    
+
     def __init__(self, message: str, retry_after: Optional[int] = None):
         super().__init__(message)
         self.retry_after = retry_after
@@ -64,47 +63,47 @@ class RepositoryInfo:
     url: str
     name: str
     full_name: str
-    
+
     # Metadata
     description: Optional[str] = None
     owner: str = ""
-    
+
     # Metrics
     stars: int = 0
     forks: int = 0
     watchers: int = 0
     open_issues: int = 0
-    
+
     # Languages
     language: Optional[str] = None
     languages: Dict[str, int] = field(default_factory=dict)
-    
+
     # License
     license: Optional[str] = None
     license_url: Optional[str] = None
-    
+
     # Timestamps
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     pushed_at: Optional[str] = None
-    
+
     # Topics/Tags
     topics: List[str] = field(default_factory=list)
-    
+
     # Repository info
     default_branch: str = "main"
     size_kb: int = 0
-    
+
     # Quality indicators
     has_readme: bool = False
     has_tests: bool = False
     has_ci: bool = False
     has_docs: bool = False
-    
+
     # Computed scores (set by ranker)
     relevance_score: float = 0.0
     quality_score: float = 0.0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -137,7 +136,7 @@ class SearchResult:
     search_time_ms: int
     has_more: bool = False
     next_page_token: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -159,7 +158,7 @@ class FileContent:
     size: int
     encoding: str = "utf-8"
     sha: Optional[str] = None
-    
+
     @property
     def text(self) -> str:
         """Get content as text."""
@@ -191,7 +190,7 @@ class PlatformClient(ABC):
                 # Implementation
                 pass
     """
-    
+
     @property
     @abstractmethod
     def platform_name(self) -> str:
@@ -202,7 +201,7 @@ class PlatformClient(ABC):
             Platform name (e.g., "github", "huggingface")
         """
         pass
-    
+
     @property
     def is_authenticated(self) -> bool:
         """
@@ -212,7 +211,7 @@ class PlatformClient(ABC):
             True if authenticated, False otherwise
         """
         return False
-    
+
     @abstractmethod
     async def search(
         self,
@@ -242,7 +241,7 @@ class PlatformClient(ABC):
             RateLimitError: If rate limit exceeded
         """
         pass
-    
+
     @abstractmethod
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
         """
@@ -258,7 +257,7 @@ class PlatformClient(ABC):
             RepositoryNotFoundError: If repository doesn't exist
         """
         pass
-    
+
     @abstractmethod
     async def get_contents(
         self,
@@ -276,7 +275,7 @@ class PlatformClient(ABC):
             DirectoryListing with files and subdirectories
         """
         pass
-    
+
     @abstractmethod
     async def get_file(
         self,
@@ -294,7 +293,7 @@ class PlatformClient(ABC):
             FileContent with file data
         """
         pass
-    
+
     @abstractmethod
     async def clone(
         self,
@@ -316,7 +315,7 @@ class PlatformClient(ABC):
             Path to cloned repository
         """
         pass
-    
+
     async def get_readme(self, repo_id: str) -> Optional[str]:
         """
         Get repository README content.
@@ -328,7 +327,7 @@ class PlatformClient(ABC):
             README content as string, or None if not found
         """
         readme_names = ["README.md", "README.rst", "README.txt", "README"]
-        
+
         for name in readme_names:
             try:
                 content = await self.get_file(repo_id, name)
@@ -336,9 +335,9 @@ class PlatformClient(ABC):
             except Exception as e:
                 logger.debug("README %s not found: %s", name, e)
                 continue
-        
+
         return None
-    
+
     async def get_license(self, repo_id: str) -> Optional[str]:
         """
         Get repository license content.
@@ -350,7 +349,7 @@ class PlatformClient(ABC):
             License content as string, or None if not found
         """
         license_names = ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"]
-        
+
         for name in license_names:
             try:
                 content = await self.get_file(repo_id, name)
@@ -358,9 +357,9 @@ class PlatformClient(ABC):
             except Exception as e:
                 logger.debug("License %s not found: %s", name, e)
                 continue
-        
+
         return None
-    
+
     async def check_health(self) -> bool:
         """
         Check if the platform API is accessible.

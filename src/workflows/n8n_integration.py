@@ -10,8 +10,6 @@ Local n8n workflow automation for:
 n8n runs locally at http://localhost:5678
 """
 
-import asyncio
-import json
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -50,7 +48,7 @@ class N8NWorkflow:
     nodes: List[Dict[str, Any]] = field(default_factory=list)
     connections: Dict[str, Any] = field(default_factory=dict)
     settings: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -95,32 +93,32 @@ class N8NClient:
             # Execute a workflow
             result = await client.execute_workflow("workflow-id", {"input": "data"})
     """
-    
+
     def __init__(self, config: Optional[N8NConfig] = None):
         """Initialize n8n client."""
         self.config = config or N8NConfig()
         self._client: Optional[httpx.AsyncClient] = None
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
         if self._client is None:
             headers = {"Content-Type": "application/json"}
             if self.config.api_key:
                 headers["X-N8N-API-KEY"] = self.config.api_key
-            
+
             self._client = httpx.AsyncClient(
                 base_url=self.config.base_url,
                 headers=headers,
                 timeout=self.config.timeout,
             )
         return self._client
-    
+
     async def close(self):
         """Close HTTP client."""
         if self._client:
             await self._client.aclose()
             self._client = None
-    
+
     async def health_check(self) -> bool:
         """Check if n8n is running."""
         try:
@@ -130,13 +128,13 @@ class N8NClient:
         except Exception as e:
             secure_logger.debug(f"n8n health check failed: {e}")
             return False
-    
+
     async def list_workflows(self) -> List[N8NWorkflow]:
         """List all workflows."""
         try:
             client = await self._get_client()
             response = await client.get("/api/v1/workflows")
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return [
@@ -151,15 +149,15 @@ class N8NClient:
                 ]
         except Exception as e:
             secure_logger.error(f"Failed to list workflows: {e}")
-        
+
         return []
-    
+
     async def get_workflow(self, workflow_id: str) -> Optional[N8NWorkflow]:
         """Get a specific workflow."""
         try:
             client = await self._get_client()
             response = await client.get(f"/api/v1/workflows/{workflow_id}")
-            
+
             if response.status_code == 200:
                 w = response.json()
                 return N8NWorkflow(
@@ -171,9 +169,9 @@ class N8NClient:
                 )
         except Exception as e:
             secure_logger.error(f"Failed to get workflow: {e}")
-        
+
         return None
-    
+
     async def create_workflow(self, workflow: N8NWorkflow) -> Optional[str]:
         """Create a new workflow."""
         try:
@@ -182,15 +180,15 @@ class N8NClient:
                 "/api/v1/workflows",
                 json=workflow.to_dict(),
             )
-            
+
             if response.status_code in (200, 201):
                 data = response.json()
                 return data.get("id")
         except Exception as e:
             secure_logger.error(f"Failed to create workflow: {e}")
-        
+
         return None
-    
+
     async def execute_workflow(
         self,
         workflow_id: str,
@@ -203,7 +201,7 @@ class N8NClient:
                 f"/api/v1/workflows/{workflow_id}/execute",
                 json={"data": input_data or {}},
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return WorkflowExecution(
@@ -223,9 +221,9 @@ class N8NClient:
                 started_at=datetime.now(),
                 error=str(e),
             )
-        
+
         return None
-    
+
     async def activate_workflow(self, workflow_id: str) -> bool:
         """Activate a workflow."""
         try:
@@ -238,7 +236,7 @@ class N8NClient:
         except Exception as e:
             secure_logger.error(f"Failed to activate workflow: {e}")
             return False
-    
+
     async def deactivate_workflow(self, workflow_id: str) -> bool:
         """Deactivate a workflow."""
         try:
@@ -263,7 +261,7 @@ class N8NWorkflowTemplates:
     - Webhook trigger workflow
     - Notification workflow
     """
-    
+
     @staticmethod
     def research_workflow(name: str = "Project Research") -> N8NWorkflow:
         """
@@ -333,7 +331,7 @@ class N8NWorkflowTemplates:
                 "merge": {"main": [[{"node": "output"}]]},
             },
         )
-    
+
     @staticmethod
     def scheduled_search_workflow(
         name: str = "Scheduled Search",
@@ -372,7 +370,7 @@ class N8NWorkflowTemplates:
                     "type": "n8n-nodes-base.writeBinaryFile",
                     "position": [650, 300],
                     "parameters": {
-                        "fileName": f"search_results_{{{{$now.format('YYYY-MM-DD')}}}}.json",
+                        "fileName": "search_results_{{$now.format('YYYY-MM-DD')}}.json",
                     },
                 },
             ],
@@ -381,7 +379,7 @@ class N8NWorkflowTemplates:
                 "search": {"main": [[{"node": "save"}]]},
             },
         )
-    
+
     @staticmethod
     def webhook_assembly_workflow(name: str = "Webhook Assembly") -> N8NWorkflow:
         """
@@ -453,7 +451,7 @@ class N8NWorkflowTemplates:
                 "assemble": {"main": [[{"node": "success"}]]},
             },
         )
-    
+
     @staticmethod
     def voice_notification_workflow(name: str = "Voice Notification") -> N8NWorkflow:
         """
@@ -500,26 +498,26 @@ async def setup_n8n_workflows(client: N8NClient) -> Dict[str, str]:
     """
     templates = N8NWorkflowTemplates()
     workflows = {}
-    
+
     # Create research workflow
     research = templates.research_workflow()
     research_id = await client.create_workflow(research)
     if research_id:
         workflows["research"] = research_id
         secure_logger.info(f"Created research workflow: {research_id}")
-    
+
     # Create scheduled search
     scheduled = templates.scheduled_search_workflow()
     scheduled_id = await client.create_workflow(scheduled)
     if scheduled_id:
         workflows["scheduled_search"] = scheduled_id
         secure_logger.info(f"Created scheduled search workflow: {scheduled_id}")
-    
+
     # Create webhook assembly
     webhook = templates.webhook_assembly_workflow()
     webhook_id = await client.create_workflow(webhook)
     if webhook_id:
         workflows["webhook_assembly"] = webhook_id
         secure_logger.info(f"Created webhook assembly workflow: {webhook_id}")
-    
+
     return workflows

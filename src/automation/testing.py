@@ -67,11 +67,11 @@ class TestSuiteResult:
     errors: int
     duration_ms: float
     results: List[TestResult] = field(default_factory=list)
-    
+
     @property
     def success_rate(self) -> float:
         return self.passed / self.total if self.total > 0 else 0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "suite": self.suite_name,
@@ -122,20 +122,20 @@ class IntegrationTester:
         # Run specific category
         results = await tester.run_category("api")
     """
-    
+
     def __init__(self):
         self._tests: Dict[str, TestCase] = {}
         self._metrics = get_metrics_collector()
-    
+
     def register(self, test: TestCase):
         """Register a test case."""
         self._tests[test.name] = test
-    
+
     def register_many(self, tests: List[TestCase]):
         """Register multiple test cases."""
         for test in tests:
             self.register(test)
-    
+
     async def run_test(self, name: str) -> TestResult:
         """Run a single test."""
         if name not in self._tests:
@@ -145,10 +145,10 @@ class IntegrationTester:
                 duration_ms=0,
                 error=f"Test not found: {name}",
             )
-        
+
         test = self._tests[name]
         start_time = time.perf_counter()
-        
+
         try:
             # Run with timeout
             async with ActionTimer(f"test_{name}", self._metrics):
@@ -156,9 +156,9 @@ class IntegrationTester:
                     test.test_func(),
                     timeout=test.timeout_seconds,
                 )
-            
+
             duration_ms = (time.perf_counter() - start_time) * 1000
-            
+
             if result:
                 return TestResult(
                     name=name,
@@ -173,7 +173,7 @@ class IntegrationTester:
                     duration_ms=duration_ms,
                     message="Test returned False",
                 )
-        
+
         except asyncio.TimeoutError:
             return TestResult(
                 name=name,
@@ -181,7 +181,7 @@ class IntegrationTester:
                 duration_ms=test.timeout_seconds * 1000,
                 error=f"Test timed out after {test.timeout_seconds}s",
             )
-        
+
         except Exception as e:
             duration_ms = (time.perf_counter() - start_time) * 1000
             return TestResult(
@@ -190,11 +190,11 @@ class IntegrationTester:
                 duration_ms=duration_ms,
                 error=str(e),
             )
-    
+
     async def run_all(self) -> TestSuiteResult:
         """Run all registered tests."""
         return await self._run_tests(list(self._tests.keys()), "all")
-    
+
     async def run_category(self, category: str) -> TestSuiteResult:
         """Run tests in a specific category."""
         tests = [
@@ -202,7 +202,7 @@ class IntegrationTester:
             if test.category == category
         ]
         return await self._run_tests(tests, category)
-    
+
     async def run_tags(self, tags: List[str]) -> TestSuiteResult:
         """Run tests with specific tags."""
         tests = [
@@ -210,7 +210,7 @@ class IntegrationTester:
             if any(tag in test.tags for tag in tags)
         ]
         return await self._run_tests(tests, f"tags:{','.join(tags)}")
-    
+
     async def _run_tests(
         self,
         test_names: List[str],
@@ -220,10 +220,10 @@ class IntegrationTester:
         start_time = time.perf_counter()
         results: List[TestResult] = []
         completed = set()
-        
+
         # Sort by dependencies
         pending = list(test_names)
-        
+
         while pending:
             # Find tests with satisfied dependencies
             ready = []
@@ -231,7 +231,7 @@ class IntegrationTester:
                 test = self._tests.get(name)
                 if test and all(dep in completed for dep in test.dependencies):
                     ready.append(name)
-            
+
             if not ready:
                 # Skip remaining tests with unsatisfied dependencies
                 for name in pending:
@@ -242,18 +242,18 @@ class IntegrationTester:
                         message="Dependencies not satisfied",
                     ))
                 break
-            
+
             # Run ready tests
             for name in ready:
                 pending.remove(name)
                 result = await self.run_test(name)
                 results.append(result)
-                
+
                 if result.status == TestStatus.PASSED:
                     completed.add(name)
-        
+
         duration_ms = (time.perf_counter() - start_time) * 1000
-        
+
         return TestSuiteResult(
             suite_name=suite_name,
             total=len(results),
@@ -293,10 +293,10 @@ async def test_github_api() -> bool:
     """Test GitHub API access."""
     from src.core.config import get_settings
     import httpx
-    
+
     settings = get_settings()
     token = settings.platforms.github_token.get_secret_value()
-    
+
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.get(
             "https://api.github.com/user",
@@ -317,13 +317,13 @@ async def test_elevenlabs_api() -> bool:
     """Test ElevenLabs API access."""
     from src.core.config import get_settings
     import httpx
-    
+
     settings = get_settings()
     api_key = settings.elevenlabs.elevenlabs_api_key.get_secret_value()
-    
+
     if not api_key:
         return True  # Optional
-    
+
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.get(
             "https://api.elevenlabs.io/v1/voices",
@@ -335,40 +335,40 @@ async def test_elevenlabs_api() -> bool:
 async def test_search_workflow() -> bool:
     """Test search workflow end-to-end."""
     from src.workflows.orchestrator import get_orchestrator
-    
+
     orchestrator = get_orchestrator()
     result = await orchestrator.research("test query python")
-    
+
     return result.success and result.data.get("total", 0) >= 0
 
 
 async def test_cache_operations() -> bool:
     """Test cache operations."""
     from src.core.cache import get_cache
-    
+
     cache = get_cache()
-    
+
     # Set
     await cache.set("test_key", {"value": 123})
-    
+
     # Get
     result = await cache.get("test_key")
-    
+
     # Delete
     await cache.delete("test_key")
-    
+
     return result == {"value": 123}
 
 
 async def test_metrics_collection() -> bool:
     """Test metrics collection."""
     from src.automation.metrics import ActionTimer, get_metrics_collector
-    
+
     collector = get_metrics_collector()
-    
+
     async with ActionTimer("test_action", collector):
         await asyncio.sleep(0.01)
-    
+
     metrics = collector.get_metrics("test_action")
     return metrics is not None and metrics.count > 0
 

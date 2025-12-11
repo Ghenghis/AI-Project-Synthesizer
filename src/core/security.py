@@ -8,7 +8,7 @@ input validation, and secure logging.
 import re
 import hashlib
 import secrets
-from typing import Optional, Dict, Any, Union
+from typing import Dict, Any
 from urllib.parse import urlparse
 import logging
 from functools import wraps
@@ -23,7 +23,7 @@ class SecretManager:
     Provides utilities for masking secrets in logs,
     validating input, and sanitizing data.
     """
-    
+
     # Patterns for detecting secrets in logs
     SECRET_PATTERNS = [
         r'ghp_[a-zA-Z0-9]{36}',  # GitHub tokens
@@ -39,7 +39,7 @@ class SecretManager:
         r'[a-zA-Z0-9_-]{40}\.[a-zA-Z0-9_-]{64}\.[a-zA-Z0-9_-]{25}',  # OpenAI tokens
         r'[a-zA-Z0-9_-]{32}',  # Generic API keys
     ]
-    
+
     @staticmethod
     def mask_secrets(text: str, mask_char: str = "*") -> str:
         """
@@ -54,9 +54,9 @@ class SecretManager:
         """
         if not text:
             return text
-            
+
         masked_text = text
-        
+
         for pattern in SecretManager.SECRET_PATTERNS:
             # Replace each match with masked version
             matches = re.finditer(pattern, masked_text, re.IGNORECASE)
@@ -68,9 +68,9 @@ class SecretManager:
                 else:
                     masked = mask_char * len(secret)
                 masked_text = masked_text.replace(secret, masked)
-        
+
         return masked_text
-    
+
     @staticmethod
     def hash_secret(secret: str) -> str:
         """
@@ -83,7 +83,7 @@ class SecretManager:
             SHA-256 hash of the secret
         """
         return hashlib.sha256(secret.encode()).hexdigest()
-    
+
     @staticmethod
     def generate_secure_id(length: int = 32) -> str:
         """
@@ -102,22 +102,22 @@ class InputValidator:
     """
     Validates and sanitizes user inputs.
     """
-    
+
     # GitHub repository URL pattern
     GITHUB_URL_PATTERN = re.compile(
         r'^https?://(?:www\.)?github\.com/[\w\-\.]+/[\w\-\.]+/?$',
         re.IGNORECASE
     )
-    
+
     # Generic URL pattern
     URL_PATTERN = re.compile(
         r'^https?://(?:[\w\-]+\.)+[\w\-]+(?:/[\w\-./?%&=]*)?$',
         re.IGNORECASE
     )
-    
+
     # Safe filename pattern
     SAFE_FILENAME_PATTERN = re.compile(r'^[\w\-\.]+$')
-    
+
     @staticmethod
     def validate_repository_url(url: str) -> bool:
         """
@@ -131,20 +131,20 @@ class InputValidator:
         """
         if not url or not isinstance(url, str):
             return False
-        
+
         # Normalize URL
         url = url.strip().lower()
-        
+
         # Check GitHub URLs specifically
         if InputValidator.GITHUB_URL_PATTERN.match(url):
             return True
-        
+
         # Check other valid URLs
         if InputValidator.URL_PATTERN.match(url):
             return True
-        
+
         return False
-    
+
     @staticmethod
     def sanitize_filename(filename: str) -> str:
         """
@@ -158,22 +158,22 @@ class InputValidator:
         """
         if not filename:
             return "unnamed"
-        
+
         # Remove path separators and dangerous characters
         sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
         sanitized = re.sub(r'\.\.', '_', sanitized)
         sanitized = sanitized.strip('._')
-        
+
         # Ensure it's not empty
         if not sanitized:
             sanitized = "unnamed"
-        
+
         # Limit length
         if len(sanitized) > 255:
             sanitized = sanitized[:255]
-        
+
         return sanitized
-    
+
     @staticmethod
     def validate_search_query(query: str) -> bool:
         """
@@ -187,18 +187,18 @@ class InputValidator:
         """
         if not query or not isinstance(query, str):
             return False
-        
+
         # Remove dangerous characters
         dangerous_chars = ['<', '>', '"', "'", '&', '\x00']
         if any(char in query for char in dangerous_chars):
             return False
-        
+
         # Check length
         if len(query.strip()) > 1000:
             return False
-        
+
         return True
-    
+
     @staticmethod
     def sanitize_path(path: str) -> str:
         """
@@ -212,17 +212,17 @@ class InputValidator:
         """
         if not path:
             return "."
-        
+
         # Normalize path separators
         path = path.replace('\\', '/')
-        
+
         # Remove path traversal attempts
         path = re.sub(r'\.\./', '', path)
         path = re.sub(r'\.\.\/', '', path)
-        
+
         # Remove leading slashes to prevent absolute paths
         path = path.lstrip('/')
-        
+
         return path
 
 
@@ -230,10 +230,10 @@ class SecureLogger:
     """
     Wrapper for secure logging that masks secrets.
     """
-    
+
     def __init__(self, logger_name: str):
         self.logger = logging.getLogger(logger_name)
-    
+
     def _sanitize_message(self, message: str, **kwargs) -> tuple[str, Dict[str, Any]]:
         """
         Sanitize message and kwargs for logging.
@@ -247,7 +247,7 @@ class SecureLogger:
         """
         # Mask secrets in message
         sanitized_message = SecretManager.mask_secrets(str(message))
-        
+
         # Sanitize context
         sanitized_context = {}
         for key, value in kwargs.items():
@@ -260,24 +260,24 @@ class SecureLogger:
                 }
             else:
                 sanitized_context[key] = value
-        
+
         return sanitized_message, sanitized_context
-    
+
     def info(self, message: str, **kwargs):
         """Log info message with secret masking."""
         sanitized_msg, sanitized_ctx = self._sanitize_message(message, **kwargs)
         self.logger.info(sanitized_msg, extra=sanitized_ctx)
-    
+
     def error(self, message: str, **kwargs):
         """Log error message with secret masking."""
         sanitized_msg, sanitized_ctx = self._sanitize_message(message, **kwargs)
         self.logger.error(sanitized_msg, extra=sanitized_ctx)
-    
+
     def warning(self, message: str, **kwargs):
         """Log warning message with secret masking."""
         sanitized_msg, sanitized_ctx = self._sanitize_message(message, **kwargs)
         self.logger.warning(sanitized_msg, extra=sanitized_ctx)
-    
+
     def debug(self, message: str, **kwargs):
         """Log debug message with secret masking."""
         sanitized_msg, sanitized_ctx = self._sanitize_message(message, **kwargs)
@@ -301,21 +301,21 @@ def secure_input(validation_func=None):
             if 'repo_url' in kwargs:
                 if not InputValidator.validate_repository_url(kwargs['repo_url']):
                     raise ValueError(f"Invalid repository URL: {kwargs['repo_url']}")
-            
+
             if 'query' in kwargs:
                 if not InputValidator.validate_search_query(kwargs['query']):
                     raise ValueError(f"Invalid search query: {kwargs['query']}")
-            
+
             if 'filename' in kwargs:
                 kwargs['filename'] = InputValidator.sanitize_filename(kwargs['filename'])
-            
+
             if 'path' in kwargs:
                 kwargs['path'] = InputValidator.sanitize_path(kwargs['path'])
-            
+
             # Apply custom validation if provided
             if validation_func:
                 validation_func(*args, **kwargs)
-            
+
             return func(*args, **kwargs)
         return wrapper
     return decorator
@@ -325,20 +325,20 @@ class SecurityConfig:
     """
     Security configuration settings.
     """
-    
+
     # Rate limiting
     DEFAULT_RATE_LIMIT = 1000  # requests per hour
     BURST_SIZE = 100
-    
+
     # Input validation
     MAX_QUERY_LENGTH = 1000
     MAX_FILENAME_LENGTH = 255
     MAX_PATH_LENGTH = 4096
-    
+
     # Secret handling
     MASK_SECRETS_IN_LOGS = True
     SECRET_MASK_CHAR = "*"
-    
+
     # URL validation
     ALLOWED_PROTOCOLS = ['http', 'https']
     ALLOWED_DOMAINS = [
@@ -348,7 +348,7 @@ class SecurityConfig:
         'kaggle.com',
         'arxiv.org'
     ]
-    
+
     @classmethod
     def is_domain_allowed(cls, url: str) -> bool:
         """
@@ -363,11 +363,11 @@ class SecurityConfig:
         try:
             parsed = urlparse(url)
             domain = parsed.netloc.lower()
-            
+
             # Remove www. prefix
             if domain.startswith('www.'):
                 domain = domain[4:]
-            
+
             return domain in cls.ALLOWED_DOMAINS
         except Exception:
             return False

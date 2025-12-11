@@ -64,14 +64,14 @@ class TestLLMSettings:
         """Test default Ollama configuration."""
         # Set environment variables to ensure consistent defaults
         monkeypatch.setenv("OLLAMA_HOST", "http://localhost:11434")
-        monkeypatch.setenv("OLLAMA_MODEL_BALANCED", "qwen2.5-coder:14b-instruct-q4_K_M")
+        monkeypatch.setenv("OLLAMA_MODEL_MEDIUM", "qwen2.5-coder:7b-instruct-q8_0")
         
         from src.core.config import LLMSettings
         
         settings = LLMSettings()
         
         assert settings.ollama_host == "http://localhost:11434"
-        assert "qwen2.5-coder" in settings.ollama_model_balanced
+        assert "qwen2.5-coder" in settings.ollama_model_medium
     
     def test_cloud_disabled_by_default(self):
         """Test that cloud LLM is disabled by default."""

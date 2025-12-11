@@ -10,8 +10,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -40,13 +39,13 @@ class AssembleRequest(BaseModel):
 
 def create_app() -> FastAPI:
     """Create FastAPI application."""
-    
+
     app = FastAPI(
         title="AI Project Synthesizer",
         description="Visual dashboard for intelligent project synthesis",
         version=get_version(),
     )
-    
+
     # CORS for development
     app.add_middleware(
         CORSMiddleware,
@@ -55,72 +54,72 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Include settings routes
     from src.dashboard.settings_routes import router as settings_router
     app.include_router(settings_router)
-    
+
     # Include agent routes
     from src.dashboard.agent_routes import router as agent_router
     app.include_router(agent_router)
-    
+
     # Include memory routes
     from src.dashboard.memory_routes import router as memory_router
     app.include_router(memory_router)
-    
+
     # Include webhook routes
     from src.dashboard.webhook_routes import router as webhook_router
     app.include_router(webhook_router)
-    
+
     # API Routes
     @app.get("/")
     async def root():
         """Dashboard home page."""
         return HTMLResponse(content=get_dashboard_html(), status_code=200)
-    
+
     @app.get("/api/health")
     async def health():
         """Get system health status."""
         health_status = await check_health()
         return health_status.to_dict()
-    
+
     @app.get("/api/version")
     async def version():
         """Get version info."""
         return get_build_info()
-    
+
     @app.get("/api/cache/stats")
     async def cache_stats():
         """Get cache statistics."""
         cache = get_cache()
         return await cache.stats()
-    
+
     @app.post("/api/cache/clear")
     async def cache_clear():
         """Clear cache."""
         cache = get_cache()
         count = await cache.clear()
         return {"cleared": count}
-    
+
     @app.get("/api/plugins")
     async def list_plugins():
         """List installed plugins."""
         manager = get_plugin_manager()
         return {"plugins": manager.list_plugins()}
-    
+
     @app.post("/api/search")
     async def search(request: SearchRequest):
         """Search across platforms."""
         try:
             from src.discovery.unified_search import create_unified_search
-            
+
             search = create_unified_search()
             results = await search.search(
                 query=request.query,
                 platforms=request.platforms,
                 max_results=request.max_results,
             )
-            
+
             return {
                 "query": request.query,
                 "total": len(results.repositories),
@@ -138,21 +137,21 @@ def create_app() -> FastAPI:
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
+
     @app.post("/api/assemble")
     async def assemble(request: AssembleRequest):
         """Assemble a project."""
         try:
             from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
-            
+
             config = AssemblerConfig(
                 base_output_dir=Path(request.output_dir),
                 create_github_repo=request.create_github,
             )
-            
+
             assembler = ProjectAssembler(config)
             project = await assembler.assemble(request.idea, request.name)
-            
+
             return {
                 "success": True,
                 "project": {
@@ -169,13 +168,13 @@ def create_app() -> FastAPI:
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
+
     @app.get("/api/projects")
     async def list_projects():
         """List assembled projects."""
         projects = []
         base_dir = Path("G:/")
-        
+
         if base_dir.exists():
             for item in base_dir.iterdir():
                 manifest = item / "project-manifest.json"
@@ -190,14 +189,14 @@ def create_app() -> FastAPI:
                         })
                     except Exception:
                         pass
-        
+
         return {"projects": projects}
-    
+
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket):
         """WebSocket for real-time updates."""
         await websocket.accept()
-        
+
         try:
             while True:
                 # Send health updates every 10 seconds
@@ -209,32 +208,32 @@ def create_app() -> FastAPI:
                 await asyncio.sleep(10)
         except WebSocketDisconnect:
             pass
-    
+
     # ============================================
     # Metrics & Monitoring Endpoints (for n8n)
     # ============================================
-    
+
     @app.get("/api/metrics")
     async def get_metrics():
         """Get system metrics."""
         from src.automation.metrics import get_metrics_collector
         collector = get_metrics_collector()
         return collector.get_summary()
-    
+
     @app.post("/api/metrics")
     async def record_metrics(data: Dict[str, Any]):
         """Record metrics from n8n workflows."""
         from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
-        
+
         collector = get_metrics_collector()
-        
+
         # Record workflow timing
         if "workflow" in data and "timings" in data:
             timings = data["timings"]
             if isinstance(timings, str):
                 timings = json.loads(timings)
-            
+
             for action, duration in timings.items():
                 record = TimingRecord(
                     action=f"n8n_{data['workflow']}_{action}",
@@ -244,15 +243,15 @@ def create_app() -> FastAPI:
                     success=data.get("success", True),
                 )
                 collector.record(record)
-        
+
         return {"status": "recorded"}
-    
+
     @app.post("/api/metrics/health")
     async def record_health_metrics(data: Dict[str, Any]):
         """Record health check metrics."""
         from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
-        
+
         collector = get_metrics_collector()
         record = TimingRecord(
             action="health_check",
@@ -263,20 +262,20 @@ def create_app() -> FastAPI:
             metadata={"status": data.get("status")},
         )
         collector.record(record)
-        
+
         return {"status": "recorded"}
-    
+
     @app.post("/api/metrics/tests")
     async def record_test_metrics(data: Dict[str, Any]):
         """Record test run metrics."""
         from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
-        
+
         collector = get_metrics_collector()
         summary = data.get("summary", {})
         if isinstance(summary, str):
             summary = json.loads(summary)
-        
+
         record = TimingRecord(
             action="integration_tests",
             start_time=time.time(),
@@ -286,65 +285,65 @@ def create_app() -> FastAPI:
             metadata=summary,
         )
         collector.record(record)
-        
+
         return {"status": "recorded"}
-    
+
     # ============================================
     # Alerts Endpoint (for n8n)
     # ============================================
-    
+
     @app.post("/api/alerts")
     async def receive_alert(data: Dict[str, Any]):
         """Receive alerts from n8n workflows."""
         alert_type = data.get("type", "unknown")
-        
+
         secure_logger.warning(
             f"Alert received: {alert_type}",
             extra={"alert_data": data}
         )
-        
+
         # Could integrate with notification systems here
         # e.g., Slack, Discord, email, etc.
-        
+
         return {"status": "received", "type": alert_type}
-    
+
     # ============================================
     # Recovery Endpoint (for n8n)
     # ============================================
-    
+
     @app.post("/api/recovery/attempt")
     async def attempt_recovery(data: Dict[str, Any]):
         """Attempt to recover unhealthy components."""
         components = data.get("components", [])
         if isinstance(components, str):
             components = json.loads(components)
-        
+
         results = {}
         for component in components:
             # Implement component-specific recovery
             results[component] = "recovery_attempted"
             secure_logger.info(f"Recovery attempted for: {component}")
-        
+
         return {"status": "attempted", "results": results}
-    
+
     # ============================================
     # Voice Endpoints (for n8n)
     # ============================================
-    
+
     @app.post("/api/voice/speak")
     async def speak(data: Dict[str, Any]):
         """Generate speech from text."""
         text = data.get("text", "")
         voice = data.get("voice", "rachel")
-        
+
         if not text:
             raise HTTPException(status_code=400, detail="Missing text")
-        
+
         try:
             from src.voice.elevenlabs_client import ElevenLabsClient
             client = ElevenLabsClient()
             audio_path = await client.generate_speech(text, voice=voice)
-            
+
             return {
                 "success": True,
                 "audio_path": str(audio_path),
@@ -353,11 +352,11 @@ def create_app() -> FastAPI:
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
+
     # ============================================
     # Research Topics Endpoint (for n8n)
     # ============================================
-    
+
     @app.get("/api/research/topics")
     async def get_research_topics():
         """Get current research topics."""
@@ -369,23 +368,23 @@ def create_app() -> FastAPI:
             {"topic": "machine learning automation"},
         ]
         return default_topics
-    
+
     @app.post("/api/research/save")
     async def save_research(data: Dict[str, Any]):
         """Save research results."""
         results = data.get("results", [])
         timestamp = data.get("timestamp", "")
-        
+
         # Save to cache
         cache = get_cache()
         await cache.set(f"research_{timestamp}", results, ttl_seconds=86400)
-        
+
         return {"status": "saved", "count": len(results) if isinstance(results, list) else 0}
-    
+
     # ============================================
     # Test Endpoints (for n8n)
     # ============================================
-    
+
     @app.get("/api/test/search")
     async def test_search():
         """Test search functionality."""
@@ -396,7 +395,7 @@ def create_app() -> FastAPI:
             return {"status": "pass", "results": len(results.repositories)}
         except Exception as e:
             return {"status": "fail", "error": str(e)}
-    
+
     @app.get("/api/test/cache")
     async def test_cache():
         """Test cache functionality."""
@@ -408,12 +407,12 @@ def create_app() -> FastAPI:
             return {"status": "pass" if result == "test_value" else "fail"}
         except Exception as e:
             return {"status": "fail", "error": str(e)}
-    
+
     @app.get("/api/health/{component}")
     async def health_component(component: str):
         """Check health of specific component."""
         health_status = await check_health()
-        
+
         for c in health_status.components:
             if c.name == component:
                 return {
@@ -422,13 +421,13 @@ def create_app() -> FastAPI:
                     "message": c.message,
                     "latency_ms": c.latency_ms,
                 }
-        
+
         raise HTTPException(status_code=404, detail=f"Component not found: {component}")
-    
+
     # ============================================
     # Automation Status Endpoint
     # ============================================
-    
+
     @app.get("/api/automation/status")
     async def automation_status():
         """Get automation coordinator status."""
@@ -438,21 +437,21 @@ def create_app() -> FastAPI:
             return coordinator.get_status()
         except Exception as e:
             return {"error": str(e), "running": False}
-    
+
     @app.post("/api/automation/tests")
     async def run_automation_tests(data: Dict[str, Any] = None):
         """Run integration tests."""
         try:
             from src.automation.coordinator import get_coordinator
             coordinator = get_coordinator()
-            
+
             category = data.get("category") if data else None
             result = await coordinator.run_tests(category)
-            
+
             return result.to_dict()
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
+
     return app
 
 
@@ -686,7 +685,7 @@ def get_dashboard_html() -> str:
 def run_dashboard(host: str = "0.0.0.0", port: int = 8000):
     """Run the dashboard server."""
     import uvicorn
-    
+
     app = create_app()
     uvicorn.run(app, host=host, port=port)
 

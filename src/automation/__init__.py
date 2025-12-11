@@ -14,7 +14,7 @@ from src.automation.testing import IntegrationTester
 
 __all__ = [
     "AutomationCoordinator",
-    "MetricsCollector", 
+    "MetricsCollector",
     "ActionTimer",
     "IntegrationTester",
 ]

@@ -8,7 +8,7 @@ Aggregates results from GitHub, HuggingFace, Kaggle, and more.
 import asyncio
 import logging
 import time
-from typing import Optional, List, Dict, Any, Set
+from typing import Optional, List, Dict, Set
 from dataclasses import dataclass, field
 import hashlib
 import json
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class UnifiedSearchResult:
     """Result from unified multi-platform search."""
-    
+
     query: str
     platforms_searched: List[str]
     total_count: int
@@ -36,7 +36,7 @@ class UnifiedSearchResult:
     search_time_ms: int
     platform_counts: Dict[str, int] = field(default_factory=dict)
     errors: Dict[str, str] = field(default_factory=dict)
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -83,9 +83,9 @@ class UnifiedSearch:
             max_results=20,
         )
     """
-    
+
     SUPPORTED_PLATFORMS = ["github", "huggingface", "kaggle", "arxiv"]
-    
+
     def __init__(
         self,
         github_token: Optional[str] = None,
@@ -103,10 +103,10 @@ class UnifiedSearch:
         self._clients: Dict[str, PlatformClient] = {}
         self._cache: Dict[str, UnifiedSearchResult] = {}
         self._cache_ttl = 3600  # 1 hour
-        
+
         # Initialize available clients
         self._init_clients(github_token, huggingface_token, kaggle_credentials)
-    
+
     def _init_clients(
         self,
         github_token: Optional[str],
@@ -115,7 +115,7 @@ class UnifiedSearch:
     ):
         """Initialize platform clients."""
         settings = get_settings()
-        
+
         # GitHub client
         if settings.platforms.github_token.get_secret_value():
             token = github_token or settings.platforms.github_token.get_secret_value()
@@ -124,7 +124,7 @@ class UnifiedSearch:
                 logger.info("GitHub client initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize GitHub client: {e}")
-        
+
         # HuggingFace client
         if settings.platforms.huggingface_token.get_secret_value():
             token = huggingface_token or settings.platforms.huggingface_token.get_secret_value()
@@ -133,7 +133,7 @@ class UnifiedSearch:
                 logger.info("HuggingFace client initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize HuggingFace client: {e}")
-        
+
         # Kaggle client
         if settings.platforms.kaggle_username and settings.platforms.kaggle_key.get_secret_value():
             try:
@@ -149,12 +149,12 @@ class UnifiedSearch:
                 logger.info("Kaggle client initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize Kaggle client: {e}")
-    
+
     @property
     def available_platforms(self) -> List[str]:
         """Get list of available (initialized) platforms."""
         return list(self._clients.keys())
-    
+
     async def search(
         self,
         query: str,
@@ -181,14 +181,14 @@ class UnifiedSearch:
             UnifiedSearchResult with aggregated results
         """
         start_time = time.time()
-        
+
         # Default to all available platforms
         if platforms is None:
             platforms = self.available_platforms
         else:
             # Filter to only available platforms
             platforms = [p for p in platforms if p in self._clients]
-        
+
         if not platforms:
             logger.warning("No platforms available for search")
             return UnifiedSearchResult(
@@ -199,14 +199,14 @@ class UnifiedSearch:
                 search_time_ms=0,
                 errors={"general": "No platforms available"},
             )
-        
+
         # Check cache
         cache_key = self._cache_key(query, platforms, language_filter, min_stars)
         if use_cache and cache_key in self._cache:
             cached = self._cache[cache_key]
             logger.debug(f"Cache hit for query: {query}")
             return cached
-        
+
         # Search all platforms in parallel
         tasks = {}
         for platform in platforms:
@@ -220,12 +220,12 @@ class UnifiedSearch:
                     max_results,
                 )
             )
-        
+
         # Gather results
         all_repos: List[RepositoryInfo] = []
         platform_counts: Dict[str, int] = {}
         errors: Dict[str, str] = {}
-        
+
         for platform, task in tasks.items():
             try:
                 result = await task
@@ -236,14 +236,14 @@ class UnifiedSearch:
                 logger.warning(f"Search failed for {platform}: {e}")
                 errors[platform] = str(e)
                 platform_counts[platform] = 0
-        
+
         # Deduplicate and rank
         unique_repos = self._deduplicate(all_repos)
         ranked_repos = self._rank_results(unique_repos, query, sort_by)
-        
+
         # Limit total results
         final_repos = ranked_repos[:max_results * len(platforms)]
-        
+
         result = UnifiedSearchResult(
             query=query,
             platforms_searched=platforms,
@@ -253,13 +253,13 @@ class UnifiedSearch:
             platform_counts=platform_counts,
             errors=errors,
         )
-        
+
         # Cache result
         if use_cache:
             self._cache[cache_key] = result
-        
+
         return result
-    
+
     async def _search_platform(
         self,
         client: PlatformClient,
@@ -276,10 +276,10 @@ class UnifiedSearch:
                 min_stars=min_stars,
                 max_results=max_results,
             )
-        except Exception as e:
+        except Exception:
             logger.exception(f"Platform search error: {client.platform_name}")
             raise
-    
+
     def _deduplicate(
         self,
         repositories: List[RepositoryInfo],
@@ -287,17 +287,17 @@ class UnifiedSearch:
         """Remove duplicate repositories across platforms."""
         seen_urls: Set[str] = set()
         unique: List[RepositoryInfo] = []
-        
+
         for repo in repositories:
             # Normalize URL for comparison
             url_key = repo.url.lower().rstrip("/")
-            
+
             if url_key not in seen_urls:
                 seen_urls.add(url_key)
                 unique.append(repo)
-        
+
         return unique
-    
+
     def _rank_results(
         self,
         repositories: List[RepositoryInfo],
@@ -319,10 +319,10 @@ class UnifiedSearch:
             for repo in repositories:
                 score = self._calculate_score(repo, query)
                 scored.append((score, repo))
-            
+
             scored.sort(key=lambda x: x[0], reverse=True)
             return [repo for _, repo in scored]
-    
+
     def _calculate_score(
         self,
         repo: RepositoryInfo,
@@ -332,7 +332,7 @@ class UnifiedSearch:
         score = 0.0
         query_lower = query.lower()
         query_terms = set(query_lower.split())
-        
+
         # Name match (0.3)
         name_lower = repo.name.lower()
         if query_lower in name_lower:
@@ -341,7 +341,7 @@ class UnifiedSearch:
             name_terms = set(name_lower.replace("-", " ").replace("_", " ").split())
             term_overlap = len(query_terms & name_terms) / len(query_terms) if query_terms else 0
             score += 0.3 * term_overlap
-        
+
         # Description match (0.2)
         if repo.description:
             desc_lower = repo.description.lower()
@@ -351,19 +351,19 @@ class UnifiedSearch:
                 desc_terms = set(desc_lower.split())
                 term_overlap = len(query_terms & desc_terms) / len(query_terms) if query_terms else 0
                 score += 0.2 * term_overlap
-        
+
         # Topics match (0.15)
         if repo.topics:
             topics_lower = {t.lower() for t in repo.topics}
             topic_overlap = len(query_terms & topics_lower)
             score += 0.15 * min(1.0, topic_overlap / 2)
-        
+
         # Popularity (0.2) - log scaled
         import math
         if repo.stars > 0:
             star_score = min(1.0, math.log10(repo.stars + 1) / 5)
             score += 0.2 * star_score
-        
+
         # Recency (0.15)
         if repo.updated_at:
             from datetime import datetime, timezone
@@ -372,19 +372,19 @@ class UnifiedSearch:
                     updated = datetime.fromisoformat(repo.updated_at.replace("Z", "+00:00"))
                 else:
                     updated = repo.updated_at
-                
+
                 if updated.tzinfo is None:
                     updated = updated.replace(tzinfo=timezone.utc)
-                
+
                 now = datetime.now(timezone.utc)
                 days_ago = (now - updated).days
                 recency_score = math.exp(-days_ago / 180)  # 6-month half-life
                 score += 0.15 * recency_score
             except Exception as e:
                 logger.debug("Failed to calculate recency score: %s", e)
-        
+
         return score
-    
+
     def _cache_key(
         self,
         query: str,
@@ -401,12 +401,12 @@ class UnifiedSearch:
         }
         key_str = json.dumps(key_data, sort_keys=True)
         return hashlib.sha256(key_str.encode()).hexdigest()
-    
+
     def clear_cache(self):
         """Clear the search cache."""
         self._cache.clear()
         logger.info("Search cache cleared")
-    
+
     async def get_repository(
         self,
         repo_url: str,
@@ -418,26 +418,26 @@ class UnifiedSearch:
         """
         # Detect platform from URL
         platform = self._detect_platform(repo_url)
-        
+
         if platform not in self._clients:
             logger.warning(f"Platform not available: {platform}")
             return None
-        
+
         client = self._clients[platform]
-        
+
         # Extract repo ID from URL
         repo_id = self._extract_repo_id(repo_url, platform)
-        
+
         try:
             return await client.get_repository(repo_id)
         except Exception as e:
             logger.warning(f"Failed to get repository: {e}")
             return None
-    
+
     def _detect_platform(self, url: str) -> str:
         """Detect platform from URL."""
         url_lower = url.lower()
-        
+
         if "github.com" in url_lower:
             return "github"
         elif "huggingface.co" in url_lower:
@@ -450,14 +450,14 @@ class UnifiedSearch:
             return "bitbucket"
         else:
             return "unknown"
-    
+
     def _extract_repo_id(self, url: str, platform: str) -> str:
         """Extract repository ID from URL."""
         from urllib.parse import urlparse
-        
+
         parsed = urlparse(url)
         path = parsed.path.strip("/")
-        
+
         if platform == "github":
             # github.com/owner/repo
             parts = path.split("/")
@@ -475,7 +475,7 @@ class UnifiedSearch:
                 parts = path.split("/")
                 if len(parts) >= 2:
                     return f"{parts[0]}/{parts[1]}"
-        
+
         return path
 
 
@@ -483,7 +483,7 @@ class UnifiedSearch:
 def create_unified_search() -> UnifiedSearch:
     """Create UnifiedSearch instance with settings from config."""
     settings = get_settings()
-    
+
     return UnifiedSearch(
         github_token=settings.platforms.github_token.get_secret_value(),
         huggingface_token=settings.platforms.huggingface_token.get_secret_value(),

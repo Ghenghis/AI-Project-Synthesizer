@@ -15,7 +15,6 @@ from pydantic import BaseModel
 from src.core.settings_manager import (
     get_settings_manager,
     SettingsTab,
-    AllSettings,
 )
 from src.core.hotkey_manager import get_hotkey_manager, HotkeyAction
 from src.core.security import get_secure_logger
@@ -88,7 +87,7 @@ async def update_tab_settings(tab: str, request: UpdateSettingsRequest) -> Dict[
         settings_tab = SettingsTab(tab)
         manager = get_settings_manager()
         manager.update(settings_tab, **request.updates)
-        
+
         return {
             "success": True,
             "tab": tab,
@@ -107,7 +106,7 @@ async def toggle_feature(tab: str, request: ToggleFeatureRequest) -> Dict[str, A
         settings_tab = SettingsTab(tab)
         manager = get_settings_manager()
         new_value = manager.toggle(settings_tab, request.feature)
-        
+
         return {
             "success": True,
             "tab": tab,
@@ -129,7 +128,7 @@ async def get_all_toggles() -> Dict[str, Any]:
 async def reset_settings(tab: Optional[str] = None) -> Dict[str, Any]:
     """Reset settings to defaults."""
     manager = get_settings_manager()
-    
+
     if tab:
         try:
             settings_tab = SettingsTab(tab)
@@ -178,7 +177,7 @@ async def update_hotkey(action: str, request: UpdateHotkeyRequest) -> Dict[str, 
         hotkey_action = HotkeyAction(action)
         manager = get_hotkey_manager()
         manager.set_keys(hotkey_action, request.keys)
-        
+
         return {
             "success": True,
             "action": action,
@@ -221,7 +220,7 @@ async def get_voice_quick_settings() -> Dict[str, Any]:
     """Get quick voice settings."""
     manager = get_settings_manager()
     voice = manager.settings.voice
-    
+
     return {
         "mode": voice.mode.value,
         "pause_detection": voice.pause_detection,
@@ -257,7 +256,7 @@ async def get_automation_quick_settings() -> Dict[str, Any]:
     """Get quick automation settings."""
     manager = get_settings_manager()
     auto = manager.settings.automation
-    
+
     return {
         "auto_continue_mode": auto.auto_continue_mode.value,
         "auto_fix_errors": auto.auto_fix_errors,
@@ -274,10 +273,10 @@ async def toggle_auto_continue() -> Dict[str, Any]:
     # Cycle through modes
     current = manager.settings.automation.auto_continue_mode
     from src.core.settings_manager import AutoContinueMode
-    
+
     modes = list(AutoContinueMode)
     current_idx = modes.index(current)
     next_mode = modes[(current_idx + 1) % len(modes)]
-    
+
     manager.update(SettingsTab.AUTOMATION, auto_continue_mode=next_mode)
     return {"auto_continue_mode": next_mode.value}

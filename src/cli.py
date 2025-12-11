@@ -16,7 +16,7 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -105,20 +105,20 @@ def search_repositories(
         ai-synthesizer search "llm agents" --language python --format json
     """
     console.print(f"\n🔍 Searching for: [bold cyan]{query}[/bold cyan]\n")
-    
+
     async def _search():
         from src.discovery.unified_search import create_unified_search
-        
+
         search = create_unified_search()
         platform_list = [p.strip() for p in platforms.split(",")]
-        
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             task = progress.add_task(f"Searching {', '.join(platform_list)}...", total=None)
-            
+
             results = await search.search(
                 query=query,
                 platforms=platform_list,
@@ -126,18 +126,18 @@ def search_repositories(
                 language_filter=language,
                 min_stars=min_stars,
             )
-            
+
             progress.update(task, completed=True)
-        
+
         return results
-    
+
     try:
         results = run_async(_search())
-        
+
         if not results.repositories:
             console.print("[yellow]No repositories found matching your query.[/yellow]")
             return
-        
+
         if output_format == "json":
             output = {
                 "query": query,
@@ -166,7 +166,7 @@ def search_repositories(
             table.add_column("Stars", justify="right", style="yellow")
             table.add_column("Language", style="magenta")
             table.add_column("Description", max_width=40)
-            
+
             for repo in results.repositories:
                 table.add_row(
                     repo.full_name,
@@ -175,11 +175,11 @@ def search_repositories(
                     repo.language or "N/A",
                     (repo.description[:37] + "...") if repo.description and len(repo.description) > 40 else (repo.description or ""),
                 )
-            
+
             console.print(table)
-        
+
         console.print(f"\n✅ Found [bold green]{len(results.repositories)}[/bold green] repositories")
-        
+
     except Exception as e:
         console.print(f"[red]Error during search: {e}[/red]")
         logger.exception("Search failed")
@@ -223,16 +223,16 @@ def analyze_repository(
         ai-synthesizer analyze https://github.com/user/repo --format json
     """
     console.print(f"\n🔬 Analyzing: [bold cyan]{repo_url}[/bold cyan]\n")
-    
+
     async def _analyze():
         from src.mcp_server.tools import handle_analyze_repository
-        
+
         return await handle_analyze_repository({
             "repo_url": repo_url,
             "include_transitive_deps": include_deps,
             "extract_components": extract_components,
         })
-    
+
     try:
         with Progress(
             SpinnerColumn(),
@@ -242,11 +242,11 @@ def analyze_repository(
             task = progress.add_task("Cloning and analyzing repository...", total=None)
             result = run_async(_analyze())
             progress.update(task, completed=True)
-        
+
         if result.get("error"):
             console.print(f"[red]Analysis failed: {result.get('message')}[/red]")
             raise typer.Exit(code=1)
-        
+
         if output_format == "json":
             console.print(Syntax(json.dumps(result, indent=2, default=str), "json"))
         elif output_format == "summary":
@@ -260,7 +260,7 @@ def analyze_repository(
         else:
             # Rich format
             repo = result.get("repository", {})
-            
+
             # Repository info panel
             repo_info = f"""
 [bold]Name:[/bold] {repo.get('name')}
@@ -271,28 +271,28 @@ def analyze_repository(
 [bold]Description:[/bold] {repo.get('description', 'N/A')}
             """
             console.print(Panel(repo_info, title="📦 Repository Info", border_style="blue"))
-            
+
             # Analysis stats
             stats = f"""
 [bold]Files Analyzed:[/bold] {result.get('files_analyzed', 0)}
 [bold]Lines of Code:[/bold] {result.get('lines_of_code', 0)}
             """
             console.print(Panel(stats, title="📊 Analysis Stats", border_style="green"))
-            
+
             # Dependencies
             deps = result.get("dependencies", {})
             if deps:
                 dep_count = deps.get("direct_count", 0)
                 console.print(Panel(f"Direct Dependencies: {dep_count}", title="📚 Dependencies", border_style="yellow"))
-            
+
             # Quality score
             quality = result.get("quality_score", {})
             if quality:
                 score = quality.get("overall_score", 0)
                 console.print(Panel(f"Overall Score: {score}/100", title="✨ Code Quality", border_style="magenta"))
-        
+
         console.print("\n✅ Analysis complete!")
-        
+
     except Exception as e:
         console.print(f"[red]Error during analysis: {e}[/red]")
         logger.exception("Analysis failed")
@@ -336,17 +336,17 @@ def synthesize_project(
     repo_list = [r.strip() for r in repos.split(",")]
     console.print(f"\n🧬 Synthesizing project: [bold cyan]{project_name}[/bold cyan]")
     console.print(f"   From {len(repo_list)} repositories\n")
-    
+
     async def _synthesize():
         from src.mcp_server.tools import handle_synthesize_project
-        
+
         return await handle_synthesize_project({
             "repositories": [{"repo_url": url} for url in repo_list],
             "project_name": project_name,
             "output_path": output_path,
             "template": template,
         })
-    
+
     try:
         with Progress(
             SpinnerColumn(),
@@ -356,11 +356,11 @@ def synthesize_project(
             task = progress.add_task("Synthesizing project (this may take a few minutes)...", total=None)
             result = run_async(_synthesize())
             progress.update(task, completed=True)
-        
+
         if result.get("error"):
             console.print(f"[red]Synthesis failed: {result.get('message')}[/red]")
             raise typer.Exit(code=1)
-        
+
         console.print(Panel(f"""
 [bold green]✅ Project synthesized successfully![/bold green]
 
@@ -368,7 +368,7 @@ def synthesize_project(
 [bold]Template:[/bold] {template}
 [bold]Sources:[/bold] {len(repo_list)} repositories
         """, title="🎉 Synthesis Complete", border_style="green"))
-        
+
     except Exception as e:
         console.print(f"[red]Error during synthesis: {e}[/red]")
         logger.exception("Synthesis failed")
@@ -406,15 +406,15 @@ def resolve_dependencies(
     """
     repo_list = [r.strip() for r in repos.split(",")]
     console.print(f"\n📦 Resolving dependencies from {len(repo_list)} repositories\n")
-    
+
     async def _resolve():
         from src.mcp_server.tools import handle_resolve_dependencies
-        
+
         return await handle_resolve_dependencies({
             "repositories": repo_list,
             "python_version": python_version,
         })
-    
+
     try:
         with Progress(
             SpinnerColumn(),
@@ -424,41 +424,41 @@ def resolve_dependencies(
             task = progress.add_task("Resolving dependencies...", total=None)
             result = run_async(_resolve())
             progress.update(task, completed=True)
-        
+
         if result.get("error"):
             console.print(f"[red]Resolution failed: {result.get('message')}[/red]")
             raise typer.Exit(code=1)
-        
+
         # Display results
         packages = result.get("packages", [])
-        
+
         table = Table(title=f"Resolved Dependencies (Python {python_version})")
         table.add_column("Package", style="cyan")
         table.add_column("Version", style="green")
         table.add_column("Source", style="yellow")
-        
+
         for pkg in packages:
             table.add_row(
                 pkg.get("name", ""),
                 pkg.get("version", ""),
                 pkg.get("source", ""),
             )
-        
+
         console.print(table)
-        
+
         # Save to file if requested
         if output_file:
             requirements_txt = result.get("requirements_txt", "")
             Path(output_file).write_text(requirements_txt)
             console.print(f"\n✅ Requirements saved to [bold]{output_file}[/bold]")
-        
+
         console.print(f"\n✅ Resolved [bold green]{len(packages)}[/bold green] packages")
-        
+
         if result.get("warnings"):
             console.print("\n⚠️ Warnings:")
             for warning in result.get("warnings", []):
                 console.print(f"  • {warning}")
-        
+
     except Exception as e:
         console.print(f"[red]Error during resolution: {e}[/red]")
         logger.exception("Resolution failed")
@@ -492,16 +492,16 @@ def generate_documentation(
         ai-synthesizer docs ./my-project --no-llm
     """
     console.print(f"\n📝 Generating documentation for: [bold cyan]{project_path}[/bold cyan]\n")
-    
+
     async def _generate():
         from src.mcp_server.tools import handle_generate_documentation
-        
+
         return await handle_generate_documentation({
             "project_path": project_path,
             "doc_types": [t.strip() for t in doc_types.split(",")],
             "llm_enhanced": llm_enhanced,
         })
-    
+
     try:
         with Progress(
             SpinnerColumn(),
@@ -511,23 +511,23 @@ def generate_documentation(
             task = progress.add_task("Generating documentation...", total=None)
             result = run_async(_generate())
             progress.update(task, completed=True)
-        
+
         if result.get("error"):
             console.print(f"[red]Documentation generation failed: {result.get('message')}[/red]")
             raise typer.Exit(code=1)
-        
+
         documents = result.get("documents", [])
-        
+
         console.print(Panel(f"""
 [bold green]✅ Documentation generated successfully![/bold green]
 
 [bold]Documents Created:[/bold] {len(documents)}
 [bold]LLM Enhanced:[/bold] {'Yes' if result.get('llm_enhanced') else 'No'}
         """, title="📚 Documentation Complete", border_style="green"))
-        
+
         for doc in documents:
             console.print(f"  • {doc}")
-        
+
     except Exception as e:
         console.print(f"[red]Error during documentation generation: {e}[/red]")
         logger.exception("Documentation generation failed")
@@ -554,10 +554,10 @@ def show_config(
         ai-synthesizer config --all
     """
     settings = get_settings()
-    
+
     # Get enabled platforms using the proper method
     enabled_platforms = settings.platforms.get_enabled_platforms()
-    
+
     config_info = f"""
 [bold]Environment:[/bold] {settings.app.app_env}
 [bold]Debug Mode:[/bold] {settings.app.debug}
@@ -577,9 +577,9 @@ def show_config(
   • Enabled: {settings.cache.enabled}
   • TTL: {settings.cache.ttl}s
     """
-    
+
     console.print(Panel(config_info, title="⚙️ Configuration", border_style="blue"))
-    
+
     if show_all:
         console.print("\n[yellow]⚠️ Sensitive values:[/yellow]")
         github_token = settings.platforms.github_token.get_secret_value() if settings.platforms.github_token else ""
@@ -602,7 +602,7 @@ def show_version() -> None:
 def show_info() -> None:
     """Show detailed information about the tool."""
     print_banner()
-    
+
     info = """
 [bold]AI Project Synthesizer[/bold] is an intelligent platform for discovering,
 analyzing, and synthesizing code from multiple repositories into unified projects.
@@ -666,34 +666,34 @@ def run_gap_check(
     from src.core.gap_analyzer import run_gap_analysis, GapSeverity
     from datetime import datetime
     from pathlib import Path
-    
+
     console.print("\n🔍 Running Gap Analysis...\n")
-    
+
     async def analyze():
         report_data = await run_gap_analysis(auto_fix=fix)
         return report_data
-    
+
     result = asyncio.run(analyze())
-    
+
     # Summary table
     table = Table(title="Gap Analysis Summary")
     table.add_column("Metric", style="cyan")
     table.add_column("Value", style="green")
-    
+
     table.add_row("Total Gaps", str(result.total_gaps))
     table.add_row("Fixed", str(result.fixed_count))
     table.add_row("Failed", str(result.failed_count))
     table.add_row("Remaining", str(len(result.unfixed_gaps)))
-    
+
     console.print(table)
-    
+
     # Show critical issues
     if result.critical_gaps:
         console.print("\n[bold red]⚠️ Critical Issues:[/bold red]")
         for gap in result.critical_gaps:
             status = "✅" if gap.fixed else "❌"
             console.print(f"  {status} {gap.description}")
-    
+
     # Show all gaps
     if result.gaps:
         console.print("\n[bold]All Gaps:[/bold]")
@@ -707,14 +707,14 @@ def run_gap_check(
             console.print(f"  {status} [{severity_color}]{gap.severity.value}[/{severity_color}] {gap.description}")
     else:
         console.print("\n[bold green]✅ No gaps found![/bold green]")
-    
+
     # Save report
     if report:
         report_path = Path(f"reports/gap_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
         report_path.parent.mkdir(exist_ok=True)
         report_path.write_text(result.to_markdown(), encoding="utf-8")
         console.print(f"\n[dim]Report saved: {report_path}[/dim]")
-    
+
     # Exit code
     if result.unfixed_gaps and any(g.severity == GapSeverity.CRITICAL for g in result.unfixed_gaps):
         raise typer.Exit(code=1)
@@ -733,7 +733,7 @@ def start_tui() -> None:
     - AI chat
     """
     console.print("\n🖥️ Starting Terminal UI...\n")
-    
+
     try:
         from src.tui import run_tui
         run_tui()
@@ -783,21 +783,21 @@ def manage_settings(
         ai-synthesizer settings --tab general --reset
     """
     from src.core.settings_manager import get_settings_manager, SettingsTab
-    
+
     manager = get_settings_manager()
-    
+
     try:
         settings_tab = SettingsTab(tab)
     except ValueError:
         console.print(f"[red]Invalid tab: {tab}[/red]")
         console.print("Valid tabs: general, voice, automation, hotkeys, ai_ml, workflows, advanced")
         raise typer.Exit(code=1)
-    
+
     if reset:
         manager.reset_to_defaults(settings_tab)
         console.print(f"[green]✅ Reset {tab} settings to defaults[/green]")
         return
-    
+
     if toggle:
         try:
             new_value = manager.toggle(settings_tab, toggle)
@@ -805,7 +805,7 @@ def manage_settings(
         except Exception as e:
             console.print(f"[red]Failed to toggle {toggle}: {e}[/red]")
         return
-    
+
     if set_value:
         try:
             key, value = set_value.split("=", 1)
@@ -816,27 +816,27 @@ def manage_settings(
                 value = int(value)
             elif value.replace(".", "").isdigit():
                 value = float(value)
-            
+
             manager.update(settings_tab, **{key: value})
             console.print(f"[green]✅ {key} = {value}[/green]")
         except Exception as e:
             console.print(f"[red]Failed to set value: {e}[/red]")
         return
-    
+
     if show or True:  # Default to show
         tab_settings = manager.get_tab(settings_tab)
-        
+
         table = Table(title=f"{tab.title()} Settings")
         table.add_column("Setting", style="cyan")
         table.add_column("Value", style="green")
         table.add_column("Type", style="dim")
-        
+
         for field_name, field_value in tab_settings:
             value_str = str(field_value)
             if len(value_str) > 50:
                 value_str = value_str[:47] + "..."
             table.add_row(field_name, value_str, type(field_value).__name__)
-        
+
         console.print(table)
 
 
@@ -849,7 +849,7 @@ def start_mcp_server() -> None:
     Windsurf IDE to interact with AI Project Synthesizer.
     """
     console.print("\n🚀 Starting MCP Server...\n")
-    
+
     try:
         from src.mcp_server.server import main as server_main
         asyncio.run(server_main())
@@ -882,19 +882,19 @@ def wizard_command() -> None:
         ai-synthesizer wizard
     """
     from src.tui.wizard import run_wizard, execute_wizard_config
-    
+
     config = run_wizard()
-    
+
     if config:
         # Execute the configuration
         success = asyncio.run(execute_wizard_config(config))
-        
+
         if success:
             console.print("\n[bold green]🎉 Project ready![/bold green]")
-            console.print(f"\nNext steps:")
+            console.print("\nNext steps:")
             console.print(f"  cd {config['full_path']}")
-            console.print(f"  pip install -r requirements.txt")
-            console.print(f"  python -m src.main")
+            console.print("  pip install -r requirements.txt")
+            console.print("  python -m src.main")
         else:
             raise typer.Exit(code=1)
 
@@ -933,22 +933,22 @@ def recipe_command(
         ai-synthesizer recipe run rag-chatbot --output G:/projects
     """
     from src.recipes import RecipeLoader, RecipeRunner
-    
+
     loader = RecipeLoader()
-    
+
     if action == "list":
         recipes = loader.list_recipes()
-        
+
         if not recipes:
             console.print("[yellow]No recipes found in recipes/ directory[/yellow]")
             return
-        
+
         table = Table(title="Available Recipes")
         table.add_column("Name", style="cyan")
         table.add_column("Version", style="green")
         table.add_column("Description")
         table.add_column("Tags", style="dim")
-        
+
         for recipe in recipes:
             table.add_row(
                 recipe["name"],
@@ -956,101 +956,101 @@ def recipe_command(
                 recipe["description"][:50] + "..." if len(recipe["description"]) > 50 else recipe["description"],
                 ", ".join(recipe["tags"][:3])
             )
-        
+
         console.print(table)
-    
+
     elif action == "show":
         if not name:
             console.print("[red]Recipe name required for 'show' action[/red]")
             raise typer.Exit(code=1)
-        
+
         recipe = loader.load_recipe(name)
         if not recipe:
             console.print(f"[red]Recipe not found: {name}[/red]")
             raise typer.Exit(code=1)
-        
+
         console.print(Panel(f"[bold]{recipe.name}[/bold] v{recipe.version}", title="Recipe"))
         console.print(f"\n[bold]Description:[/bold] {recipe.description}")
         console.print(f"[bold]Author:[/bold] {recipe.author or 'Unknown'}")
         console.print(f"[bold]Tags:[/bold] {', '.join(recipe.tags)}")
-        
+
         console.print("\n[bold]Sources:[/bold]")
         for source in recipe.sources:
             console.print(f"  - {source.repo}")
             if source.extract:
                 console.print(f"    Extract: {', '.join(source.extract[:3])}")
-        
-        console.print(f"\n[bold]Synthesis:[/bold]")
+
+        console.print("\n[bold]Synthesis:[/bold]")
         console.print(f"  Strategy: {recipe.synthesis.strategy}")
         console.print(f"  Template: {recipe.synthesis.template}")
-        
+
         if recipe.post_synthesis:
             console.print(f"\n[bold]Post-synthesis:[/bold] {', '.join(recipe.post_synthesis)}")
-        
+
         if recipe.variables:
             console.print("\n[bold]Variables:[/bold]")
             for var_name, var_config in recipe.variables.items():
                 default = var_config.get("default", "")
                 console.print(f"  - {var_name}: {var_config.get('description', '')} (default: {default})")
-    
+
     elif action == "run":
         if not name:
             console.print("[red]Recipe name required for 'run' action[/red]")
             raise typer.Exit(code=1)
-        
+
         output_path = Path(output) if output else Path.cwd()
-        
+
         runner = RecipeRunner()
-        
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
             task = progress.add_task(f"Running recipe: {name}...", total=None)
-            
+
             result = asyncio.run(runner.run(
                 recipe_name=name,
                 output_path=output_path,
                 dry_run=dry_run,
             ))
-        
+
         if result.success:
-            console.print(f"\n[green]✅ Recipe completed successfully![/green]")
+            console.print("\n[green]✅ Recipe completed successfully![/green]")
             console.print(f"   Project: {result.project_path}")
             console.print(f"   Repos cloned: {result.repos_cloned}")
             console.print(f"   Files created: {result.files_created}")
-            
+
             if result.warnings:
                 console.print("\n[yellow]Warnings:[/yellow]")
                 for warning in result.warnings:
                     console.print(f"  - {warning}")
         else:
-            console.print(f"\n[red]❌ Recipe failed[/red]")
+            console.print("\n[red]❌ Recipe failed[/red]")
             for error in result.errors:
                 console.print(f"  - {error}")
             raise typer.Exit(code=1)
-    
+
     elif action == "validate":
         if not name:
             console.print("[red]Recipe name required for 'validate' action[/red]")
             raise typer.Exit(code=1)
-        
+
         recipe = loader.load_recipe(name)
         if not recipe:
             console.print(f"[red]Recipe not found: {name}[/red]")
             raise typer.Exit(code=1)
-        
+
         errors = loader.validate_recipe(recipe)
-        
+
         if errors:
-            console.print(f"[red]❌ Recipe validation failed:[/red]")
+            console.print("[red]❌ Recipe validation failed:[/red]")
             for error in errors:
                 console.print(f"  - {error}")
             raise typer.Exit(code=1)
         else:
             console.print(f"[green]✅ Recipe '{name}' is valid[/green]")
-    
+
     else:
         console.print(f"[red]Unknown action: {action}[/red]")
         console.print("Valid actions: list, show, run, validate")

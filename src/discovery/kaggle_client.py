@@ -10,7 +10,7 @@ import os
 import time
 import tempfile
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -21,7 +21,6 @@ from src.discovery.base_client import (
     FileContent,
     DirectoryListing,
     AuthenticationError,
-    RateLimitError,
     RepositoryNotFoundError,
 )
 from src.core.config import get_settings
@@ -88,7 +87,7 @@ class KaggleNotebook:
     competition_sources: List[str] = field(default_factory=list)
 
 
-@dataclass 
+@dataclass
 class KaggleModel:
     """Kaggle model information."""
     ref: str  # owner/model-slug
@@ -128,7 +127,7 @@ class KaggleClient(PlatformClient):
         # Get trending notebooks
         notebooks = await client.get_trending_notebooks(language="python")
     """
-    
+
     def __init__(
         self,
         username: Optional[str] = None,
@@ -144,20 +143,20 @@ class KaggleClient(PlatformClient):
         settings = get_settings()
         self._username = username or settings.platforms.kaggle_username
         self._key = key or settings.platforms.kaggle_key.get_secret_value()
-        
+
         self._api = None
         self._init_api()
-    
+
     def _init_api(self):
         """Initialize Kaggle API client."""
         if not self._username or not self._key:
             secure_logger.warning("Kaggle credentials not provided")
             return
-        
+
         # Set environment variables for kaggle library
         os.environ['KAGGLE_USERNAME'] = self._username
         os.environ['KAGGLE_KEY'] = self._key
-        
+
         try:
             from kaggle.api.kaggle_api_extended import KaggleApi
             self._api = KaggleApi()
@@ -169,15 +168,15 @@ class KaggleClient(PlatformClient):
         except Exception as e:
             secure_logger.error(f"Failed to initialize Kaggle API: {e}")
             self._api = None
-    
+
     @property
     def platform_name(self) -> str:
         return "kaggle"
-    
+
     @property
     def is_authenticated(self) -> bool:
         return self._api is not None
-    
+
     async def search(
         self,
         query: str,
@@ -204,7 +203,7 @@ class KaggleClient(PlatformClient):
             SearchResult with matching resources
         """
         start_time = time.time()
-        
+
         if not self._api:
             secure_logger.warning("Kaggle API not initialized")
             return SearchResult(
@@ -214,7 +213,7 @@ class KaggleClient(PlatformClient):
                 repositories=[],
                 search_time_ms=0,
             )
-        
+
         try:
             if resource_type == "dataset":
                 results = await self._search_datasets(query, min_stars, max_results, sort_by)
@@ -227,16 +226,16 @@ class KaggleClient(PlatformClient):
             else:
                 # Default to datasets
                 results = await self._search_datasets(query, min_stars, max_results, sort_by)
-            
+
             search_time_ms = int((time.time() - start_time) * 1000)
-            
+
             secure_logger.info(
-                f"Kaggle search completed",
+                "Kaggle search completed",
                 query=query[:50],
                 resource_type=resource_type,
                 result_count=len(results)
             )
-            
+
             return SearchResult(
                 query=query,
                 platform=self.platform_name,
@@ -245,7 +244,7 @@ class KaggleClient(PlatformClient):
                 search_time_ms=search_time_ms,
                 has_more=len(results) >= max_results,
             )
-            
+
         except Exception as e:
             secure_logger.error(f"Kaggle search error: {e}")
             return SearchResult(
@@ -255,7 +254,7 @@ class KaggleClient(PlatformClient):
                 repositories=[],
                 search_time_ms=int((time.time() - start_time) * 1000),
             )
-    
+
     async def _search_datasets(
         self,
         query: str,
@@ -273,7 +272,7 @@ class KaggleClient(PlatformClient):
             "relevance": "relevance",
         }
         kaggle_sort = sort_map.get(sort_by, "votes")
-        
+
         # Run in executor since kaggle API is synchronous
         loop = asyncio.get_event_loop()
         datasets = await loop.run_in_executor(
@@ -283,17 +282,17 @@ class KaggleClient(PlatformClient):
                 sort_by=kaggle_sort,
             ))[:max_results]
         )
-        
+
         # Convert to RepositoryInfo
         repositories = []
         for ds in datasets:
             if hasattr(ds, 'voteCount') and ds.voteCount < min_votes:
                 continue
-            
+
             # Convert tags to strings (Kaggle returns Tag objects)
             tags = getattr(ds, 'tags', []) or []
             tag_strings = [str(t.name) if hasattr(t, 'name') else str(t) for t in tags]
-                
+
             repo_info = RepositoryInfo(
                 platform="kaggle",
                 id=ds.ref,
@@ -314,9 +313,9 @@ class KaggleClient(PlatformClient):
                 size_kb=getattr(ds, 'totalBytes', 0) // 1024,
             )
             repositories.append(repo_info)
-        
+
         return repositories[:max_results]
-    
+
     async def _search_competitions(
         self,
         query: str,
@@ -325,7 +324,7 @@ class KaggleClient(PlatformClient):
     ) -> List[RepositoryInfo]:
         """Search Kaggle competitions."""
         loop = asyncio.get_event_loop()
-        
+
         # Get competitions - filter by search query manually since API doesn't support search
         competitions = await loop.run_in_executor(
             None,
@@ -335,7 +334,7 @@ class KaggleClient(PlatformClient):
                 page_size=100,  # Get more to filter
             ))
         )
-        
+
         # Filter by query
         query_lower = query.lower()
         filtered = [
@@ -344,7 +343,7 @@ class KaggleClient(PlatformClient):
             or query_lower in getattr(c, 'description', '').lower()
             or query_lower in str(getattr(c, 'tags', [])).lower()
         ]
-        
+
         # Convert to RepositoryInfo
         repositories = []
         for comp in filtered[:max_results]:
@@ -367,9 +366,9 @@ class KaggleClient(PlatformClient):
                 topics=getattr(comp, 'tags', []) or [],
             )
             repositories.append(repo_info)
-        
+
         return repositories
-    
+
     async def _search_notebooks(
         self,
         query: str,
@@ -379,7 +378,7 @@ class KaggleClient(PlatformClient):
     ) -> List[RepositoryInfo]:
         """Search Kaggle notebooks/kernels."""
         loop = asyncio.get_event_loop()
-        
+
         # Map sort field
         sort_map = {
             "votes": "voteCount",
@@ -389,7 +388,7 @@ class KaggleClient(PlatformClient):
             "relevance": "relevance",
         }
         kaggle_sort = sort_map.get(sort_by, "voteCount")
-        
+
         # Build search params
         search_params = {
             "search": query,
@@ -399,12 +398,12 @@ class KaggleClient(PlatformClient):
         }
         if language:
             search_params["language"] = language
-        
+
         notebooks = await loop.run_in_executor(
             None,
             lambda: list(self._api.kernels_list(**search_params))
         )
-        
+
         # Convert to RepositoryInfo
         repositories = []
         for nb in notebooks:
@@ -427,9 +426,9 @@ class KaggleClient(PlatformClient):
                 topics=[],
             )
             repositories.append(repo_info)
-        
+
         return repositories[:max_results]
-    
+
     async def _search_models(
         self,
         query: str,
@@ -438,7 +437,7 @@ class KaggleClient(PlatformClient):
     ) -> List[RepositoryInfo]:
         """Search Kaggle models."""
         loop = asyncio.get_event_loop()
-        
+
         try:
             # Model search may not be available in all kaggle versions
             models = await loop.run_in_executor(
@@ -454,7 +453,7 @@ class KaggleClient(PlatformClient):
         except Exception as e:
             secure_logger.warning(f"Kaggle model search failed: {e}")
             return []
-        
+
         # Convert to RepositoryInfo
         repositories = []
         for model in models:
@@ -477,9 +476,9 @@ class KaggleClient(PlatformClient):
                 topics=getattr(model, 'tags', []) or [],
             )
             repositories.append(repo_info)
-        
+
         return repositories[:max_results]
-    
+
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
         """
         Get detailed information about a Kaggle dataset.
@@ -492,9 +491,9 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             raise AuthenticationError("Kaggle API not initialized")
-        
+
         loop = asyncio.get_event_loop()
-        
+
         try:
             # Parse the repo_id to determine type
             if repo_id.startswith("competition/"):
@@ -507,7 +506,7 @@ class KaggleClient(PlatformClient):
                 comp = next((c for c in comps if c.ref == comp_ref), None)
                 if not comp:
                     raise RepositoryNotFoundError(f"Competition not found: {comp_ref}")
-                
+
                 return RepositoryInfo(
                     platform="kaggle",
                     id=comp.ref,
@@ -522,16 +521,16 @@ class KaggleClient(PlatformClient):
             else:
                 # Assume it's a dataset
                 owner, slug = repo_id.split("/") if "/" in repo_id else ("", repo_id)
-                
+
                 datasets = await loop.run_in_executor(
                     None,
                     lambda: list(self._api.dataset_list(search=slug, page_size=10))
                 )
-                
+
                 ds = next((d for d in datasets if d.ref == repo_id), None)
                 if not ds:
                     raise RepositoryNotFoundError(f"Dataset not found: {repo_id}")
-                
+
                 return RepositoryInfo(
                     platform="kaggle",
                     id=ds.ref,
@@ -547,25 +546,25 @@ class KaggleClient(PlatformClient):
                     topics=getattr(ds, 'tags', []) or [],
                     size_kb=getattr(ds, 'totalBytes', 0) // 1024,
                 )
-                
+
         except RepositoryNotFoundError:
             raise
         except Exception as e:
             secure_logger.error(f"Failed to get Kaggle resource: {e}")
             raise RepositoryNotFoundError(f"Resource not found: {repo_id}")
-    
+
     async def get_contents(self, repo_id: str, path: str = "") -> DirectoryListing:
         """Get contents of a directory in the dataset."""
         return await self.list_directory(repo_id, path)
-    
+
     async def get_file(self, repo_id: str, file_path: str) -> FileContent:
         """Get contents of a specific file."""
         return await self.get_file_content(repo_id, file_path)
-    
+
     async def clone(self, repo_id: str, destination: Path, depth: int = 1, branch: Optional[str] = None) -> Path:
         """Download dataset to local filesystem."""
         return await self.download_dataset(repo_id, destination, unzip=True)
-    
+
     async def get_file_content(
         self,
         repo_id: str,
@@ -579,9 +578,9 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             raise AuthenticationError("Kaggle API not initialized")
-        
+
         loop = asyncio.get_event_loop()
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # Download dataset
             await loop.run_in_executor(
@@ -592,21 +591,21 @@ class KaggleClient(PlatformClient):
                     unzip=True,
                 )
             )
-            
+
             # Read the specific file
             file_full_path = Path(tmpdir) / file_path
             if not file_full_path.exists():
                 raise RepositoryNotFoundError(f"File not found: {file_path}")
-            
+
             content = file_full_path.read_bytes()
-            
+
             return FileContent(
                 path=file_path,
                 name=file_full_path.name,
                 content=content,
                 size=len(content),
             )
-    
+
     async def list_directory(
         self,
         repo_id: str,
@@ -624,15 +623,15 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             raise AuthenticationError("Kaggle API not initialized")
-        
+
         loop = asyncio.get_event_loop()
-        
+
         try:
             files = await loop.run_in_executor(
                 None,
                 lambda: list(self._api.dataset_list_files(repo_id).files)
             )
-            
+
             file_list = []
             for f in files:
                 file_list.append({
@@ -640,19 +639,19 @@ class KaggleClient(PlatformClient):
                     "size": getattr(f, 'totalBytes', 0),
                     "type": "file",
                 })
-            
+
             return DirectoryListing(
                 path="/",
                 files=file_list,
                 directories=[],
             )
-            
+
         except Exception as e:
             secure_logger.error(f"Failed to list dataset files: {e}")
             raise RepositoryNotFoundError(f"Dataset not found: {repo_id}")
-    
+
     # ==================== Extended Kaggle Features ====================
-    
+
     async def get_trending_datasets(
         self,
         max_results: int = 20,
@@ -660,7 +659,7 @@ class KaggleClient(PlatformClient):
         """Get trending/hot datasets."""
         if not self._api:
             return []
-        
+
         loop = asyncio.get_event_loop()
         datasets = await loop.run_in_executor(
             None,
@@ -669,7 +668,7 @@ class KaggleClient(PlatformClient):
                 page_size=max_results,
             ))
         )
-        
+
         return [
             KaggleDataset(
                 ref=ds.ref,
@@ -687,7 +686,7 @@ class KaggleClient(PlatformClient):
             )
             for ds in datasets
         ]
-    
+
     async def get_active_competitions(
         self,
         category: Optional[str] = None,
@@ -702,21 +701,21 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             return []
-        
+
         loop = asyncio.get_event_loop()
-        
+
         params = {
             "sort_by": "latestDeadline",
             "page_size": max_results,
         }
         if category:
             params["category"] = category
-        
+
         competitions = await loop.run_in_executor(
             None,
             lambda: list(self._api.competitions_list(**params))
         )
-        
+
         return [
             KaggleCompetition(
                 ref=comp.ref,
@@ -733,7 +732,7 @@ class KaggleClient(PlatformClient):
             )
             for comp in competitions
         ]
-    
+
     async def get_trending_notebooks(
         self,
         language: Optional[str] = None,
@@ -748,21 +747,21 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             return []
-        
+
         loop = asyncio.get_event_loop()
-        
+
         params = {
             "sort_by": "hotness",
             "page_size": max_results,
         }
         if language:
             params["language"] = language
-        
+
         notebooks = await loop.run_in_executor(
             None,
             lambda: list(self._api.kernels_list(**params))
         )
-        
+
         return [
             KaggleNotebook(
                 ref=nb.ref,
@@ -777,7 +776,7 @@ class KaggleClient(PlatformClient):
             )
             for nb in notebooks
         ]
-    
+
     async def download_dataset(
         self,
         dataset_ref: str,
@@ -797,11 +796,11 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             raise AuthenticationError("Kaggle API not initialized")
-        
+
         loop = asyncio.get_event_loop()
-        
+
         destination.mkdir(parents=True, exist_ok=True)
-        
+
         await loop.run_in_executor(
             None,
             lambda: self._api.dataset_download_files(
@@ -810,10 +809,10 @@ class KaggleClient(PlatformClient):
                 unzip=unzip,
             )
         )
-        
+
         secure_logger.info(f"Downloaded dataset {dataset_ref} to {destination}")
         return destination
-    
+
     async def download_competition_data(
         self,
         competition_ref: str,
@@ -831,11 +830,11 @@ class KaggleClient(PlatformClient):
         """
         if not self._api:
             raise AuthenticationError("Kaggle API not initialized")
-        
+
         loop = asyncio.get_event_loop()
-        
+
         destination.mkdir(parents=True, exist_ok=True)
-        
+
         await loop.run_in_executor(
             None,
             lambda: self._api.competition_download_files(
@@ -843,7 +842,7 @@ class KaggleClient(PlatformClient):
                 path=str(destination),
             )
         )
-        
+
         secure_logger.info(f"Downloaded competition data {competition_ref} to {destination}")
         return destination
 
@@ -851,8 +850,8 @@ class KaggleClient(PlatformClient):
 def create_kaggle_client() -> Optional[KaggleClient]:
     """Factory function to create Kaggle client if credentials are available."""
     settings = get_settings()
-    
+
     if settings.platforms.kaggle_username and settings.platforms.kaggle_key.get_secret_value():
         return KaggleClient()
-    
+
     return None

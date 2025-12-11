@@ -5,12 +5,11 @@ Full-featured HuggingFace Hub API client.
 Provides model, dataset, and space search capabilities.
 """
 
-import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass, field
+from typing import Optional, List, Any
+from dataclasses import dataclass
 
 from src.discovery.base_client import (
     PlatformClient,
@@ -40,7 +39,7 @@ class HFModelInfo:
     tags: List[str]
     pipeline_tag: Optional[str]
     library_name: Optional[str]
-    
+
     def to_repository_info(self) -> RepositoryInfo:
         """Convert to standard RepositoryInfo format."""
         return RepositoryInfo(
@@ -67,7 +66,7 @@ class HFModelInfo:
         )
 
 
-@dataclass 
+@dataclass
 class HFDatasetInfo:
     """HuggingFace dataset information."""
     dataset_id: str
@@ -78,7 +77,7 @@ class HFDatasetInfo:
     downloads: int
     likes: int
     tags: List[str]
-    
+
     def to_repository_info(self) -> RepositoryInfo:
         """Convert to standard RepositoryInfo format."""
         return RepositoryInfo(
@@ -87,7 +86,7 @@ class HFDatasetInfo:
             url=f"https://huggingface.co/datasets/{self.dataset_id}",
             name=self.dataset_id.split("/")[-1] if "/" in self.dataset_id else self.dataset_id,
             full_name=f"datasets/{self.dataset_id}",
-            description=f"HuggingFace dataset",
+            description="HuggingFace dataset",
             owner=self.author,
             stars=self.likes,
             forks=0,
@@ -122,7 +121,7 @@ class HuggingFaceClient(PlatformClient):
         for repo in results.repositories:
             print(f"{repo.full_name}: {repo.stars} likes")
     """
-    
+
     def __init__(
         self,
         token: Optional[str] = None,
@@ -142,7 +141,7 @@ class HuggingFaceClient(PlatformClient):
             burst_size=50,
         )
         self._init_api()
-    
+
     def _init_api(self):
         """Initialize huggingface_hub client."""
         try:
@@ -152,15 +151,15 @@ class HuggingFaceClient(PlatformClient):
         except ImportError:
             logger.warning("huggingface_hub not installed, using fallback")
             self._api = None
-    
+
     @property
     def platform_name(self) -> str:
         return "huggingface"
-    
+
     @property
     def is_authenticated(self) -> bool:
         return self._token is not None
-    
+
     async def search(
         self,
         query: str,
@@ -183,7 +182,7 @@ class HuggingFaceClient(PlatformClient):
         """
         start_time = time.time()
         await self._rate_limiter.acquire()
-        
+
         try:
             if self._api:
                 if search_type == "model":
@@ -198,7 +197,7 @@ class HuggingFaceClient(PlatformClient):
                     results = await self._search_spaces(
                         query, max_results, sort_by
                     )
-                
+
                 return SearchResult(
                     query=query,
                     platform=self.platform_name,
@@ -209,7 +208,7 @@ class HuggingFaceClient(PlatformClient):
                 )
             else:
                 return await self._search_fallback(query, max_results)
-                
+
         except Exception as e:
             error_msg = str(e).lower()
             if "rate limit" in error_msg or "429" in error_msg:
@@ -222,7 +221,7 @@ class HuggingFaceClient(PlatformClient):
             else:
                 logger.exception("HuggingFace search error")
                 raise
-    
+
     async def _search_models(
         self,
         query: str,
@@ -235,11 +234,11 @@ class HuggingFaceClient(PlatformClient):
         # Map sort field
         sort_map = {
             "likes": "likes",
-            "downloads": "downloads", 
+            "downloads": "downloads",
             "modified": "lastModified",
         }
         sort_field = sort_map.get(sort_by, "likes")
-        
+
         # Search models - newer huggingface_hub API
         kwargs = {
             "search": query,
@@ -247,12 +246,12 @@ class HuggingFaceClient(PlatformClient):
             "direction": -1,
             "limit": max_results * 2,  # Get extra for filtering
         }
-        
+
         models = list(self._api.list_models(**kwargs))
-        
+
         # Filter by likes
         filtered = [m for m in models if getattr(m, 'likes', 0) >= min_likes]
-        
+
         # Convert to RepositoryInfo
         repositories = []
         for model in filtered[:max_results]:
@@ -279,9 +278,9 @@ class HuggingFaceClient(PlatformClient):
                 has_readme=True,
             )
             repositories.append(repo_info)
-        
+
         return repositories
-    
+
     async def _search_datasets(
         self,
         query: str,
@@ -296,16 +295,16 @@ class HuggingFaceClient(PlatformClient):
             "modified": "lastModified",
         }
         sort_field = sort_map.get(sort_by, "likes")
-        
+
         datasets = list(self._api.list_datasets(
             search=query,
             sort=sort_field,
             direction=-1,
             limit=max_results * 2,
         ))
-        
+
         filtered = [d for d in datasets if getattr(d, 'likes', 0) >= min_likes]
-        
+
         repositories = []
         for dataset in filtered[:max_results]:
             dataset_id = dataset.id
@@ -332,9 +331,9 @@ class HuggingFaceClient(PlatformClient):
                 has_readme=True,
             )
             repositories.append(repo_info)
-        
+
         return repositories
-    
+
     async def _search_spaces(
         self,
         query: str,
@@ -347,14 +346,14 @@ class HuggingFaceClient(PlatformClient):
             "modified": "lastModified",
         }
         sort_field = sort_map.get(sort_by, "likes")
-        
+
         spaces = list(self._api.list_spaces(
             search=query,
             sort=sort_field,
             direction=-1,
             limit=max_results,
         ))
-        
+
         repositories = []
         for space in spaces:
             space_id = space.id
@@ -381,13 +380,13 @@ class HuggingFaceClient(PlatformClient):
                 has_readme=True,
             )
             repositories.append(repo_info)
-        
+
         return repositories
-    
+
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
         """Get detailed repository information."""
         await self._rate_limiter.acquire()
-        
+
         try:
             if self._api:
                 # Determine type from ID
@@ -404,12 +403,12 @@ class HuggingFaceClient(PlatformClient):
                     return self._model_to_repo_info(info)
             else:
                 raise NotImplementedError("Fallback not implemented")
-                
+
         except Exception as e:
             if "404" in str(e) or "not found" in str(e).lower():
                 raise RepositoryNotFoundError(f"Repository not found: {repo_id}")
             raise
-    
+
     def _model_to_repo_info(self, info: Any) -> RepositoryInfo:
         """Convert model info to RepositoryInfo."""
         return RepositoryInfo(
@@ -434,7 +433,7 @@ class HuggingFaceClient(PlatformClient):
             size_kb=0,
             has_readme=True,
         )
-    
+
     def _dataset_to_repo_info(self, info: Any) -> RepositoryInfo:
         """Convert dataset info to RepositoryInfo."""
         return RepositoryInfo(
@@ -459,7 +458,7 @@ class HuggingFaceClient(PlatformClient):
             size_kb=0,
             has_readme=True,
         )
-    
+
     def _space_to_repo_info(self, info: Any) -> RepositoryInfo:
         """Convert space info to RepositoryInfo."""
         return RepositoryInfo(
@@ -484,7 +483,7 @@ class HuggingFaceClient(PlatformClient):
             size_kb=0,
             has_readme=True,
         )
-    
+
     async def get_contents(
         self,
         repo_id: str,
@@ -492,7 +491,7 @@ class HuggingFaceClient(PlatformClient):
     ) -> DirectoryListing:
         """Get directory contents from HuggingFace repo."""
         await self._rate_limiter.acquire()
-        
+
         if self._api:
             # Determine repo type
             repo_type = "model"
@@ -503,21 +502,21 @@ class HuggingFaceClient(PlatformClient):
             elif repo_id.startswith("spaces/"):
                 repo_type = "space"
                 actual_id = repo_id.replace("spaces/", "")
-            
+
             files_info = self._api.list_repo_files(
                 repo_id=actual_id,
                 repo_type=repo_type,
             )
-            
+
             files = []
             directories = set()
-            
+
             for file_path in files_info:
                 if path and not file_path.startswith(path):
                     continue
-                
+
                 rel_path = file_path[len(path):].lstrip("/") if path else file_path
-                
+
                 if "/" in rel_path:
                     # It's in a subdirectory
                     dir_name = rel_path.split("/")[0]
@@ -530,7 +529,7 @@ class HuggingFaceClient(PlatformClient):
                         "size": 0,
                         "type": "file",
                     })
-            
+
             return DirectoryListing(
                 path=path,
                 files=files,
@@ -538,7 +537,7 @@ class HuggingFaceClient(PlatformClient):
             )
         else:
             raise NotImplementedError("Fallback not implemented")
-    
+
     async def get_file(
         self,
         repo_id: str,
@@ -546,10 +545,10 @@ class HuggingFaceClient(PlatformClient):
     ) -> FileContent:
         """Get file contents from HuggingFace repo."""
         await self._rate_limiter.acquire()
-        
+
         if self._api:
             from huggingface_hub import hf_hub_download
-            
+
             # Determine repo type
             repo_type = "model"
             actual_id = repo_id
@@ -559,7 +558,7 @@ class HuggingFaceClient(PlatformClient):
             elif repo_id.startswith("spaces/"):
                 repo_type = "space"
                 actual_id = repo_id.replace("spaces/", "")
-            
+
             # Download file with explicit revision pinning for security
             local_path = hf_hub_download(  # nosec B615 - revision explicitly pinned
                 repo_id=actual_id,
@@ -568,9 +567,9 @@ class HuggingFaceClient(PlatformClient):
                 token=self._token,
                 revision="main",  # Pin to main branch for reproducibility
             )
-            
+
             content = Path(local_path).read_bytes()
-            
+
             return FileContent(
                 path=file_path,
                 name=Path(file_path).name,
@@ -580,7 +579,7 @@ class HuggingFaceClient(PlatformClient):
             )
         else:
             raise NotImplementedError("Fallback not implemented")
-    
+
     async def clone(
         self,
         repo_id: str,
@@ -590,7 +589,7 @@ class HuggingFaceClient(PlatformClient):
     ) -> Path:
         """Clone HuggingFace repository."""
         from huggingface_hub import snapshot_download
-        
+
         # Determine repo type
         repo_type = "model"
         actual_id = repo_id
@@ -600,7 +599,7 @@ class HuggingFaceClient(PlatformClient):
         elif repo_id.startswith("spaces/"):
             repo_type = "space"
             actual_id = repo_id.replace("spaces/", "")
-        
+
         # Download snapshot with explicit revision pinning for security
         # Default to "main" branch if no branch specified
         revision = branch if branch else "main"
@@ -611,10 +610,10 @@ class HuggingFaceClient(PlatformClient):
             token=self._token,
             revision=revision,
         )
-        
+
         logger.info(f"Downloaded {repo_id} to {local_dir}")
         return Path(local_dir)
-    
+
     async def _search_fallback(
         self,
         query: str,

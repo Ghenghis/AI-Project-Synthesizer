@@ -63,30 +63,45 @@ def output_dir(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def mock_github_response():
-    """Mock GitHub API search response."""
+    """Mock GitHub API search response that supports both dict and attribute access."""
     class MockRepo:
-        id = 123456
-        name = "test-repo"
-        full_name = "owner/test-repo"
-        html_url = "https://github.com/owner/test-repo"
-        description = "A test repository"
-        stargazers_count = 1000
-        forks_count = 100
-        watchers_count = 50
-        open_issues_count = 10
-        language = "Python"
-        license = MagicMock(spdx_id="MIT")
-        created_at = "2023-01-01T00:00:00Z"
-        updated_at = "2024-01-01T00:00:00Z"
-        pushed_at = "2024-01-01T00:00:00Z"
-        topics = ["python", "ml", "ai"]
-        default_branch = "main"
-        size = 5000
-        owner = MagicMock(login="owner")
+        def __init__(self):
+            self.id = 123456
+            self.name = "test-repo"
+            self.full_name = "owner/test-repo"
+            self.html_url = "https://github.com/owner/test-repo"
+            self.description = "A test repository"
+            self.stargazers_count = 1000
+            self.forks_count = 100
+            self.watchers_count = 50
+            self.open_issues_count = 10
+            self.language = "Python"
+            self.license = MagicMock(spdx_id="MIT")
+            self.created_at = "2023-01-01T00:00:00Z"
+            self.updated_at = "2024-01-01T00:00:00Z"
+            self.pushed_at = "2024-01-01T00:00:00Z"
+            self.topics = ["python", "ml", "ai"]
+            self.default_branch = "main"
+            self.size = 5000
+            self.owner = MagicMock(login="owner")
+        
+        def __getitem__(self, key):
+            return getattr(self, key)
+        
+        def get(self, key, default=None):
+            return getattr(self, key, default)
     
     class MockSearchResult:
-        items = [MockRepo()]
-        total_count = 1
+        """Mock that supports both dict-style and attribute access like ghapi."""
+        def __init__(self):
+            self.items = [MockRepo()]
+            self.total_count = 1
+        
+        def __getitem__(self, key):
+            return getattr(self, key)
+        
+        def get(self, key, default=None):
+            return getattr(self, key, default)
     
     return MockSearchResult()
 

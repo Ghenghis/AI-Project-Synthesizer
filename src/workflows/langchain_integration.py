@@ -9,9 +9,8 @@ Advanced LLM workflows using LangChain:
 """
 
 import asyncio
-from typing import Optional, List, Dict, Any, Callable
-from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
 
 # Try importing LangChain components with fallbacks
 try:
@@ -90,7 +89,7 @@ class LangChainOrchestrator:
         # Run synthesis chain
         result = await orchestrator.synthesize(project_idea, resources)
     """
-    
+
     def __init__(self, config: Optional[ChainConfig] = None):
         """Initialize orchestrator."""
         self.config = config or ChainConfig()
@@ -99,14 +98,14 @@ class LangChainOrchestrator:
             memory_key="chat_history",
             return_messages=True,
         )
-    
+
     def _get_llm(self):
         """Get or create LLM instance."""
         if self._llm is not None:
             return self._llm
-        
+
         settings = get_settings()
-        
+
         if self.config.model_provider == "lmstudio":
             # LM Studio uses OpenAI-compatible API
             self._llm = ChatOpenAI(
@@ -133,9 +132,9 @@ class LangChainOrchestrator:
             )
         else:
             raise ValueError(f"Unknown provider: {self.config.model_provider}")
-        
+
         return self._llm
-    
+
     async def research(self, query: str) -> Dict[str, Any]:
         """
         Run research chain to discover resources.
@@ -146,16 +145,16 @@ class LangChainOrchestrator:
         3. Synthesize findings into recommendations
         """
         chain = create_research_chain(self._get_llm())
-        
+
         result = await chain.ainvoke({"query": query})
-        
+
         return {
             "query": query,
             "analysis": result.get("analysis", ""),
             "search_queries": result.get("search_queries", {}),
             "recommendations": result.get("recommendations", ""),
         }
-    
+
     async def synthesize(
         self,
         project_idea: str,
@@ -171,12 +170,12 @@ class LangChainOrchestrator:
         4. Create documentation outline
         """
         chain = create_synthesis_chain(self._get_llm())
-        
+
         result = await chain.ainvoke({
             "project_idea": project_idea,
             "resources": resources,
         })
-        
+
         return {
             "project_idea": project_idea,
             "compatibility_analysis": result.get("compatibility", ""),
@@ -184,13 +183,13 @@ class LangChainOrchestrator:
             "structure": result.get("structure", {}),
             "documentation": result.get("docs", ""),
         }
-    
+
     async def chat(self, message: str) -> str:
         """
         Chat with memory for multi-turn conversations.
         """
         llm = self._get_llm()
-        
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", """You are an AI Project Synthesizer assistant. 
             You help users discover, combine, and build projects from open-source resources.
@@ -199,25 +198,25 @@ class LangChainOrchestrator:
             ("placeholder", "{chat_history}"),
             ("human", "{input}"),
         ])
-        
+
         chain = prompt | llm | StrOutputParser()
-        
+
         # Get chat history
         history = self._memory.load_memory_variables({})
-        
+
         response = await chain.ainvoke({
             "input": message,
             "chat_history": history.get("chat_history", []),
         })
-        
+
         # Save to memory
         self._memory.save_context(
             {"input": message},
             {"output": response},
         )
-        
+
         return response
-    
+
     def create_agent(self, tools: List[Tool]) -> AgentExecutor:
         """
         Create a ReAct agent with custom tools.
@@ -229,7 +228,7 @@ class LangChainOrchestrator:
             AgentExecutor ready to run
         """
         llm = self._get_llm()
-        
+
         prompt = PromptTemplate.from_template("""Answer the following questions as best you can. You have access to the following tools:
 
 {tools}
@@ -249,9 +248,9 @@ Begin!
 
 Question: {input}
 Thought:{agent_scratchpad}""")
-        
+
         agent = create_react_agent(llm, tools, prompt)
-        
+
         return AgentExecutor(
             agent=agent,
             tools=tools,
@@ -270,7 +269,7 @@ def create_research_chain(llm):
     2. Search Query Generation → Platform-specific queries
     3. Recommendation Synthesis → Actionable suggestions
     """
-    
+
     # Step 1: Analyze the query
     analysis_prompt = ChatPromptTemplate.from_template("""
 Analyze this project research query and identify:
@@ -282,9 +281,9 @@ Analyze this project research query and identify:
 Query: {query}
 
 Analysis:""")
-    
+
     analysis_chain = analysis_prompt | llm | StrOutputParser()
-    
+
     # Step 2: Generate search queries
     search_prompt = ChatPromptTemplate.from_template("""
 Based on this analysis, generate optimized search queries for each platform:
@@ -300,9 +299,9 @@ Generate JSON with search queries:
 }}
 
 Search Queries:""")
-    
+
     search_chain = search_prompt | llm | StrOutputParser()
-    
+
     # Step 3: Synthesize recommendations
     recommend_prompt = ChatPromptTemplate.from_template("""
 Based on the analysis and search strategy, provide recommendations:
@@ -312,13 +311,13 @@ Analysis: {analysis}
 Search Strategy: {search_queries}
 
 Provide 3-5 specific recommendations for finding the best resources:""")
-    
+
     recommend_chain = recommend_prompt | llm | StrOutputParser()
-    
+
     # Combine into sequential chain
     async def run_chain(inputs):
         query = inputs["query"]
-        
+
         analysis = await analysis_chain.ainvoke({"query": query})
         search_queries = await search_chain.ainvoke({"analysis": analysis})
         recommendations = await recommend_chain.ainvoke({
@@ -326,13 +325,13 @@ Provide 3-5 specific recommendations for finding the best resources:""")
             "analysis": analysis,
             "search_queries": search_queries,
         })
-        
+
         return {
             "analysis": analysis,
             "search_queries": search_queries,
             "recommendations": recommendations,
         }
-    
+
     return RunnableLambda(run_chain)
 
 
@@ -346,7 +345,7 @@ def create_synthesis_chain(llm):
     3. Structure Generation → Project folder layout
     4. Documentation Outline → README and docs
     """
-    
+
     # Step 1: Compatibility analysis
     compat_prompt = ChatPromptTemplate.from_template("""
 Analyze compatibility of these resources for the project:
@@ -361,9 +360,9 @@ Check for:
 4. Integration complexity
 
 Compatibility Analysis:""")
-    
+
     compat_chain = compat_prompt | llm | StrOutputParser()
-    
+
     # Step 2: Integration plan
     plan_prompt = ChatPromptTemplate.from_template("""
 Create an integration plan for these resources:
@@ -379,9 +378,9 @@ Plan should include:
 4. Testing strategy
 
 Integration Plan:""")
-    
+
     plan_chain = plan_prompt | llm | StrOutputParser()
-    
+
     # Step 3: Project structure
     structure_prompt = ChatPromptTemplate.from_template("""
 Generate project folder structure:
@@ -390,9 +389,9 @@ Project: {project_idea}
 Integration Plan: {plan}
 
 Provide a tree structure with key files:""")
-    
+
     structure_chain = structure_prompt | llm | StrOutputParser()
-    
+
     # Step 4: Documentation outline
     docs_prompt = ChatPromptTemplate.from_template("""
 Create README.md outline:
@@ -409,70 +408,70 @@ Include sections for:
 - Contributing
 
 README Outline:""")
-    
+
     docs_chain = docs_prompt | llm | StrOutputParser()
-    
+
     # Combine
     async def run_chain(inputs):
         project_idea = inputs["project_idea"]
         resources = inputs["resources"]
-        
+
         compatibility = await compat_chain.ainvoke({
             "project_idea": project_idea,
             "resources": str(resources),
         })
-        
+
         plan = await plan_chain.ainvoke({
             "project_idea": project_idea,
             "compatibility": compatibility,
             "resources": str(resources),
         })
-        
+
         structure = await structure_chain.ainvoke({
             "project_idea": project_idea,
             "plan": plan,
         })
-        
+
         docs = await docs_chain.ainvoke({
             "project_idea": project_idea,
             "structure": structure,
         })
-        
+
         return {
             "compatibility": compatibility,
             "plan": plan,
             "structure": structure,
             "docs": docs,
         }
-    
+
     return RunnableLambda(run_chain)
 
 
 # Pre-built tools for agents
 def create_synthesizer_tools() -> List[Tool]:
     """Create LangChain tools for the synthesizer agent."""
-    
+
     async def search_github(query: str) -> str:
         """Search GitHub repositories."""
         from src.discovery.github_client import GitHubClient
         client = GitHubClient()
         results = await client.search_repositories(query, max_results=5)
         return str([{"name": r.name, "url": r.url, "stars": r.stars} for r in results])
-    
+
     async def search_huggingface(query: str) -> str:
         """Search HuggingFace models."""
         from src.discovery.huggingface_client import HuggingFaceClient
         client = HuggingFaceClient()
         results = await client.search_models(query, limit=5)
         return str(results)
-    
+
     async def assemble_project(idea: str) -> str:
         """Assemble a project from an idea."""
         from src.synthesis.project_assembler import ProjectAssembler
         assembler = ProjectAssembler()
         result = await assembler.assemble(idea)
         return f"Project assembled at: {result.base_path}"
-    
+
     return [
         Tool(
             name="search_github",

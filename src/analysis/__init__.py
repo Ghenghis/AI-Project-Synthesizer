@@ -12,7 +12,7 @@ from src.analysis.quality_scorer import QualityScorer
 
 __all__ = [
     "ASTParser",
-    "DependencyAnalyzer", 
+    "DependencyAnalyzer",
     "CompatibilityChecker",
     "CodeExtractor",
     "QualityScorer",

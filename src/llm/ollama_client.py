@@ -4,9 +4,8 @@ AI Project Synthesizer - Ollama Client
 Client for local LLM inference using Ollama.
 """
 
-import asyncio
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from dataclasses import dataclass
 
 import httpx
@@ -35,13 +34,13 @@ class OllamaClient:
         result = await client.complete("Explain this code: def foo(): pass")
         print(result.content)
     """
-    
+
     DEFAULT_MODELS = {
         "fast": "qwen2.5-coder:7b-instruct-q8_0",
-        "balanced": "qwen2.5-coder:14b-instruct-q4_K_M", 
+        "balanced": "qwen2.5-coder:14b-instruct-q4_K_M",
         "powerful": "qwen2.5-coder:32b-instruct-q4_K_M",
     }
-    
+
     def __init__(
         self,
         host: str = "http://localhost:11434",
@@ -60,7 +59,7 @@ class OllamaClient:
         self.default_model = default_model or self.DEFAULT_MODELS["balanced"]
         self.timeout = timeout
         self._client: Optional[httpx.AsyncClient] = None
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
         if self._client is None:
@@ -69,13 +68,13 @@ class OllamaClient:
                 timeout=httpx.Timeout(self.timeout),
             )
         return self._client
-    
+
     async def close(self):
         """Close the HTTP client."""
         if self._client:
             await self._client.aclose()
             self._client = None
-    
+
     async def is_available(self) -> bool:
         """Check if Ollama is available."""
         try:
@@ -84,7 +83,7 @@ class OllamaClient:
             return response.status_code == 200
         except Exception:
             return False
-    
+
     async def list_models(self) -> List[str]:
         """List available models."""
         try:
@@ -96,7 +95,7 @@ class OllamaClient:
         except Exception as e:
             logger.warning(f"Failed to list models: {e}")
         return []
-    
+
     async def complete(
         self,
         prompt: str,
@@ -122,18 +121,18 @@ class OllamaClient:
         """
         import time
         start_time = time.time()
-        
+
         model = model or self.default_model
-        
+
         # Build messages
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         # Make request
         client = await self._get_client()
-        
+
         try:
             response = await client.post(
                 "/api/chat",
@@ -147,15 +146,15 @@ class OllamaClient:
                     },
                 },
             )
-            
+
             if response.status_code != 200:
                 raise Exception(f"Ollama error: {response.text}")
-            
+
             data = response.json()
-            
+
             content = data.get("message", {}).get("content", "")
             tokens = data.get("eval_count", 0) + data.get("prompt_eval_count", 0)
-            
+
             return CompletionResult(
                 content=content,
                 model=model,
@@ -163,13 +162,13 @@ class OllamaClient:
                 finish_reason=data.get("done_reason", "stop"),
                 duration_ms=int((time.time() - start_time) * 1000),
             )
-            
+
         except httpx.TimeoutException:
             raise Exception(f"Ollama request timed out after {self.timeout}s")
         except Exception as e:
             logger.error(f"Ollama completion failed: {e}")
             raise
-    
+
     async def analyze_code(
         self,
         code: str,
@@ -193,17 +192,17 @@ class OllamaClient:
             "refactor": f"Suggest refactoring for this {language} code:\n\n```{language}\n{code}\n```",
             "document": f"Generate docstrings for this {language} code:\n\n```{language}\n{code}\n```",
         }
-        
+
         prompt = prompts.get(task, prompts["explain"])
-        
+
         result = await self.complete(
             prompt=prompt,
             system_prompt="You are an expert code analyst. Be concise and specific.",
             temperature=0.3,
         )
-        
+
         return result.content
-    
+
     async def generate_code(
         self,
         description: str,
@@ -222,21 +221,21 @@ class OllamaClient:
             Generated code
         """
         prompt = f"Generate {language} code for: {description}"
-        
+
         if context:
             prompt += f"\n\nContext:\n```{language}\n{context}\n```"
-        
-        prompt += f"\n\nRespond with only the code, no explanations."
-        
+
+        prompt += "\n\nRespond with only the code, no explanations."
+
         result = await self.complete(
             prompt=prompt,
             system_prompt="You are an expert programmer. Generate clean, well-documented code.",
             temperature=0.2,
         )
-        
+
         # Extract code from response
         content = result.content
-        
+
         # Try to extract from code blocks
         if "```" in content:
             lines = content.split("```")
@@ -247,5 +246,5 @@ class OllamaClient:
                     if code_lines and code_lines[0].strip() in ["python", "javascript", "typescript", language]:
                         code_lines = code_lines[1:]
                     return "\n".join(code_lines).strip()
-        
+
         return content

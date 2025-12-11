@@ -10,7 +10,7 @@ This module handles all configuration management including:
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import List
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,19 +18,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class PlatformSettings(BaseSettings):
     """Platform API credentials and settings."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
-    
+
     # GitHub (Required)
     github_token: SecretStr = Field(
         default=SecretStr(""),
         description="GitHub personal access token"
     )
-    
+
     # GitLab (Optional)
     gitlab_token: SecretStr = Field(
         default=SecretStr(""),
@@ -40,13 +40,13 @@ class PlatformSettings(BaseSettings):
         default="https://gitlab.com",
         description="GitLab instance URL"
     )
-    
+
     # HuggingFace (Optional)
     huggingface_token: SecretStr = Field(
         default=SecretStr(""),
         description="HuggingFace access token"
     )
-    
+
     # Kaggle (Optional)
     kaggle_username: str = Field(
         default="",
@@ -56,17 +56,17 @@ class PlatformSettings(BaseSettings):
         default=SecretStr(""),
         description="Kaggle API key"
     )
-    
+
     # Semantic Scholar (Optional)
     semantic_scholar_api_key: SecretStr = Field(
         default=SecretStr(""),
         description="Semantic Scholar API key"
     )
-    
+
     def get_enabled_platforms(self) -> List[str]:
         """Return list of platforms with valid credentials."""
         platforms = []
-        
+
         if self.github_token.get_secret_value():
             platforms.append("github")
         if self.gitlab_token.get_secret_value():
@@ -75,25 +75,25 @@ class PlatformSettings(BaseSettings):
             platforms.append("huggingface")
         if self.kaggle_username and self.kaggle_key.get_secret_value():
             platforms.append("kaggle")
-        
+
         # These don't require auth
         platforms.extend(["arxiv", "papers_with_code"])
-        
+
         if self.semantic_scholar_api_key.get_secret_value():
             platforms.append("semantic_scholar")
-        
+
         return platforms
 
 
 class LLMSettings(BaseSettings):
     """LLM configuration settings."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
-    
+
     # Ollama - Optimized for 7B and smaller models
     ollama_host: str = Field(
         default="http://localhost:11434",
@@ -115,7 +115,7 @@ class LLMSettings(BaseSettings):
         default="medium",
         description="Model size preference: tiny, small, medium, large"
     )
-    
+
     # LM Studio - Size-based model selection
     lmstudio_host: str = Field(
         default="http://localhost:1234",
@@ -126,7 +126,7 @@ class LLMSettings(BaseSettings):
         description="Tiny model (< 2B) for quick tasks"
     )
     lmstudio_model_small: str = Field(
-        default="local-model-small", 
+        default="local-model-small",
         description="Small model (2-4B) for simple tasks"
     )
     lmstudio_model_medium: str = Field(
@@ -145,7 +145,7 @@ class LLMSettings(BaseSettings):
         default=True,
         description="Enable LM Studio integration"
     )
-    
+
     # Cloud LLM
     cloud_llm_enabled: bool = Field(
         default=False,
@@ -157,7 +157,7 @@ class LLMSettings(BaseSettings):
         le=1.0,
         description="Threshold for routing to cloud"
     )
-    
+
     # OpenAI
     openai_api_key: SecretStr = Field(
         default=SecretStr(""),
@@ -167,7 +167,7 @@ class LLMSettings(BaseSettings):
         default="gpt-4-turbo-preview",
         description="OpenAI model to use"
     )
-    
+
     # Anthropic
     anthropic_api_key: SecretStr = Field(
         default=SecretStr(""),
@@ -177,7 +177,7 @@ class LLMSettings(BaseSettings):
         default="claude-sonnet-4-20250514",
         description="Anthropic model to use"
     )
-    
+
     # xAI / Grok
     xai_api_key: SecretStr = Field(
         default=SecretStr(""),
@@ -191,7 +191,7 @@ class LLMSettings(BaseSettings):
         default="https://api.x.ai/v1",
         description="xAI API base URL"
     )
-    
+
     # Google Gemini
     google_api_key: SecretStr = Field(
         default=SecretStr(""),
@@ -202,7 +202,7 @@ class LLMSettings(BaseSettings):
         default="gemini-2.0-flash",
         description="Google Gemini model to use"
     )
-    
+
     # Brave Search
     brave_search_api_key: SecretStr = Field(
         default=SecretStr(""),
@@ -212,25 +212,25 @@ class LLMSettings(BaseSettings):
 
 class ElevenLabsSettings(BaseSettings):
     """ElevenLabs voice AI configuration."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
-    
+
     # API Configuration
     elevenlabs_api_key: SecretStr = Field(
         default=SecretStr(""),
         description="ElevenLabs API key"
     )
-    
+
     # Voice Selection
     default_voice_id: str = Field(
         default="21m00Tcm4TlvDq8ikWAM",  # Rachel - default voice
         description="Default voice ID for TTS"
     )
-    
+
     # Available voices (popular ones)
     # Rachel: 21m00Tcm4TlvDq8ikWAM - Calm, professional
     # Domi: AZnzlk1XvdvUeBnXmlld - Strong, confident
@@ -241,13 +241,13 @@ class ElevenLabsSettings(BaseSettings):
     # Arnold: VR6AewLTigWG4xSOukaG - Crisp, authoritative
     # Adam: pNInz6obpgDQGcFmaJgB - Deep, warm
     # Sam: yoZ06aMxZJJ28mfd3POQ - Dynamic, expressive
-    
+
     # Model Selection
     tts_model: str = Field(
         default="eleven_multilingual_v2",
         description="TTS model: eleven_multilingual_v2, eleven_turbo_v2_5, eleven_turbo_v2"
     )
-    
+
     # Real-time Voice Settings
     realtime_enabled: bool = Field(
         default=True,
@@ -257,7 +257,7 @@ class ElevenLabsSettings(BaseSettings):
         default="eleven_turbo_v2_5",
         description="Model for real-time voice (lower latency)"
     )
-    
+
     # Voice Settings
     stability: float = Field(
         default=0.5,
@@ -281,7 +281,7 @@ class ElevenLabsSettings(BaseSettings):
         default=True,
         description="Enhance speaker clarity"
     )
-    
+
     # Output Settings
     output_format: str = Field(
         default="mp3_44100_128",
@@ -291,13 +291,13 @@ class ElevenLabsSettings(BaseSettings):
 
 class AppSettings(BaseSettings):
     """Main application settings."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
-    
+
     # Application
     app_name: str = Field(
         default="AI Project Synthesizer",
@@ -315,7 +315,7 @@ class AppSettings(BaseSettings):
         default="INFO",
         description="Logging level"
     )
-    
+
     # Server
     server_host: str = Field(
         default="localhost",
@@ -325,7 +325,7 @@ class AppSettings(BaseSettings):
         default=8000,
         description="Server port"
     )
-    
+
     # Paths
     default_output_dir: Path = Field(
         default=Path("./output"),
@@ -339,7 +339,7 @@ class AppSettings(BaseSettings):
         default=Path("./.cache"),
         description="Cache directory"
     )
-    
+
     # Synthesis
     max_repos_per_synthesis: int = Field(
         default=10,
@@ -358,7 +358,7 @@ class AppSettings(BaseSettings):
         ge=1,
         description="Git clone depth"
     )
-    
+
     # Network
     request_timeout_seconds: int = Field(
         default=30,
@@ -368,7 +368,7 @@ class AppSettings(BaseSettings):
         default=3,
         description="Maximum retry attempts"
     )
-    
+
     # Cache
     cache_enabled: bool = Field(
         default=True,
@@ -378,7 +378,7 @@ class AppSettings(BaseSettings):
         default=3600,
         description="Cache TTL in seconds"
     )
-    
+
     # Circuit Breaker Settings
     circuit_breaker_failure_threshold: int = Field(
         default=5,
@@ -404,7 +404,7 @@ class AppSettings(BaseSettings):
         le=300.0,
         description="Call timeout for circuit breaker"
     )
-    
+
     # Observability Settings
     metrics_retention_hours: int = Field(
         default=24,
@@ -422,7 +422,7 @@ class AppSettings(BaseSettings):
         le=300,
         description="Health check interval in seconds"
     )
-    
+
     # Security Settings
     mask_secrets_in_logs: bool = Field(
         default=True,
@@ -438,7 +438,7 @@ class AppSettings(BaseSettings):
         le=10000,
         description="Maximum search query length"
     )
-    
+
     # Lifecycle Settings
     graceful_shutdown_timeout: float = Field(
         default=60.0,
@@ -452,7 +452,7 @@ class AppSettings(BaseSettings):
         le=120.0,
         description="Cleanup timeout during shutdown"
     )
-    
+
     @field_validator("default_output_dir", "temp_dir", "cache_dir", mode="after")
     @classmethod
     def ensure_directory_exists(cls, v: Path) -> Path:
@@ -463,29 +463,29 @@ class AppSettings(BaseSettings):
 
 class Settings(BaseSettings):
     """Combined settings container."""
-    
+
     app: AppSettings = Field(default_factory=AppSettings)
     platforms: PlatformSettings = Field(default_factory=PlatformSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     elevenlabs: ElevenLabsSettings = Field(default_factory=ElevenLabsSettings)
-    
+
     @property
     def is_production(self) -> bool:
         """Check if running in production."""
         return self.app.app_env == "production"
-    
+
     @property
     def is_debug(self) -> bool:
         """Check if debug mode is enabled."""
         return self.app.debug and not self.is_production
-    
+
     def get_available_llm_providers(self) -> List[str]:
         """Get list of LLM providers with valid API keys."""
         providers = []
-        
+
         # Local providers (always available if running)
         providers.extend(["lmstudio", "ollama"])
-        
+
         # Cloud providers
         if self.llm.openai_api_key.get_secret_value():
             providers.append("openai")
@@ -495,7 +495,7 @@ class Settings(BaseSettings):
             providers.append("xai")
         if self.llm.google_api_key.get_secret_value():
             providers.append("google")
-        
+
         return providers
 
 

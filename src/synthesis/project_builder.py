@@ -5,7 +5,6 @@ Orchestrates the complete project synthesis pipeline.
 Combines discovery, analysis, resolution, and generation.
 """
 
-import asyncio
 import time
 import uuid
 import logging
@@ -64,7 +63,7 @@ class SynthesisResult:
     duration_seconds: float = 0.0
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -114,7 +113,7 @@ class ProjectBuilder:
             )
         )
     """
-    
+
     def __init__(self, work_dir: Optional[Path] = None):
         """
         Initialize project builder.
@@ -124,10 +123,10 @@ class ProjectBuilder:
         """
         self.work_dir = work_dir or Path("./temp")
         self.work_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Track active synthesis operations
         self._active_syntheses: Dict[str, SynthesisResult] = {}
-    
+
     async def synthesize(
         self,
         request: SynthesisRequest,
@@ -146,32 +145,32 @@ class ProjectBuilder:
             request_id=request.id,
             status=SynthesisStatus.PENDING,
         )
-        
+
         self._active_syntheses[request.id] = result
-        
+
         try:
             # Validate request
             self._validate_request(request)
-            
+
             # Create output directory
             output_path = Path(request.output_path)
             output_path.mkdir(parents=True, exist_ok=True)
-            
+
             # Step 1: Discovery (if no repos specified)
             result.status = SynthesisStatus.DISCOVERING
             if not request.repositories and request.query:
                 repos = await self._discover_repositories(request.query)
                 request.repositories = repos
-            
+
             # Step 2: Analysis
             result.status = SynthesisStatus.ANALYZING
             analyses = await self._analyze_repositories(request.repositories)
-            
+
             # Step 3: Resolution
             result.status = SynthesisStatus.RESOLVING
             resolved_deps = await self._resolve_dependencies(analyses)
             result.dependencies_resolved = resolved_deps.get("count", 0)
-            
+
             # Step 4: Synthesis
             result.status = SynthesisStatus.SYNTHESIZING
             synthesis_result = await self._synthesize_code(
@@ -181,34 +180,34 @@ class ProjectBuilder:
             )
             result.files_generated = synthesis_result.get("files", 0)
             result.repositories_used = [r.repo_url for r in request.repositories]
-            
+
             # Write dependencies
             await self._write_dependencies(output_path, resolved_deps)
-            
+
             # Step 5: Generate Documentation
             result.status = SynthesisStatus.GENERATING
             if request.generate_docs:
                 docs = await self._generate_documentation(output_path)
                 result.documentation_generated = docs
-            
+
             # Success
             result.status = SynthesisStatus.COMPLETE
             result.output_path = str(output_path)
             result.duration_seconds = time.time() - start_time
-            
+
             logger.info(
                 f"Synthesis complete: {result.files_generated} files, "
                 f"{result.duration_seconds:.2f}s"
             )
-            
+
         except Exception as e:
             logger.exception("Synthesis failed")
             result.status = SynthesisStatus.FAILED
             result.errors.append(str(e))
             result.duration_seconds = time.time() - start_time
-        
+
         return result
-    
+
     def _validate_request(self, request: SynthesisRequest) -> None:
         """Validate synthesis request."""
         if not request.project_name:
@@ -217,17 +216,17 @@ class ProjectBuilder:
             raise ValueError("Output path is required")
         if not request.repositories and not request.query:
             raise ValueError("Either repositories or query must be provided")
-    
+
     async def _discover_repositories(
         self,
         query: str,
     ) -> List[ExtractionSpec]:
         """Discover repositories based on query."""
         from src.discovery.unified_search import UnifiedSearch
-        
+
         search = UnifiedSearch()
         results = await search.search(query, max_results=5)
-        
+
         # Convert to extraction specs
         specs = []
         for repo in results.repositories:
@@ -236,9 +235,9 @@ class ProjectBuilder:
                 components=["src", "lib"],  # Default extraction
                 destination=repo.name,
             ))
-        
+
         return specs
-    
+
     async def _analyze_repositories(
         self,
         repositories: List[ExtractionSpec],
@@ -253,21 +252,21 @@ class ProjectBuilder:
                 "dependencies": [],
             })
         return analyses
-    
+
     async def _resolve_dependencies(
         self,
         analyses: List[Dict],
     ) -> Dict:
         """Resolve dependencies across all repositories."""
         from src.resolution.python_resolver import PythonResolver
-        
+
         resolver = PythonResolver()
-        
+
         # Collect all requirements
         all_reqs = []
         for analysis in analyses:
             all_reqs.extend(analysis.get("dependencies", []))
-        
+
         if all_reqs:
             result = await resolver.resolve(all_reqs)
             return {
@@ -276,9 +275,9 @@ class ProjectBuilder:
                 "packages": result.packages,
                 "lockfile": result.lockfile_content,
             }
-        
+
         return {"success": True, "count": 0, "packages": [], "lockfile": ""}
-    
+
     async def _synthesize_code(
         self,
         repositories: List[ExtractionSpec],
@@ -290,50 +289,50 @@ class ProjectBuilder:
         import tempfile
         from src.discovery.unified_search import UnifiedSearch
         from src.analysis.code_extractor import CodeExtractor
-        
+
         files_created = 0
-        
+
         # Create basic structure
         (output_path / "src").mkdir(exist_ok=True)
         (output_path / "tests").mkdir(exist_ok=True)
         (output_path / "docs").mkdir(exist_ok=True)
-        
+
         # Create __init__.py files
         (output_path / "src" / "__init__.py").write_text("")
         (output_path / "tests" / "__init__.py").write_text("")
         files_created += 2
-        
+
         search = UnifiedSearch()
         extractor = CodeExtractor()
-        
+
         for repo_spec in repositories:
             try:
                 # Clone repository to temp directory
                 with tempfile.TemporaryDirectory() as temp_dir:
                     temp_path = Path(temp_dir) / "repo"
-                    
+
                     platform = search._detect_platform(repo_spec.repo_url)
                     repo_id = search._extract_repo_id(repo_spec.repo_url, platform)
                     client = search._clients.get(platform)
-                    
+
                     if not client:
                         logger.warning(f"No client for platform: {platform}")
                         continue
-                    
+
                     await client.clone(repo_id, temp_path, depth=1)
-                    
+
                     # Determine destination
                     dest_dir = output_path / "src"
                     if repo_spec.destination:
                         dest_dir = output_path / repo_spec.destination
                         dest_dir.mkdir(parents=True, exist_ok=True)
-                    
+
                     # Extract specified components or default paths
                     components_to_extract = repo_spec.components or ["src", "lib", repo_id.split("/")[-1]]
-                    
+
                     for component in components_to_extract:
                         src_component = temp_path / component
-                        
+
                         if src_component.exists():
                             if src_component.is_dir():
                                 # Copy directory contents
@@ -356,21 +355,21 @@ class ProjectBuilder:
                                 dest_file = dest_dir / src_component.name
                                 shutil.copy2(src_component, dest_file)
                                 files_created += 1
-                    
+
                     # Apply rename map if specified
                     for old_name, new_name in repo_spec.rename_map.items():
                         old_path = dest_dir / old_name
                         new_path = dest_dir / new_name
                         if old_path.exists():
                             old_path.rename(new_path)
-                    
+
                     logger.info(f"Extracted {repo_spec.repo_url} -> {dest_dir}")
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to extract from {repo_spec.repo_url}: {e}")
-        
+
         return {"files": files_created}
-    
+
     async def _write_dependencies(
         self,
         output_path: Path,
@@ -389,22 +388,22 @@ class ProjectBuilder:
                 "# Add your dependencies here\n",
                 encoding='utf-8'
             )
-    
+
     async def _generate_documentation(
         self,
         output_path: Path,
     ) -> List[str]:
         """Generate project documentation."""
         docs_generated = []
-        
+
         # Ensure docs directory exists
         (output_path / "docs").mkdir(parents=True, exist_ok=True)
-        
+
         # Generate README
         readme_content = self._generate_readme(output_path)
         (output_path / "README.md").write_text(readme_content, encoding='utf-8')
         docs_generated.append("README.md")
-        
+
         # Generate basic structure docs
         (output_path / "docs" / "ARCHITECTURE.md").write_text(
             """# Architecture
@@ -442,13 +441,13 @@ Dependencies were resolved and merged using the unified resolver, which:
             encoding='utf-8'
         )
         docs_generated.append("docs/ARCHITECTURE.md")
-        
+
         return docs_generated
-    
+
     def _generate_readme(self, output_path: Path) -> str:
         """Generate README content."""
         project_name = output_path.name
-        
+
         return f"""# {project_name}
 
 > Generated by AI Project Synthesizer
@@ -508,18 +507,18 @@ ruff format src/
 
 MIT
 """
-    
+
     def get_status(self, synthesis_id: str) -> Optional[SynthesisResult]:
         """Get status of a synthesis operation."""
         return self._active_syntheses.get(synthesis_id)
-    
+
     def list_active(self) -> List[Dict]:
         """List all active synthesis operations."""
         return [
             r.to_dict() for r in self._active_syntheses.values()
             if r.status not in [SynthesisStatus.COMPLETE, SynthesisStatus.FAILED]
         ]
-    
+
     async def build(
         self,
         repositories: List[Dict],
@@ -544,7 +543,7 @@ MIT
             BuildResult with details about created project
         """
         result = BuildResult(project_path=output_path)
-        
+
         # Convert dict configs to ExtractionSpec
         specs = []
         for repo_config in repositories:
@@ -557,7 +556,7 @@ MIT
                 ))
             elif isinstance(repo_config, ExtractionSpec):
                 specs.append(repo_config)
-        
+
         # Create synthesis request
         request = SynthesisRequest(
             project_name=project_name,
@@ -566,10 +565,10 @@ MIT
             template=template,
             generate_docs=True,
         )
-        
+
         # Run synthesis
         synthesis_result = await self.synthesize(request)
-        
+
         # Map to BuildResult
         result.repos_processed = len(synthesis_result.repositories_used)
         result.files_created = synthesis_result.files_generated
@@ -577,8 +576,8 @@ MIT
         result.docs_generated = synthesis_result.documentation_generated
         result.warnings = synthesis_result.warnings + synthesis_result.errors
         result.components_extracted = result.files_created  # Approximate
-        
+
         if progress_callback:
             progress_callback(100, "complete")
-        
+
         return result

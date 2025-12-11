@@ -13,9 +13,7 @@ SPEED OPTIMIZATION:
 - PCM format for lowest latency
 """
 
-import asyncio
 import aiohttp
-import json
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, AsyncIterator
 from pathlib import Path
@@ -35,7 +33,7 @@ class Voice:
     description: Optional[str] = None
     preview_url: Optional[str] = None
     labels: Dict[str, str] = None
-    
+
     def __post_init__(self):
         if self.labels is None:
             self.labels = {}
@@ -90,32 +88,32 @@ class ElevenLabsClient:
             voice="josh",  # or voice_id
         )
     """
-    
+
     BASE_URL = "https://api.elevenlabs.io/v1"
-    
+
     def __init__(self, api_key: Optional[str] = None):
         """Initialize ElevenLabs client."""
         settings = get_settings()
         self._api_key = api_key or settings.elevenlabs.elevenlabs_api_key.get_secret_value()
-        
+
         if not self._api_key:
             secure_logger.warning("ElevenLabs API key not configured")
-        
+
         # Load settings
         self._default_voice_id = settings.elevenlabs.default_voice_id
         self._tts_model = settings.elevenlabs.tts_model
         self._realtime_model = settings.elevenlabs.realtime_model
         self._output_format = settings.elevenlabs.output_format
-        
+
         self._default_settings = VoiceSettings(
             stability=settings.elevenlabs.stability,
             similarity_boost=settings.elevenlabs.similarity_boost,
             style=settings.elevenlabs.style,
             use_speaker_boost=settings.elevenlabs.use_speaker_boost,
         )
-        
+
         self._session: Optional[aiohttp.ClientSession] = None
-    
+
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
         if self._session is None or self._session.closed:
@@ -126,25 +124,25 @@ class ElevenLabsClient:
                 }
             )
         return self._session
-    
+
     async def close(self):
         """Close the client session."""
         if self._session and not self._session.closed:
             await self._session.close()
-    
+
     def _resolve_voice_id(self, voice: Optional[str]) -> str:
         """Resolve voice name or ID to voice ID."""
         if voice is None:
             return self._default_voice_id
-        
+
         # Check if it's a known voice name
         voice_lower = voice.lower()
         if voice_lower in PREMADE_VOICES:
             return PREMADE_VOICES[voice_lower].voice_id
-        
+
         # Assume it's a voice ID
         return voice
-    
+
     async def text_to_speech(
         self,
         text: str,
@@ -168,14 +166,14 @@ class ElevenLabsClient:
         """
         if not self._api_key:
             raise ValueError("ElevenLabs API key not configured")
-        
+
         voice_id = self._resolve_voice_id(voice)
         model_id = model or self._tts_model
         voice_settings = settings or self._default_settings
         fmt = output_format or self._output_format
-        
+
         url = f"{self.BASE_URL}/text-to-speech/{voice_id}"
-        
+
         payload = {
             "text": text,
             "model_id": model_id,
@@ -186,9 +184,9 @@ class ElevenLabsClient:
                 "use_speaker_boost": voice_settings.use_speaker_boost,
             },
         }
-        
+
         session = await self._get_session()
-        
+
         async with session.post(
             url,
             json=payload,
@@ -197,11 +195,11 @@ class ElevenLabsClient:
             if response.status != 200:
                 error = await response.text()
                 raise Exception(f"ElevenLabs API error: {response.status} - {error}")
-            
+
             audio_data = await response.read()
             secure_logger.info(f"Generated {len(audio_data)} bytes of audio")
             return audio_data
-    
+
     async def stream_speech(
         self,
         text: str,
@@ -225,13 +223,13 @@ class ElevenLabsClient:
         """
         if not self._api_key:
             raise ValueError("ElevenLabs API key not configured")
-        
+
         voice_id = self._resolve_voice_id(voice)
         model_id = model or self._realtime_model  # Use faster model for streaming
         voice_settings = settings or self._default_settings
-        
+
         url = f"{self.BASE_URL}/text-to-speech/{voice_id}/stream"
-        
+
         payload = {
             "text": text,
             "model_id": model_id,
@@ -242,33 +240,33 @@ class ElevenLabsClient:
                 "use_speaker_boost": voice_settings.use_speaker_boost,
             },
         }
-        
+
         session = await self._get_session()
-        
+
         async with session.post(url, json=payload) as response:
             if response.status != 200:
                 error = await response.text()
                 raise Exception(f"ElevenLabs API error: {response.status} - {error}")
-            
+
             async for chunk in response.content.iter_chunked(chunk_size):
                 yield chunk
-    
+
     async def get_voices(self) -> List[Voice]:
         """Get all available voices."""
         if not self._api_key:
             return list(PREMADE_VOICES.values())
-        
+
         url = f"{self.BASE_URL}/voices"
         session = await self._get_session()
-        
+
         async with session.get(url) as response:
             if response.status != 200:
                 secure_logger.warning("Failed to fetch voices, using premade list")
                 return list(PREMADE_VOICES.values())
-            
+
             data = await response.json()
             voices = []
-            
+
             for v in data.get("voices", []):
                 voice = Voice(
                     voice_id=v["voice_id"],
@@ -279,18 +277,18 @@ class ElevenLabsClient:
                     labels=v.get("labels", {}),
                 )
                 voices.append(voice)
-            
+
             return voices
-    
+
     async def get_voice(self, voice_id: str) -> Optional[Voice]:
         """Get specific voice details."""
         url = f"{self.BASE_URL}/voices/{voice_id}"
         session = await self._get_session()
-        
+
         async with session.get(url) as response:
             if response.status != 200:
                 return None
-            
+
             v = await response.json()
             return Voice(
                 voice_id=v["voice_id"],
@@ -300,7 +298,7 @@ class ElevenLabsClient:
                 preview_url=v.get("preview_url"),
                 labels=v.get("labels", {}),
             )
-    
+
     async def save_audio(
         self,
         text: str,
@@ -321,29 +319,29 @@ class ElevenLabsClient:
             Path to saved file
         """
         audio = await self.text_to_speech(text, voice=voice, **kwargs)
-        
+
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(audio)
-        
+
         secure_logger.info(f"Saved audio to {output_path}")
         return output_path
-    
+
     async def get_user_info(self) -> Dict[str, Any]:
         """Get user subscription info."""
         url = f"{self.BASE_URL}/user"
         session = await self._get_session()
-        
+
         async with session.get(url) as response:
             if response.status != 200:
                 return {}
             return await response.json()
-    
+
     async def get_usage(self) -> Dict[str, Any]:
         """Get character usage info."""
         url = f"{self.BASE_URL}/user/subscription"
         session = await self._get_session()
-        
+
         async with session.get(url) as response:
             if response.status != 200:
                 return {}
@@ -353,8 +351,8 @@ class ElevenLabsClient:
 def create_elevenlabs_client() -> Optional[ElevenLabsClient]:
     """Factory function to create ElevenLabs client if API key is available."""
     settings = get_settings()
-    
+
     if settings.elevenlabs.elevenlabs_api_key.get_secret_value():
         return ElevenLabsClient()
-    
+
     return None

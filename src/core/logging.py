@@ -9,7 +9,6 @@ import logging
 import sys
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 import structlog
 from structlog.types import Processor
@@ -31,18 +30,18 @@ def setup_logging(
         log_file: Optional file path for log output
     """
     settings = get_settings()
-    
+
     # Determine log level
     log_level = level or settings.app.log_level
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
-    
+
     # Configure standard library logging
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
         level=numeric_level,
     )
-    
+
     # Build processor chain
     processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
@@ -51,7 +50,7 @@ def setup_logging(
         structlog.dev.set_exc_info,
         structlog.processors.TimeStamper(fmt="iso"),
     ]
-    
+
     # Add appropriate renderer based on format
     if json_format or settings.app.app_env == "production":
         processors.append(structlog.processors.JSONRenderer())
@@ -62,7 +61,7 @@ def setup_logging(
                 exception_formatter=structlog.dev.plain_traceback
             )
         )
-    
+
     # Configure structlog
     structlog.configure(
         processors=processors,
@@ -71,7 +70,7 @@ def setup_logging(
         logger_factory=structlog.PrintLoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
     # Setup file handler if specified
     if log_file:
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -111,15 +110,15 @@ class LogContext:
         ...     logger.info("Processing request")
         ...     # Logs will include request_id and user
     """
-    
+
     def __init__(self, **kwargs):
         self.context = kwargs
         self._token = None
-    
+
     def __enter__(self):
         self._token = structlog.contextvars.bind_contextvars(**self.context)
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         structlog.contextvars.unbind_contextvars(*self.context.keys())
         return False

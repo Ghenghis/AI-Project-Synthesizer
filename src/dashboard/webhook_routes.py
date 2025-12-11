@@ -10,10 +10,7 @@ Webhook endpoints for external integrations:
 
 from typing import Dict, Any, Optional
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Request, Header
-from pydantic import BaseModel
-import hashlib
-import hmac
+from fastapi import APIRouter, Request, Header
 import json
 
 from src.core.realtime import get_event_bus, EventType, emit_notification
@@ -47,53 +44,53 @@ async def github_webhook(
     """
     body = await request.body()
     payload = json.loads(body)
-    
+
     event_type = x_github_event or "unknown"
-    
+
     secure_logger.info(f"GitHub webhook received: {event_type}")
-    
+
     # Emit real-time event
     bus = get_event_bus()
-    
+
     if event_type == "push":
         commits = payload.get("commits", [])
         repo = payload.get("repository", {}).get("full_name", "unknown")
-        
+
         await bus.emit_async(EventType.NOTIFICATION, {
             "title": "GitHub Push",
             "message": f"{len(commits)} commit(s) pushed to {repo}",
             "level": "info",
             "source": "github",
         })
-        
+
     elif event_type == "pull_request":
         action = payload.get("action", "")
         pr = payload.get("pull_request", {})
         title = pr.get("title", "")
-        
+
         await bus.emit_async(EventType.NOTIFICATION, {
             "title": f"PR {action.title()}",
             "message": title,
             "level": "info",
             "source": "github",
         })
-        
+
     elif event_type == "release":
         action = payload.get("action", "")
         release = payload.get("release", {})
         tag = release.get("tag_name", "")
-        
+
         await bus.emit_async(EventType.NOTIFICATION, {
             "title": "New Release",
             "message": f"Version {tag} released",
             "level": "success",
             "source": "github",
         })
-        
+
     elif event_type == "star":
         action = payload.get("action", "")
         repo = payload.get("repository", {}).get("full_name", "")
-        
+
         if action == "created":
             await bus.emit_async(EventType.NOTIFICATION, {
                 "title": "New Star",
@@ -101,7 +98,7 @@ async def github_webhook(
                 "level": "info",
                 "source": "github",
             })
-    
+
     # Save to memory
     store = get_memory_store()
     store.save_memory(MemoryEntry(
@@ -116,7 +113,7 @@ async def github_webhook(
         },
         tags=["github", event_type],
     ))
-    
+
     return {"status": "received", "event": event_type}
 
 
@@ -135,33 +132,33 @@ async def n8n_webhook(workflow_name: str, request: Request):
     - Status updates
     """
     body = await request.json()
-    
+
     secure_logger.info(f"n8n webhook received: {workflow_name}")
-    
+
     bus = get_event_bus()
-    
+
     status = body.get("status", "unknown")
-    
+
     if status == "completed":
         await bus.emit_async(EventType.WORKFLOW_COMPLETED, {
             "workflow": workflow_name,
             "result": body.get("result"),
             "duration_ms": body.get("duration_ms"),
         })
-        
+
     elif status == "failed":
         await bus.emit_async(EventType.WORKFLOW_FAILED, {
             "workflow": workflow_name,
             "error": body.get("error"),
         })
-        
+
     elif status == "progress":
         await bus.emit_async(EventType.WORKFLOW_PROGRESS, {
             "workflow": workflow_name,
             "progress": body.get("progress"),
             "message": body.get("message"),
         })
-    
+
     return {"status": "received", "workflow": workflow_name}
 
 
@@ -180,11 +177,11 @@ async def custom_webhook(hook_id: str, request: Request):
     - External service callbacks
     """
     body = await request.json()
-    
+
     secure_logger.info(f"Custom webhook received: {hook_id}")
-    
+
     bus = get_event_bus()
-    
+
     # Emit as notification
     await bus.emit_async(EventType.NOTIFICATION, {
         "title": f"Webhook: {hook_id}",
@@ -193,7 +190,7 @@ async def custom_webhook(hook_id: str, request: Request):
         "source": hook_id,
         "data": body,
     })
-    
+
     # Save to memory
     store = get_memory_store()
     store.save_memory(MemoryEntry(
@@ -202,7 +199,7 @@ async def custom_webhook(hook_id: str, request: Request):
         content=body,
         tags=["webhook", hook_id],
     ))
-    
+
     return {"status": "received", "hook_id": hook_id}
 
 
@@ -216,15 +213,15 @@ async def slack_webhook(request: Request):
     Handle Slack webhooks (slash commands, events).
     """
     form = await request.form()
-    
+
     # Slash command
     if "command" in form:
         command = form.get("command", "")
         text = form.get("text", "")
         user = form.get("user_name", "")
-        
+
         secure_logger.info(f"Slack command: {command} {text} from {user}")
-        
+
         # Process command
         if command == "/synth-search":
             # Trigger search
@@ -232,14 +229,14 @@ async def slack_webhook(request: Request):
                 "response_type": "in_channel",
                 "text": f"🔍 Searching for: {text}",
             }
-            
+
         elif command == "/synth-status":
             # Get status
             return {
                 "response_type": "ephemeral",
                 "text": "✅ AI Synthesizer is running",
             }
-    
+
     return {"status": "received"}
 
 
@@ -253,22 +250,22 @@ async def discord_webhook(request: Request):
     Handle Discord webhooks (interactions).
     """
     body = await request.json()
-    
+
     # Verify Discord signature would go here
-    
+
     interaction_type = body.get("type", 0)
-    
+
     # Ping
     if interaction_type == 1:
         return {"type": 1}
-    
+
     # Application command
     if interaction_type == 2:
         data = body.get("data", {})
         command_name = data.get("name", "")
-        
+
         secure_logger.info(f"Discord command: {command_name}")
-        
+
         if command_name == "search":
             query = data.get("options", [{}])[0].get("value", "")
             return {
@@ -277,7 +274,7 @@ async def discord_webhook(request: Request):
                     "content": f"🔍 Searching for: {query}",
                 },
             }
-    
+
     return {"status": "received"}
 
 
@@ -328,13 +325,13 @@ async def list_webhooks():
 async def test_webhook(data: Dict[str, Any]):
     """Test webhook endpoint for debugging."""
     secure_logger.info(f"Test webhook received: {data}")
-    
+
     emit_notification(
         "Test Webhook",
         f"Received: {json.dumps(data)[:100]}",
         "info"
     )
-    
+
     return {
         "status": "received",
         "echo": data,

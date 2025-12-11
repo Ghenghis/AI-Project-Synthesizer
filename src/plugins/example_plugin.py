@@ -17,7 +17,7 @@ class GitLabPlugin(PlatformPlugin):
     
     This is an example - implement your own logic for real use.
     """
-    
+
     @property
     def metadata(self) -> PluginMetadata:
         return PluginMetadata(
@@ -32,13 +32,13 @@ class GitLabPlugin(PlatformPlugin):
                 "token": {"type": "string", "secret": True},
             }
         )
-    
+
     async def initialize(self, config: Dict[str, Any]) -> bool:
         """Initialize with GitLab credentials."""
         self._url = config.get("url", "https://gitlab.com")
         self._token = config.get("token", "")
         return True
-    
+
     async def search(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """
         Search GitLab repositories.
@@ -49,7 +49,7 @@ class GitLabPlugin(PlatformPlugin):
         # import gitlab
         # gl = gitlab.Gitlab(self._url, private_token=self._token)
         # projects = gl.projects.list(search=query, per_page=max_results)
-        
+
         # Placeholder return
         return [
             {
@@ -60,7 +60,7 @@ class GitLabPlugin(PlatformPlugin):
                 "platform": "gitlab",
             }
         ]
-    
+
     async def get_details(self, identifier: str) -> Optional[Dict[str, Any]]:
         """Get repository details."""
         return {
@@ -68,7 +68,7 @@ class GitLabPlugin(PlatformPlugin):
             "url": f"{self._url}/{identifier}",
             "platform": "gitlab",
         }
-    
+
     async def download(self, identifier: str, destination: Path) -> bool:
         """Clone GitLab repository."""
         # git clone implementation

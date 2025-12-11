@@ -9,13 +9,12 @@ AI-powered voice agent for:
 - Auto-continue conversations
 """
 
-import asyncio
-from typing import Optional, Dict, Any, List, Callable
+from typing import Optional, Dict, Any, Callable
 from dataclasses import dataclass
 
 from src.agents.base import BaseAgent, AgentConfig, AgentTool
 from src.core.security import get_secure_logger
-from src.core.settings_manager import get_settings_manager, VoiceMode
+from src.core.settings_manager import get_settings_manager
 
 secure_logger = get_secure_logger(__name__)
 
@@ -42,7 +41,7 @@ class VoiceAgent(BaseAgent):
     - Voice command execution
     - Multi-voice support
     """
-    
+
     def __init__(self, config: Optional[AgentConfig] = None):
         config = config or AgentConfig(
             name="voice_agent",
@@ -57,7 +56,7 @@ class VoiceAgent(BaseAgent):
         self._on_transcription: Optional[Callable] = None
         self._on_response: Optional[Callable] = None
         self._setup_tools()
-    
+
     def _setup_tools(self):
         """Set up voice tools."""
         self.register_tool(AgentTool(
@@ -69,7 +68,7 @@ class VoiceAgent(BaseAgent):
                 "voice": {"type": "string", "description": "Voice to use"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="listen",
             description="Listen for voice input",
@@ -78,7 +77,7 @@ class VoiceAgent(BaseAgent):
                 "timeout": {"type": "integer", "description": "Listen timeout (0=unlimited)"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="execute_command",
             description="Execute a voice command",
@@ -87,103 +86,103 @@ class VoiceAgent(BaseAgent):
                 "command": {"type": "string", "description": "Command to execute"},
             },
         ))
-    
+
     async def _get_voice_manager(self):
         """Get voice manager."""
         if self._voice_manager is None:
             from src.voice import get_voice_manager
             self._voice_manager = get_voice_manager()
         return self._voice_manager
-    
+
     async def _speak(self, text: str, voice: Optional[str] = None) -> Dict[str, Any]:
         """Speak text aloud."""
         self._state.is_speaking = True
-        
+
         try:
             manager = await self._get_voice_manager()
             settings = get_settings_manager().settings.voice
-            
+
             voice = voice or settings.voice_id
-            
+
             if settings.stream_audio:
                 await manager.speak_fast(text, voice)
             else:
                 await manager.speak(text, voice)
-            
+
             self._state.last_response = text
-            
+
             return {"success": True, "text": text, "voice": voice}
-        
+
         except Exception as e:
             secure_logger.error(f"Speech failed: {e}")
             return {"success": False, "error": str(e)}
-        
+
         finally:
             self._state.is_speaking = False
-    
+
     async def _listen(self, timeout: int = 0) -> Dict[str, Any]:
         """Listen for voice input (no pause limits when timeout=0)."""
         self._state.is_listening = True
-        
+
         try:
             # Get settings
             settings = get_settings_manager().settings.voice
-            
+
             # Use configured timeout or unlimited
             actual_timeout = timeout if timeout > 0 else settings.max_recording_duration
-            
+
             # For now, return placeholder - would integrate with speech recognition
             # In production, this would use whisper, vosk, or cloud STT
-            
+
             return {
                 "success": True,
                 "listening": True,
                 "timeout": actual_timeout,
                 "pause_detection": settings.pause_detection,
             }
-        
+
         except Exception as e:
             return {"success": False, "error": str(e)}
-        
+
         finally:
             self._state.is_listening = False
-    
+
     async def _execute_command(self, command: str) -> Dict[str, Any]:
         """Execute a voice command."""
         command_lower = command.lower().strip()
-        
+
         # Built-in commands
         if command_lower in ["stop", "cancel", "nevermind"]:
             return {"action": "cancel", "success": True}
-        
+
         if command_lower in ["pause", "wait"]:
             return {"action": "pause", "success": True}
-        
+
         if command_lower in ["continue", "go on", "resume"]:
             return {"action": "continue", "success": True}
-        
+
         if command_lower.startswith("search for "):
             query = command_lower.replace("search for ", "")
             return {"action": "search", "query": query, "success": True}
-        
+
         if command_lower.startswith("create ") or command_lower.startswith("build "):
             idea = command_lower.replace("create ", "").replace("build ", "")
             return {"action": "synthesize", "idea": idea, "success": True}
-        
+
         # Default: treat as chat
         return {"action": "chat", "message": command, "success": True}
-    
+
     async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a voice interaction step."""
         llm = await self._get_llm()
         settings = get_settings_manager().settings.voice
-        
+
         # Build conversation context
         history = "\n".join([
             f"{m['role']}: {m['content']}"
             for m in self._memory[-10:]  # Last 10 messages
         ])
-        
+
         prompt = f"""You are a helpful voice assistant. Respond naturally and concisely.
 
 Conversation history:
@@ -196,32 +195,32 @@ If the user wants to perform an action (search, create project, etc.),
 indicate the action clearly.
 
 Response:"""
-        
+
         response = await llm.complete(prompt)
         response = response.strip()
-        
+
         # Add to memory
         self.add_memory("user", task)
         self.add_memory("assistant", response)
-        
+
         # Speak response if enabled
         if settings.auto_speak_responses:
             await self._speak(response)
-        
+
         # Notify callback
         if self._on_response:
             try:
                 self._on_response(response)
             except Exception:
                 pass
-        
+
         # Check for action commands in response
         action = None
         if "search" in task.lower():
             action = "search"
         elif "create" in task.lower() or "build" in task.lower():
             action = "synthesize"
-        
+
         return {
             "action": action or "chat",
             "input": task,
@@ -229,32 +228,32 @@ Response:"""
             "spoken": settings.auto_speak_responses,
             "complete": not self._state.auto_continue,
         }
-    
+
     def _should_continue(self, step_result: Dict[str, Any]) -> bool:
         """Check if should continue conversation."""
         # Continue if auto-continue is enabled and not explicitly completed
         return self._state.auto_continue and not step_result.get("complete", False)
-    
+
     def on_transcription(self, callback: Callable):
         """Set callback for transcription events."""
         self._on_transcription = callback
-    
+
     def on_response(self, callback: Callable):
         """Set callback for response events."""
         self._on_response = callback
-    
+
     async def start_listening(self):
         """Start continuous listening mode."""
         self._state.is_listening = True
         self._state.auto_continue = True
         secure_logger.info("Voice agent: Started listening")
-    
+
     async def stop_listening(self):
         """Stop listening mode."""
         self._state.is_listening = False
         self._state.auto_continue = False
         secure_logger.info("Voice agent: Stopped listening")
-    
+
     async def process_text(self, text: str) -> str:
         """
         Process text input and return response.
@@ -267,18 +266,18 @@ Response:"""
         """
         self._state.is_processing = True
         self._state.current_text = text
-        
+
         try:
             result = await self.run(text)
             return result.output or ""
         finally:
             self._state.is_processing = False
-    
+
     async def speak_and_wait(self, text: str) -> bool:
         """Speak text and wait for completion."""
         result = await self._speak(text)
         return result.get("success", False)
-    
+
     def get_state(self) -> Dict[str, Any]:
         """Get current voice state."""
         return {

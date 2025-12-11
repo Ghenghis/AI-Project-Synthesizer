@@ -27,7 +27,7 @@ import time
 import wave
 import tempfile
 from pathlib import Path
-from typing import Optional, Callable, Any
+from typing import Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -51,22 +51,22 @@ class ConversationConfig:
     # Pause detection
     pause_threshold: float = 3.5  # Seconds of silence to trigger response
     min_speech_duration: float = 0.5  # Minimum speech to process
-    
+
     # Proactive research (when user is idle)
     enable_proactive_research: bool = True
     research_after_idle: float = 30.0  # Start researching after this many seconds
-    
+
     # Audio settings
     sample_rate: int = 16000
     channels: int = 1
     chunk_size: int = 1024
-    
+
     # Voice settings
     voice: str = "rachel"
-    
+
     # Silence detection
     silence_threshold: int = 500  # Audio level below this = silence
-    
+
     # Callbacks
     on_state_change: Optional[Callable[[ConversationState], None]] = None
     on_user_speech: Optional[Callable[[str], None]] = None
@@ -86,7 +86,7 @@ class RealtimeConversation:
         # Say something, pause for 3.5s, AI responds
         await conv.stop()
     """
-    
+
     def __init__(self, config: Optional[ConversationConfig] = None):
         """Initialize conversation."""
         self.config = config or ConversationConfig()
@@ -96,49 +96,49 @@ class RealtimeConversation:
         self._listen_thread: Optional[threading.Thread] = None
         self._last_user_speech: float = time.time()
         self._research_presented: bool = False
-        
+
         # Components
         self._assistant = None
         self._voice_player = None
         self._transcriber = None
         self._research_engine = None
-    
+
     async def start(self):
         """Start the conversation loop."""
         if self._running:
             return
-        
+
         self._running = True
         self._set_state(ConversationState.LISTENING)
-        
+
         # Initialize components
         await self._init_components()
-        
+
         # Start listening thread
         self._listen_thread = threading.Thread(
             target=self._listen_loop,
             daemon=True,
         )
         self._listen_thread.start()
-        
+
         # Start proactive research if enabled
         if self.config.enable_proactive_research:
             await self._research_engine.start_monitoring()
-        
+
         # Start processing loop
         await self._process_loop()
-    
+
     async def stop(self):
         """Stop the conversation."""
         self._running = False
         self._set_state(ConversationState.IDLE)
-        
+
         if self._research_engine:
             await self._research_engine.stop_monitoring()
-        
+
         if self._listen_thread:
             self._listen_thread.join(timeout=2)
-    
+
     async def _init_components(self):
         """Initialize AI and voice components."""
         # Assistant
@@ -146,34 +146,34 @@ class RealtimeConversation:
         self._assistant = ConversationalAssistant(AssistantConfig(
             voice_enabled=False,  # We handle voice separately
         ))
-        
+
         # Voice player
         from src.voice.streaming_player import get_streaming_player
         self._voice_player = get_streaming_player()
-        
+
         # Proactive research engine
         if self.config.enable_proactive_research:
             from src.assistant.proactive_research import ProactiveResearchEngine, ResearchConfig
-            
+
             def on_research_complete(result):
                 secure_logger.info(f"Research ready: {result.summary()}")
                 self._research_presented = False  # New research available
-            
+
             self._research_engine = ProactiveResearchEngine(ResearchConfig(
                 light_research_after=self.config.research_after_idle,
                 medium_research_after=self.config.research_after_idle * 2,
                 deep_research_after=self.config.research_after_idle * 4,
                 on_research_complete=on_research_complete,
             ))
-        
+
         secure_logger.info("Real-time conversation initialized")
-    
+
     def _set_state(self, state: ConversationState):
         """Update state and notify."""
         self.state = state
         if self.config.on_state_change:
             self.config.on_state_change(state)
-    
+
     def _listen_loop(self):
         """Background thread that captures audio."""
         try:
@@ -181,9 +181,9 @@ class RealtimeConversation:
         except ImportError:
             secure_logger.error("PyAudio required for voice input. Install with: pip install pyaudio")
             return
-        
+
         p = pyaudio.PyAudio()
-        
+
         stream = p.open(
             format=pyaudio.paInt16,
             channels=self.config.channels,
@@ -191,24 +191,24 @@ class RealtimeConversation:
             input=True,
             frames_per_buffer=self.config.chunk_size,
         )
-        
+
         audio_buffer = []
         silence_start = None
         speech_detected = False
-        
+
         try:
             while self._running:
                 if self.state != ConversationState.LISTENING:
                     time.sleep(0.1)
                     continue
-                
+
                 # Read audio chunk
                 data = stream.read(self.config.chunk_size, exception_on_overflow=False)
-                
+
                 # Check audio level
                 level = self._get_audio_level(data)
                 is_silence = level < self.config.silence_threshold
-                
+
                 if not is_silence:
                     # Speech detected
                     speech_detected = True
@@ -218,7 +218,7 @@ class RealtimeConversation:
                     # Silence
                     if speech_detected:
                         audio_buffer.append(data)
-                        
+
                         if silence_start is None:
                             silence_start = time.time()
                         elif time.time() - silence_start >= self.config.pause_threshold:
@@ -226,28 +226,28 @@ class RealtimeConversation:
                             if len(audio_buffer) > 0:
                                 audio_data = b''.join(audio_buffer)
                                 self._audio_queue.put(audio_data)
-                            
+
                             # Reset
                             audio_buffer = []
                             silence_start = None
                             speech_detected = False
-                
+
         finally:
             stream.stop_stream()
             stream.close()
             p.terminate()
-    
+
     def _get_audio_level(self, data: bytes) -> int:
         """Get audio level from raw data."""
         import struct
-        
+
         # Convert bytes to samples
         count = len(data) // 2
         samples = struct.unpack(f'{count}h', data)
-        
+
         # Return max absolute value
         return max(abs(s) for s in samples) if samples else 0
-    
+
     async def _process_loop(self):
         """Main processing loop."""
         while self._running:
@@ -258,28 +258,28 @@ class RealtimeConversation:
                 except queue.Empty:
                     await asyncio.sleep(0.1)
                     continue
-                
+
                 # User is active - update research engine
                 self._last_user_speech = time.time()
                 if self._research_engine:
                     self._research_engine.user_active()
-                
+
                 # Process the audio
                 self._set_state(ConversationState.PROCESSING)
-                
+
                 # Transcribe
                 text = await self._transcribe(audio_data)
-                
+
                 if text and len(text.strip()) > 0:
                     secure_logger.info(f"User said: {text}")
-                    
+
                     if self.config.on_user_speech:
                         self.config.on_user_speech(text)
-                    
+
                     # Update research context
                     if self._research_engine:
                         self._research_engine.set_context(text)
-                    
+
                     # Check if we have research to present first
                     research_intro = ""
                     if self._research_engine and not self._research_presented:
@@ -287,53 +287,53 @@ class RealtimeConversation:
                         if result and result.projects:
                             self._research_presented = True
                             research_intro = f"While you were thinking, I found {len(result.projects)} relevant projects and {len(result.papers)} research papers. "
-                    
+
                     # Get AI response
                     response = await self._assistant.chat(text)
                     response_text = research_intro + response["text"]
-                    
+
                     # If we have detailed research, offer to share it
                     if self._research_engine and not self._research_presented:
                         result = self._research_engine.get_latest_research()
                         if result and result.recommendations:
                             response_text += " Would you like me to share my research findings?"
-                    
+
                     secure_logger.info(f"Assistant: {response_text[:100]}...")
-                    
+
                     if self.config.on_assistant_response:
                         self.config.on_assistant_response(response_text)
-                    
+
                     # Speak response
                     self._set_state(ConversationState.SPEAKING)
                     await self._speak(response_text)
-                
+
                 # Back to listening
                 self._set_state(ConversationState.LISTENING)
-                
+
             except Exception as e:
                 secure_logger.error(f"Processing error: {e}")
                 self._set_state(ConversationState.LISTENING)
-    
+
     async def _transcribe(self, audio_data: bytes) -> str:
         """Transcribe audio to text using Whisper or cloud API."""
         # Save audio to temp file
         temp_file = Path(tempfile.gettempdir()) / "speech_input.wav"
-        
+
         with wave.open(str(temp_file), 'wb') as wav:
             wav.setnchannels(self.config.channels)
             wav.setsampwidth(2)  # 16-bit
             wav.setframerate(self.config.sample_rate)
             wav.writeframes(audio_data)
-        
+
         # Try OpenAI Whisper API
         try:
             from src.core.config import get_settings
             settings = get_settings()
             api_key = settings.llm.openai_api_key.get_secret_value()
-            
+
             if api_key:
                 import httpx
-                
+
                 async with httpx.AsyncClient() as client:
                     with open(temp_file, 'rb') as f:
                         response = await client.post(
@@ -343,12 +343,12 @@ class RealtimeConversation:
                             data={"model": "whisper-1"},
                             timeout=30,
                         )
-                    
+
                     if response.status_code == 200:
                         return response.json().get("text", "")
         except Exception as e:
             secure_logger.warning(f"Whisper API error: {e}")
-        
+
         # Fallback: try local whisper
         try:
             import whisper
@@ -359,9 +359,9 @@ class RealtimeConversation:
             secure_logger.warning("Local whisper not available")
         except Exception as e:
             secure_logger.warning(f"Local whisper error: {e}")
-        
+
         return ""
-    
+
     async def _speak(self, text: str):
         """Speak text using streaming voice."""
         from src.voice.streaming_player import speak_fast
@@ -399,13 +399,13 @@ async def start_voice_chat(
         on_user_speech=on_user_speech,
         on_assistant_response=on_assistant_response,
     )
-    
+
     conv = RealtimeConversation(config)
-    
-    print(f"\n🎤 Voice chat started!")
+
+    print("\n🎤 Voice chat started!")
     print(f"   Speak naturally, pause for {pause_threshold}s to get a response.")
-    print(f"   Press Ctrl+C to stop.\n")
-    
+    print("   Press Ctrl+C to stop.\n")
+
     try:
         await conv.start()
     except KeyboardInterrupt:

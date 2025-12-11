@@ -66,17 +66,24 @@ class TestCaching:
         assert stats["misses"] == 1
     
     @pytest.mark.asyncio
-    async def test_sqlite_cache(self):
+    async def test_sqlite_cache(self, tmp_path):
         """Test SQLite cache."""
         from src.core.cache import SQLiteCache
         
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache = SQLiteCache(Path(tmpdir) / "test.db")
-            
+        db_path = tmp_path / "test.db"
+        cache = SQLiteCache(db_path)
+        
+        try:
             await cache.set("key", {"nested": {"data": 123}})
             result = await cache.get("key")
             
             assert result == {"nested": {"data": 123}}
+        finally:
+            # Ensure cache is closed before cleanup
+            if hasattr(cache, 'close'):
+                await cache.close()
+            elif hasattr(cache, '_conn') and cache._conn:
+                cache._conn.close()
     
     @pytest.mark.asyncio
     async def test_cache_manager(self):
@@ -194,45 +201,57 @@ class TestTelemetry:
         
         assert len(telemetry._events) == 0
     
-    def test_telemetry_tracking_when_enabled(self):
+    def test_telemetry_tracking_when_enabled(self, tmp_path):
         """Test events tracked when enabled."""
         from src.core.telemetry import TelemetryCollector, TelemetryConfig
+        from unittest.mock import patch
         
         config = TelemetryConfig(
             enabled=True,
-            local_storage_path=Path("/tmp/test_telemetry.json"),
+            local_storage_path=tmp_path / "test_telemetry.json",
         )
-        telemetry = TelemetryCollector(config)
         
-        telemetry.track("test_event", {"platform": "github", "count": 10})
-        
-        assert len(telemetry._events) == 1
-        assert telemetry._events[0].event_type == "test_event"
+        # Mock file operations to avoid permission issues
+        with patch.object(TelemetryCollector, '_load_config'), \
+             patch.object(TelemetryCollector, '_save_events'):
+            telemetry = TelemetryCollector(config)
+            telemetry.config.enabled = True  # Ensure enabled after mock
+            
+            telemetry.track("test_event", {"platform": "github", "count": 10})
+            
+            assert len(telemetry._events) == 1
+            assert telemetry._events[0].event_type == "test_event"
     
-    def test_telemetry_sanitizes_properties(self):
+    def test_telemetry_sanitizes_properties(self, tmp_path):
         """Test that telemetry sanitizes properties."""
         from src.core.telemetry import TelemetryCollector, TelemetryConfig
+        from unittest.mock import patch
         
         config = TelemetryConfig(
             enabled=True,
-            local_storage_path=Path("/tmp/test_telemetry.json"),
+            local_storage_path=tmp_path / "test_telemetry.json",
         )
-        telemetry = TelemetryCollector(config)
         
-        # Try to track with potentially sensitive data
-        telemetry.track("test", {
-            "platform": "github",  # Allowed
-            "api_key": "secret123",  # Not allowed
-            "password": "hunter2",  # Not allowed
-            "count": 5,  # Allowed
-        })
-        
-        props = telemetry._events[0].properties
-        
-        assert "platform" in props
-        assert "count" in props
-        assert "api_key" not in props
-        assert "password" not in props
+        # Mock file operations to avoid permission issues
+        with patch.object(TelemetryCollector, '_load_config'), \
+             patch.object(TelemetryCollector, '_save_events'):
+            telemetry = TelemetryCollector(config)
+            telemetry.config.enabled = True  # Ensure enabled after mock
+            
+            # Try to track with potentially sensitive data
+            telemetry.track("test", {
+                "platform": "github",  # Allowed
+                "api_key": "secret123",  # Not allowed
+                "password": "hunter2",  # Not allowed
+                "count": 5,  # Allowed
+            })
+            
+            props = telemetry._events[0].properties
+            
+            assert "platform" in props
+            assert "count" in props
+            assert "api_key" not in props
+            assert "password" not in props
     
     def test_anonymous_id_generation(self):
         """Test anonymous ID is generated."""

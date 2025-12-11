@@ -26,7 +26,7 @@ from src.llm.providers.registry import ProviderRegistry, get_provider_registry
 
 __all__ = [
     "LLMProvider",
-    "ProviderConfig", 
+    "ProviderConfig",
     "CompletionResult",
     "ProviderCapabilities",
     "ProviderStatus",

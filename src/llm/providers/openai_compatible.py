@@ -11,7 +11,7 @@ Generic provider for any OpenAI-compatible API including:
 """
 
 import time
-from typing import Optional, List, Dict, Any, AsyncIterator
+from typing import Optional, List, AsyncIterator
 
 from openai import AsyncOpenAI
 
@@ -21,7 +21,6 @@ from src.llm.providers.base import (
     CompletionResult,
     StreamChunk,
     ProviderCapabilities,
-    ProviderStatus,
 )
 from src.core.circuit_breaker import circuit_breaker, CircuitBreakerConfig
 from src.core.security import get_secure_logger
@@ -59,22 +58,22 @@ class OpenAICompatibleProvider(LLMProvider):
         provider = OpenAICompatibleProvider(config)
         result = await provider.complete("Hello!")
     """
-    
+
     def __init__(self, config: ProviderConfig):
         super().__init__(config)
-        
+
         # Initialize OpenAI client with custom base URL
         base_url = config.host.rstrip("/")
         if not base_url.endswith("/v1"):
             base_url = f"{base_url}/v1"
-        
+
         self.client = AsyncOpenAI(
             base_url=base_url,
             api_key=config.api_key or "not-needed",
             timeout=config.timeout,
             max_retries=config.max_retries,
         )
-        
+
         # Set capabilities
         self.capabilities = ProviderCapabilities(
             streaming=True,
@@ -87,17 +86,17 @@ class OpenAICompatibleProvider(LLMProvider):
             supports_system_prompt=True,
             supports_json_mode=False,
         )
-    
+
     @circuit_breaker("openai_compatible", OPENAI_COMPAT_BREAKER)
     @track_performance("openai_compatible_available")
     async def is_available(self) -> bool:
         """Check if the OpenAI-compatible server is available."""
         correlation_id = correlation_manager.get_correlation_id()
-        
+
         try:
             models = await self.client.models.list()
             model_count = len(list(models))
-            
+
             secure_logger.info(
                 "OpenAI-compatible server available",
                 extra={
@@ -106,10 +105,10 @@ class OpenAICompatibleProvider(LLMProvider):
                     "model_count": model_count,
                 }
             )
-            
+
             metrics.increment("llm_health_check_success", tags={"provider": self.name})
             return True
-            
+
         except Exception as e:
             secure_logger.warning(
                 f"OpenAI-compatible server unavailable: {str(e)[:100]}",
@@ -120,7 +119,7 @@ class OpenAICompatibleProvider(LLMProvider):
             )
             metrics.increment("llm_health_check_failure", tags={"provider": self.name})
             return False
-    
+
     @circuit_breaker("openai_compatible", OPENAI_COMPAT_BREAKER)
     @track_performance("openai_compatible_list_models")
     async def list_models(self) -> List[str]:
@@ -131,7 +130,7 @@ class OpenAICompatibleProvider(LLMProvider):
         except Exception as e:
             secure_logger.error(f"Failed to list models: {e}")
             return []
-    
+
     @circuit_breaker("openai_compatible", OPENAI_COMPAT_BREAKER)
     @track_performance("openai_compatible_complete")
     async def complete(
@@ -146,15 +145,15 @@ class OpenAICompatibleProvider(LLMProvider):
         """Generate completion using OpenAI-compatible API."""
         correlation_id = correlation_manager.get_correlation_id()
         start_time = time.time()
-        
+
         model = model or self.config.default_model or "local-model"
-        
+
         # Build messages
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         secure_logger.info(
             "Starting completion",
             extra={
@@ -164,7 +163,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 "prompt_length": len(prompt),
             }
         )
-        
+
         try:
             response = await self.client.chat.completions.create(
                 model=model,
@@ -173,14 +172,14 @@ class OpenAICompatibleProvider(LLMProvider):
                 max_tokens=max_tokens,
                 **kwargs
             )
-            
+
             duration_ms = int((time.time() - start_time) * 1000)
-            
+
             content = response.choices[0].message.content or ""
             tokens_used = response.usage.total_tokens if response.usage else 0
             prompt_tokens = response.usage.prompt_tokens if response.usage else 0
             completion_tokens = response.usage.completion_tokens if response.usage else 0
-            
+
             secure_logger.info(
                 "Completion successful",
                 extra={
@@ -191,11 +190,11 @@ class OpenAICompatibleProvider(LLMProvider):
                     "duration_ms": duration_ms,
                 }
             )
-            
+
             metrics.increment("llm_completions_success", tags={"provider": self.name})
             metrics.record_histogram("llm_completion_tokens", tokens_used, tags={"provider": self.name})
             metrics.record_timer("llm_completion_duration", duration_ms / 1000, tags={"provider": self.name})
-            
+
             return CompletionResult(
                 content=content,
                 model=model,
@@ -206,7 +205,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 finish_reason=response.choices[0].finish_reason or "stop",
                 duration_ms=duration_ms,
             )
-            
+
         except Exception as e:
             duration_ms = int((time.time() - start_time) * 1000)
             secure_logger.error(
@@ -220,7 +219,7 @@ class OpenAICompatibleProvider(LLMProvider):
             )
             metrics.increment("llm_completions_error", tags={"provider": self.name})
             raise
-    
+
     async def stream(
         self,
         prompt: str,
@@ -232,12 +231,12 @@ class OpenAICompatibleProvider(LLMProvider):
     ) -> AsyncIterator[StreamChunk]:
         """Stream completion using OpenAI-compatible API."""
         model = model or self.config.default_model or "local-model"
-        
+
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         try:
             stream = await self.client.chat.completions.create(
                 model=model,
@@ -247,7 +246,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 stream=True,
                 **kwargs
             )
-            
+
             async for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield StreamChunk(
@@ -255,11 +254,11 @@ class OpenAICompatibleProvider(LLMProvider):
                         finish_reason=chunk.choices[0].finish_reason,
                         is_final=chunk.choices[0].finish_reason is not None,
                     )
-                    
+
         except Exception as e:
             secure_logger.error(f"Stream failed: {e}")
             raise
-    
+
     async def close(self):
         """Close the client."""
         await self.client.close()

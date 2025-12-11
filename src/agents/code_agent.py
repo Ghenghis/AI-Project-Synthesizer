@@ -9,9 +9,7 @@ AI-powered code agent for:
 - Documentation
 """
 
-import asyncio
-from typing import Optional, Dict, Any, List
-from pathlib import Path
+from typing import Optional, Dict, Any
 
 from src.agents.base import BaseAgent, AgentConfig, AgentTool
 from src.core.security import get_secure_logger
@@ -30,7 +28,7 @@ class CodeAgent(BaseAgent):
     - Refactor code
     - Generate documentation
     """
-    
+
     def __init__(self, config: Optional[AgentConfig] = None):
         config = config or AgentConfig(
             name="code_agent",
@@ -40,7 +38,7 @@ class CodeAgent(BaseAgent):
         )
         super().__init__(config)
         self._setup_tools()
-    
+
     def _setup_tools(self):
         """Set up code tools."""
         self.register_tool(AgentTool(
@@ -53,7 +51,7 @@ class CodeAgent(BaseAgent):
                 "style": {"type": "string", "enum": ["minimal", "documented", "production"]},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="fix_code",
             description="Fix bugs in code",
@@ -64,7 +62,7 @@ class CodeAgent(BaseAgent):
                 "language": {"type": "string"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="review_code",
             description="Review code for quality issues",
@@ -74,7 +72,7 @@ class CodeAgent(BaseAgent):
                 "language": {"type": "string"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="refactor_code",
             description="Refactor code for better quality",
@@ -85,7 +83,7 @@ class CodeAgent(BaseAgent):
                 "language": {"type": "string"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="generate_docs",
             description="Generate documentation for code",
@@ -96,7 +94,7 @@ class CodeAgent(BaseAgent):
                 "style": {"type": "string", "enum": ["docstring", "markdown", "readme"]},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="explain_code",
             description="Explain what code does",
@@ -106,7 +104,7 @@ class CodeAgent(BaseAgent):
                 "language": {"type": "string"},
             },
         ))
-    
+
     async def _generate_code(
         self,
         description: str,
@@ -115,13 +113,13 @@ class CodeAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """Generate code from description."""
         llm = await self._get_llm()
-        
+
         style_instructions = {
             "minimal": "Write minimal, concise code without comments.",
             "documented": "Include docstrings and inline comments.",
             "production": "Write production-ready code with full documentation, error handling, type hints, and tests.",
         }
-        
+
         prompt = f"""Generate {language} code for: {description}
 
 Style: {style_instructions.get(style, style_instructions['production'])}
@@ -133,9 +131,9 @@ Requirements:
 - Use type hints where applicable
 
 Return ONLY the code, no explanations."""
-        
+
         code = await llm.complete(prompt)
-        
+
         # Clean up code
         if "```" in code:
             parts = code.split("```")
@@ -143,14 +141,14 @@ Return ONLY the code, no explanations."""
                 code = parts[1]
                 if code.startswith(language):
                     code = "\n".join(code.split("\n")[1:])
-        
+
         return {
             "success": True,
             "code": code.strip(),
             "language": language,
             "style": style,
         }
-    
+
     async def _fix_code(
         self,
         code: str,
@@ -159,7 +157,7 @@ Return ONLY the code, no explanations."""
     ) -> Dict[str, Any]:
         """Fix bugs in code."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Fix the following {language} code that has this error:
 
 Error: {error}
@@ -170,9 +168,9 @@ Code:
 ```
 
 Provide the fixed code. Explain what was wrong briefly, then return the corrected code."""
-        
+
         response = await llm.complete(prompt)
-        
+
         # Extract fixed code
         fixed_code = code
         if "```" in response:
@@ -181,10 +179,10 @@ Provide the fixed code. Explain what was wrong briefly, then return the correcte
                 fixed_code = parts[1]
                 if fixed_code.startswith(language):
                     fixed_code = "\n".join(fixed_code.split("\n")[1:])
-        
+
         # Extract explanation
         explanation = response.split("```")[0].strip() if "```" in response else ""
-        
+
         return {
             "success": True,
             "original_code": code,
@@ -192,7 +190,7 @@ Provide the fixed code. Explain what was wrong briefly, then return the correcte
             "error": error,
             "explanation": explanation,
         }
-    
+
     async def _review_code(
         self,
         code: str,
@@ -200,7 +198,7 @@ Provide the fixed code. Explain what was wrong briefly, then return the correcte
     ) -> Dict[str, Any]:
         """Review code for quality issues."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Review this {language} code for quality issues:
 
 ```{language}
@@ -215,9 +213,9 @@ Analyze for:
 5. Best practices violations
 
 Provide a structured review with severity levels (high/medium/low)."""
-        
+
         review = await llm.complete(prompt)
-        
+
         # Parse review for issues
         issues = []
         for line in review.split("\n"):
@@ -228,14 +226,14 @@ Provide a structured review with severity levels (high/medium/low)."""
                 issues.append({"severity": "medium", "issue": line})
             elif "low" in line_lower:
                 issues.append({"severity": "low", "issue": line})
-        
+
         return {
             "success": True,
             "review": review,
             "issues": issues,
             "issue_count": len(issues),
         }
-    
+
     async def _refactor_code(
         self,
         code: str,
@@ -244,7 +242,7 @@ Provide a structured review with severity levels (high/medium/low)."""
     ) -> Dict[str, Any]:
         """Refactor code."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Refactor this {language} code with the goal: {goal}
 
 Original code:
@@ -253,9 +251,9 @@ Original code:
 ```
 
 Provide the refactored code that achieves the goal while maintaining functionality."""
-        
+
         response = await llm.complete(prompt)
-        
+
         # Extract refactored code
         refactored = code
         if "```" in response:
@@ -264,14 +262,14 @@ Provide the refactored code that achieves the goal while maintaining functionali
                 refactored = parts[1]
                 if refactored.startswith(language):
                     refactored = "\n".join(refactored.split("\n")[1:])
-        
+
         return {
             "success": True,
             "original_code": code,
             "refactored_code": refactored.strip(),
             "goal": goal,
         }
-    
+
     async def _generate_docs(
         self,
         code: str,
@@ -280,13 +278,13 @@ Provide the refactored code that achieves the goal while maintaining functionali
     ) -> Dict[str, Any]:
         """Generate documentation."""
         llm = await self._get_llm()
-        
+
         style_prompts = {
             "docstring": f"Add comprehensive docstrings to this {language} code",
             "markdown": f"Generate markdown documentation for this {language} code",
             "readme": f"Generate a README.md for a project containing this {language} code",
         }
-        
+
         prompt = f"""{style_prompts.get(style, style_prompts['docstring'])}:
 
 ```{language}
@@ -298,15 +296,15 @@ Include:
 - Parameter documentation
 - Return value documentation
 - Usage examples"""
-        
+
         docs = await llm.complete(prompt)
-        
+
         return {
             "success": True,
             "documentation": docs,
             "style": style,
         }
-    
+
     async def _explain_code(
         self,
         code: str,
@@ -314,7 +312,7 @@ Include:
     ) -> Dict[str, Any]:
         """Explain what code does."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Explain what this {language} code does in simple terms:
 
 ```{language}
@@ -326,24 +324,24 @@ Provide:
 2. Step-by-step breakdown
 3. Key concepts used
 4. Potential use cases"""
-        
+
         explanation = await llm.complete(prompt)
-        
+
         return {
             "success": True,
             "explanation": explanation,
         }
-    
+
     async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a code task step."""
         llm = await self._get_llm()
-        
+
         # Build prompt
         tools_desc = "\n".join([
             f"- {t.name}: {t.description}"
             for t in self._tools.values()
         ])
-        
+
         prompt = f"""You are a code agent. Your task: {task}
 
 Available tools:
@@ -359,28 +357,28 @@ Or if task is complete:
 COMPLETE: true
 OUTPUT: <final output>
 """
-        
+
         response = await llm.complete(prompt)
-        
+
         # Parse response
         if "COMPLETE: true" in response:
             output = ""
             if "OUTPUT:" in response:
                 output = response.split("OUTPUT:")[1].strip()
-            
+
             return {
                 "action": "complete",
                 "output": output,
                 "complete": True,
             }
-        
+
         # Extract tool call
         tool_name = None
         params = {}
-        
+
         if "TOOL:" in response:
             tool_name = response.split("TOOL:")[1].split("\n")[0].strip()
-        
+
         if "PARAMS:" in response:
             import json
             try:
@@ -388,12 +386,12 @@ OUTPUT: <final output>
                 params = json.loads(params_str)
             except:
                 params = {}
-        
+
         # Execute tool
         if tool_name and tool_name in self._tools:
             tool = self._tools[tool_name]
             result = await tool.execute(**params)
-            
+
             return {
                 "action": "tool_call",
                 "tool": tool_name,
@@ -401,17 +399,17 @@ OUTPUT: <final output>
                 "result": result,
                 "complete": False,
             }
-        
+
         return {
             "action": "thinking",
             "output": response,
             "complete": False,
         }
-    
+
     def _should_continue(self, step_result: Dict[str, Any]) -> bool:
         """Check if should continue."""
         return not step_result.get("complete", False)
-    
+
     async def generate(self, description: str, language: str = "python") -> str:
         """
         Generate code from description.
@@ -425,7 +423,7 @@ OUTPUT: <final output>
         """
         result = await self._generate_code(description, language)
         return result.get("code", "")
-    
+
     async def fix(self, code: str, error: str) -> str:
         """
         Fix code with error.

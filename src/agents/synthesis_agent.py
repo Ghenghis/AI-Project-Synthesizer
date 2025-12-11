@@ -8,7 +8,6 @@ AI-powered project synthesis agent for:
 - Documentation creation
 """
 
-import asyncio
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
@@ -29,7 +28,7 @@ class SynthesisAgent(BaseAgent):
     - Create documentation
     - Set up configurations
     """
-    
+
     def __init__(self, config: Optional[AgentConfig] = None):
         config = config or AgentConfig(
             name="synthesis_agent",
@@ -39,7 +38,7 @@ class SynthesisAgent(BaseAgent):
         )
         super().__init__(config)
         self._setup_tools()
-    
+
     def _setup_tools(self):
         """Set up synthesis tools."""
         self.register_tool(AgentTool(
@@ -51,7 +50,7 @@ class SynthesisAgent(BaseAgent):
                 "type": {"type": "string", "enum": ["python", "web", "api", "ml"]},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="generate_file",
             description="Generate a code file",
@@ -61,7 +60,7 @@ class SynthesisAgent(BaseAgent):
                 "description": {"type": "string", "description": "What the file should do"},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="resolve_dependencies",
             description="Resolve and list project dependencies",
@@ -71,7 +70,7 @@ class SynthesisAgent(BaseAgent):
                 "features": {"type": "array", "items": {"type": "string"}},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="create_readme",
             description="Generate README documentation",
@@ -82,7 +81,7 @@ class SynthesisAgent(BaseAgent):
                 "features": {"type": "array", "items": {"type": "string"}},
             },
         ))
-        
+
         self.register_tool(AgentTool(
             name="assemble_project",
             description="Assemble complete project",
@@ -92,7 +91,7 @@ class SynthesisAgent(BaseAgent):
                 "output_dir": {"type": "string"},
             },
         ))
-    
+
     async def _plan_project(
         self,
         idea: str,
@@ -100,7 +99,7 @@ class SynthesisAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """Plan project structure."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Plan a {type} project structure for: {idea}
 
 Return a JSON structure with:
@@ -110,9 +109,9 @@ Return a JSON structure with:
 - dependencies: key dependencies needed
 
 Be specific and practical."""
-        
+
         response = await llm.complete(prompt)
-        
+
         # Parse response
         import json
         try:
@@ -128,9 +127,9 @@ Be specific and practical."""
                 plan = {"raw": response}
         except:
             plan = {"raw": response}
-        
+
         return {"success": True, "plan": plan}
-    
+
     async def _generate_file(
         self,
         path: str,
@@ -138,7 +137,7 @@ Be specific and practical."""
     ) -> Dict[str, Any]:
         """Generate a code file."""
         llm = await self._get_llm()
-        
+
         # Determine language from extension
         ext = Path(path).suffix
         lang_map = {
@@ -151,7 +150,7 @@ Be specific and practical."""
             ".md": "Markdown",
         }
         language = lang_map.get(ext, "code")
-        
+
         prompt = f"""Generate {language} code for: {description}
 
 File: {path}
@@ -164,9 +163,9 @@ Requirements:
 - Handle errors appropriately
 
 Return ONLY the code, no explanations."""
-        
+
         code = await llm.complete(prompt)
-        
+
         # Clean up code
         if "```" in code:
             code = code.split("```")[1]
@@ -174,14 +173,14 @@ Return ONLY the code, no explanations."""
                 code = "\n".join(code.split("\n")[1:])
             if "```" in code:
                 code = code.split("```")[0]
-        
+
         return {
             "success": True,
             "path": path,
             "code": code.strip(),
             "language": language,
         }
-    
+
     async def _resolve_dependencies(
         self,
         project_type: str,
@@ -195,7 +194,7 @@ Return ONLY the code, no explanations."""
             "api": ["fastapi", "uvicorn", "pydantic"],
             "ml": ["torch", "transformers", "numpy"],
         }
-        
+
         feature_deps = {
             "voice": ["elevenlabs", "sounddevice"],
             "llm": ["openai", "anthropic", "ollama"],
@@ -203,19 +202,19 @@ Return ONLY the code, no explanations."""
             "web": ["httpx", "aiohttp"],
             "cli": ["typer", "rich"],
         }
-        
+
         deps = base_deps.get(project_type, [])
-        
+
         for feature in features:
             if feature in feature_deps:
                 deps.extend(feature_deps[feature])
-        
+
         return {
             "success": True,
             "dependencies": list(set(deps)),
             "project_type": project_type,
         }
-    
+
     async def _create_readme(
         self,
         project_name: str,
@@ -224,7 +223,7 @@ Return ONLY the code, no explanations."""
     ) -> Dict[str, Any]:
         """Generate README."""
         llm = await self._get_llm()
-        
+
         prompt = f"""Create a professional README.md for:
 
 Project: {project_name}
@@ -240,14 +239,14 @@ Include:
 - Configuration
 - Contributing guidelines
 - License section"""
-        
+
         readme = await llm.complete(prompt)
-        
+
         return {
             "success": True,
             "readme": readme,
         }
-    
+
     async def _assemble_project(
         self,
         idea: str,
@@ -256,14 +255,14 @@ Include:
         """Assemble complete project."""
         try:
             from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
-            
+
             config = AssemblerConfig(
                 base_output_dir=Path(output_dir),
             )
-            
+
             assembler = ProjectAssembler(config)
             project = await assembler.assemble(idea)
-            
+
             return {
                 "success": True,
                 "project": {
@@ -274,19 +273,19 @@ Include:
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a synthesis step."""
         llm = await self._get_llm()
-        
+
         # Build prompt
         tools_desc = "\n".join([
             f"- {t.name}: {t.description}"
             for t in self._tools.values()
         ])
-        
+
         previous = context.get("previous_step", {})
-        
+
         prompt = f"""You are a project synthesis agent. Your task: {task}
 
 Available tools:
@@ -304,28 +303,28 @@ Or if synthesis is complete:
 COMPLETE: true
 SUMMARY: <what was created>
 """
-        
+
         response = await llm.complete(prompt)
-        
+
         # Parse response
         if "COMPLETE: true" in response:
             summary = ""
             if "SUMMARY:" in response:
                 summary = response.split("SUMMARY:")[1].split("\n")[0].strip()
-            
+
             return {
                 "action": "complete",
                 "output": summary,
                 "complete": True,
             }
-        
+
         # Extract tool call
         tool_name = None
         params = {}
-        
+
         if "TOOL:" in response:
             tool_name = response.split("TOOL:")[1].split("\n")[0].strip()
-        
+
         if "PARAMS:" in response:
             import json
             try:
@@ -333,14 +332,14 @@ SUMMARY: <what was created>
                 params = json.loads(params_str)
             except:
                 params = {}
-        
+
         # Execute tool
         if tool_name and tool_name in self._tools:
             tool = self._tools[tool_name]
             result = await tool.execute(**params)
-            
+
             self.add_memory("assistant", f"Used {tool_name}: {result}")
-            
+
             return {
                 "action": "tool_call",
                 "tool": tool_name,
@@ -348,17 +347,17 @@ SUMMARY: <what was created>
                 "result": result,
                 "complete": False,
             }
-        
+
         return {
             "action": "thinking",
             "output": response,
             "complete": False,
         }
-    
+
     def _should_continue(self, step_result: Dict[str, Any]) -> bool:
         """Check if should continue synthesis."""
         return not step_result.get("complete", False)
-    
+
     async def synthesize(self, idea: str, output_dir: str = "G:/") -> Dict[str, Any]:
         """
         Convenience method to synthesize a project.

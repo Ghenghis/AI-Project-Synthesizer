@@ -28,32 +28,32 @@ class EventType(str, Enum):
     WORKFLOW_PROGRESS = "workflow.progress"
     WORKFLOW_COMPLETED = "workflow.completed"
     WORKFLOW_FAILED = "workflow.failed"
-    
+
     # Agent events
     AGENT_STARTED = "agent.started"
     AGENT_STEP = "agent.step"
     AGENT_COMPLETED = "agent.completed"
     AGENT_ERROR = "agent.error"
-    
+
     # Search events
     SEARCH_STARTED = "search.started"
     SEARCH_RESULT = "search.result"
     SEARCH_COMPLETED = "search.completed"
-    
+
     # Health events
     HEALTH_CHECK = "health.check"
     HEALTH_ALERT = "health.alert"
     HEALTH_RECOVERED = "health.recovered"
-    
+
     # System events
     NOTIFICATION = "notification"
     ERROR = "error"
     LOG = "log"
-    
+
     # Memory events
     BOOKMARK_ADDED = "bookmark.added"
     SEARCH_SAVED = "search.saved"
-    
+
     # Voice events
     VOICE_STARTED = "voice.started"
     VOICE_TRANSCRIPTION = "voice.transcription"
@@ -67,7 +67,7 @@ class Event:
     data: Dict[str, Any]
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     source: str = "system"
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "type": self.type.value,
@@ -75,7 +75,7 @@ class Event:
             "timestamp": self.timestamp,
             "source": self.source,
         }
-    
+
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
 
@@ -90,14 +90,14 @@ class EventBus:
     - Event filtering
     - Event history
     """
-    
+
     def __init__(self, max_history: int = 1000):
         self._subscribers: Dict[EventType, List[Callable]] = {}
         self._global_subscribers: List[Callable] = []
         self._history: List[Event] = []
         self._max_history = max_history
         self._queues: Set[asyncio.Queue] = set()
-    
+
     def subscribe(
         self,
         event_type: EventType,
@@ -107,11 +107,11 @@ class EventBus:
         if event_type not in self._subscribers:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(callback)
-    
+
     def subscribe_all(self, callback: Callable):
         """Subscribe to all events."""
         self._global_subscribers.append(callback)
-    
+
     def unsubscribe(
         self,
         event_type: EventType,
@@ -123,14 +123,14 @@ class EventBus:
                 cb for cb in self._subscribers[event_type]
                 if cb != callback
             ]
-    
+
     async def publish(self, event: Event):
         """Publish an event."""
         # Add to history
         self._history.append(event)
         if len(self._history) > self._max_history:
             self._history = self._history[-self._max_history:]
-        
+
         # Notify specific subscribers
         for callback in self._subscribers.get(event.type, []):
             try:
@@ -139,7 +139,7 @@ class EventBus:
                     await result
             except Exception as e:
                 secure_logger.error(f"Event callback error: {e}")
-        
+
         # Notify global subscribers
         for callback in self._global_subscribers:
             try:
@@ -148,24 +148,24 @@ class EventBus:
                     await result
             except Exception as e:
                 secure_logger.error(f"Global callback error: {e}")
-        
+
         # Push to queues (for SSE/WebSocket)
         for queue in self._queues:
             try:
                 await queue.put(event)
             except Exception:
                 pass
-    
+
     def emit(self, event_type: EventType, data: Dict[str, Any], source: str = "system"):
         """Emit an event (sync wrapper)."""
         event = Event(type=event_type, data=data, source=source)
         asyncio.create_task(self.publish(event))
-    
+
     async def emit_async(self, event_type: EventType, data: Dict[str, Any], source: str = "system"):
         """Emit an event asynchronously."""
         event = Event(type=event_type, data=data, source=source)
         await self.publish(event)
-    
+
     def get_history(
         self,
         event_type: Optional[EventType] = None,
@@ -173,33 +173,33 @@ class EventBus:
     ) -> List[Event]:
         """Get event history."""
         events = self._history
-        
+
         if event_type:
             events = [e for e in events if e.type == event_type]
-        
+
         return events[-limit:]
-    
+
     def create_queue(self) -> asyncio.Queue:
         """Create a queue for streaming events."""
         queue = asyncio.Queue()
         self._queues.add(queue)
         return queue
-    
+
     def remove_queue(self, queue: asyncio.Queue):
         """Remove a queue."""
         self._queues.discard(queue)
-    
+
     async def stream_events(
         self,
         event_types: Optional[List[EventType]] = None,
     ):
         """Async generator for streaming events."""
         queue = self.create_queue()
-        
+
         try:
             while True:
                 event = await queue.get()
-                
+
                 if event_types is None or event.type in event_types:
                     yield event
         finally:
@@ -230,16 +230,16 @@ def emit_workflow_event(
 ):
     """Emit a workflow event."""
     bus = get_event_bus()
-    
+
     event_map = {
         "started": EventType.WORKFLOW_STARTED,
         "progress": EventType.WORKFLOW_PROGRESS,
         "completed": EventType.WORKFLOW_COMPLETED,
         "failed": EventType.WORKFLOW_FAILED,
     }
-    
+
     event_type = event_map.get(status, EventType.WORKFLOW_PROGRESS)
-    
+
     bus.emit(event_type, {
         "workflow_id": workflow_id,
         "status": status,
@@ -256,16 +256,16 @@ def emit_agent_event(
 ):
     """Emit an agent event."""
     bus = get_event_bus()
-    
+
     event_map = {
         "started": EventType.AGENT_STARTED,
         "step": EventType.AGENT_STEP,
         "completed": EventType.AGENT_COMPLETED,
         "error": EventType.AGENT_ERROR,
     }
-    
+
     event_type = event_map.get(status, EventType.AGENT_STEP)
-    
+
     bus.emit(event_type, {
         "agent": agent_name,
         "status": status,
@@ -282,15 +282,15 @@ def emit_search_event(
 ):
     """Emit a search event."""
     bus = get_event_bus()
-    
+
     event_map = {
         "started": EventType.SEARCH_STARTED,
         "result": EventType.SEARCH_RESULT,
         "completed": EventType.SEARCH_COMPLETED,
     }
-    
+
     event_type = event_map.get(status, EventType.SEARCH_RESULT)
-    
+
     bus.emit(event_type, {
         "query": query,
         "status": status,
@@ -306,7 +306,7 @@ def emit_notification(
 ):
     """Emit a notification event."""
     bus = get_event_bus()
-    
+
     bus.emit(EventType.NOTIFICATION, {
         "title": title,
         "message": message,

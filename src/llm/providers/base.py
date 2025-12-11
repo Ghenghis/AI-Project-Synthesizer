@@ -22,7 +22,7 @@ class ProviderType(Enum):
     VLLM = "vllm"
     KOBOLDAI = "koboldai"
     LLAMACPP = "llamacpp"
-    
+
     # Cloud Providers
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -33,7 +33,7 @@ class ProviderType(Enum):
     COHERE = "cohere"
     FIREWORKS = "fireworks"
     DEEPSEEK = "deepseek"
-    
+
     # Generic OpenAI-Compatible
     OPENAI_COMPATIBLE = "openai_compatible"
 
@@ -72,13 +72,13 @@ class ProviderConfig:
     max_retries: int = 3
     enabled: bool = True
     priority: int = 0  # Lower = higher priority for fallback
-    
+
     # Model size tiers
     model_tiny: Optional[str] = None
     model_small: Optional[str] = None
     model_medium: Optional[str] = None
     model_large: Optional[str] = None
-    
+
     # Additional settings
     extra_headers: Dict[str, str] = field(default_factory=dict)
     extra_params: Dict[str, Any] = field(default_factory=dict)
@@ -114,24 +114,24 @@ class LLMProvider(ABC):
     All provider implementations must inherit from this class
     and implement the required methods.
     """
-    
+
     def __init__(self, config: ProviderConfig):
         """Initialize provider with configuration."""
         self.config = config
         self.capabilities = ProviderCapabilities()
         self._last_health_check: float = 0
         self._health_status: ProviderStatus = ProviderStatus.UNKNOWN
-    
+
     @property
     def name(self) -> str:
         """Provider name."""
         return self.config.name
-    
+
     @property
     def provider_type(self) -> ProviderType:
         """Provider type."""
         return self.config.provider_type
-    
+
     @property
     def is_local(self) -> bool:
         """Whether this is a local provider."""
@@ -146,17 +146,17 @@ class LLMProvider(ABC):
             ProviderType.LLAMACPP,
         }
         return self.config.provider_type in local_types
-    
+
     @abstractmethod
     async def is_available(self) -> bool:
         """Check if provider is available and healthy."""
         pass
-    
+
     @abstractmethod
     async def list_models(self) -> List[str]:
         """List available models from this provider."""
         pass
-    
+
     @abstractmethod
     async def complete(
         self,
@@ -169,7 +169,7 @@ class LLMProvider(ABC):
     ) -> CompletionResult:
         """Generate completion for prompt."""
         pass
-    
+
     async def stream(
         self,
         prompt: str,
@@ -190,7 +190,7 @@ class LLMProvider(ABC):
             **kwargs
         )
         yield StreamChunk(content=result.content, finish_reason="stop", is_final=True)
-    
+
     async def health_check(self) -> ProviderStatus:
         """Perform health check and return status."""
         try:
@@ -202,7 +202,7 @@ class LLMProvider(ABC):
             self._health_status = ProviderStatus.UNHEALTHY
             self._last_health_check = time.time()
             return self._health_status
-    
+
     def get_model_for_size(self, size: str) -> str:
         """Get model name for given size tier."""
         size_map = {
@@ -213,10 +213,10 @@ class LLMProvider(ABC):
         }
         model = size_map.get(size) or self.config.default_model
         return model or "default"
-    
+
     async def close(self):
         """Clean up provider resources."""
         pass
-    
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name}, type={self.provider_type.value})"

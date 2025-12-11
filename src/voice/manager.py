@@ -8,14 +8,12 @@ Comprehensive voice management for:
 - Voice profiles
 """
 
-import asyncio
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from pathlib import Path
 from enum import Enum
 from datetime import datetime
 
-from src.core.config import get_settings
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -49,7 +47,7 @@ class VoiceProfile:
     style: float = 0.0
     speed: float = 1.0
     model: str = "eleven_turbo_v2_5"
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -148,37 +146,37 @@ class VoiceManager:
         # Get available voices
         voices = manager.list_voices()
     """
-    
+
     def __init__(self):
         self._profiles = dict(DEFAULT_VOICES)
         self._current_session: Optional[AudioSession] = None
         self._default_voice = "rachel"
         self._client = None
-    
+
     async def _get_client(self):
         """Get ElevenLabs client."""
         if self._client is None:
             from src.voice.elevenlabs_client import ElevenLabsClient
             self._client = ElevenLabsClient()
         return self._client
-    
+
     def list_voices(self) -> List[Dict[str, Any]]:
         """List available voice profiles."""
         return [p.to_dict() for p in self._profiles.values()]
-    
+
     def get_voice(self, voice_id: str) -> Optional[VoiceProfile]:
         """Get a voice profile by ID."""
         return self._profiles.get(voice_id)
-    
+
     def add_voice(self, profile: VoiceProfile):
         """Add a custom voice profile."""
         self._profiles[profile.id] = profile
-    
+
     def set_default_voice(self, voice_id: str):
         """Set the default voice."""
         if voice_id in self._profiles:
             self._default_voice = voice_id
-    
+
     async def speak(
         self,
         text: str,
@@ -198,14 +196,14 @@ class VoiceManager:
         """
         voice_id = voice or self._default_voice
         profile = self._profiles.get(voice_id)
-        
+
         if not profile:
             secure_logger.warning(f"Voice not found: {voice_id}, using default")
             profile = self._profiles[self._default_voice]
-        
+
         try:
             client = await self._get_client()
-            
+
             if stream:
                 await client.stream_speech(
                     text,
@@ -222,30 +220,30 @@ class VoiceManager:
                     similarity_boost=profile.similarity_boost,
                 )
                 return audio_path
-        
+
         except Exception as e:
             secure_logger.error(f"Speech generation failed: {e}")
             raise
-    
+
     async def speak_fast(self, text: str, voice: Optional[str] = None):
         """Quick speech with streaming for low latency."""
         return await self.speak(text, voice, stream=True)
-    
+
     def get_session(self) -> Optional[AudioSession]:
         """Get current audio session."""
         return self._current_session
-    
+
     def start_session(self, voice: Optional[str] = None) -> AudioSession:
         """Start a new audio session."""
         voice_id = voice or self._default_voice
         profile = self._profiles.get(voice_id, self._profiles[self._default_voice])
-        
+
         self._current_session = AudioSession(
             id=f"session_{datetime.now().timestamp()}",
             profile=profile,
         )
         return self._current_session
-    
+
     def end_session(self):
         """End current audio session."""
         self._current_session = None

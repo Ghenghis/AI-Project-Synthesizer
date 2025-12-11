@@ -58,7 +58,6 @@ See docs/MCP_CLIENT_SUPPORT.md for full configuration guide.
 
 import asyncio
 import json
-import logging
 import time
 from typing import Any
 
@@ -417,19 +416,19 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     # Generate correlation ID for request tracing
     correlation_id = correlation_manager.generate_id()
     correlation_manager.set_correlation_id(correlation_id)
-    
+
     # Mask secrets in arguments before logging
     sanitized_args = SecretManager.mask_secrets(str(arguments))
-    
+
     secure_logger.info(
         f"Tool called: {name}",
         correlation_id=correlation_id,
         tool=name,
         args_count=len(arguments)
     )
-    
-    metrics.increment(f"tool_calls_total", tags={"tool": name})
-    
+
+    metrics.increment("tool_calls_total", tags={"tool": name})
+
     try:
         # Route to appropriate handler with performance tracking
         with track_performance(f"tool_{name}"):
@@ -462,44 +461,44 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 result = await handle_assemble_project(arguments)
             else:
                 result = {"error": f"Unknown tool: {name}"}
-                metrics.increment(f"tool_errors_total", tags={"tool": name, "error_type": "unknown_tool"})
-        
+                metrics.increment("tool_errors_total", tags={"tool": name, "error_type": "unknown_tool"})
+
         # Convert result to JSON string
         result_text = json.dumps(result, indent=2, default=str)
-        
+
         secure_logger.info(
             f"Tool {name} completed successfully",
             correlation_id=correlation_id,
             tool=name,
             result_size=len(result_text)
         )
-        
-        metrics.increment(f"tool_success_total", tags={"tool": name})
-        
+
+        metrics.increment("tool_success_total", tags={"tool": name})
+
         return [TextContent(type="text", text=result_text)]
-        
+
     except Exception as e:
         # Mask secrets in error messages
         sanitized_error = SecretManager.mask_secrets(str(e))
-        
+
         secure_logger.error(
             f"Error in tool {name}: {sanitized_error}",
             correlation_id=correlation_id,
             tool=name,
             error_type=type(e).__name__
         )
-        
-        metrics.increment(f"tool_errors_total", tags={"tool": name, "error_type": type(e).__name__})
-        
+
+        metrics.increment("tool_errors_total", tags={"tool": name, "error_type": type(e).__name__})
+
         error_response = {
             "error": True,
             "message": sanitized_error,
             "tool": name,
             "correlation_id": correlation_id
         }
-        
+
         return [TextContent(type="text", text=json.dumps(error_response))]
-    
+
     finally:
         # Clear correlation ID
         correlation_manager.clear_correlation_id()
@@ -519,18 +518,18 @@ async def main():
     secure_logger.info(f"Enabled platforms: {settings.platforms.get_enabled_platforms()}")
     secure_logger.info(f"LLM Host: {settings.llm.ollama_host}")
     secure_logger.info("=" * 60)
-    
+
     # Register shutdown handler
     async def shutdown_mcp_server():
         """Shutdown MCP server gracefully."""
         secure_logger.info("Shutting down MCP server")
-    
+
     lifecycle.add_shutdown_task("mcp_server", shutdown_mcp_server, priority=100)
-    
+
     # Initialize metrics
     metrics.set_gauge("server_startup_time", time.time())
     metrics.increment("server_startups_total")
-    
+
     try:
         async with stdio_server() as (read_stream, write_stream):
             await server.run(

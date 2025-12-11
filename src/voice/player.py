@@ -12,7 +12,6 @@ import base64
 import tempfile
 import subprocess
 import platform
-import os
 from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
@@ -42,14 +41,14 @@ class VoicePlayer:
         player = VoicePlayer()
         await player.play_base64(audio_base64, format="mp3")
     """
-    
+
     def __init__(self, temp_dir: Optional[Path] = None):
         """Initialize voice player."""
         self.temp_dir = temp_dir or Path(tempfile.gettempdir()) / "ai_synthesizer_voice"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         self._current_process: Optional[subprocess.Popen] = None
         self.system = platform.system()
-    
+
     async def play_base64(
         self,
         audio_base64: str,
@@ -74,7 +73,7 @@ class VoicePlayer:
         except Exception as e:
             secure_logger.error(f"Failed to decode audio: {e}")
             return PlaybackResult(success=False, error=str(e))
-    
+
     async def play_bytes(
         self,
         audio_bytes: bytes,
@@ -95,9 +94,9 @@ class VoicePlayer:
         # Save to temp file
         temp_file = self.temp_dir / f"voice_output.{format}"
         temp_file.write_bytes(audio_bytes)
-        
+
         return await self.play_file(temp_file, wait)
-    
+
     async def play_file(
         self,
         file_path: Path,
@@ -114,14 +113,14 @@ class VoicePlayer:
             PlaybackResult with success status
         """
         file_path = Path(file_path)
-        
+
         if not file_path.exists():
             return PlaybackResult(success=False, error=f"File not found: {file_path}")
-        
+
         try:
             # Stop any current playback
             await self.stop()
-            
+
             # Platform-specific playback
             if self.system == "Windows":
                 result = await self._play_windows(file_path, wait)
@@ -129,14 +128,14 @@ class VoicePlayer:
                 result = await self._play_macos(file_path, wait)
             else:  # Linux
                 result = await self._play_linux(file_path, wait)
-            
+
             secure_logger.info(f"Audio playback completed: {file_path.name}")
             return result
-            
+
         except Exception as e:
             secure_logger.error(f"Playback error: {e}")
             return PlaybackResult(success=False, error=str(e))
-    
+
     async def _play_windows(self, file_path: Path, wait: bool) -> PlaybackResult:
         """Play audio on Windows using PowerShell."""
         # Use Windows Media Player COM object for reliable playback
@@ -151,7 +150,7 @@ while ($player.NaturalDuration.HasTimeSpan -and $player.Position -lt $player.Nat
 }}
 $player.Close()
 '''
-        
+
         if wait:
             # Run synchronously
             process = await asyncio.create_subprocess_exec(
@@ -169,11 +168,11 @@ $player.Close()
                 stderr=subprocess.DEVNULL,
             )
             return PlaybackResult(success=True)
-    
+
     async def _play_macos(self, file_path: Path, wait: bool) -> PlaybackResult:
         """Play audio on macOS using afplay."""
         cmd = ["afplay", str(file_path)]
-        
+
         if wait:
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -189,7 +188,7 @@ $player.Close()
                 stderr=subprocess.DEVNULL,
             )
             return PlaybackResult(success=True)
-    
+
     async def _play_linux(self, file_path: Path, wait: bool) -> PlaybackResult:
         """Play audio on Linux using available player."""
         # Try different players
@@ -199,7 +198,7 @@ $player.Close()
             ["aplay", str(file_path)],  # For WAV
             ["paplay", str(file_path)],  # PulseAudio
         ]
-        
+
         for cmd in players:
             try:
                 if wait:
@@ -220,9 +219,9 @@ $player.Close()
                     return PlaybackResult(success=True)
             except FileNotFoundError:
                 continue
-        
+
         return PlaybackResult(success=False, error="No audio player found")
-    
+
     async def stop(self):
         """Stop current playback."""
         if self._current_process:
@@ -231,7 +230,7 @@ $player.Close()
                 self._current_process = None
             except Exception:
                 pass
-    
+
     def cleanup(self):
         """Clean up temp files."""
         try:
