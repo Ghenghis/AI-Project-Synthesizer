@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+    <linearGradient id="coreGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe"/>
+      <stop offset="100%" style="stop-color:#00f2fe"/>
+    </linearGradient>
+    <linearGradient id="discoveryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#43e97b"/>
+      <stop offset="100%" style="stop-color:#38f9d7"/>
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fa709a"/>
+      <stop offset="100%" style="stop-color:#fee140"/>
+    </linearGradient>
+    <linearGradient id="synthesisGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a8edea"/>
+      <stop offset="100%" style="stop-color:#fed6e3"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <rect x="0" y="0" width="1200" height="60" fill="url(#headerGrad)"/>
+  <text x="600" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">AI Project Synthesizer - System Architecture</text>
+
+  <!-- Core Module -->
+  <g transform="translate(500, 100)">
+    <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#coreGrad)" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Core</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">config.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">security_utils.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">resource_manager.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">exceptions.py</text>
+  </g>
+
+  <!-- Discovery Module -->
+  <g transform="translate(50, 280)">
+    <rect x="0" y="0" width="220" height="180" rx="10" fill="url(#discoveryGrad)" filter="url(#shadow)"/>
+    <text x="110" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Discovery</text>
+    <text x="110" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">github_client.py</text>
+    <text x="110" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">gitlab_client.py</text>
+    <text x="110" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">huggingface_client.py</text>
+    <text x="110" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">arxiv_client.py</text>
+    <text x="110" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">unified_search.py</text>
+    <text x="110" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">base_client.py</text>
+    <text x="110" y="157" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">circuit_breaker.py</text>
+  </g>
+
+  <!-- LLM Module -->
+  <g transform="translate(320, 280)">
+    <rect x="0" y="0" width="200" height="180" rx="10" fill="url(#llmGrad)" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">LLM</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">ollama_client.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">lmstudio_client.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">cloud_client.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">litellm_router.py</text>
+    <text x="100" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">orchestrator.py</text>
+    <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">model_selector.py</text>
+  </g>
+
+  <!-- Analysis Module -->
+  <g transform="translate(570, 280)">
+    <rect x="0" y="0" width="200" height="150" rx="10" fill="#e2e8f0" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Analysis</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">ast_parser.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">dependency_analyzer.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">code_extractor.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">compatibility_checker.py</text>
+    <text x="100" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">quality_scorer.py</text>
+  </g>
+
+  <!-- Synthesis Module -->
+  <g transform="translate(820, 280)">
+    <rect x="0" y="0" width="200" height="150" rx="10" fill="url(#synthesisGrad)" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Synthesis</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">project_builder.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">project_assembler.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">scaffolder.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">code_merger.py</text>
+  </g>
+
+  <!-- VIBE Module -->
+  <g transform="translate(50, 520)">
+    <rect x="0" y="0" width="280" height="200" rx="10" fill="#fef3c7" filter="url(#shadow)"/>
+    <text x="140" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">VIBE (AI Assistant)</text>
+    <text x="140" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">architect_agent.py</text>
+    <text x="140" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">context_manager.py</text>
+    <text x="140" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">task_decomposer.py</text>
+    <text x="140" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">project_classifier.py</text>
+    <text x="140" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">auto_commit.py</text>
+    <text x="140" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">auto_rollback.py</text>
+    <text x="140" y="157" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">rules_engine.py</text>
+    <text x="140" y="174" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">explain_mode.py</text>
+  </g>
+
+  <!-- Voice Module -->
+  <g transform="translate(380, 520)">
+    <rect x="0" y="0" width="200" height="150" rx="10" fill="#ddd6fe" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Voice</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">manager.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">elevenlabs_client.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">streaming_player.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">realtime_conversation.py</text>
+    <text x="100" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">player.py</text>
+  </g>
+
+  <!-- Quality Module -->
+  <g transform="translate(630, 520)">
+    <rect x="0" y="0" width="200" height="180" rx="10" fill="#fecaca" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">Quality</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">quality_gate.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">security_scanner.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">lint_checker.py</text>
+    <text x="100" y="106" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">test_generator.py</text>
+    <text x="100" y="123" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">dependency_scanner.py</text>
+    <text x="100" y="140" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">review_agent.py</text>
+  </g>
+
+  <!-- MCP Server -->
+  <g transform="translate(880, 520)">
+    <rect x="0" y="0" width="200" height="120" rx="10" fill="#bfdbfe" filter="url(#shadow)"/>
+    <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a365d">MCP Server</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">server.py</text>
+    <text x="100" y="72" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">tools.py</text>
+    <text x="100" y="89" text-anchor="middle" font-family="Arial" font-size="11" fill="#2d3748">handlers.py</text>
+  </g>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Core to other modules -->
+  <line x1="600" y1="220" x2="160" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="220" x2="420" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="220" x2="670" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="220" x2="920" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Discovery to LLM -->
+  <line x1="270" y1="370" x2="320" y2="370" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- LLM to Analysis -->
+  <line x1="520" y1="370" x2="570" y2="370" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Analysis to Synthesis -->
+  <line x1="770" y1="355" x2="820" y2="355" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- VIBE connections -->
+  <line x1="190" y1="520" x2="190" y2="460" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="330" y1="620" x2="380" y2="620" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Legend -->
+  <g transform="translate(1050, 700)">
+    <text x="0" y="0" font-family="Arial" font-size="12" font-weight="bold" fill="#1a365d">Legend</text>
+    <line x1="0" y1="15" x2="30" y2="15" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="40" y="20" font-family="Arial" font-size="10" fill="#4a5568">Data Flow</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="600" y="780" text-anchor="middle" font-family="Arial" font-size="12" fill="#718096">AI Project Synthesizer v1.0.0 - Enterprise Architecture</text>
+</svg>
