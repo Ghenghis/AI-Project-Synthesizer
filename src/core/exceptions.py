@@ -4,7 +4,7 @@ AI Project Synthesizer - Custom Exceptions
 Hierarchical exception classes for error handling throughout the application.
 """
 
-from typing import Optional, Any, Dict
+from typing import Any
 
 
 class SynthesizerError(Exception):
@@ -23,15 +23,15 @@ class SynthesizerError(Exception):
     def __init__(
         self,
         message: str,
-        code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        code: str | None = None,
+        details: dict[str, Any] | None = None
     ):
         self.message = message
         self.code = code or "SYNTHESIZER_ERROR"
         self.details = details or {}
         super().__init__(self.message)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert exception to dictionary for JSON serialization."""
         return {
             "error": True,
@@ -225,7 +225,7 @@ class DiagramGenerationError(GenerationError):
 class RateLimitError(SynthesizerError):
     """API rate limit exceeded."""
 
-    def __init__(self, platform: str, reset_time: Optional[int] = None):
+    def __init__(self, platform: str, reset_time: int | None = None):
         message = f"Rate limit exceeded for {platform}"
         if reset_time:
             message += f". Resets in {reset_time} seconds"
@@ -279,3 +279,10 @@ class TimeoutError(SynthesizerError):
             details={"operation": operation, "timeout_seconds": timeout_seconds}
         )
         self.code = "TIMEOUT"
+
+
+class SecurityScanError(SynthesizerError):
+    """Security scan failed or found issues."""
+
+    def __init__(self, message: str, **kwargs):
+        super().__init__(message, code="SECURITY_SCAN_ERROR", **kwargs)
