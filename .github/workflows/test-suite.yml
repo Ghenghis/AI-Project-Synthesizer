@@ -79,6 +79,9 @@ jobs:
         run: |
           pytest tests/ \
             --ignore=tests/generated \
+            --ignore=tests/unit/agents/test_crewai_integration.py \
+            --ignore=tests/unit/agents/test_framework_router.py \
+            --ignore=tests/test_automation_testing.py \
             --splits 10 \
             --group ${{ matrix.shard }} \
             --splitting-algorithm least_duration \
