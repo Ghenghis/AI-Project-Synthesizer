@@ -43,7 +43,7 @@ GitPython>=3.1.0                # Git interface
 # ============================================
 # Memory & LLM Integration
 # ============================================
-mem0>=0.1.0                      # Advanced memory system (26% better than OpenAI)
+mem0ai>=0.1.0                    # Advanced memory system (26% better than OpenAI)
 
 # ============================================
 # Platform Integrations
