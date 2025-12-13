@@ -3,263 +3,152 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **The Ultimate AI-Powered Vibe Coder** - Transform natural language into production-ready applications with multi-agent AI, voice interaction, and intelligent automation.
+AI Project Synthesizer is an AI-powered **Vibe Coder** system that discovers, analyzes, merges, and generates projects from multiple sources (GitHub, HuggingFace, Kaggle, web scraping), with a multi-agent architecture, quality gates, memory, and voice interaction.
 
 ## Project Scale
 
-| Metric | Count | Description |
-|--------|-------|-------------|
-| Source Files | 141+ | Python modules across 27 packages |
-| Classes | 461+ | Dataclasses, enums, OOP classes |
-| Functions | 1,888+ | Async and sync functions |
-| Modules | 27 | Major feature categories |
-| Agent Frameworks | 4 | AutoGen, CrewAI, LangGraph, Swarm |
-| LLM Providers | 6+ | OpenAI, Anthropic, xAI, Gemini, Ollama, LM Studio |
-| Voice Engines | 2 | ElevenLabs TTS, GLM ASR |
-| Platforms | 5+ | GitHub, HuggingFace, Kaggle, GitLab, Firecrawl |
+- **Source files:** 141+
+- **Classes:** 461+
+- **Functions:** 1,888+
+- **Major module groups:** 27
 
-## What Is This Project?
+For a full auto-generated inventory, see:
+- `scripts/feature_inventory.md`
 
-AI Project Synthesizer is a comprehensive Vibe Coding platform that:
+## High-Level Architecture
 
-1. **Understands your intent** - Describe what you want in natural language
-2. **Searches multiple platforms** - Finds code from GitHub, HuggingFace, Kaggle
-3. **Analyzes codebases** - Parses AST, maps dependencies, scores quality
-4. **Resolves conflicts** - Uses SAT solvers to merge dependencies
-5. **Synthesizes projects** - Combines components into working projects
-6. **Generates documentation** - Creates README, API docs, diagrams
-7. **Speaks to you** - Real-time voice conversations
-8. **Automates everything** - N8N workflows, scheduled tasks
-
-## System Architecture
-
-`mermaid
+```mermaid
 flowchart TB
-    subgraph USER[User Interfaces]
-        CLI[CLI - 23 commands]
-        TUI[Terminal UI]
-        VOICE[Voice Chat]
-        MCP[MCP Server]
-    end
-    
-    subgraph AGENTS[AI Agent Layer]
-        CODE[Code Agent]
-        RESEARCH[Research Agent]
-        SYNTH[Synthesis Agent]
-    end
-    
-    subgraph LLM[LLM Layer]
-        ROUTER[LiteLLM Router]
-        LOCAL[Ollama/LM Studio]
-        CLOUD[OpenAI/Anthropic]
-    end
-    
-    USER --> AGENTS
-    AGENTS --> LLM
-`
+  subgraph UI[Entry Points]
+    CLI[CLI]
+    MCP[MCP Server (Windsurf IDE)]
+    TUI[Terminal UI]
+    VOICE[Voice Chat]
+  end
 
-## Module Reference
+  subgraph VIBE[Vibe Coding Pipeline]
+    PE[Prompt Enhancer]
+    ARCH[Architect Agent]
+    TD[Task Decomposer]
+    CTX[Context Manager]
+    QG[Quality Gate]
+    AC[Auto Commit]
+    AR[Auto Rollback]
+  end
 
-### Agents (src/agents/) - 12 files, 37 classes, 172 functions
+  subgraph DISC[Discovery]
+    GH[GitHub]
+    HF[HuggingFace]
+    KG[Kaggle]
+    GL[GitLab]
+    FC[Firecrawl]
+  end
 
-| Module | Description |
-|--------|-------------|
-| base.py | Foundation for all agents |
-| code_agent.py | Code generation, review |
-| research_agent.py | Multi-platform discovery |
-| voice_agent.py | Voice interaction |
-| synthesis_agent.py | Project assembly |
-| autogen_integration.py | Multi-agent conversations |
-| crewai_integration.py | Role-based teams |
-| langgraph_integration.py | Stateful workflows |
-| swarm_integration.py | Fast handoffs |
-| framework_router.py | Dynamic framework selection |
+  subgraph ANA[Analysis]
+    AST[AST Parser]
+    DEP[Dependency Analyzer]
+    QUAL[Quality Scorer]
+    COMPAT[Compatibility Checker]
+  end
 
-### Vibe Coder (src/vibe/) - 11 files, 48 classes, 162 functions
+  subgraph LLM[LLM Orchestration]
+    ROUTER[Router]
+    LOCAL[Local Models]
+    CLOUD[Cloud Providers]
+  end
 
-| Module | Description |
-|--------|-------------|
-| prompt_enhancer.py | Enriches prompts with context |
-| rules_engine.py | YAML-based coding rules |
-| architect_agent.py | Creates architecture plans |
-| task_decomposer.py | Breaks tasks into phases |
-| context_manager.py | State tracking with Mem0 |
-| auto_commit.py | Automated Git commits |
-| auto_rollback.py | Checkpoint recovery |
-| explain_mode.py | Code decision explanations |
-| project_classifier.py | Project type identification |
+  UI --> VIBE
+  VIBE --> DISC
+  DISC --> ANA
+  VIBE --> LLM
+  ANA --> VIBE
+  ROUTER --> LOCAL
+  ROUTER --> CLOUD
+```
 
-### Discovery (src/discovery/) - 10 files, 49 classes, 189 functions
+## What It Does (End-to-End)
 
-| Module | Description |
-|--------|-------------|
-| github_client.py | GitHub API search, clone |
-| huggingface_client.py | HuggingFace models/datasets |
-| kaggle_client.py | Kaggle competitions/datasets |
-| gitlab_client.py | GitLab projects |
-| unified_search.py | Multi-platform search |
-| firecrawl_enhanced.py | Web scraping with caching |
+- **Discovery**
+  - Searches across platforms and scrapes documentation pages
+  - Caches results and rate limits requests
+- **Analysis**
+  - Parses code using AST tooling
+  - Builds dependency graphs and detects conflicts
+  - Scores quality (tests/docs/maintenance)
+- **Resolution + Synthesis**
+  - Resolves dependency conflicts (including SAT-style strategies)
+  - Assembles a synthesized output project
+- **Generation**
+  - Generates documentation and diagrams
+- **Quality + Auto-Repair**
+  - Runs lint/security checks and can attempt auto-fixes
+  - Uses automated repair logic (see `src/core/auto_repair.py`)
+- **Event Handling + Debugging**
+  - Centralized lifecycle/health/telemetry utilities in `src/core/`
 
-### Analysis (src/analysis/) - 6 files, 17 classes, 64 functions
+## Module Map (Top-Level)
 
-| Module | Description |
-|--------|-------------|
-| ast_parser.py | Tree-sitter AST parsing |
-| dependency_analyzer.py | Dependency graphs |
-| compatibility_checker.py | Version compatibility |
-| quality_scorer.py | Code quality scoring |
-| code_extractor.py | Component extraction |
+The authoritative code is under `src/`.
 
-### Voice (src/voice/) - 8 files, 18 classes, 84 functions
-
-| Module | Description |
-|--------|-------------|
-| manager.py | Unified TTS/ASR interface |
-| elevenlabs_client.py | 9+ voices, cloning |
-| realtime_conversation.py | Continuous voice chat |
-| streaming_player.py | Low-latency audio |
-
-**Voices:** Rachel, Domi, Bella, Antoni, Josh, Adam, Sam, Elli, Arnold
-
-
-### LLM (src/llm/) - 11 files, 32 classes, 89 functions
-
-| Provider | Models | Type |
-|----------|--------|------|
-| Ollama | qwen2.5-coder, llama3, mistral | Local |
-| LM Studio | Any GGUF model | Local |
-| OpenAI | gpt-4o, o1-preview | Cloud |
-| Anthropic | claude-sonnet-4 | Cloud |
-| xAI | grok-3 | Cloud |
-| Google | gemini-2.0-flash | Cloud |
-
-### Memory (src/memory/) - 2 files, 5 classes, 42 functions
-
-**Categories:** PREFERENCE, DECISION, PATTERN, ERROR_SOLUTION, CONTEXT, LEARNING, COMPONENT, WORKFLOW
-
-### Quality (src/quality/) - 7 files, 28 classes, 90 functions
-
-| Module | Description |
-|--------|-------------|
-| security_scanner.py | Semgrep + Bandit |
-| lint_checker.py | Ruff, ESLint, MyPy |
-| test_generator.py | Auto pytest/Jest |
-| review_agent.py | Multi-agent review |
-| quality_gate.py | Pass/fail with auto-fix |
-
-### Automation (src/automation/) - 6 files, 19 classes, 97 functions
-
-| Module | Description |
-|--------|-------------|
-| coordinator.py | Event-driven hub |
-| n8n_client.py | N8N workflows |
-| browser_client.py | Playwright automation |
-| scheduler.py | Cron scheduling |
-
-### Core (src/core/) - 22 files, 110 classes, 391 functions
-
-| Module | Description |
-|--------|-------------|
-| config.py | Pydantic settings |
-| resource_manager.py | Memory optimization |
-| health.py | Health checks |
-| circuit_breaker.py | Fault tolerance |
-| security_utils.py | Input validation |
-| exceptions.py | Error hierarchy |
-| cache.py | Multi-level caching |
-
-### Additional Modules
-
-| Module | Files | Classes | Functions |
-|--------|-------|---------|-----------|
-| assistant/ | 3 | 10 | 42 |
-| synthesis/ | 4 | 12 | 42 |
-| resolution/ | 4 | 8 | 28 |
-| generation/ | 3 | 4 | 29 |
-| workflows/ | 4 | 14 | 40 |
-| recipes/ | 3 | 6 | 9 |
-| tui/ | 3 | 2 | 28 |
-| dashboard/ | 6 | 15 | 83 |
-| mcp_server/ | 3 | 0 | 35 |
-
-
-### CLI Commands
-
-`ash
-ai-synthesizer search query --platforms github,huggingface
-ai-synthesizer analyze https://github.com/user/repo
-ai-synthesizer synthesize --repos repo1,repo2 --output ./project
-ai-synthesizer docs ./project
-ai-synthesizer tui
-ai-synthesizer mcp-server
-ai-synthesizer wizard
-`
-
-### MCP Server Tools
-
-| Tool | Description |
-|------|-------------|
-| search_repositories | Multi-platform search |
-| analyze_repository | Deep code analysis |
-| synthesize_project | Combine repos |
-| generate_documentation | Create docs |
-| memory_add/search | Memory operations |
-| voice_speak | Text-to-speech |
+- `src/agents/` - agent implementations (code/research/synthesis/voice)
+- `src/vibe/` - the Vibe Coding pipeline components
+- `src/discovery/` - GitHub/HF/Kaggle/GitLab/Firecrawl clients + unified search
+- `src/analysis/` - AST parsing, dependency/compatibility/quality scoring
+- `src/resolution/` - dependency conflict detection/resolution
+- `src/synthesis/` - project assembly/scaffolding
+- `src/generation/` - README/diagram generation
+- `src/quality/` - lint/security/test generation + quality gate
+- `src/memory/` - persistent memory store/integration
+- `src/voice/` - ElevenLabs + realtime voice components
+- `src/mcp/` and/or `src/mcp_server/` - MCP server + tools for IDE integration
+- `src/dashboard/` - web dashboard routes/app
+- `src/tui/` - terminal UI
+- `src/core/` - configuration, security, caching, health, lifecycle, observability
 
 ## Quick Start
 
-`ash
+```bash
 git clone https://github.com/Ghenghis/AI-Project-Synthesizer.git
 cd AI-Project-Synthesizer
+
 python -m venv .venv
+.venv\Scripts\activate
+
 pip install -r requirements.txt
-cp .env.example .env
+
+# Copy env template and fill in keys
+copy .env.example .env
+
 python -m src.cli --help
-`
+```
 
-## Environment Variables
+## Key Commands
 
-`
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-OLLAMA_HOST=http://localhost:11434
-ELEVENLABS_API_KEY=...
-GITHUB_TOKEN=ghp_...
-`
+```bash
+# Multi-platform search
+python -m src.cli search "fastapi auth" --limit 5
 
-## Voice Chat
+# Analyze a repo
+python -m src.cli analyze https://github.com/user/repo --deep
 
-`ash
-python start_voice_chat.py --voice rachel
-`
+# Synthesize a project
+python -m src.cli synthesize --repos repo1,repo2 --output .\out
+
+# Run MCP server
+python -m src.mcp.server
+```
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Getting Started](docs/getting-started.md) | Installation guide |
-| [API Reference](docs/api-reference.md) | Complete API docs |
-| [Tutorials](docs/tutorials.md) | Step-by-step guides |
-| [Architecture](docs/architecture.md) | System design |
-| [User Guide](docs/USER_GUIDE.md) | Full manual |
-| [Vibe Coding](docs/VIBE_CODING_AUTOMATION.md) | Pipeline details |
-
-## Testing
-
-`ash
-pytest tests/ -v
-`
-
-**Status:** 281+ tests passing
+- `docs/USER_GUIDE.md`
+- `docs/VIBE_CODING_AUTOMATION.md`
+- `docs/architecture.md`
+- `docs/diagrams/DIAGRAMS.md`
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See `CONTRIBUTING.md`.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
-
----
-
-[Report Bug](https://github.com/Ghenghis/AI-Project-Synthesizer/issues) | [Request Feature](https://github.com/Ghenghis/AI-Project-Synthesizer/issues)
+MIT
