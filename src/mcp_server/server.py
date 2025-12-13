@@ -66,7 +66,6 @@ from unittest.mock import MagicMock
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
-
 from src.core.config import get_settings
 from src.core.lifecycle import lifecycle
 from src.core.observability import correlation_manager, metrics, track_performance
@@ -104,10 +103,10 @@ memory_system = None
 
 class MCPServer:
     """Wrapper class for MCP server to support testing."""
-    
+
     def __init__(self):
         global llm_router, memory_system
-        
+
         # Initialize LLM router
         try:
             from src.llm.litellm_router import LiteLLMRouter
@@ -115,7 +114,7 @@ class MCPServer:
         except Exception:
             # Fallback for testing
             llm_router = MagicMock()
-            
+
         # Initialize memory system
         try:
             from src.memory.mem0_integration import MemorySystem
@@ -123,15 +122,15 @@ class MCPServer:
         except Exception:
             # Fallback for testing
             memory_system = MagicMock()
-            
+
         self.llm_router = llm_router
         self.memory_system = memory_system
         self.server = server
-        
+
     async def start(self):
         """Start the MCP server."""
         await main()
-        
+
     def get_server_info(self) -> dict[str, Any]:
         """Get server information."""
         return {

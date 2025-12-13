@@ -113,6 +113,10 @@ jobs:
             .coverage.${{ matrix.shard }}
           include-hidden-files: true
           retention-days: 7
+      
+      - name: Run smoke tests
+        run: |
+          pytest tests/test_mcp_smoke.py -v --tb=short
 
   # Stage 3: Integration tests (separate job with services)
   integration-tests:

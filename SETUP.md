@@ -1,16 +1,20 @@
-# AI Project Synthesizer - Setup Guide
+# AI Project Synthesizer - Quick Setup Guide
+
+## Overview
+AI Project Synthesizer is an MCP (Model Context Protocol) server that helps you discover, analyze, and synthesize code from multiple repositories. It works with Windsurf IDE, Claude Desktop, VS Code, and other MCP-compatible clients.
 
 ## Prerequisites
 
-1. **Python 3.11+** installed
-2. **Git** installed and configured
-3. **GitHub Personal Access Token** (required for repository cloning)
+- Python 3.11 or higher
+- Git
+- GitHub Personal Access Token (required for repository cloning)
+- Optional: Ollama for local LLM support
 
-## Quick Setup
+## Installation
 
-### 1. Clone/Download the Project
+### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/Ghenghis/AI-Project-Synthesizer.git
 cd AI_Synthesizer
 ```
 
@@ -27,6 +31,118 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+### 4. Set Up Environment Variables
+Create `.env` file in the root directory:
+```env
+# Required
+GITHUB_TOKEN=your_github_token_here
+
+# Optional - for local LLM
+OLLAMA_HOST=http://localhost:11434
+
+# Optional - for cloud LLMs
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+```
+
+## Running the MCP Server
+
+### Option 1: Standalone (for testing)
+```bash
+python -m src.mcp_server.server
+```
+
+### Option 2: With Windsurf IDE
+Add to `~/.windsurf/mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "ai-project-synthesizer": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "/path/to/AI_Synthesizer"
+    }
+  }
+}
+```
+
+### Option 3: With Claude Desktop
+Add to Claude Desktop config:
+```json
+{
+  "mcpServers": {
+    "ai-project-synthesizer": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "/path/to/AI_Synthesizer"
+    }
+  }
+}
+```
+
+## Available Tools
+
+- **search_repositories**: Find repositories across GitHub, HuggingFace, Kaggle
+- **analyze_repository**: Deep analysis of code structure, dependencies, quality
+- **check_compatibility**: Verify if multiple repositories can work together
+- **resolve_dependencies**: Merge dependencies without conflicts
+- **synthesize_project**: Create a new project from multiple sources
+
+## Example Usage
+
+In Windsurf/Claude, try:
+```
+Search for Python web scraping repositories on GitHub with at least 100 stars.
+```
+
+```
+Analyze https://github.com/example/scrapy-project and extract the main components.
+```
+
+```
+Check if https://github.com/a/fastapi and https://github.com/b/sqlalchemy are compatible.
+```
+
+## Troubleshooting
+
+### Voice/Audio Issues on Linux
+If you get portaudio errors:
+```bash
+sudo apt-get install portaudio19-dev libsndfile1-dev
+```
+
+### Permission Errors
+Make sure your GitHub token has the appropriate scopes:
+- `public_repo` (for public repositories)
+- `repo` (for private repositories)
+
+### LLM Not Responding
+- Check Ollama is running: `ollama list`
+- Verify OLLAMA_HOST in `.env`
+- Try a cloud provider as fallback
+
+## Development
+
+### Running Tests
+```bash
+pytest tests/ -v
+```
+
+### Code Quality
+```bash
+ruff check src/ --fix
+ruff format src/
+```
+
+## Need Help?
+
+- Check the [Issues](https://github.com/Ghenghis/AI-Project-Synthesizer/issues) page
+- Read the [Documentation](docs/)
+- Join our Discord community
+
+## License
+MIT License - see LICENSE file for details.
 
 ### 4. Configure Environment
 

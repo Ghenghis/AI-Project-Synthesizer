@@ -316,7 +316,7 @@ class RulesEngine:
 
         # Check conditions
         if rule.conditions:
-            local_context = context or {}
+            local_context = _context or {}
 
             for condition, value in rule.conditions.items():
                 if condition == "language" and local_context.get("language") != value or condition == "has_user_input" and value and "input" not in prompt_lower:

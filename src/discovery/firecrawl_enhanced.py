@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import tiktoken
 from bs4 import BeautifulSoup
@@ -150,7 +150,7 @@ class FirecrawlEnhanced(FirecrawlClient):
         self.browser: BrowserAutomation | None = None
 
         # Content queue for prioritized processing
-        self._content_queue: list[Tuple[ContentPriority, dict[str, Any]]] = []
+        self._content_queue: list[tuple[ContentPriority, dict[str, Any]]] = []
         self._queue_lock = asyncio.Lock()
 
         secure_logger.info(f"Enhanced Firecrawl client initialized with {cache_strategy.value} caching")
