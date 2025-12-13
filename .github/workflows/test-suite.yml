@@ -1,0 +1,230 @@
+name: AI_Synthesizer Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Stage 1: Determine test distribution
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      unit_shards: ${{ steps.shards.outputs.unit }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: shards
+        run: |
+          # 10 shards for 8145 unit tests = ~815 tests per shard
+          echo 'unit=[1,2,3,4,5,6,7,8,9,10]' >> $GITHUB_OUTPUT
+
+  # Stage 2: Parallel unit test execution
+  unit-tests:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: ${{ fromJson(needs.prepare.outputs.unit_shards) }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Restore cached virtualenv
+        uses: actions/cache@v4
+        with:
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements*.txt', 'pyproject.toml') }}
+          restore-keys: |
+            venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+          path: .venv
+      
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip wheel
+          pip install pytest pytest-split pytest-xdist pytest-cov pytest-timeout pytest-rerunfailures
+          pip install -r requirements.txt
+          # Install optional deps if available
+          pip install pyautogen swarm || true
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+      
+      - name: Run unit tests (shard ${{ matrix.shard }}/10)
+        run: |
+          pytest tests/ \
+            --ignore=tests/generated \
+            --splits 10 \
+            --group ${{ matrix.shard }} \
+            --splitting-algorithm least_duration \
+            -n 2 \
+            --dist loadfile \
+            --timeout 120 \
+            --reruns 2 \
+            --reruns-delay 1 \
+            --cov=src \
+            --cov-report=xml:coverage-${{ matrix.shard }}.xml \
+            --junitxml=results-${{ matrix.shard }}.xml \
+            -v --tb=short
+        env:
+          COVERAGE_FILE: ".coverage.${{ matrix.shard }}"
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-results-${{ matrix.shard }}
+          path: |
+            results-${{ matrix.shard }}.xml
+            coverage-${{ matrix.shard }}.xml
+            .coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          retention-days: 7
+
+  # Stage 3: Integration tests (separate job with services)
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pytest-timeout
+          pip install -r requirements.txt
+      
+      - name: Run integration tests
+        run: |
+          pytest tests/integration \
+            -m integration \
+            --timeout 300 \
+            --cov=src \
+            --cov-report=xml:coverage-integration.xml \
+            --junitxml=results-integration.xml \
+            -v
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/test_db
+      
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: |
+            results-integration.xml
+            coverage-integration.xml
+
+  # Stage 4: E2E tests (optional, can be triggered separately)
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - run: pip install -r requirements.txt
+      
+      - name: Run E2E tests
+        run: |
+          pytest tests/e2e \
+            -m e2e \
+            --timeout 600 \
+            --junitxml=results-e2e.xml \
+            -v
+      
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results
+          path: results-e2e.xml
+
+  # Stage 5: Aggregate results and coverage
+  report:
+    needs: [unit-tests, integration-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+          pattern: '*-results*'
+          merge-multiple: true
+      
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: test-results/**/*.xml
+          check_name: "Test Results Summary"
+          comment_mode: always
+          job_summary: true
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Combine coverage reports
+        run: |
+          pip install coverage[toml]
+          coverage combine test-results/.coverage.*
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+          coverage xml -o combined-coverage.xml
+          coverage report --fail-under=80
+      
+      - name: Upload combined coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-coverage
+          path: combined-coverage.xml

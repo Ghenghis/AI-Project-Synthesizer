@@ -28,6 +28,67 @@ import pytest
 
 
 # ============================================
+# Optional Dependency Checks
+# ============================================
+
+def _has_autogen():
+    """Check if AutoGen is available."""
+    try:
+        from autogen_agentchat.agents import AssistantAgent
+        return True
+    except ImportError:
+        return False
+
+def _has_swarm():
+    """Check if Swarm is available."""
+    try:
+        import swarm
+        return True
+    except ImportError:
+        return False
+
+def _has_piper():
+    """Check if Piper TTS binary is available."""
+    try:
+        from src.voice.tts.piper_client import PiperTTSClient
+        import os
+        import shutil
+        client = PiperTTSClient()
+        return os.path.exists(client.piper_path) or shutil.which("piper")
+    except Exception:
+        return False
+
+def _has_glm_asr():
+    """Check if GLM ASR dependencies are available."""
+    try:
+        import torch
+        import transformers
+        return True
+    except ImportError:
+        return False
+
+# Create pytest markers
+requires_autogen = pytest.mark.skipif(
+    not _has_autogen(),
+    reason="AutoGen not installed. Install with: pip install pyautogen"
+)
+
+requires_swarm = pytest.mark.skipif(
+    not _has_swarm(),
+    reason="Swarm not installed. Install with: pip install git+https://github.com/openai/swarm.git"
+)
+
+requires_piper = pytest.mark.skipif(
+    not _has_piper(),
+    reason="Piper TTS binary not available"
+)
+
+requires_glm_asr = pytest.mark.skipif(
+    not _has_glm_asr(),
+    reason="GLM ASR dependencies not installed. Install with: pip install torch transformers"
+)
+
+# ============================================
 # Async Configuration
 # ============================================
 
