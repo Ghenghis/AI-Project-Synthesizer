@@ -21,15 +21,15 @@ PROACTIVE RESEARCH (when user is idle):
 """
 
 import asyncio
-import threading
 import queue
+import tempfile
+import threading
 import time
 import wave
-import tempfile
-from pathlib import Path
-from typing import Optional, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 from src.core.security import get_secure_logger
 
@@ -68,9 +68,9 @@ class ConversationConfig:
     silence_threshold: int = 500  # Audio level below this = silence
 
     # Callbacks
-    on_state_change: Optional[Callable[[ConversationState], None]] = None
-    on_user_speech: Optional[Callable[[str], None]] = None
-    on_assistant_response: Optional[Callable[[str], None]] = None
+    on_state_change: Callable[[ConversationState], None] | None = None
+    on_user_speech: Callable[[str], None] | None = None
+    on_assistant_response: Callable[[str], None] | None = None
 
 
 class RealtimeConversation:
@@ -87,13 +87,13 @@ class RealtimeConversation:
         await conv.stop()
     """
 
-    def __init__(self, config: Optional[ConversationConfig] = None):
+    def __init__(self, config: ConversationConfig | None = None):
         """Initialize conversation."""
         self.config = config or ConversationConfig()
         self.state = ConversationState.IDLE
         self._running = False
         self._audio_queue = queue.Queue()
-        self._listen_thread: Optional[threading.Thread] = None
+        self._listen_thread: threading.Thread | None = None
         self._last_user_speech: float = time.time()
         self._research_presented: bool = False
 
@@ -142,7 +142,7 @@ class RealtimeConversation:
     async def _init_components(self):
         """Initialize AI and voice components."""
         # Assistant
-        from src.assistant.core import ConversationalAssistant, AssistantConfig
+        from src.assistant.core import AssistantConfig, ConversationalAssistant
         self._assistant = ConversationalAssistant(AssistantConfig(
             voice_enabled=False,  # We handle voice separately
         ))
@@ -153,7 +153,10 @@ class RealtimeConversation:
 
         # Proactive research engine
         if self.config.enable_proactive_research:
-            from src.assistant.proactive_research import ProactiveResearchEngine, ResearchConfig
+            from src.assistant.proactive_research import (
+                ProactiveResearchEngine,
+                ResearchConfig,
+            )
 
             def on_research_complete(result):
                 secure_logger.info(f"Research ready: {result.summary()}")
@@ -371,8 +374,8 @@ class RealtimeConversation:
 async def start_voice_chat(
     pause_threshold: float = 3.5,
     voice: str = "rachel",
-    on_user_speech: Optional[Callable[[str], None]] = None,
-    on_assistant_response: Optional[Callable[[str], None]] = None,
+    on_user_speech: Callable[[str], None] | None = None,
+    on_assistant_response: Callable[[str], None] | None = None,
 ):
     """
     Start a real-time voice conversation.

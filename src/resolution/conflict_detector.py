@@ -5,7 +5,6 @@ Detects and analyzes dependency conflicts between repositories.
 """
 
 import logging
-from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 
 from src.analysis.dependency_analyzer import Dependency, DependencyGraph
@@ -18,11 +17,11 @@ class ConflictInfo:
     """Detailed information about a conflict."""
     package_name: str
     conflict_type: str  # "version", "extras", "python_version"
-    sources: Dict[str, str]  # source -> version_spec
+    sources: dict[str, str]  # source -> version_spec
     description: str
     severity: str  # "error", "warning"
     resolvable: bool
-    resolution_suggestion: Optional[str] = None
+    resolution_suggestion: str | None = None
 
 
 @dataclass
@@ -30,7 +29,7 @@ class ConflictReport:
     """Complete conflict analysis report."""
     total_packages: int
     conflicting_packages: int
-    conflicts: List[ConflictInfo]
+    conflicts: list[ConflictInfo]
     resolvable_count: int
 
     @property
@@ -80,8 +79,8 @@ class ConflictDetector:
 
     def detect(
         self,
-        graphs: List[DependencyGraph],
-        sources: List[str] = None
+        graphs: list[DependencyGraph],
+        sources: list[str] = None
     ) -> ConflictReport:
         """
         Detect conflicts between dependency graphs.
@@ -97,9 +96,9 @@ class ConflictDetector:
             sources = [f"source_{i}" for i in range(len(graphs))]
 
         # Collect all dependencies by package name
-        all_deps: Dict[str, Dict[str, Dependency]] = {}
+        all_deps: dict[str, dict[str, Dependency]] = {}
 
-        for graph, source in zip(graphs, sources):
+        for graph, source in zip(graphs, sources, strict=False):
             for dep in graph.all_dependencies:
                 name = dep.normalized_name
                 if name not in all_deps:
@@ -138,8 +137,8 @@ class ConflictDetector:
     def _check_version_conflict(
         self,
         package_name: str,
-        source_deps: Dict[str, Dependency]
-    ) -> Optional[ConflictInfo]:
+        source_deps: dict[str, Dependency]
+    ) -> ConflictInfo | None:
         """Check for version conflicts."""
         version_specs = {
             source: dep.version_spec
@@ -184,10 +183,10 @@ class ConflictDetector:
     def _check_extras_conflict(
         self,
         package_name: str,
-        source_deps: Dict[str, Dependency]
-    ) -> Optional[ConflictInfo]:
+        source_deps: dict[str, Dependency]
+    ) -> ConflictInfo | None:
         """Check for extras conflicts (just informational)."""
-        all_extras: Set[str] = set()
+        all_extras: set[str] = set()
         for dep in source_deps.values():
             all_extras.update(dep.extras)
 
@@ -204,7 +203,7 @@ class ConflictDetector:
 
         return None
 
-    def _ranges_compatible(self, specs: List[str]) -> bool:
+    def _ranges_compatible(self, specs: list[str]) -> bool:
         """
         Check if version ranges might be compatible.
 

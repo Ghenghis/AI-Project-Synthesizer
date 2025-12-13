@@ -6,9 +6,8 @@ dependencies, Python versions, and system requirements.
 """
 
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from src.analysis.dependency_analyzer import DependencyAnalyzer, DependencyGraph
 
@@ -20,10 +19,10 @@ class RepositoryInfo:
     """Information about a repository for compatibility checking."""
     url: str
     name: str
-    path: Optional[Path] = None
-    python_version: Optional[str] = None
-    languages: Dict[str, float] = field(default_factory=dict)
-    dependencies: Optional[DependencyGraph] = None
+    path: Path | None = None
+    python_version: str | None = None
+    languages: dict[str, float] = field(default_factory=dict)
+    dependencies: DependencyGraph | None = None
 
 
 @dataclass
@@ -31,20 +30,20 @@ class CompatibilityIssue:
     """Represents a compatibility issue between repositories."""
     severity: str  # "error", "warning", "info"
     category: str  # "dependency", "python_version", "language", "license"
-    repos_involved: List[str]
+    repos_involved: list[str]
     description: str
-    suggestion: Optional[str] = None
+    suggestion: str | None = None
 
 
 @dataclass
 class CompatibilityMatrix:
     """Complete compatibility analysis result."""
-    repositories: List[str]
+    repositories: list[str]
     overall_compatible: bool
-    python_version: Optional[str]
-    issues: List[CompatibilityIssue] = field(default_factory=list)
-    shared_dependencies: List[str] = field(default_factory=list)
-    all_dependencies: List[str] = field(default_factory=list)
+    python_version: str | None
+    issues: list[CompatibilityIssue] = field(default_factory=list)
+    shared_dependencies: list[str] = field(default_factory=list)
+    all_dependencies: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -103,7 +102,7 @@ class CompatibilityChecker:
 
     async def check(
         self,
-        repositories: List[RepositoryInfo],
+        repositories: list[RepositoryInfo],
         target_python: str = "3.11"
     ) -> CompatibilityMatrix:
         """
@@ -116,9 +115,9 @@ class CompatibilityChecker:
         Returns:
             CompatibilityMatrix with analysis results
         """
-        issues: List[CompatibilityIssue] = []
-        all_deps: Set[str] = set()
-        shared_deps: Set[str] = set()
+        issues: list[CompatibilityIssue] = []
+        all_deps: set[str] = set()
+        shared_deps: set[str] = set()
 
         # Analyze each repository
         for repo in repositories:
@@ -151,9 +150,9 @@ class CompatibilityChecker:
 
     def _check_python_versions(
         self,
-        repositories: List[RepositoryInfo],
+        repositories: list[RepositoryInfo],
         target_python: str
-    ) -> List[CompatibilityIssue]:
+    ) -> list[CompatibilityIssue]:
         """Check Python version compatibility."""
         issues = []
 
@@ -175,11 +174,11 @@ class CompatibilityChecker:
 
     def _check_dependencies(
         self,
-        repositories: List[RepositoryInfo]
-    ) -> tuple[List[CompatibilityIssue], Set[str], Set[str]]:
+        repositories: list[RepositoryInfo]
+    ) -> tuple[list[CompatibilityIssue], set[str], set[str]]:
         """Check for dependency conflicts."""
         issues = []
-        all_deps: Dict[str, Dict[str, str]] = {}  # package -> {repo -> version}
+        all_deps: dict[str, dict[str, str]] = {}  # package -> {repo -> version}
 
         # Collect all dependencies
         for repo in repositories:
@@ -214,8 +213,8 @@ class CompatibilityChecker:
 
     def _check_languages(
         self,
-        repositories: List[RepositoryInfo]
-    ) -> List[CompatibilityIssue]:
+        repositories: list[RepositoryInfo]
+    ) -> list[CompatibilityIssue]:
         """Check language compatibility."""
         issues = []
 
@@ -238,7 +237,7 @@ class CompatibilityChecker:
 
         return issues
 
-    def _parse_python_requirement(self, spec: str) -> Optional[str]:
+    def _parse_python_requirement(self, spec: str) -> str | None:
         """Parse Python version requirement string."""
         import re
 
@@ -258,7 +257,7 @@ class CompatibilityChecker:
         except (ValueError, AttributeError):
             return False
 
-    def _versions_might_overlap(self, version_specs: List[str]) -> bool:
+    def _versions_might_overlap(self, version_specs: list[str]) -> bool:
         """Check if version specs might have overlapping solutions."""
         # Simplified check - real implementation would use packaging library
         exact_versions = []

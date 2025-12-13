@@ -10,7 +10,6 @@ This module handles all configuration management including:
 
 from functools import lru_cache
 from pathlib import Path
-from typing import List
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -63,7 +62,7 @@ class PlatformSettings(BaseSettings):
         description="Semantic Scholar API key"
     )
 
-    def get_enabled_platforms(self) -> List[str]:
+    def get_enabled_platforms(self) -> list[str]:
         """Return list of platforms with valid credentials."""
         platforms = []
 
@@ -464,6 +463,14 @@ class AppSettings(BaseSettings):
 class Settings(BaseSettings):
     """Combined settings container."""
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+        env_nested_delimiter="__"
+    )
+
     app: AppSettings = Field(default_factory=AppSettings)
     platforms: PlatformSettings = Field(default_factory=PlatformSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
@@ -479,7 +486,7 @@ class Settings(BaseSettings):
         """Check if debug mode is enabled."""
         return self.app.debug and not self.is_production
 
-    def get_available_llm_providers(self) -> List[str]:
+    def get_available_llm_providers(self) -> list[str]:
         """Get list of LLM providers with valid API keys."""
         providers = []
 
@@ -499,7 +506,7 @@ class Settings(BaseSettings):
         return providers
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.
@@ -507,7 +514,3 @@ def get_settings() -> Settings:
     Uses lru_cache to ensure settings are only loaded once.
     """
     return Settings()
-
-
-# Convenience function for quick access
-settings = get_settings()

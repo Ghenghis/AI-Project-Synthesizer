@@ -12,14 +12,13 @@ Runs before TaskDecomposer to provide architectural context.
 """
 
 import json
-import re
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from src.agents.autogen_integration import AutoGenIntegration
-from src.llm.litellm_router import LiteLLMRouter
 from src.core.config import get_settings
+from src.llm.litellm_router import LiteLLMRouter
 
 
 class ArchitecturePattern(Enum):
@@ -43,10 +42,10 @@ class Component:
     name: str
     type: str  # service, module, component, database, etc.
     description: str
-    responsibilities: List[str]
-    interfaces: List[str]
-    dependencies: List[str]
-    technology: Optional[str] = None
+    responsibilities: list[str]
+    interfaces: list[str]
+    dependencies: list[str]
+    technology: str | None = None
 
 
 @dataclass
@@ -64,18 +63,18 @@ class ArchitecturePlan:
     """Complete architectural plan."""
     pattern: ArchitecturePattern
     overview: str
-    components: List[Component]
-    data_flows: List[DataFlow]
-    technology_stack: Dict[str, List[str]]
-    non_functional_requirements: Dict[str, str]
+    components: list[Component]
+    data_flows: list[DataFlow]
+    technology_stack: dict[str, list[str]]
+    non_functional_requirements: dict[str, str]
     diagram: str  # ASCII/Mermaid diagram
-    considerations: List[str]
+    considerations: list[str]
 
 
 class ArchitectAgent:
     """
     Creates architectural plans for development tasks.
-    
+
     Features:
     - Pattern detection and recommendation
     - Component identification
@@ -83,12 +82,12 @@ class ArchitectAgent:
     - Technology stack suggestions
     - Diagram generation
     """
-    
+
     def __init__(self):
         self.config = get_settings()
         self.autogen = AutoGenIntegration()
         self.llm_router = LiteLLMRouter()
-        
+
         # Pattern detection rules
         self.pattern_keywords = {
             ArchitecturePattern.MVC: ["mvc", "model view controller", "web app", "crud"],
@@ -102,7 +101,7 @@ class ArchitectAgent:
             ArchitecturePattern.REST_API: ["rest", "api", "endpoint", "http"],
             ArchitecturePattern.WEBSOCKET_API: ["websocket", "real-time", "socket", "live"]
         }
-        
+
         # Component type templates
         self.component_types = {
             "database": ["database", "db", "storage", "persistence"],
@@ -111,42 +110,42 @@ class ArchitectAgent:
             "business": ["logic", "service", "handler", "processor"],
             "integration": ["integration", "adapter", "gateway", "proxy"]
         }
-    
-    async def create_architecture(self, requirements: str, context: Optional[Dict[str, Any]] = None) -> ArchitecturePlan:
+
+    async def create_architecture(self, requirements: str, context: dict[str, Any] | None = None) -> ArchitecturePlan:
         """
         Create an architectural plan based on requirements.
-        
+
         Args:
             requirements: The system requirements
             context: Project context (tech stack, existing components, etc.)
-            
+
         Returns:
             ArchitecturePlan with detailed design
         """
         # Detect architectural pattern
         pattern = self._detect_pattern(requirements, context)
-        
+
         # Generate plan using LLM
         plan = await self._generate_architectural_plan(requirements, context, pattern)
-        
+
         # Generate diagram
         plan.diagram = self._generate_diagram(plan)
-        
+
         return plan
-    
-    def _detect_pattern(self, requirements: str, context: Optional[Dict[str, Any]]) -> ArchitecturePattern:
+
+    def _detect_pattern(self, requirements: str, context: dict[str, Any] | None) -> ArchitecturePattern:
         """Detect the most suitable architectural pattern."""
         req_lower = requirements.lower()
-        
+
         # Score each pattern
         pattern_scores = {}
-        
+
         for pattern, keywords in self.pattern_keywords.items():
             score = 0
             for keyword in keywords:
                 score += req_lower.count(keyword)
             pattern_scores[pattern] = score
-        
+
         # Consider context
         if context:
             tech_stack = context.get("tech_stack", [])
@@ -154,7 +153,7 @@ class ArchitectAgent:
                 pattern_scores[ArchitecturePattern.MICROSERVICES] += 2
             if "serverless" in " ".join(tech_stack).lower():
                 pattern_scores[ArchitecturePattern.SERVERLESS] += 2
-        
+
         # Return pattern with highest score
         if not pattern_scores or max(pattern_scores.values()) == 0:
             # Default based on requirements complexity
@@ -164,10 +163,10 @@ class ArchitectAgent:
                 return ArchitecturePattern.MVC
             else:
                 return ArchitecturePattern.LAYERED
-        
+
         return max(pattern_scores, key=pattern_scores.get)
-    
-    async def _generate_architectural_plan(self, requirements: str, context: Optional[Dict[str, Any]], 
+
+    async def _generate_architectural_plan(self, requirements: str, context: dict[str, Any] | None,
                                          pattern: ArchitecturePattern) -> ArchitecturePlan:
         """Generate detailed architectural plan using LLM."""
         # Build prompt
@@ -230,7 +229,7 @@ Return as JSON:
     }},
     "considerations": ["...", "..."]
 }}"""
-        
+
         try:
             # Get LLM response
             response = await self.llm_router.generate(
@@ -238,10 +237,10 @@ Return as JSON:
                 model="claude-sonnet",
                 max_tokens=3000
             )
-            
+
             # Parse response
             data = json.loads(response)
-            
+
             # Parse components
             components = []
             for comp_data in data.get("components", []):
@@ -256,7 +255,7 @@ Return as JSON:
                     technology=comp_data.get("technology")
                 )
                 components.append(component)
-            
+
             # Parse data flows
             data_flows = []
             for flow_data in data.get("data_flows", []):
@@ -268,7 +267,7 @@ Return as JSON:
                     description=flow_data.get("description", "")
                 )
                 data_flows.append(flow)
-            
+
             return ArchitecturePlan(
                 pattern=pattern,
                 overview=data.get("overview", ""),
@@ -279,17 +278,17 @@ Return as JSON:
                 diagram="",  # Will be generated separately
                 considerations=data.get("considerations", [])
             )
-            
+
         except Exception as e:
             print(f"Failed to generate architectural plan: {e}")
             # Return basic plan
             return self._create_basic_plan(requirements, pattern)
-    
+
     def _create_basic_plan(self, requirements: str, pattern: ArchitecturePattern) -> ArchitecturePlan:
         """Create a basic fallback plan."""
         # Basic components based on pattern
         components = []
-        
+
         if pattern == ArchitecturePattern.REST_API:
             components = [
                 Component(
@@ -357,7 +356,7 @@ Return as JSON:
                     technology="Database"
                 )
             ]
-        
+
         return ArchitecturePlan(
             pattern=pattern,
             overview=f"Basic {pattern.value} architecture for the requirements",
@@ -368,7 +367,7 @@ Return as JSON:
             diagram="",
             considerations=["This is a basic plan that should be refined"]
         )
-    
+
     def _generate_diagram(self, plan: ArchitecturePlan) -> str:
         """Generate an ASCII/Mermaid diagram of the architecture."""
         if plan.pattern == ArchitecturePattern.REST_API:
@@ -379,63 +378,63 @@ Return as JSON:
             return self._generate_mvc_diagram(plan)
         else:
             return self._generate_generic_diagram(plan)
-    
+
     def _generate_rest_diagram(self, plan: ArchitecturePlan) -> str:
         """Generate REST API architecture diagram."""
         diagram = ["graph LR"]
-        
+
         # Add components
         for comp in plan.components:
             safe_name = comp.name.replace(" ", "_").replace("-", "_")
             diagram.append(f"    {safe_name}[{comp.name}]")
-        
+
         # Add flows
         for flow in plan.data_flows:
             from_name = flow.from_component.replace(" ", "_").replace("-", "_")
             to_name = flow.to_component.replace(" ", "_").replace("-", "_")
             diagram.append(f"    {from_name} -->|{flow.protocol}| {to_name}")
-        
+
         return "\n".join(diagram)
-    
+
     def _generate_microservices_diagram(self, plan: ArchitecturePlan) -> str:
         """Generate microservices architecture diagram."""
         diagram = ["graph TB"]
         diagram.append("    subgraph \"System\"")
-        
+
         # Group components by type
         for comp in plan.components:
             safe_name = comp.name.replace(" ", "_").replace("-", "_")
             diagram.append(f"        {safe_name}[{comp.name}<br/>{comp.type}]")
-        
+
         diagram.append("    end")
-        
+
         # Add flows
         for flow in plan.data_flows:
             from_name = flow.from_component.replace(" ", "_").replace("-", "_")
             to_name = flow.to_component.replace(" ", "_").replace("-", "_")
             diagram.append(f"    {from_name} -->|{flow.data_type}| {to_name}")
-        
+
         return "\n".join(diagram)
-    
+
     def _generate_mvc_diagram(self, plan: ArchitecturePlan) -> str:
         """Generate MVC architecture diagram."""
         diagram = ["graph LR"]
         diagram.append("    subgraph \"MVC Pattern\"")
-        
+
         # Find MVC components
         model = next((c for c in plan.components if "model" in c.name.lower() or c.type == "database"), None)
         view = next((c for c in plan.components if "view" in c.name.lower() or c.type == "ui"), None)
         controller = next((c for c in plan.components if "controller" in c.name.lower() or c.type == "api"), None)
-        
+
         if model:
             diagram.append(f"        Model[{model.name}]")
         if view:
             diagram.append(f"        View[{view.name}]")
         if controller:
             diagram.append(f"        Controller[{controller.name}]")
-        
+
         diagram.append("    end")
-        
+
         # MVC connections
         if controller and model:
             diagram.append("    Controller --> Model")
@@ -443,41 +442,41 @@ Return as JSON:
             diagram.append("    Controller --> View")
         if view and model:
             diagram.append("    View --> Model")
-        
+
         return "\n".join(diagram)
-    
+
     def _generate_generic_diagram(self, plan: ArchitecturePlan) -> str:
         """Generate generic architecture diagram."""
         diagram = ["graph TD"]
-        
+
         # Add components
         for comp in plan.components:
             safe_name = comp.name.replace(" ", "_").replace("-", "_")
             diagram.append(f"    {safe_name}[{comp.name}]")
-        
+
         # Add flows
         for flow in plan.data_flows:
             from_name = flow.from_component.replace(" ", "_").replace("-", "_")
             to_name = flow.to_component.replace(" ", "_").replace("-", "_")
             diagram.append(f"    {from_name} --> {to_name}")
-        
+
         return "\n".join(diagram)
-    
-    def get_component_by_id(self, plan: ArchitecturePlan, component_id: str) -> Optional[Component]:
+
+    def get_component_by_id(self, plan: ArchitecturePlan, component_id: str) -> Component | None:
         """Get a component by its ID."""
         for component in plan.components:
             if component.id == component_id:
                 return component
         return None
-    
-    def get_components_by_type(self, plan: ArchitecturePlan, component_type: str) -> List[Component]:
+
+    def get_components_by_type(self, plan: ArchitecturePlan, component_type: str) -> list[Component]:
         """Get all components of a specific type."""
         return [c for c in plan.components if c.type == component_type]
-    
-    def validate_plan(self, plan: ArchitecturePlan) -> List[str]:
+
+    def validate_plan(self, plan: ArchitecturePlan) -> list[str]:
         """Validate an architectural plan and return issues."""
         issues = []
-        
+
         # Check for required components based on pattern
         if plan.pattern == ArchitecturePattern.MVC:
             types = {c.type for c in plan.components}
@@ -487,39 +486,39 @@ Return as JSON:
                 issues.append("MVC pattern requires a Controller component")
             if "database" not in types and "model" not in types:
                 issues.append("MVC pattern requires a Model/Database component")
-        
+
         # Check for orphaned components
         all_deps = set()
         for comp in plan.components:
             all_deps.update(comp.dependencies)
-        
+
         all_ids = {c.id for c in plan.components}
         orphaned = all_deps - all_ids
         if orphaned:
             issues.append(f"Dependencies reference non-existent components: {orphaned}")
-        
+
         # Check for circular dependencies
         for comp in plan.components:
             if self._has_circular_dependency(plan, comp.id, set()):
                 issues.append(f"Circular dependency detected involving {comp.id}")
-        
+
         return issues
-    
+
     def _has_circular_dependency(self, plan: ArchitecturePlan, component_id: str, visited: set) -> bool:
         """Check if a component has circular dependencies."""
         if component_id in visited:
             return True
-        
+
         visited.add(component_id)
         component = self.get_component_by_id(plan, component_id)
-        
+
         if component:
             for dep in component.dependencies:
                 if self._has_circular_dependency(plan, dep, visited.copy()):
                     return True
-        
+
         return False
-    
+
     def export_plan(self, plan: ArchitecturePlan, output_path: str) -> None:
         """Export architectural plan to file."""
         export_data = {
@@ -553,10 +552,10 @@ Return as JSON:
             "diagram": plan.diagram,
             "considerations": plan.considerations
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(export_data, f, indent=2)
-    
+
     def create_markdown_report(self, plan: ArchitecturePlan) -> str:
         """Create a markdown report of the architectural plan."""
         report = []
@@ -565,7 +564,7 @@ Return as JSON:
         report.append("## Overview")
         report.append(plan.overview)
         report.append("")
-        
+
         # Components
         report.append("## Components")
         for comp in plan.components:
@@ -590,7 +589,7 @@ Return as JSON:
             if comp.technology:
                 report.append(f"**Technology:** {comp.technology}")
                 report.append("")
-        
+
         # Data Flows
         if plan.data_flows:
             report.append("## Data Flows")
@@ -600,13 +599,13 @@ Return as JSON:
                 report.append(f"  - Protocol: {flow.protocol}")
                 report.append(f"  - Description: {flow.description}")
                 report.append("")
-        
+
         # Technology Stack
         report.append("## Technology Stack")
         for layer, techs in plan.technology_stack.items():
             report.append(f"**{layer.title()}:** {', '.join(techs)}")
         report.append("")
-        
+
         # Diagram
         if plan.diagram:
             report.append("## Architecture Diagram")
@@ -614,20 +613,20 @@ Return as JSON:
             report.append(plan.diagram)
             report.append("```")
             report.append("")
-        
+
         # Non-functional Requirements
         if plan.non_functional_requirements:
             report.append("## Non-Functional Requirements")
             for req_type, desc in plan.non_functional_requirements.items():
                 report.append(f"**{req_type.title()}:** {desc}")
             report.append("")
-        
+
         # Considerations
         if plan.considerations:
             report.append("## Architectural Considerations")
             for consideration in plan.considerations:
                 report.append(f"- {consideration}")
-        
+
         return "\n".join(report)
 
 
@@ -635,24 +634,24 @@ Return as JSON:
 if __name__ == "__main__":
     import asyncio
     import sys
-    
+
     async def main():
         architect = ArchitectAgent()
-        
+
         if len(sys.argv) > 1:
             # Create architecture from file
             req_file = sys.argv[1]
             try:
-                with open(req_file, 'r') as f:
+                with open(req_file) as f:
                     requirements = f.read().strip()
-                
+
                 context = {
                     "tech_stack": ["Python", "FastAPI", "PostgreSQL"],
                     "project_type": "web_api"
                 }
-                
+
                 plan = await architect.create_architecture(requirements, context)
-                
+
                 # Print summary
                 print("=" * 60)
                 print("ARCHITECTURAL PLAN")
@@ -662,25 +661,25 @@ if __name__ == "__main__":
                 print(f"Data Flows: {len(plan.data_flows)}")
                 print("\nOverview:")
                 print(plan.overview)
-                
+
                 # Validate plan
                 issues = architect.validate_plan(plan)
                 if issues:
                     print("\nValidation Issues:")
                     for issue in issues:
                         print(f"- {issue}")
-                
+
                 # Export plan
                 output_file = Path(req_file).with_suffix(".architecture.json")
                 architect.export_plan(plan, str(output_file))
                 print(f"\nPlan exported to: {output_file}")
-                
+
                 # Export markdown
                 md_file = Path(req_file).with_suffix(".architecture.md")
                 with open(md_file, 'w') as f:
                     f.write(architect.create_markdown_report(plan))
                 print(f"Markdown report exported to: {md_file}")
-                
+
             except FileNotFoundError:
                 print(f"File not found: {req_file}")
         else:
@@ -693,13 +692,13 @@ if __name__ == "__main__":
             - Due dates and reminders
             - Search and filtering
             """
-            
+
             context = {
                 "tech_stack": ["Python", "FastAPI", "PostgreSQL", "Redis"],
                 "project_type": "web_api"
             }
-            
+
             plan = await architect.create_architecture(demo_requirements, context)
             print(f"Created {plan.pattern.value} architecture with {len(plan.components)} components")
-    
+
     asyncio.run(main())

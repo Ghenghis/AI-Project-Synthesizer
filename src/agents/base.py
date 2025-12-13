@@ -9,15 +9,16 @@ Foundation for all AI agents with:
 """
 
 import asyncio
-from typing import Optional, Dict, Any, List, Callable, TypeVar
+import contextlib
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from abc import ABC, abstractmethod
+from typing import Any, TypeVar
 
-
-from src.core.security import get_secure_logger
 from src.automation.metrics import ActionTimer, get_metrics_collector
+from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
 
@@ -57,9 +58,9 @@ class AgentConfig:
     enable_voice: bool = False
 
     # Callbacks
-    on_step: Optional[Callable] = None
-    on_complete: Optional[Callable] = None
-    on_error: Optional[Callable] = None
+    on_step: Callable | None = None
+    on_complete: Callable | None = None
+    on_error: Callable | None = None
 
 
 @dataclass
@@ -67,13 +68,13 @@ class AgentResult:
     """Result from agent execution."""
     success: bool
     output: Any
-    steps: List[Dict[str, Any]] = field(default_factory=list)
+    steps: list[dict[str, Any]] = field(default_factory=list)
     duration_ms: float = 0
     iterations: int = 0
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "success": self.success,
             "output": self.output,
@@ -93,7 +94,7 @@ class AgentTool:
         name: str,
         description: str,
         func: Callable,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: dict[str, Any] | None = None,
     ):
         self.name = name
         self.description = description
@@ -106,7 +107,7 @@ class AgentTool:
             return await self.func(**kwargs)
         return self.func(**kwargs)
 
-    def to_schema(self) -> Dict[str, Any]:
+    def to_schema(self) -> dict[str, Any]:
         """Get tool schema for LLM."""
         return {
             "name": self.name,
@@ -130,9 +131,9 @@ class BaseAgent(ABC):
     def __init__(self, config: AgentConfig):
         self.config = config
         self.status = AgentStatus.IDLE
-        self._tools: Dict[str, AgentTool] = {}
-        self._memory: List[Dict[str, Any]] = []
-        self._current_task: Optional[str] = None
+        self._tools: dict[str, AgentTool] = {}
+        self._memory: list[dict[str, Any]] = []
+        self._current_task: str | None = None
         self._iterations = 0
         self._llm_client = None
 
@@ -152,7 +153,7 @@ class BaseAgent(ABC):
         """Register a tool for the agent."""
         self._tools[tool.name] = tool
 
-    def add_memory(self, role: str, content: str, metadata: Optional[Dict] = None):
+    def add_memory(self, role: str, content: str, metadata: dict | None = None):
         """Add to agent memory."""
         self._memory.append({
             "role": role,
@@ -166,16 +167,16 @@ class BaseAgent(ABC):
         self._memory = []
 
     @abstractmethod
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a single step. Override in subclasses."""
         pass
 
     @abstractmethod
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Determine if agent should continue. Override in subclasses."""
         pass
 
-    async def run(self, task: str, context: Optional[Dict[str, Any]] = None) -> AgentResult:
+    async def run(self, task: str, context: dict[str, Any] | None = None) -> AgentResult:
         """
         Run the agent on a task.
 
@@ -208,10 +209,8 @@ class BaseAgent(ABC):
 
                     # Callback
                     if self.config.on_step:
-                        try:
+                        with contextlib.suppress(Exception):
                             self.config.on_step(step_result)
-                        except Exception:
-                            pass
 
                     # Check if should continue
                     if not self.config.auto_continue or not self._should_continue(step_result):
@@ -235,10 +234,8 @@ class BaseAgent(ABC):
 
                 # Callback
                 if self.config.on_complete:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.config.on_complete(result)
-                    except Exception:
-                        pass
 
                 return result
 
@@ -257,10 +254,8 @@ class BaseAgent(ABC):
 
                 # Callback
                 if self.config.on_error:
-                    try:
+                    with contextlib.suppress(Exception):
                         self.config.on_error(e)
-                    except Exception:
-                        pass
 
                 return result
 
@@ -268,7 +263,7 @@ class BaseAgent(ABC):
         """Cancel agent execution."""
         self.status = AgentStatus.CANCELLED
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get agent status."""
         return {
             "name": self.config.name,

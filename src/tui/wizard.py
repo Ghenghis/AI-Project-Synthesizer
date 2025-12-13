@@ -4,13 +4,13 @@ AI Synthesizer Wizard Mode
 Interactive guided project creation wizard.
 """
 
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any
+
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-
 
 console = Console()
 
@@ -38,9 +38,9 @@ class ProjectWizard:
 
     def __init__(self):
         """Initialize the wizard."""
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
 
-    def run(self) -> Optional[Dict[str, Any]]:
+    def run(self) -> dict[str, Any] | None:
         """Run the interactive wizard."""
         console.print(Panel(
             "[bold cyan]🧙 AI Project Synthesizer Wizard[/bold cyan]\n\n"
@@ -206,13 +206,13 @@ class ProjectWizard:
         return Confirm.ask("\nCreate project with these settings?", default=True)
 
 
-def run_wizard() -> Optional[Dict[str, Any]]:
+def run_wizard() -> dict[str, Any] | None:
     """Run the project wizard and return configuration."""
     wizard = ProjectWizard()
     return wizard.run()
 
 
-async def execute_wizard_config(config: Dict[str, Any]) -> bool:
+async def execute_wizard_config(config: dict[str, Any]) -> bool:
     """Execute the wizard configuration to create a project."""
 
     console.print("\n[bold]Creating project...[/bold]\n")

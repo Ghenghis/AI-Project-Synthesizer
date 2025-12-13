@@ -8,22 +8,22 @@ Provides repository search, analysis, and download capabilities.
 import asyncio
 import time
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
+from src.core.circuit_breaker import GITHUB_BREAKER_CONFIG, circuit_breaker
+from src.core.observability import correlation_manager, metrics, track_performance
+from src.core.security import InputValidator, get_secure_logger
 from src.discovery.base_client import (
-    PlatformClient,
-    RepositoryInfo,
-    SearchResult,
-    FileContent,
-    DirectoryListing,
     AuthenticationError,
+    DirectoryListing,
+    FileContent,
+    PlatformClient,
     RateLimitError,
+    RepositoryInfo,
     RepositoryNotFoundError,
+    SearchResult,
 )
 from src.utils.rate_limiter import RateLimiter
-from src.core.circuit_breaker import circuit_breaker, GITHUB_BREAKER_CONFIG
-from src.core.security import InputValidator, get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
 
 secure_logger = get_secure_logger(__name__)
 
@@ -49,7 +49,7 @@ class GitHubClient(PlatformClient):
 
     def __init__(
         self,
-        token: Optional[str] = None,
+        token: str | None = None,
         requests_per_hour: int = 5000,
     ):
         """
@@ -97,7 +97,7 @@ class GitHubClient(PlatformClient):
     async def search(
         self,
         query: str,
-        language: Optional[str] = None,
+        language: str | None = None,
         min_stars: int = 0,
         max_results: int = 20,
         sort_by: str = "stars",
@@ -318,7 +318,7 @@ class GitHubClient(PlatformClient):
         repo_id: str,
         destination: Path,
         depth: int = 1,
-        branch: Optional[str] = None,
+        branch: str | None = None,
     ) -> Path:
         """Clone repository to local filesystem."""
         clone_url = f"https://github.com/{repo_id}.git"
@@ -380,15 +380,16 @@ class GitHubClient(PlatformClient):
     async def _search_fallback(
         self,
         query: str,
-        language: Optional[str] = None,
+        language: str | None = None,
         min_stars: int = 0,
         max_results: int = 30,
         sort_by: str = "best-match",
         order: str = "desc",
     ) -> SearchResult:
         """Fallback search using httpx when ghapi is unavailable."""
-        import httpx
         import time
+
+        import httpx
 
         start_time = time.time()
 
@@ -447,7 +448,7 @@ class GitHubClient(PlatformClient):
             has_more=data.get("total_count", 0) > max_results,
         )
 
-    def _convert_repo_dict(self, item: Dict[str, Any]) -> RepositoryInfo:
+    def _convert_repo_dict(self, item: dict[str, Any]) -> RepositoryInfo:
         """Convert dict response to RepositoryInfo."""
         license_info = item.get("license") or {}
         owner_info = item.get("owner") or {}
@@ -551,8 +552,9 @@ class GitHubClient(PlatformClient):
         self, repo_id: str, file_path: str
     ) -> FileContent:
         """Fallback file fetch using httpx."""
-        import httpx
         import base64
+
+        import httpx
 
         owner, repo = repo_id.split("/")
 
@@ -582,7 +584,7 @@ class GitHubClient(PlatformClient):
             sha=data.get("sha", ""),
         )
 
-    async def get_languages(self, repo_id: str) -> Dict[str, int]:
+    async def get_languages(self, repo_id: str) -> dict[str, int]:
         """Get language breakdown for repository."""
         await self._rate_limiter.acquire()
 
@@ -592,7 +594,7 @@ class GitHubClient(PlatformClient):
             return dict(self._api.repos.list_languages(owner=owner, repo=repo))
         return {}
 
-    async def get_topics(self, repo_id: str) -> List[str]:
+    async def get_topics(self, repo_id: str) -> list[str]:
         """Get repository topics/tags."""
         await self._rate_limiter.acquire()
 
@@ -608,10 +610,7 @@ class GitHubClient(PlatformClient):
         try:
             contents = await self.get_contents(repo_id, "")
             test_dirs = ["tests", "test", "spec", "__tests__"]
-            for d in contents.directories:
-                if d["name"].lower() in test_dirs:
-                    return True
-            return False
+            return any(d["name"].lower() in test_dirs for d in contents.directories)
         except Exception:
             return False
 
@@ -630,9 +629,6 @@ class GitHubClient(PlatformClient):
             contents = await self.get_contents(repo_id, "")
             all_items = [d["name"] for d in contents.directories + contents.files]
 
-            for ci in ci_paths:
-                if ci.split("/")[0] in all_items:
-                    return True
-            return False
+            return any(ci.split("/")[0] in all_items for ci in ci_paths)
         except Exception:
             return False

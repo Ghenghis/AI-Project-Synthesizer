@@ -6,13 +6,14 @@ Aggregates results from GitHub, HuggingFace, Kaggle, and more.
 """
 
 import asyncio
-import logging
-import time
-from typing import Optional, List, Dict, Set
-from dataclasses import dataclass, field
 import hashlib
 import json
+import logging
+import time
+from dataclasses import dataclass, field
+from datetime import UTC
 
+from src.core.config import get_settings
 from src.discovery.base_client import (
     PlatformClient,
     RepositoryInfo,
@@ -20,7 +21,6 @@ from src.discovery.base_client import (
 )
 from src.discovery.github_client import GitHubClient
 from src.discovery.huggingface_client import HuggingFaceClient
-from src.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +30,12 @@ class UnifiedSearchResult:
     """Result from unified multi-platform search."""
 
     query: str
-    platforms_searched: List[str]
+    platforms_searched: list[str]
     total_count: int
-    repositories: List[RepositoryInfo]
+    repositories: list[RepositoryInfo]
     search_time_ms: int
-    platform_counts: Dict[str, int] = field(default_factory=dict)
-    errors: Dict[str, str] = field(default_factory=dict)
+    platform_counts: dict[str, int] = field(default_factory=dict)
+    errors: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -88,9 +88,9 @@ class UnifiedSearch:
 
     def __init__(
         self,
-        github_token: Optional[str] = None,
-        huggingface_token: Optional[str] = None,
-        kaggle_credentials: Optional[Dict[str, str]] = None,
+        github_token: str | None = None,
+        huggingface_token: str | None = None,
+        kaggle_credentials: dict[str, str] | None = None,
     ):
         """
         Initialize unified search with platform credentials.
@@ -100,8 +100,8 @@ class UnifiedSearch:
             huggingface_token: HuggingFace API token
             kaggle_credentials: Kaggle API credentials dict
         """
-        self._clients: Dict[str, PlatformClient] = {}
-        self._cache: Dict[str, UnifiedSearchResult] = {}
+        self._clients: dict[str, PlatformClient] = {}
+        self._cache: dict[str, UnifiedSearchResult] = {}
         self._cache_ttl = 3600  # 1 hour
 
         # Initialize available clients
@@ -109,9 +109,9 @@ class UnifiedSearch:
 
     def _init_clients(
         self,
-        github_token: Optional[str],
-        huggingface_token: Optional[str],
-        kaggle_credentials: Optional[Dict[str, str]],
+        github_token: str | None,
+        huggingface_token: str | None,
+        kaggle_credentials: dict[str, str] | None,
     ):
         """Initialize platform clients."""
         settings = get_settings()
@@ -151,16 +151,16 @@ class UnifiedSearch:
                 logger.warning(f"Failed to initialize Kaggle client: {e}")
 
     @property
-    def available_platforms(self) -> List[str]:
+    def available_platforms(self) -> list[str]:
         """Get list of available (initialized) platforms."""
         return list(self._clients.keys())
 
     async def search(
         self,
         query: str,
-        platforms: Optional[List[str]] = None,
+        platforms: list[str] | None = None,
         max_results: int = 20,
-        language_filter: Optional[str] = None,
+        language_filter: str | None = None,
         min_stars: int = 0,
         sort_by: str = "relevance",
         use_cache: bool = True,
@@ -222,9 +222,9 @@ class UnifiedSearch:
             )
 
         # Gather results
-        all_repos: List[RepositoryInfo] = []
-        platform_counts: Dict[str, int] = {}
-        errors: Dict[str, str] = {}
+        all_repos: list[RepositoryInfo] = []
+        platform_counts: dict[str, int] = {}
+        errors: dict[str, str] = {}
 
         for platform, task in tasks.items():
             try:
@@ -264,7 +264,7 @@ class UnifiedSearch:
         self,
         client: PlatformClient,
         query: str,
-        language: Optional[str],
+        language: str | None,
         min_stars: int,
         max_results: int,
     ) -> SearchResult:
@@ -282,11 +282,11 @@ class UnifiedSearch:
 
     def _deduplicate(
         self,
-        repositories: List[RepositoryInfo],
-    ) -> List[RepositoryInfo]:
+        repositories: list[RepositoryInfo],
+    ) -> list[RepositoryInfo]:
         """Remove duplicate repositories across platforms."""
-        seen_urls: Set[str] = set()
-        unique: List[RepositoryInfo] = []
+        seen_urls: set[str] = set()
+        unique: list[RepositoryInfo] = []
 
         for repo in repositories:
             # Normalize URL for comparison
@@ -300,10 +300,10 @@ class UnifiedSearch:
 
     def _rank_results(
         self,
-        repositories: List[RepositoryInfo],
+        repositories: list[RepositoryInfo],
         query: str,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Rank results using composite scoring."""
         if sort_by == "stars":
             return sorted(repositories, key=lambda r: r.stars, reverse=True)
@@ -366,7 +366,7 @@ class UnifiedSearch:
 
         # Recency (0.15)
         if repo.updated_at:
-            from datetime import datetime, timezone
+            from datetime import datetime
             try:
                 if isinstance(repo.updated_at, str):
                     updated = datetime.fromisoformat(repo.updated_at.replace("Z", "+00:00"))
@@ -374,9 +374,9 @@ class UnifiedSearch:
                     updated = repo.updated_at
 
                 if updated.tzinfo is None:
-                    updated = updated.replace(tzinfo=timezone.utc)
+                    updated = updated.replace(tzinfo=UTC)
 
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 days_ago = (now - updated).days
                 recency_score = math.exp(-days_ago / 180)  # 6-month half-life
                 score += 0.15 * recency_score
@@ -388,8 +388,8 @@ class UnifiedSearch:
     def _cache_key(
         self,
         query: str,
-        platforms: List[str],
-        language: Optional[str],
+        platforms: list[str],
+        language: str | None,
         min_stars: int,
     ) -> str:
         """Generate cache key for search parameters."""
@@ -410,7 +410,7 @@ class UnifiedSearch:
     async def get_repository(
         self,
         repo_url: str,
-    ) -> Optional[RepositoryInfo]:
+    ) -> RepositoryInfo | None:
         """
         Get repository info from URL.
 
@@ -467,9 +467,7 @@ class UnifiedSearch:
             # huggingface.co/owner/model
             # huggingface.co/datasets/owner/dataset
             # huggingface.co/spaces/owner/space
-            if path.startswith("datasets/"):
-                return path
-            elif path.startswith("spaces/"):
+            if path.startswith("datasets/") or path.startswith("spaces/"):
                 return path
             else:
                 parts = path.split("/")

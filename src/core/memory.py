@@ -12,11 +12,11 @@ Persistent memory for:
 
 import json
 import sqlite3
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -40,13 +40,13 @@ class MemoryEntry:
     """Single memory entry."""
     id: str
     type: MemoryType
-    content: Dict[str, Any]
-    tags: List[str] = field(default_factory=list)
+    content: dict[str, Any]
+    tags: list[str] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "type": self.type.value,
@@ -63,12 +63,12 @@ class SearchEntry:
     """Search history entry."""
     id: str
     query: str
-    platforms: List[str]
+    platforms: list[str]
     results_count: int
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    filters: Dict[str, Any] = field(default_factory=dict)
+    filters: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -80,11 +80,11 @@ class Bookmark:
     url: str
     type: str  # repo, model, dataset, paper, project
     description: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -100,7 +100,7 @@ class MemoryStore:
     - Workflow state tracking
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         self._db_path = db_path or Path("data/memory.db")
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -210,7 +210,7 @@ class MemoryStore:
         conn.close()
         return entry.id
 
-    def get_memory(self, memory_id: str) -> Optional[MemoryEntry]:
+    def get_memory(self, memory_id: str) -> MemoryEntry | None:
         """Get a memory entry by ID."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -233,10 +233,10 @@ class MemoryStore:
 
     def search_memories(
         self,
-        type: Optional[MemoryType] = None,
-        tags: Optional[List[str]] = None,
+        type: MemoryType | None = None,
+        tags: list[str] | None = None,
         limit: int = 50,
-    ) -> List[MemoryEntry]:
+    ) -> list[MemoryEntry]:
         """Search memories by type and tags."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -312,7 +312,7 @@ class MemoryStore:
         conn.close()
         return entry.id
 
-    def get_search_history(self, limit: int = 50) -> List[SearchEntry]:
+    def get_search_history(self, limit: int = 50) -> list[SearchEntry]:
         """Get recent search history."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -336,7 +336,7 @@ class MemoryStore:
             for row in rows
         ]
 
-    def replay_search(self, search_id: str) -> Optional[SearchEntry]:
+    def replay_search(self, search_id: str) -> SearchEntry | None:
         """Get a search for replay."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -386,10 +386,10 @@ class MemoryStore:
 
     def get_bookmarks(
         self,
-        type: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        type: str | None = None,
+        tags: list[str] | None = None,
         limit: int = 100,
-    ) -> List[Bookmark]:
+    ) -> list[Bookmark]:
         """Get bookmarks with optional filtering."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -448,7 +448,7 @@ class MemoryStore:
         session_id: str,
         role: str,
         content: str,
-        metadata: Optional[Dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Save a conversation message."""
         conn = self._get_conn()
@@ -477,7 +477,7 @@ class MemoryStore:
         self,
         session_id: str,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get conversation history for a session."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -507,7 +507,7 @@ class MemoryStore:
     # Workflow State
     # ============================================
 
-    def save_workflow_state(self, workflow_id: str, state: Dict[str, Any]) -> str:
+    def save_workflow_state(self, workflow_id: str, state: dict[str, Any]) -> str:
         """Save workflow state."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -529,7 +529,7 @@ class MemoryStore:
         conn.close()
         return state_id
 
-    def get_workflow_state(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+    def get_workflow_state(self, workflow_id: str) -> dict[str, Any] | None:
         """Get workflow state."""
         conn = self._get_conn()
         cursor = conn.cursor()
@@ -547,7 +547,7 @@ class MemoryStore:
 
 
 # Global memory store
-_memory_store: Optional[MemoryStore] = None
+_memory_store: MemoryStore | None = None
 
 
 def get_memory_store() -> MemoryStore:

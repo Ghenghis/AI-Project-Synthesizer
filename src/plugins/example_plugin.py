@@ -5,8 +5,8 @@ This is an example plugin showing how to add a new platform.
 Copy this as a template for your own plugins.
 """
 
-from typing import List, Dict, Any, Optional
 from pathlib import Path
+from typing import Any
 
 from src.core.plugins import PlatformPlugin, PluginMetadata, PluginType
 
@@ -33,13 +33,13 @@ class GitLabPlugin(PlatformPlugin):
             }
         )
 
-    async def initialize(self, config: Dict[str, Any]) -> bool:
+    async def initialize(self, config: dict[str, Any]) -> bool:
         """Initialize with GitLab credentials."""
         self._url = config.get("url", "https://gitlab.com")
         self._token = config.get("token", "")
         return True
 
-    async def search(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    async def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """
         Search GitLab repositories.
 
@@ -61,7 +61,7 @@ class GitLabPlugin(PlatformPlugin):
             }
         ]
 
-    async def get_details(self, identifier: str) -> Optional[Dict[str, Any]]:
+    async def get_details(self, identifier: str) -> dict[str, Any] | None:
         """Get repository details."""
         return {
             "name": identifier,

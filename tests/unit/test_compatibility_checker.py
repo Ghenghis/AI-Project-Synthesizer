@@ -10,11 +10,11 @@ import pytest
 
 from src.analysis.compatibility_checker import (
     CompatibilityChecker,
-    RepositoryInfo,
-    CompatibilityMatrix,
     CompatibilityIssue,
+    CompatibilityMatrix,
+    RepositoryInfo,
 )
-from src.analysis.dependency_analyzer import DependencyGraph, Dependency
+from src.analysis.dependency_analyzer import Dependency, DependencyGraph
 
 
 class TestCompatibilityCheckerInit:

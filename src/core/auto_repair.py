@@ -9,17 +9,18 @@ Progressive auto-repair for:
 """
 
 import asyncio
-import sys
-from typing import Optional, Dict, Any, List, Callable
-from dataclasses import dataclass, field
-from datetime import datetime
-from pathlib import Path
-from enum import Enum
 import json
 import re
+import sys
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
+from src.core.gap_analyzer import Gap, GapCategory, GapSeverity
 from src.core.security import get_secure_logger
-from src.core.gap_analyzer import Gap, GapSeverity, GapCategory
 
 secure_logger = get_secure_logger(__name__)
 
@@ -40,13 +41,13 @@ class RepairStep:
     """Single repair step."""
     action: RepairAction
     target: str
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
     description: str = ""
     executed: bool = False
     success: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "action": self.action.value,
             "target": self.target,
@@ -61,12 +62,12 @@ class RepairStep:
 class RepairPlan:
     """Plan for repairing gaps."""
     gap: Gap
-    steps: List[RepairStep] = field(default_factory=list)
+    steps: list[RepairStep] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     executed: bool = False
     success: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "gap_id": self.gap.id,
             "gap_description": self.gap.description,
@@ -88,7 +89,7 @@ class AutoRepair:
     """
 
     def __init__(self):
-        self._repair_handlers: Dict[GapCategory, Callable] = {
+        self._repair_handlers: dict[GapCategory, Callable] = {
             GapCategory.FILE: self._plan_file_repair,
             GapCategory.CONFIG: self._plan_config_repair,
             GapCategory.IMPORT: self._plan_import_repair,
@@ -96,9 +97,9 @@ class AutoRepair:
             GapCategory.DATABASE: self._plan_database_repair,
             GapCategory.INTEGRATION: self._plan_integration_repair,
         }
-        self._executed_plans: List[RepairPlan] = []
+        self._executed_plans: list[RepairPlan] = []
 
-    def create_plan(self, gap: Gap) -> Optional[RepairPlan]:
+    def create_plan(self, gap: Gap) -> RepairPlan | None:
         """Create a repair plan for a gap."""
         handler = self._repair_handlers.get(gap.category)
 
@@ -230,15 +231,12 @@ class AutoRepair:
             secure_logger.error(f"Failed to run command: {e}")
             return False
 
-    def _update_config(self, path: str, updates: Dict[str, Any]) -> bool:
+    def _update_config(self, path: str, updates: dict[str, Any]) -> bool:
         """Update a JSON config file."""
         try:
             file_path = Path(path)
 
-            if file_path.exists():
-                config = json.loads(file_path.read_text())
-            else:
-                config = {}
+            config = json.loads(file_path.read_text()) if file_path.exists() else {}
 
             # Deep merge updates
             self._deep_merge(config, updates)
@@ -390,13 +388,13 @@ LMSTUDIO_HOST=http://localhost:1234
 
         return plan
 
-    def get_repair_history(self) -> List[Dict[str, Any]]:
+    def get_repair_history(self) -> list[dict[str, Any]]:
         """Get history of executed repairs."""
         return [p.to_dict() for p in self._executed_plans]
 
 
 # Global auto-repair instance
-_auto_repair: Optional[AutoRepair] = None
+_auto_repair: AutoRepair | None = None
 
 
 def get_auto_repair() -> AutoRepair:
@@ -407,7 +405,7 @@ def get_auto_repair() -> AutoRepair:
     return _auto_repair
 
 
-async def repair_gaps(gaps: List[Gap]) -> List[RepairPlan]:
+async def repair_gaps(gaps: list[Gap]) -> list[RepairPlan]:
     """Repair a list of gaps."""
     repair = get_auto_repair()
     plans = []

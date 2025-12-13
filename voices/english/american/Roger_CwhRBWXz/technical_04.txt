@@ -1,0 +1,1 @@
+The neural network processes audio in real-time.

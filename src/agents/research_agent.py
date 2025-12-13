@@ -8,9 +8,9 @@ AI-powered research agent for:
 - Recommendation generation
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
 
-from src.agents.base import BaseAgent, AgentConfig, AgentTool
+from src.agents.base import AgentConfig, AgentTool, BaseAgent
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -27,7 +27,7 @@ class ResearchAgent(BaseAgent):
     - Generate recommendations
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         config = config or AgentConfig(
             name="research_agent",
             description="Discovers and analyzes resources across platforms",
@@ -75,7 +75,7 @@ class ResearchAgent(BaseAgent):
             parameters={},
         ))
 
-    async def _search_github(self, query: str, max_results: int = 10) -> Dict[str, Any]:
+    async def _search_github(self, query: str, max_results: int = 10) -> dict[str, Any]:
         """Search GitHub repositories."""
         try:
             from src.discovery.unified_search import create_unified_search
@@ -109,7 +109,7 @@ class ResearchAgent(BaseAgent):
         self,
         query: str,
         type: str = "model",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Search HuggingFace."""
         try:
             from src.discovery.unified_search import create_unified_search
@@ -132,7 +132,7 @@ class ResearchAgent(BaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _analyze_repo(self, repo_url: str) -> Dict[str, Any]:
+    async def _analyze_repo(self, repo_url: str) -> dict[str, Any]:
         """Analyze a repository."""
         try:
             from src.analysis.code_analyzer import CodeAnalyzer
@@ -152,7 +152,7 @@ class ResearchAgent(BaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _get_trends(self) -> Dict[str, Any]:
+    async def _get_trends(self) -> dict[str, Any]:
         """Get trending topics."""
         # Could integrate with GitHub trending, HN, etc.
         return {
@@ -166,7 +166,7 @@ class ResearchAgent(BaseAgent):
             ],
         }
 
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a research step."""
         llm = await self._get_llm()
 
@@ -246,11 +246,11 @@ RECOMMENDATIONS: <list of recommendations>
             "complete": False,
         }
 
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Check if should continue research."""
         return not step_result.get("complete", False)
 
-    async def research(self, topic: str) -> Dict[str, Any]:
+    async def research(self, topic: str) -> dict[str, Any]:
         """
         Convenience method to research a topic.
 

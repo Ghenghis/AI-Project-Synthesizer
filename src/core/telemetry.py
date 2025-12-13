@@ -15,15 +15,15 @@ PRIVACY:
 """
 
 import hashlib
+import json
 import platform
 import time
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 from pathlib import Path
-import json
+from typing import Any
 
-from src.core.version import get_version
 from src.core.security import get_secure_logger
+from src.core.version import get_version
 
 secure_logger = get_secure_logger(__name__)
 
@@ -33,9 +33,9 @@ class TelemetryEvent:
     """A telemetry event."""
     event_type: str
     timestamp: float = field(default_factory=time.time)
-    properties: Dict[str, Any] = field(default_factory=dict)
+    properties: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event": self.event_type,
             "ts": self.timestamp,
@@ -81,10 +81,10 @@ class TelemetryCollector:
         telemetry.disable()
     """
 
-    def __init__(self, config: Optional[TelemetryConfig] = None):
+    def __init__(self, config: TelemetryConfig | None = None):
         """Initialize telemetry collector."""
         self.config = config or TelemetryConfig()
-        self._events: List[TelemetryEvent] = []
+        self._events: list[TelemetryEvent] = []
         self._session_start = time.time()
 
         # Generate anonymous ID if not set
@@ -137,7 +137,7 @@ class TelemetryCollector:
         """Check if telemetry is enabled."""
         return self.config.enabled
 
-    def track(self, event_type: str, properties: Dict[str, Any] = None):
+    def track(self, event_type: str, properties: dict[str, Any] = None):
         """
         Track an event.
 
@@ -160,7 +160,7 @@ class TelemetryCollector:
         # Save locally
         self._save_events()
 
-    def _sanitize_properties(self, props: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_properties(self, props: dict[str, Any]) -> dict[str, Any]:
         """Remove any potential PII from properties."""
         safe = {}
 
@@ -174,9 +174,7 @@ class TelemetryCollector:
         for key, value in props.items():
             if key in allowed_keys:
                 # Only include simple values
-                if isinstance(value, (str, int, float, bool)):
-                    safe[key] = value
-                elif isinstance(value, list) and all(isinstance(v, str) for v in value):
+                if isinstance(value, str | int | float | bool) or isinstance(value, list) and all(isinstance(v, str) for v in value):
                     safe[key] = value
 
         return safe
@@ -196,7 +194,7 @@ class TelemetryCollector:
         except Exception as e:
             secure_logger.debug(f"Failed to save telemetry: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get local telemetry stats."""
         return {
             "enabled": self.config.enabled,
@@ -206,7 +204,7 @@ class TelemetryCollector:
         }
 
     # Convenience methods for common events
-    def track_search(self, platforms: List[str], results_count: int, duration_ms: float):
+    def track_search(self, platforms: list[str], results_count: int, duration_ms: float):
         """Track a search event."""
         if self.config.track_searches:
             self.track("search", {
@@ -233,7 +231,7 @@ class TelemetryCollector:
 
 
 # Global telemetry instance
-_telemetry: Optional[TelemetryCollector] = None
+_telemetry: TelemetryCollector | None = None
 
 
 def get_telemetry() -> TelemetryCollector:
@@ -244,6 +242,6 @@ def get_telemetry() -> TelemetryCollector:
     return _telemetry
 
 
-def track(event_type: str, properties: Dict[str, Any] = None):
+def track(event_type: str, properties: dict[str, Any] = None):
     """Quick function to track an event."""
     get_telemetry().track(event_type, properties)

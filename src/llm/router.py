@@ -5,11 +5,11 @@ Intelligent routing between local and cloud LLMs based on task complexity.
 """
 
 import logging
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 
-from src.llm.ollama_client import OllamaClient, CompletionResult
 from src.llm.lmstudio_client import LMStudioClient
+from src.llm.ollama_client import CompletionResult, OllamaClient
 
 logger = logging.getLogger(__name__)
 

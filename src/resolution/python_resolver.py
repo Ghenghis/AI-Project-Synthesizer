@@ -7,12 +7,11 @@ Handles version conflicts with SAT solver.
 
 import asyncio
 import logging
+import re
 import subprocess
 import tempfile
-from pathlib import Path
-from typing import List, Dict, Optional
 from dataclasses import dataclass, field
-import re
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class ResolvedPackage:
     name: str
     version: str
     source: str = "pypi"
-    extras: List[str] = field(default_factory=list)
+    extras: list[str] = field(default_factory=list)
 
     def to_requirement(self) -> str:
         """Convert to requirements.txt line."""
@@ -36,9 +35,9 @@ class ResolvedPackage:
 class ResolutionResult:
     """Result of dependency resolution."""
     success: bool
-    packages: List[ResolvedPackage] = field(default_factory=list)
-    conflicts: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    packages: list[ResolvedPackage] = field(default_factory=list)
+    conflicts: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     lockfile_content: str = ""
     resolution_time_ms: int = 0
 
@@ -119,9 +118,9 @@ class PythonResolver:
 
     async def resolve(
         self,
-        requirements: List[str],
-        python_version: Optional[str] = None,
-        constraints: Optional[List[str]] = None,
+        requirements: list[str],
+        python_version: str | None = None,
+        constraints: list[str] | None = None,
     ) -> ResolutionResult:
         """
         Resolve dependencies to exact versions.
@@ -157,7 +156,7 @@ class PythonResolver:
 
     async def _resolve_with_uv(
         self,
-        requirements: List[str],
+        requirements: list[str],
         python_version: str,
     ) -> ResolutionResult:
         """Resolve using uv."""
@@ -216,7 +215,7 @@ class PythonResolver:
 
     async def _resolve_with_pip_compile(
         self,
-        requirements: List[str],
+        requirements: list[str],
         python_version: str,
     ) -> ResolutionResult:
         """Resolve using pip-compile."""
@@ -269,7 +268,7 @@ class PythonResolver:
 
     def _simple_resolve(
         self,
-        requirements: List[str],
+        requirements: list[str],
     ) -> ResolutionResult:
         """Simple resolution without SAT solver."""
         packages = []
@@ -310,7 +309,7 @@ class PythonResolver:
             warnings=["Used simple resolution - install uv for better results"],
         )
 
-    def _parse_lockfile(self, content: str) -> List[ResolvedPackage]:
+    def _parse_lockfile(self, content: str) -> list[ResolvedPackage]:
         """Parse lockfile content into packages."""
         packages = []
 
@@ -337,7 +336,7 @@ class PythonResolver:
 
         return packages
 
-    def _parse_conflicts(self, error_message: str) -> List[str]:
+    def _parse_conflicts(self, error_message: str) -> list[str]:
         """Parse conflict information from error message."""
         conflicts = []
 
@@ -356,8 +355,8 @@ class PythonResolver:
 
     async def check_conflicts(
         self,
-        requirements: List[str],
-    ) -> List[str]:
+        requirements: list[str],
+    ) -> list[str]:
         """
         Check for potential conflicts without full resolution.
 
@@ -368,7 +367,7 @@ class PythonResolver:
             List of potential conflict descriptions
         """
         # Group by package name
-        by_name: Dict[str, List[str]] = {}
+        by_name: dict[str, list[str]] = {}
 
         for req in requirements:
             match = re.match(r'^([a-zA-Z0-9][-a-zA-Z0-9._]*)', req)

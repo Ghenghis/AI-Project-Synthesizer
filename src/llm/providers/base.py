@@ -4,11 +4,12 @@ AI Project Synthesizer - Base LLM Provider Interface
 Abstract base class and common types for all LLM providers.
 """
 
+import time
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict, Any, AsyncIterator
-import time
+from typing import Any
 
 
 class ProviderType(Enum):
@@ -66,22 +67,22 @@ class ProviderConfig:
     provider_type: ProviderType
     name: str
     host: str
-    api_key: Optional[str] = None
-    default_model: Optional[str] = None
+    api_key: str | None = None
+    default_model: str | None = None
     timeout: float = 120.0
     max_retries: int = 3
     enabled: bool = True
     priority: int = 0  # Lower = higher priority for fallback
 
     # Model size tiers
-    model_tiny: Optional[str] = None
-    model_small: Optional[str] = None
-    model_medium: Optional[str] = None
-    model_large: Optional[str] = None
+    model_tiny: str | None = None
+    model_small: str | None = None
+    model_medium: str | None = None
+    model_large: str | None = None
 
     # Additional settings
-    extra_headers: Dict[str, str] = field(default_factory=dict)
-    extra_params: Dict[str, Any] = field(default_factory=dict)
+    extra_headers: dict[str, str] = field(default_factory=dict)
+    extra_params: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -96,14 +97,14 @@ class CompletionResult:
     finish_reason: str = "stop"
     duration_ms: int = 0
     cached: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class StreamChunk:
     """Chunk from streaming completion."""
     content: str
-    finish_reason: Optional[str] = None
+    finish_reason: str | None = None
     is_final: bool = False
 
 
@@ -153,7 +154,7 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available models from this provider."""
         pass
 
@@ -161,8 +162,8 @@ class LLMProvider(ABC):
     async def complete(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs
@@ -173,8 +174,8 @@ class LLMProvider(ABC):
     async def stream(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs

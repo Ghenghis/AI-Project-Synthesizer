@@ -5,7 +5,6 @@ Client for local LLM inference using Ollama.
 """
 
 import logging
-from typing import Optional, List
 from dataclasses import dataclass
 
 import httpx
@@ -58,7 +57,7 @@ class OllamaClient:
         self.host = host.rstrip("/")
         self.default_model = default_model or self.DEFAULT_MODELS["balanced"]
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
@@ -84,7 +83,7 @@ class OllamaClient:
         except Exception:
             return False
 
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available models."""
         try:
             client = await self._get_client()

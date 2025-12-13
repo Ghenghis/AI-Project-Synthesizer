@@ -6,12 +6,13 @@ Prevents cascade failures and provides automatic recovery with configurable thre
 """
 
 import asyncio
-import time
 import logging
-from enum import Enum
-from typing import Optional, Callable, Any, Dict
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 from functools import wraps
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,8 @@ class CircuitBreakerStats:
     failures: int = 0
     successes: int = 0
     total_calls: int = 0
-    last_failure_time: Optional[float] = None
-    last_success_time: Optional[float] = None
+    last_failure_time: float | None = None
+    last_success_time: float | None = None
     state_changes: int = 0
 
     @property
@@ -85,7 +86,7 @@ class CircuitBreaker:
     Automatically opens when failures exceed threshold, closes when service recovers.
     """
 
-    def __init__(self, config: Optional[CircuitBreakerConfig] = None, name: str = "default"):
+    def __init__(self, config: CircuitBreakerConfig | None = None, name: str = "default"):
         """
         Initialize circuit breaker.
 
@@ -98,7 +99,7 @@ class CircuitBreaker:
         self._state = CircuitState.CLOSED
         self._failure_count = 0
         self._success_count = 0
-        self._last_failure_time: Optional[float] = None
+        self._last_failure_time: float | None = None
         self._last_state_change = time.time()
         self._stats = CircuitBreakerStats()
 
@@ -204,7 +205,7 @@ class CircuitBreaker:
             self._record_success()
             return result
 
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             self._record_failure()
             raise CircuitTimeoutError(f"Call timed out after {self.config.timeout}s") from e
         except self.config.expected_exception as e:
@@ -233,7 +234,7 @@ class CircuitBreaker:
         self._stats.state_changes += 1
         logger.warning(f"Circuit '{self.name}' manually forced to OPEN")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current circuit breaker status."""
         return {
             "name": self.name,
@@ -257,9 +258,9 @@ class CircuitBreakerRegistry:
     """
 
     def __init__(self):
-        self._breakers: Dict[str, CircuitBreaker] = {}
+        self._breakers: dict[str, CircuitBreaker] = {}
 
-    def get_breaker(self, name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
+    def get_breaker(self, name: str, config: CircuitBreakerConfig | None = None) -> CircuitBreaker:
         """
         Get or create circuit breaker by name.
 
@@ -274,7 +275,7 @@ class CircuitBreakerRegistry:
             self._breakers[name] = CircuitBreaker(config, name)
         return self._breakers[name]
 
-    def get_all_status(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_status(self) -> dict[str, dict[str, Any]]:
         """Get status of all circuit breakers."""
         return {name: breaker.get_status() for name, breaker in self._breakers.items()}
 
@@ -335,7 +336,7 @@ def circuit_breaker(
     return decorator
 
 
-def get_circuit_breaker(name: str) -> Optional[CircuitBreaker]:
+def get_circuit_breaker(name: str) -> CircuitBreaker | None:
     """
     Get circuit breaker from global registry.
 
@@ -348,7 +349,7 @@ def get_circuit_breaker(name: str) -> Optional[CircuitBreaker]:
     return _registry._breakers.get(name)
 
 
-def get_all_circuit_breaker_status() -> Dict[str, Dict[str, Any]]:
+def get_all_circuit_breaker_status() -> dict[str, dict[str, Any]]:
     """Get status of all circuit breakers."""
     return _registry.get_all_status()
 

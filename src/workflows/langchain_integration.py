@@ -9,15 +9,15 @@ Advanced LLM workflows using LangChain:
 """
 
 import asyncio
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 
 # Try importing LangChain components with fallbacks
 try:
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
     from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-    from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
-    from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    from langchain_core.runnables import RunnableLambda, RunnablePassthrough
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
@@ -42,9 +42,9 @@ except ImportError:
 
 try:
     from langchain.agents import AgentExecutor, create_react_agent
-    from langchain.tools import Tool
-    from langchain.memory import ConversationBufferMemory
     from langchain.chains import LLMChain, SequentialChain
+    from langchain.memory import ConversationBufferMemory
+    from langchain.tools import Tool
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -90,7 +90,7 @@ class LangChainOrchestrator:
         result = await orchestrator.synthesize(project_idea, resources)
     """
 
-    def __init__(self, config: Optional[ChainConfig] = None):
+    def __init__(self, config: ChainConfig | None = None):
         """Initialize orchestrator."""
         self.config = config or ChainConfig()
         self._llm = None
@@ -135,7 +135,7 @@ class LangChainOrchestrator:
 
         return self._llm
 
-    async def research(self, query: str) -> Dict[str, Any]:
+    async def research(self, query: str) -> dict[str, Any]:
         """
         Run research chain to discover resources.
 
@@ -158,8 +158,8 @@ class LangChainOrchestrator:
     async def synthesize(
         self,
         project_idea: str,
-        resources: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        resources: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Run synthesis chain to plan project assembly.
 
@@ -217,7 +217,7 @@ class LangChainOrchestrator:
 
         return response
 
-    def create_agent(self, tools: List[Tool]) -> AgentExecutor:
+    def create_agent(self, tools: list[Tool]) -> AgentExecutor:
         """
         Create a ReAct agent with custom tools.
 
@@ -448,7 +448,7 @@ README Outline:""")
 
 
 # Pre-built tools for agents
-def create_synthesizer_tools() -> List[Tool]:
+def create_synthesizer_tools() -> list[Tool]:
     """Create LangChain tools for the synthesizer agent."""
 
     async def search_github(query: str) -> str:

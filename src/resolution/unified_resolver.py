@@ -7,12 +7,11 @@ Merges requirements and resolves conflicts using appropriate resolvers.
 
 import logging
 import tempfile
-from pathlib import Path
-from typing import List, Dict, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
 
-from src.resolution.python_resolver import PythonResolver, ResolvedPackage
 from src.analysis.dependency_analyzer import DependencyAnalyzer, DependencyGraph
+from src.resolution.python_resolver import PythonResolver, ResolvedPackage
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +21,14 @@ class UnifiedResolutionResult:
     """Result of unified dependency resolution."""
 
     success: bool
-    packages: List[ResolvedPackage] = field(default_factory=list)
+    packages: list[ResolvedPackage] = field(default_factory=list)
     requirements_txt: str = ""
-    conflicts_resolved: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    conflicts_resolved: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     resolution_time_ms: int = 0
 
     # Per-repository breakdown
-    repository_deps: Dict[str, int] = field(default_factory=dict)
+    repository_deps: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -74,9 +73,9 @@ class UnifiedResolver:
 
     async def resolve(
         self,
-        repository_urls: List[str],
+        repository_urls: list[str],
         python_version: str = "3.11",
-        additional_constraints: Optional[List[str]] = None,
+        additional_constraints: list[str] | None = None,
     ) -> UnifiedResolutionResult:
         """
         Resolve dependencies from multiple repositories.
@@ -93,8 +92,8 @@ class UnifiedResolver:
         start_time = time.time()
 
         result = UnifiedResolutionResult(success=False)
-        all_requirements: List[str] = []
-        seen_packages: Dict[str, List[str]] = {}  # package -> versions
+        all_requirements: list[str] = []
+        seen_packages: dict[str, list[str]] = {}  # package -> versions
 
         # Analyze each repository
         for repo_url in repository_urls:
@@ -149,7 +148,7 @@ class UnifiedResolver:
     async def _extract_dependencies(
         self,
         repo_url: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Extract dependencies from a repository."""
         # For URLs, we need to clone first
         if repo_url.startswith("http"):
@@ -158,7 +157,7 @@ class UnifiedResolver:
             # Local path
             return await self._extract_from_path(Path(repo_url))
 
-    async def _extract_from_url(self, repo_url: str) -> List[str]:
+    async def _extract_from_url(self, repo_url: str) -> list[str]:
         """Extract dependencies from a remote repository."""
         from src.discovery.unified_search import UnifiedSearch
 
@@ -178,7 +177,7 @@ class UnifiedResolver:
                 logger.warning(f"No client for platform: {platform}")
                 return []
 
-    async def _extract_from_path(self, repo_path: Path) -> List[str]:
+    async def _extract_from_path(self, repo_path: Path) -> list[str]:
         """Extract dependencies from a local repository path."""
         graph = await self.dep_analyzer.analyze(repo_path)
 
@@ -193,7 +192,7 @@ class UnifiedResolver:
 
     async def resolve_from_graphs(
         self,
-        dependency_graphs: List[DependencyGraph],
+        dependency_graphs: list[DependencyGraph],
         python_version: str = "3.11",
     ) -> UnifiedResolutionResult:
         """

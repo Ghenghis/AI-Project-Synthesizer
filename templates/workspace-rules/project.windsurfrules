@@ -1,0 +1,131 @@
+{
+  // High-level identity
+  "project": {
+    "name": "VIBE MCP - Visual Intelligence Builder Environment",
+    "description": "A guarded, MCP-driven coding cockpit that integrates LM Studio/local LLMs, MCP tools, and strict quality gates for multi-language repos.",
+    "primary_languages": ["python", "javascript", "typescript", "powershell"],
+    "goals": [
+      "Keep changes production-grade and small, with clear diffs.",
+      "Use MCP tools wherever possible instead of hardcoding ad-hoc logic.",
+      "Maintain strong security, testing, and documentation discipline."
+    ]
+  },
+
+  // How the AI / agents should behave in Windsurf
+  "ai_behaviour": {
+    "style": {
+      "tone": "professional, concise, explanatory",
+      "avoid": ["placeholders", "hand-wavy descriptions", "incomplete pseudo-code"]
+    },
+    "rules": [
+      "Always explain the reasoning behind non-trivial changes in plain English.",
+      "Prefer incremental, reviewable patches over large rewrites.",
+      "Respect existing architecture and directory layout; do not invent new top-level folders without justification.",
+      "If a requested change conflicts with security, testing, or style rules, call it out and propose a safer alternative."
+    ]
+  },
+
+  // Repository layout hints
+  "architecture": {
+    "core_dirs": [
+      "src/",
+      "src/mcp/",
+      "src/cli/",
+      "src/memory/",
+      "src/llm/",
+      "src/quality/",
+      "src/voice/",
+      "tests/",
+      "docs/",
+      "tools/"
+    ],
+    "conventions": [
+      "Python modules go under src/<domain>/ with __init__.py and type hints.",
+      "Tests mirror src layout under tests/ with pytest-style tests.",
+      "CLI entrypoints live in tools/ or src/cli/.",
+      "Docs live in docs/, one topic per file.",
+      "MCP server components are in src/mcp/ with FastMCP framework.",
+      "All CLI operations use the AgentCLI interface for safety and error recovery."
+    ]
+  },
+
+  // Quality gates and expectations
+  "quality": {
+    "required_checks": [
+      "code must be syntactically valid",
+      "no obvious security issues for the change scope",
+      "add or update tests when touching non-trivial logic",
+      "update or create docs when adding new public features"
+    ],
+    "linters": [
+      "python: ruff + mypy",
+      "javascript/typescript: eslint",
+      "shell: shellcheck (if applicable)"
+    ],
+    "testing": {
+      "framework": "pytest for Python; npm/yarn test for JS/TS where applicable",
+      "rules": [
+        "Prefer small, focused tests over giant end-to-end ones.",
+        "When fixing a bug, add at least one regression test."
+      ]
+    }
+  },
+
+  // MCP / tools integration hints
+  "tools": {
+    "mcp": {
+      "usage_rules": [
+        "When you need repo-wide context, use MCP tools to scan or search instead of guessing.",
+        "Use MCP tools to read config, environment, and external service info rather than inventing values.",
+        "Before refactoring large areas, request a project map via MCP tools and summarize the impact."
+      ]
+    },
+    "cli_executor": {
+      "notes": [
+        "All command execution should use the CLI executor from src/cli/agent_interface.py",
+        "The executor provides automatic error recovery and safety checks",
+        "Use semantic methods like cli.git_commit() instead of raw shell commands"
+      ]
+    },
+    "memory_system": {
+      "notes": [
+        "Use the memory system to remember user preferences and learned patterns",
+        "Call memory.remember_preference() for user choices",
+        "Use memory.get_context_for_task() before starting work"
+      ]
+    }
+  },
+
+  // Safety & guardrails
+  "safety": {
+    "forbidden_actions": [
+      "Writing secrets, API keys, or passwords into code or config files.",
+      "Disabling security checks, linters, or tests without explicit justification.",
+      "Deleting large sections of code or docs without a clear reason and explanation.",
+      "Bypassing the CLI executor safety checks for raw command execution"
+    ],
+    "ask_before": [
+      "Changing project-wide naming conventions.",
+      "Introducing new external dependencies.",
+      "Rewriting core architecture files.",
+      "Modifying the CLI executor safety mechanisms"
+    ]
+  },
+
+  // Vibe Coding specific rules
+  "vibe_coding": {
+    "principles": [
+      "Automate repetitive tasks through the CLI executor",
+      "Use the memory system to avoid asking the same questions",
+      "Leverage error recovery to auto-fix common issues",
+      "Maintain the 5 pillars: Prompt Engineering, Structured Process, Security & Quality, Right Tools & Stack, Learning & Iteration"
+    ],
+    "workflow": [
+      "1. Check memory for relevant context",
+      "2. Use CLI executor for all command operations",
+      "3. Let error recovery handle common issues",
+      "4. Update memory with new learnings",
+      "5. Run quality gates before committing"
+    ]
+  }
+}

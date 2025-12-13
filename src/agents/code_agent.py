@@ -9,9 +9,9 @@ AI-powered code agent for:
 - Documentation
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
 
-from src.agents.base import BaseAgent, AgentConfig, AgentTool
+from src.agents.base import AgentConfig, AgentTool, BaseAgent
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -29,7 +29,7 @@ class CodeAgent(BaseAgent):
     - Generate documentation
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         config = config or AgentConfig(
             name="code_agent",
             description="Generates and improves code",
@@ -110,7 +110,7 @@ class CodeAgent(BaseAgent):
         description: str,
         language: str = "python",
         style: str = "production",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate code from description."""
         llm = await self._get_llm()
 
@@ -154,7 +154,7 @@ Return ONLY the code, no explanations."""
         code: str,
         error: str,
         language: str = "python",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Fix bugs in code."""
         llm = await self._get_llm()
 
@@ -195,7 +195,7 @@ Provide the fixed code. Explain what was wrong briefly, then return the correcte
         self,
         code: str,
         language: str = "python",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Review code for quality issues."""
         llm = await self._get_llm()
 
@@ -239,7 +239,7 @@ Provide a structured review with severity levels (high/medium/low)."""
         code: str,
         goal: str,
         language: str = "python",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Refactor code."""
         llm = await self._get_llm()
 
@@ -275,7 +275,7 @@ Provide the refactored code that achieves the goal while maintaining functionali
         code: str,
         language: str = "python",
         style: str = "docstring",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate documentation."""
         llm = await self._get_llm()
 
@@ -309,7 +309,7 @@ Include:
         self,
         code: str,
         language: str = "python",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Explain what code does."""
         llm = await self._get_llm()
 
@@ -332,7 +332,7 @@ Provide:
             "explanation": explanation,
         }
 
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a code task step."""
         llm = await self._get_llm()
 
@@ -406,7 +406,7 @@ OUTPUT: <final output>
             "complete": False,
         }
 
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Check if should continue."""
         return not step_result.get("complete", False)
 

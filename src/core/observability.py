@@ -6,14 +6,15 @@ and health checks for production monitoring.
 """
 
 import asyncio
+import logging
+import threading
 import time
 import uuid
-import threading
-from typing import Optional, Dict, Any, List, Callable
-from dataclasses import dataclass, field
-from contextlib import contextmanager
 from collections import defaultdict, deque
-import logging
+from collections.abc import Callable
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class CorrelationManager:
             delattr(self._local, 'correlation_id')
 
     @contextmanager
-    def correlation_context(self, correlation_id: Optional[str] = None):
+    def correlation_context(self, correlation_id: str | None = None):
         """
         Context manager for correlation ID.
 
@@ -78,7 +79,7 @@ class MetricValue:
     """Single metric value with timestamp."""
     value: float
     timestamp: float = field(default_factory=time.time)
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
 
 class MetricType:
@@ -104,12 +105,12 @@ class MetricsCollector:
         Args:
             max_history: Maximum values to keep per metric
         """
-        self._metrics: Dict[str, List[MetricValue]] = defaultdict(lambda: deque(maxlen=max_history))
-        self._counters: Dict[str, float] = defaultdict(float)
-        self._gauges: Dict[str, float] = defaultdict(float)
+        self._metrics: dict[str, list[MetricValue]] = defaultdict(lambda: deque(maxlen=max_history))
+        self._counters: dict[str, float] = defaultdict(float)
+        self._gauges: dict[str, float] = defaultdict(float)
         self._lock = threading.Lock()
 
-    def increment(self, name: str, value: float = 1.0, tags: Optional[Dict[str, str]] = None):
+    def increment(self, name: str, value: float = 1.0, tags: dict[str, str] | None = None):
         """
         Increment counter metric.
 
@@ -122,7 +123,7 @@ class MetricsCollector:
             self._counters[name] += value
             self._metrics[name].append(MetricValue(value, tags=tags or {}))
 
-    def set_gauge(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
+    def set_gauge(self, name: str, value: float, tags: dict[str, str] | None = None):
         """
         Set gauge metric value.
 
@@ -135,7 +136,7 @@ class MetricsCollector:
             self._gauges[name] = value
             self._metrics[name].append(MetricValue(value, tags=tags or {}))
 
-    def record_timer(self, name: str, duration: float, tags: Optional[Dict[str, str]] = None):
+    def record_timer(self, name: str, duration: float, tags: dict[str, str] | None = None):
         """
         Record timer metric.
 
@@ -147,7 +148,7 @@ class MetricsCollector:
         with self._lock:
             self._metrics[name].append(MetricValue(duration, tags=tags or {}))
 
-    def record_histogram(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
+    def record_histogram(self, name: str, value: float, tags: dict[str, str] | None = None):
         """
         Record histogram value.
 
@@ -167,7 +168,7 @@ class MetricsCollector:
         """Get gauge value."""
         return self._gauges.get(name, 0.0)
 
-    def get_metric_values(self, name: str, since: Optional[float] = None) -> List[MetricValue]:
+    def get_metric_values(self, name: str, since: float | None = None) -> list[MetricValue]:
         """
         Get metric values.
 
@@ -183,7 +184,7 @@ class MetricsCollector:
             values = [v for v in values if v.timestamp >= since]
         return values
 
-    def get_metric_summary(self, name: str, since: Optional[float] = None) -> Dict[str, Any]:
+    def get_metric_summary(self, name: str, since: float | None = None) -> dict[str, Any]:
         """
         Get metric summary statistics.
 
@@ -208,7 +209,7 @@ class MetricsCollector:
             "latest": numeric_values[-1] if numeric_values else None,
         }
 
-    def get_all_metrics(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_metrics(self) -> dict[str, dict[str, Any]]:
         """Get all metrics summary."""
         result = {}
 
@@ -261,7 +262,7 @@ class HealthCheck:
         self.last_status = None
         self.last_error = None
 
-    async def check(self) -> Dict[str, Any]:
+    async def check(self) -> dict[str, Any]:
         """
         Execute health check.
 
@@ -285,7 +286,7 @@ class HealthCheck:
                 "timestamp": self.last_check,
             }
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             duration = time.time() - start_time
             self.last_check = time.time()
             self.last_status = "timeout"
@@ -320,7 +321,7 @@ class HealthChecker:
     """
 
     def __init__(self):
-        self._checks: Dict[str, HealthCheck] = {}
+        self._checks: dict[str, HealthCheck] = {}
         self._lock = threading.Lock()
 
     def add_check(self, check: HealthCheck):
@@ -333,7 +334,7 @@ class HealthChecker:
         with self._lock:
             self._checks.pop(name, None)
 
-    async def check_all(self) -> Dict[str, Any]:
+    async def check_all(self) -> dict[str, Any]:
         """
         Execute all health checks.
 
@@ -355,7 +356,7 @@ class HealthChecker:
         if tasks:
             check_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            for name, result in zip(check_names, check_results):
+            for name, result in zip(check_names, check_results, strict=False):
                 if isinstance(result, Exception):
                     results[name] = {
                         "name": name,
@@ -375,7 +376,7 @@ class HealthChecker:
             "checks": results,
         }
 
-    async def check_single(self, name: str) -> Optional[Dict[str, Any]]:
+    async def check_single(self, name: str) -> dict[str, Any] | None:
         """Execute single health check."""
         with self._lock:
             check = self._checks.get(name)
@@ -385,7 +386,7 @@ class HealthChecker:
 
         return await check.check()
 
-    def get_check_names(self) -> List[str]:
+    def get_check_names(self) -> list[str]:
         """Get all check names."""
         with self._lock:
             return list(self._checks.keys())
@@ -443,7 +444,7 @@ class PerformanceTracker:
     """
 
     def __init__(self):
-        self._operations: Dict[str, List[float]] = defaultdict(list)
+        self._operations: dict[str, list[float]] = defaultdict(list)
         self._lock = threading.Lock()
 
     def record_operation(self, operation: str, duration: float):
@@ -454,7 +455,7 @@ class PerformanceTracker:
             if len(self._operations[operation]) > 1000:
                 self._operations[operation] = self._operations[operation][-1000:]
 
-    def get_operation_stats(self, operation: str) -> Dict[str, float]:
+    def get_operation_stats(self, operation: str) -> dict[str, float]:
         """Get operation statistics."""
         with self._lock:
             durations = self._operations.get(operation, [])
@@ -496,7 +497,7 @@ def track_performance(operation: str):
                            tags={"correlation_id": correlation_id} if correlation_id else None)
 
 
-def track_metrics(metric_type: str, name: str, tags: Optional[Dict[str, str]] = None):
+def track_metrics(metric_type: str, name: str, tags: dict[str, str] | None = None):
     """
     Decorator for tracking function metrics.
 
@@ -536,7 +537,7 @@ def track_metrics(metric_type: str, name: str, tags: Optional[Dict[str, str]] = 
     return decorator
 
 
-def get_correlation_id() -> Optional[str]:
+def get_correlation_id() -> str | None:
     """Get current correlation ID."""
     return correlation_manager.get_correlation_id()
 
@@ -546,7 +547,7 @@ def set_correlation_id(correlation_id: str):
     correlation_manager.set_correlation_id(correlation_id)
 
 
-async def check_lmstudio_health() -> Dict[str, Any]:
+async def check_lmstudio_health() -> dict[str, Any]:
     """
     Health check for LM Studio service.
 

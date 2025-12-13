@@ -10,12 +10,13 @@ Robust progressive gap filling:
 
 import asyncio
 import importlib
-from typing import Optional, Dict, Any, List, Tuple, Callable
+import traceback
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from enum import Enum
-import traceback
+from pathlib import Path
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -53,12 +54,12 @@ class Gap:
     description: str
     location: str
     auto_fixable: bool = False
-    fix_action: Optional[str] = None
-    fix_function: Optional[Callable] = None
+    fix_action: str | None = None
+    fix_function: Callable | None = None
     fixed: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "category": self.category.value,
@@ -76,7 +77,7 @@ class Gap:
 class AnalysisReport:
     """Gap analysis report."""
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    gaps: List[Gap] = field(default_factory=list)
+    gaps: list[Gap] = field(default_factory=list)
     fixed_count: int = 0
     failed_count: int = 0
 
@@ -85,14 +86,14 @@ class AnalysisReport:
         return len(self.gaps)
 
     @property
-    def critical_gaps(self) -> List[Gap]:
+    def critical_gaps(self) -> list[Gap]:
         return [g for g in self.gaps if g.severity == GapSeverity.CRITICAL]
 
     @property
-    def unfixed_gaps(self) -> List[Gap]:
+    def unfixed_gaps(self) -> list[Gap]:
         return [g for g in self.gaps if not g.fixed]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp,
             "total_gaps": self.total_gaps,
@@ -142,8 +143,8 @@ class GapAnalyzer:
     """
 
     def __init__(self):
-        self._gaps: List[Gap] = []
-        self._checks: List[Tuple[str, Callable]] = []
+        self._gaps: list[Gap] = []
+        self._checks: list[tuple[str, Callable]] = []
         self._setup_checks()
 
     def _setup_checks(self):
@@ -318,10 +319,10 @@ class GapAnalyzer:
     def _check_dashboard_imports(self):
         """Check dashboard imports."""
         try:
-            from src.dashboard.app import create_app
-            from src.dashboard.settings_routes import router as settings_router
             from src.dashboard.agent_routes import router as agent_router
+            from src.dashboard.app import create_app
             from src.dashboard.memory_routes import router as memory_router
+            from src.dashboard.settings_routes import router as settings_router
             from src.dashboard.webhook_routes import router as webhook_router
         except ImportError as e:
             self.add_gap(Gap(
@@ -414,6 +415,7 @@ class GapAnalyzer:
     def _check_api_keys(self):
         """Check API keys are configured."""
         import os
+
         from dotenv import load_dotenv
 
         # Load .env file
@@ -615,7 +617,7 @@ class GapAnalyzer:
 
 
 # Global analyzer
-_analyzer: Optional[GapAnalyzer] = None
+_analyzer: GapAnalyzer | None = None
 
 
 def get_gap_analyzer() -> GapAnalyzer:

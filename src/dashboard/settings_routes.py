@@ -8,16 +8,17 @@ API endpoints for settings management:
 - Export/import settings
 """
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from src.core.settings_manager import (
-    get_settings_manager,
-    SettingsTab,
-)
-from src.core.hotkey_manager import get_hotkey_manager, HotkeyAction
+from src.core.hotkey_manager import HotkeyAction, get_hotkey_manager
 from src.core.security import get_secure_logger
+from src.core.settings_manager import (
+    SettingsTab,
+    get_settings_manager,
+)
 
 secure_logger = get_secure_logger(__name__)
 
@@ -27,7 +28,7 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 # Request models
 class UpdateSettingsRequest(BaseModel):
     """Request to update settings."""
-    updates: Dict[str, Any]
+    updates: dict[str, Any]
 
 
 class ToggleFeatureRequest(BaseModel):
@@ -46,14 +47,14 @@ class UpdateHotkeyRequest(BaseModel):
 # ============================================
 
 @router.get("")
-async def get_all_settings() -> Dict[str, Any]:
+async def get_all_settings() -> dict[str, Any]:
     """Get all settings."""
     manager = get_settings_manager()
     return manager.export_settings()
 
 
 @router.get("/tabs")
-async def get_tabs() -> Dict[str, Any]:
+async def get_tabs() -> dict[str, Any]:
     """Get available settings tabs."""
     return {
         "tabs": [
@@ -69,7 +70,7 @@ async def get_tabs() -> Dict[str, Any]:
 
 
 @router.get("/{tab}")
-async def get_tab_settings(tab: str) -> Dict[str, Any]:
+async def get_tab_settings(tab: str) -> dict[str, Any]:
     """Get settings for a specific tab."""
     try:
         settings_tab = SettingsTab(tab)
@@ -81,7 +82,7 @@ async def get_tab_settings(tab: str) -> Dict[str, Any]:
 
 
 @router.put("/{tab}")
-async def update_tab_settings(tab: str, request: UpdateSettingsRequest) -> Dict[str, Any]:
+async def update_tab_settings(tab: str, request: UpdateSettingsRequest) -> dict[str, Any]:
     """Update settings for a specific tab."""
     try:
         settings_tab = SettingsTab(tab)
@@ -100,7 +101,7 @@ async def update_tab_settings(tab: str, request: UpdateSettingsRequest) -> Dict[
 
 
 @router.post("/{tab}/toggle")
-async def toggle_feature(tab: str, request: ToggleFeatureRequest) -> Dict[str, Any]:
+async def toggle_feature(tab: str, request: ToggleFeatureRequest) -> dict[str, Any]:
     """Toggle a boolean feature."""
     try:
         settings_tab = SettingsTab(tab)
@@ -118,14 +119,14 @@ async def toggle_feature(tab: str, request: ToggleFeatureRequest) -> Dict[str, A
 
 
 @router.get("/toggles/all")
-async def get_all_toggles() -> Dict[str, Any]:
+async def get_all_toggles() -> dict[str, Any]:
     """Get all feature toggles."""
     manager = get_settings_manager()
     return manager.get_feature_toggles()
 
 
 @router.post("/reset")
-async def reset_settings(tab: Optional[str] = None) -> Dict[str, Any]:
+async def reset_settings(tab: str | None = None) -> dict[str, Any]:
     """Reset settings to defaults."""
     manager = get_settings_manager()
 
@@ -142,7 +143,7 @@ async def reset_settings(tab: Optional[str] = None) -> Dict[str, Any]:
 
 
 @router.post("/export")
-async def export_settings() -> Dict[str, Any]:
+async def export_settings() -> dict[str, Any]:
     """Export all settings."""
     manager = get_settings_manager()
     return {
@@ -152,7 +153,7 @@ async def export_settings() -> Dict[str, Any]:
 
 
 @router.post("/import")
-async def import_settings(settings: Dict[str, Any]) -> Dict[str, Any]:
+async def import_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Import settings."""
     manager = get_settings_manager()
     manager.import_settings(settings)
@@ -164,14 +165,14 @@ async def import_settings(settings: Dict[str, Any]) -> Dict[str, Any]:
 # ============================================
 
 @router.get("/hotkeys/bindings")
-async def get_hotkey_bindings() -> Dict[str, Any]:
+async def get_hotkey_bindings() -> dict[str, Any]:
     """Get all hotkey bindings."""
     manager = get_hotkey_manager()
     return {"bindings": manager.get_bindings()}
 
 
 @router.put("/hotkeys/{action}")
-async def update_hotkey(action: str, request: UpdateHotkeyRequest) -> Dict[str, Any]:
+async def update_hotkey(action: str, request: UpdateHotkeyRequest) -> dict[str, Any]:
     """Update a hotkey binding."""
     try:
         hotkey_action = HotkeyAction(action)
@@ -188,7 +189,7 @@ async def update_hotkey(action: str, request: UpdateHotkeyRequest) -> Dict[str, 
 
 
 @router.post("/hotkeys/{action}/enable")
-async def enable_hotkey(action: str) -> Dict[str, Any]:
+async def enable_hotkey(action: str) -> dict[str, Any]:
     """Enable a hotkey."""
     try:
         hotkey_action = HotkeyAction(action)
@@ -200,7 +201,7 @@ async def enable_hotkey(action: str) -> Dict[str, Any]:
 
 
 @router.post("/hotkeys/{action}/disable")
-async def disable_hotkey(action: str) -> Dict[str, Any]:
+async def disable_hotkey(action: str) -> dict[str, Any]:
     """Disable a hotkey."""
     try:
         hotkey_action = HotkeyAction(action)
@@ -216,7 +217,7 @@ async def disable_hotkey(action: str) -> Dict[str, Any]:
 # ============================================
 
 @router.get("/voice/quick")
-async def get_voice_quick_settings() -> Dict[str, Any]:
+async def get_voice_quick_settings() -> dict[str, Any]:
     """Get quick voice settings."""
     manager = get_settings_manager()
     voice = manager.settings.voice
@@ -232,7 +233,7 @@ async def get_voice_quick_settings() -> Dict[str, Any]:
 
 
 @router.post("/voice/toggle-pause")
-async def toggle_voice_pause() -> Dict[str, Any]:
+async def toggle_voice_pause() -> dict[str, Any]:
     """Toggle voice pause detection."""
     manager = get_settings_manager()
     new_value = manager.toggle(SettingsTab.VOICE, "pause_detection")
@@ -240,7 +241,7 @@ async def toggle_voice_pause() -> Dict[str, Any]:
 
 
 @router.post("/voice/toggle-auto-speak")
-async def toggle_auto_speak() -> Dict[str, Any]:
+async def toggle_auto_speak() -> dict[str, Any]:
     """Toggle auto-speak responses."""
     manager = get_settings_manager()
     new_value = manager.toggle(SettingsTab.VOICE, "auto_speak_responses")
@@ -252,7 +253,7 @@ async def toggle_auto_speak() -> Dict[str, Any]:
 # ============================================
 
 @router.get("/automation/quick")
-async def get_automation_quick_settings() -> Dict[str, Any]:
+async def get_automation_quick_settings() -> dict[str, Any]:
     """Get quick automation settings."""
     manager = get_settings_manager()
     auto = manager.settings.automation
@@ -267,7 +268,7 @@ async def get_automation_quick_settings() -> Dict[str, Any]:
 
 
 @router.post("/automation/toggle-auto-continue")
-async def toggle_auto_continue() -> Dict[str, Any]:
+async def toggle_auto_continue() -> dict[str, Any]:
     """Toggle auto-continue."""
     manager = get_settings_manager()
     # Cycle through modes

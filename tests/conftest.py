@@ -4,17 +4,27 @@ AI Project Synthesizer - Test Configuration
 Pytest fixtures and configuration for all test suites.
 """
 
-import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, MagicMock
 
-import pytest
+# Set environment variables BEFORE any other imports
+# This must happen before any src modules are imported
+os.environ.setdefault("APP_ENV", "testing")
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("LOG_LEVEL", "DEBUG")
+os.environ.setdefault("GITHUB_TOKEN", "test_github_token")
+os.environ.setdefault("CACHE_ENABLED", "false")
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# Now import other modules
+import asyncio
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 # ============================================
@@ -84,25 +94,25 @@ def mock_github_response():
             self.default_branch = "main"
             self.size = 5000
             self.owner = MagicMock(login="owner")
-        
+
         def __getitem__(self, key):
             return getattr(self, key)
-        
+
         def get(self, key, default=None):
             return getattr(self, key, default)
-    
+
     class MockSearchResult:
         """Mock that supports both dict-style and attribute access like ghapi."""
         def __init__(self):
             self.items = [MockRepo()]
             self.total_count = 1
-        
+
         def __getitem__(self, key):
             return getattr(self, key)
-        
+
         def get(self, key, default=None):
             return getattr(self, key, default)
-    
+
     return MockSearchResult()
 
 
@@ -110,7 +120,7 @@ def mock_github_response():
 def mock_github_client(mock_github_response):
     """Mock GitHub client."""
     from src.discovery.github_client import GitHubClient
-    
+
     client = GitHubClient(token="test_token")
     client._api = MagicMock()
     client._api.search.repos.return_value = mock_github_response
@@ -121,7 +131,7 @@ def mock_github_client(mock_github_response):
 def mock_repository_info():
     """Mock RepositoryInfo object."""
     from src.discovery.base_client import RepositoryInfo
-    
+
     return RepositoryInfo(
         platform="github",
         id="123456",
@@ -161,10 +171,10 @@ from typing import List, Optional
 
 class SampleClass:
     """A sample class."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     def greet(self) -> str:
         return f"Hello, {self.name}!"
 
@@ -244,12 +254,12 @@ def sample_repo_structure(tmp_path: Path) -> Path:
     """Create sample repository structure for testing."""
     repo = tmp_path / "sample-repo"
     repo.mkdir()
-    
+
     # Create directories
     (repo / "src").mkdir()
     (repo / "tests").mkdir()
     (repo / "docs").mkdir()
-    
+
     # Create files
     (repo / "README.md").write_text("# Sample Repository\n\nA test repository.")
     (repo / "requirements.txt").write_text("fastapi>=0.100.0\npydantic>=2.0.0\n")
@@ -258,7 +268,7 @@ def sample_repo_structure(tmp_path: Path) -> Path:
     (repo / "src" / "main.py").write_text('def main():\n    print("Hello")\n')
     (repo / "tests" / "__init__.py").write_text("")
     (repo / "tests" / "test_main.py").write_text('def test_main():\n    assert True\n')
-    
+
     return repo
 
 

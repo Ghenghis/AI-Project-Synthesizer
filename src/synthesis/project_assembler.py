@@ -14,11 +14,11 @@ This is the BRAIN that assembles complete projects automatically.
 
 import asyncio
 import json
-from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from src.core.config import get_settings
 from src.core.security import get_secure_logger
@@ -34,10 +34,10 @@ class ProjectResource:
     url: str
     resource_type: str  # code, model, dataset, paper
     description: str = ""
-    download_path: Optional[Path] = None
+    download_path: Path | None = None
     downloaded: bool = False
     size_mb: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -49,17 +49,17 @@ class AssembledProject:
     base_path: Path
 
     # Resources
-    code_repos: List[ProjectResource] = field(default_factory=list)
-    models: List[ProjectResource] = field(default_factory=list)
-    datasets: List[ProjectResource] = field(default_factory=list)
-    papers: List[ProjectResource] = field(default_factory=list)
+    code_repos: list[ProjectResource] = field(default_factory=list)
+    models: list[ProjectResource] = field(default_factory=list)
+    datasets: list[ProjectResource] = field(default_factory=list)
+    papers: list[ProjectResource] = field(default_factory=list)
 
     # Generated files
-    readme_path: Optional[Path] = None
-    requirements_path: Optional[Path] = None
+    readme_path: Path | None = None
+    requirements_path: Path | None = None
 
     # GitHub
-    github_repo_url: Optional[str] = None
+    github_repo_url: str | None = None
     github_repo_created: bool = False
 
     # Status
@@ -115,7 +115,7 @@ class ProjectAssembler:
         print(f"GitHub: {project.github_repo_url}")
     """
 
-    def __init__(self, config: Optional[AssemblerConfig] = None):
+    def __init__(self, config: AssemblerConfig | None = None):
         """Initialize assembler."""
         self.config = config or AssemblerConfig()
         self._search = None
@@ -132,8 +132,8 @@ class ProjectAssembler:
     async def assemble(
         self,
         idea: str,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
+        name: str | None = None,
+        description: str | None = None,
     ) -> AssembledProject:
         """
         Assemble a complete project from an idea.
@@ -613,7 +613,7 @@ class ProjectAssembler:
 
         return "\n".join(lines)
 
-    async def _collect_requirements(self, project: AssembledProject) -> List[str]:
+    async def _collect_requirements(self, project: AssembledProject) -> list[str]:
         """Collect requirements from all repos."""
         requirements = set()
 
@@ -687,7 +687,7 @@ Thumbs.db
 *.key
 """
 
-    def _generate_windsurf_config(self, project: AssembledProject) -> Dict[str, Any]:
+    def _generate_windsurf_config(self, project: AssembledProject) -> dict[str, Any]:
         """Generate Windsurf IDE configuration."""
         return {
             "project": {
@@ -814,7 +814,7 @@ Thumbs.db
 
 async def assemble_project(
     idea: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     output_dir: Path = Path("G:/"),
     create_github: bool = True,
 ) -> AssembledProject:

@@ -7,9 +7,8 @@ Builds dependency graphs and detects conflicts.
 
 import logging
 import re
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import toml
 
@@ -21,7 +20,7 @@ class Dependency:
     """Represents a single dependency."""
     name: str
     version_spec: str  # e.g., ">=1.0.0,<2.0.0"
-    extras: List[str] = field(default_factory=list)
+    extras: list[str] = field(default_factory=list)
     source_file: str = ""
     package_manager: str = "pip"
     is_dev: bool = False
@@ -41,19 +40,19 @@ class DependencyConflict:
     dep_b: Dependency
     reason: str
     resolvable: bool = True
-    suggested_version: Optional[str] = None
+    suggested_version: str | None = None
 
 
 @dataclass
 class DependencyGraph:
     """Complete dependency graph for a project."""
-    direct: List[Dependency] = field(default_factory=list)
-    transitive: List[Dependency] = field(default_factory=list)
-    conflicts: List[DependencyConflict] = field(default_factory=list)
-    dev_dependencies: List[Dependency] = field(default_factory=list)
+    direct: list[Dependency] = field(default_factory=list)
+    transitive: list[Dependency] = field(default_factory=list)
+    conflicts: list[DependencyConflict] = field(default_factory=list)
+    dev_dependencies: list[Dependency] = field(default_factory=list)
 
     @property
-    def all_dependencies(self) -> List[Dependency]:
+    def all_dependencies(self) -> list[Dependency]:
         """Return all dependencies."""
         return self.direct + self.transitive
 
@@ -147,8 +146,8 @@ class DependencyAnalyzer:
         Returns:
             DependencyGraph with all discovered dependencies
         """
-        direct_deps: List[Dependency] = []
-        dev_deps: List[Dependency] = []
+        direct_deps: list[Dependency] = []
+        dev_deps: list[Dependency] = []
 
         # Detect and parse each dependency file
         for pm, files in self.DEPENDENCY_FILES.items():
@@ -187,7 +186,7 @@ class DependencyAnalyzer:
         self,
         file_path: Path,
         package_manager: str
-    ) -> Tuple[List[Dependency], List[Dependency]]:
+    ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse a dependency file and return (regular, dev) dependencies."""
         try:
             if file_path.name == "requirements.txt" or file_path.name.startswith("requirements"):
@@ -212,7 +211,7 @@ class DependencyAnalyzer:
 
         return [], []
 
-    def _parse_requirements_txt(self, file_path: Path) -> List[Dependency]:
+    def _parse_requirements_txt(self, file_path: Path) -> list[Dependency]:
         """Parse requirements.txt format."""
         deps = []
         content = file_path.read_text(encoding="utf-8")
@@ -239,7 +238,7 @@ class DependencyAnalyzer:
         self,
         line: str,
         source_file: str
-    ) -> Optional[Dependency]:
+    ) -> Dependency | None:
         """Parse a single requirement line."""
         # Remove inline comments
         if "#" in line:
@@ -273,7 +272,7 @@ class DependencyAnalyzer:
     def _parse_pyproject_toml(
         self,
         file_path: Path
-    ) -> Tuple[List[Dependency], List[Dependency]]:
+    ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse pyproject.toml for dependencies."""
         deps = []
         dev_deps = []
@@ -364,7 +363,7 @@ class DependencyAnalyzer:
     def _parse_package_json(
         self,
         file_path: Path
-    ) -> Tuple[List[Dependency], List[Dependency]]:
+    ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse package.json for npm dependencies."""
         import json
 
@@ -399,7 +398,7 @@ class DependencyAnalyzer:
     def _parse_cargo_toml(
         self,
         file_path: Path
-    ) -> Tuple[List[Dependency], List[Dependency]]:
+    ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse Cargo.toml for Rust dependencies."""
         deps = []
         dev_deps = []
@@ -446,7 +445,7 @@ class DependencyAnalyzer:
     def _parse_pipfile(
         self,
         file_path: Path
-    ) -> Tuple[List[Dependency], List[Dependency]]:
+    ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse Pipfile for dependencies."""
         deps = []
         dev_deps = []
@@ -490,9 +489,9 @@ class DependencyAnalyzer:
 
         return deps, dev_deps
 
-    def _deduplicate(self, deps: List[Dependency]) -> List[Dependency]:
+    def _deduplicate(self, deps: list[Dependency]) -> list[Dependency]:
         """Remove duplicate dependencies, keeping the most specific version."""
-        seen: Dict[str, Dependency] = {}
+        seen: dict[str, Dependency] = {}
 
         for dep in deps:
             key = dep.normalized_name
@@ -508,13 +507,13 @@ class DependencyAnalyzer:
 
     def _detect_conflicts(
         self,
-        dependencies: List[Dependency]
-    ) -> List[DependencyConflict]:
+        dependencies: list[Dependency]
+    ) -> list[DependencyConflict]:
         """Detect version conflicts between dependencies."""
         conflicts = []
 
         # Group by normalized name
-        by_name: Dict[str, List[Dependency]] = {}
+        by_name: dict[str, list[Dependency]] = {}
         for dep in dependencies:
             key = dep.normalized_name
             by_name.setdefault(key, []).append(dep)

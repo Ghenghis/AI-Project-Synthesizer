@@ -10,15 +10,14 @@ Rich-based TUI for full system control:
 """
 
 import asyncio
-from typing import List
 from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Confirm, Prompt
 from rich.syntax import Syntax
+from rich.table import Table
 
 console = Console()
 
@@ -38,7 +37,7 @@ class SynthesizerTUI:
     def __init__(self):
         self.running = True
         self.current_view = "main"
-        self._history: List[str] = []
+        self._history: list[str] = []
 
     def clear(self):
         """Clear terminal."""
@@ -201,7 +200,10 @@ class SynthesizerTUI:
             task = progress.add_task("Assembling project...", total=None)
 
             try:
-                from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
+                from src.synthesis.project_assembler import (
+                    AssemblerConfig,
+                    ProjectAssembler,
+                )
 
                 config = AssemblerConfig(base_output_dir=Path(output_dir))
                 assembler = ProjectAssembler(config)
@@ -396,7 +398,7 @@ class SynthesizerTUI:
         self.header()
         console.print("\n[bold]⚙️ Settings[/bold]\n")
 
-        from src.core.settings_manager import get_settings_manager, SettingsTab
+        from src.core.settings_manager import SettingsTab, get_settings_manager
         manager = get_settings_manager()
 
         menu = Table(show_header=False, box=None)

@@ -6,9 +6,8 @@ Supports selective extraction of modules, classes, and functions.
 """
 
 import logging
-from pathlib import Path
-from typing import List, Dict, Optional, Set
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from src.analysis.ast_parser import ASTParser, ParsedFile
 
@@ -21,12 +20,12 @@ class Component:
 
     name: str
     component_type: str  # "module", "package", "class", "function"
-    files: List[str]
-    entry_point: Optional[str] = None
-    internal_deps: List[str] = field(default_factory=list)
-    external_deps: List[str] = field(default_factory=list)
+    files: list[str]
+    entry_point: str | None = None
+    internal_deps: list[str] = field(default_factory=list)
+    external_deps: list[str] = field(default_factory=list)
     loc: int = 0
-    description: Optional[str] = None
+    description: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -63,7 +62,7 @@ class CodeExtractor:
     async def identify_components(
         self,
         repo_path: Path,
-    ) -> List[Component]:
+    ) -> list[Component]:
         """
         Identify extractable components in a repository.
 
@@ -73,11 +72,11 @@ class CodeExtractor:
         Returns:
             List of identified components
         """
-        components: List[Component] = []
+        components: list[Component] = []
 
         # Analyze project structure
         analysis = await self._parser.analyze_project(repo_path)
-        files: List[ParsedFile] = analysis.get("files", [])
+        files: list[ParsedFile] = analysis.get("files", [])
 
         # Build import graph
         import_graph = self._build_import_graph(files)
@@ -110,13 +109,13 @@ class CodeExtractor:
 
     def _build_import_graph(
         self,
-        files: List[ParsedFile],
-    ) -> Dict[str, Set[str]]:
+        files: list[ParsedFile],
+    ) -> dict[str, set[str]]:
         """Build import dependency graph."""
-        graph: Dict[str, Set[str]] = {}
+        graph: dict[str, set[str]] = {}
 
         for parsed in files:
-            deps: Set[str] = set()
+            deps: set[str] = set()
 
             for imp in parsed.imports:
                 if imp.is_relative:
@@ -129,7 +128,7 @@ class CodeExtractor:
 
         return graph
 
-    def _identify_packages(self, repo_path: Path) -> List[Path]:
+    def _identify_packages(self, repo_path: Path) -> list[Path]:
         """Find Python packages (directories with __init__.py)."""
         packages = []
 
@@ -148,9 +147,9 @@ class CodeExtractor:
         self,
         repo_path: Path,
         pkg_path: Path,
-        files: List[ParsedFile],
-        import_graph: Dict[str, Set[str]],
-    ) -> Optional[Component]:
+        files: list[ParsedFile],
+        import_graph: dict[str, set[str]],
+    ) -> Component | None:
         """Analyze a package and create component."""
         # Get all files in package
         pkg_files = [
@@ -165,8 +164,8 @@ class CodeExtractor:
         total_loc = sum(f.loc for f in pkg_files)
 
         # Get internal and external dependencies
-        internal_deps: Set[str] = set()
-        external_deps: Set[str] = set()
+        internal_deps: set[str] = set()
+        external_deps: set[str] = set()
 
         for parsed in pkg_files:
             for imp in parsed.imports:
@@ -193,7 +192,7 @@ class CodeExtractor:
     def _is_standalone_module(
         self,
         parsed: ParsedFile,
-        import_graph: Dict[str, Set[str]],
+        import_graph: dict[str, set[str]],
     ) -> bool:
         """Check if a module can stand alone."""
         # Has significant code
@@ -201,10 +200,7 @@ class CodeExtractor:
             return False
 
         # Has functions or classes
-        if not parsed.functions and not parsed.classes:
-            return False
-
-        return True
+        return not (not parsed.functions and not parsed.classes)
 
     def _is_significant_class(self, cls, parsed: ParsedFile) -> bool:
         """Check if a class is significant enough to extract."""
@@ -213,10 +209,7 @@ class CodeExtractor:
             return False
 
         # Has docstring
-        if not cls.docstring:
-            return False
-
-        return True
+        return cls.docstring
 
     def _create_module_component(self, parsed: ParsedFile) -> Component:
         """Create component from a module."""
@@ -248,7 +241,7 @@ class CodeExtractor:
             description=cls.docstring,
         )
 
-    def _get_package_description(self, files: List[ParsedFile]) -> Optional[str]:
+    def _get_package_description(self, files: list[ParsedFile]) -> str | None:
         """Extract package description from __init__.py docstring."""
         for f in files:
             if f.path.endswith("__init__.py"):
@@ -257,7 +250,7 @@ class CodeExtractor:
                     return f.classes[0].docstring[:200]
         return None
 
-    def _get_module_description(self, parsed: ParsedFile) -> Optional[str]:
+    def _get_module_description(self, parsed: ParsedFile) -> str | None:
         """Extract module description."""
         if parsed.functions and parsed.functions[0].docstring:
             return parsed.functions[0].docstring[:200]
@@ -314,7 +307,4 @@ class CodeExtractor:
             "tests", "docs", "examples", "scripts",
         }
 
-        for part in path.parts:
-            if part in skip_patterns:
-                return True
-        return False
+        return any(part in skip_patterns for part in path.parts)

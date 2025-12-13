@@ -5,9 +5,8 @@ Generates Mermaid diagrams for architecture visualization.
 """
 
 import logging
-from pathlib import Path
-from typing import List, Dict
 from dataclasses import dataclass, field
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +15,9 @@ logger = logging.getLogger(__name__)
 class DiagramConfig:
     """Configuration for diagram generation."""
     project_name: str
-    components: List[str] = field(default_factory=list)
-    dependencies: Dict[str, List[str]] = field(default_factory=dict)
-    diagram_types: List[str] = field(default_factory=lambda: ["architecture", "flow"])
+    components: list[str] = field(default_factory=list)
+    dependencies: dict[str, list[str]] = field(default_factory=dict)
+    diagram_types: list[str] = field(default_factory=lambda: ["architecture", "flow"])
 
 
 class DiagramGenerator:
@@ -41,7 +40,7 @@ class DiagramGenerator:
     def generate(
         self,
         config: DiagramConfig,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Generate diagrams based on configuration.
 
@@ -71,7 +70,7 @@ class DiagramGenerator:
 """
 
         # Add components
-        for i, component in enumerate(config.components):
+        for _i, component in enumerate(config.components):
             safe_id = component.replace(" ", "_").replace("-", "_")
             diagram += f"        {safe_id}[\"{component}\"]\n"
 
@@ -127,7 +126,7 @@ class DiagramGenerator:
         direction TB
 """
 
-        for i, component in enumerate(config.components):
+        for _i, component in enumerate(config.components):
             safe_id = component.replace(" ", "_").replace("-", "_")
             diagram += f"        {safe_id}[[\"{component}\"]]\n"
 
@@ -138,7 +137,7 @@ class DiagramGenerator:
     def generate_from_codebase(
         self,
         project_path: Path,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Auto-generate diagrams by analyzing codebase.
 
@@ -170,9 +169,9 @@ class DiagramGenerator:
 
     def save_diagrams(
         self,
-        diagrams: Dict[str, str],
+        diagrams: dict[str, str],
         output_dir: Path,
-    ) -> List[Path]:
+    ) -> list[Path]:
         """
         Save diagrams to files.
 

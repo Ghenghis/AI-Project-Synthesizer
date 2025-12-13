@@ -11,10 +11,11 @@ Automated testing for:
 
 import asyncio
 import time
-from typing import Optional, List, Dict, Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from src.automation.metrics import ActionTimer, get_metrics_collector
 from src.core.security import get_secure_logger
@@ -40,8 +41,8 @@ class TestCase:
     test_func: Callable[[], Awaitable[bool]]
     category: str = "general"
     timeout_seconds: int = 30
-    dependencies: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -51,8 +52,8 @@ class TestResult:
     status: TestStatus
     duration_ms: float
     message: str = ""
-    error: Optional[str] = None
-    details: Dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -66,13 +67,13 @@ class TestSuiteResult:
     skipped: int
     errors: int
     duration_ms: float
-    results: List[TestResult] = field(default_factory=list)
+    results: list[TestResult] = field(default_factory=list)
 
     @property
     def success_rate(self) -> float:
         return self.passed / self.total if self.total > 0 else 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "suite": self.suite_name,
             "total": self.total,
@@ -124,14 +125,14 @@ class IntegrationTester:
     """
 
     def __init__(self):
-        self._tests: Dict[str, TestCase] = {}
+        self._tests: dict[str, TestCase] = {}
         self._metrics = get_metrics_collector()
 
     def register(self, test: TestCase):
         """Register a test case."""
         self._tests[test.name] = test
 
-    def register_many(self, tests: List[TestCase]):
+    def register_many(self, tests: list[TestCase]):
         """Register multiple test cases."""
         for test in tests:
             self.register(test)
@@ -174,7 +175,7 @@ class IntegrationTester:
                     message="Test returned False",
                 )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return TestResult(
                 name=name,
                 status=TestStatus.ERROR,
@@ -203,7 +204,7 @@ class IntegrationTester:
         ]
         return await self._run_tests(tests, category)
 
-    async def run_tags(self, tags: List[str]) -> TestSuiteResult:
+    async def run_tags(self, tags: list[str]) -> TestSuiteResult:
         """Run tests with specific tags."""
         tests = [
             name for name, test in self._tests.items()
@@ -213,12 +214,12 @@ class IntegrationTester:
 
     async def _run_tests(
         self,
-        test_names: List[str],
+        test_names: list[str],
         suite_name: str,
     ) -> TestSuiteResult:
         """Run a list of tests."""
         start_time = time.perf_counter()
-        results: List[TestResult] = []
+        results: list[TestResult] = []
         completed = set()
 
         # Sort by dependencies
@@ -291,8 +292,9 @@ async def test_ollama_connection() -> bool:
 
 async def test_github_api() -> bool:
     """Test GitHub API access."""
-    from src.core.config import get_settings
     import httpx
+
+    from src.core.config import get_settings
 
     settings = get_settings()
     token = settings.platforms.github_token.get_secret_value()
@@ -315,8 +317,9 @@ async def test_huggingface_api() -> bool:
 
 async def test_elevenlabs_api() -> bool:
     """Test ElevenLabs API access."""
-    from src.core.config import get_settings
     import httpx
+
+    from src.core.config import get_settings
 
     settings = get_settings()
     api_key = settings.elevenlabs.elevenlabs_api_key.get_secret_value()
@@ -373,7 +376,7 @@ async def test_metrics_collection() -> bool:
     return metrics is not None and metrics.count > 0
 
 
-def get_default_tests() -> List[TestCase]:
+def get_default_tests() -> list[TestCase]:
     """Get default test cases."""
     return [
         TestCase(

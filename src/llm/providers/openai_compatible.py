@@ -11,20 +11,20 @@ Generic provider for any OpenAI-compatible API including:
 """
 
 import time
-from typing import Optional, List, AsyncIterator
+from collections.abc import AsyncIterator
 
 from openai import AsyncOpenAI
 
-from src.llm.providers.base import (
-    LLMProvider,
-    ProviderConfig,
-    CompletionResult,
-    StreamChunk,
-    ProviderCapabilities,
-)
-from src.core.circuit_breaker import circuit_breaker, CircuitBreakerConfig
+from src.core.circuit_breaker import CircuitBreakerConfig, circuit_breaker
+from src.core.observability import correlation_manager, metrics, track_performance
 from src.core.security import get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
+from src.llm.providers.base import (
+    CompletionResult,
+    LLMProvider,
+    ProviderCapabilities,
+    ProviderConfig,
+    StreamChunk,
+)
 
 secure_logger = get_secure_logger(__name__)
 
@@ -122,7 +122,7 @@ class OpenAICompatibleProvider(LLMProvider):
 
     @circuit_breaker("openai_compatible", OPENAI_COMPAT_BREAKER)
     @track_performance("openai_compatible_list_models")
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available models from the server."""
         try:
             models = await self.client.models.list()
@@ -136,8 +136,8 @@ class OpenAICompatibleProvider(LLMProvider):
     async def complete(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs
@@ -223,8 +223,8 @@ class OpenAICompatibleProvider(LLMProvider):
     async def stream(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs

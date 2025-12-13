@@ -10,12 +10,12 @@ Professional health check system for:
 
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from src.core.version import get_version
 from src.core.security import get_secure_logger
+from src.core.version import get_version
 
 secure_logger = get_secure_logger(__name__)
 
@@ -36,7 +36,7 @@ class ComponentHealth:
     message: str = ""
     latency_ms: float = 0.0
     last_check: datetime = field(default_factory=datetime.now)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -45,10 +45,10 @@ class SystemHealth:
     status: HealthStatus
     version: str
     uptime_seconds: float
-    components: List[ComponentHealth]
+    components: list[ComponentHealth]
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "status": self.status.value,
@@ -78,7 +78,7 @@ class HealthChecker:
     def __init__(self):
         """Initialize health checker."""
         self._start_time = time.time()
-        self._last_check: Optional[SystemHealth] = None
+        self._last_check: SystemHealth | None = None
 
     async def check_all(self) -> SystemHealth:
         """Run all health checks."""
@@ -327,7 +327,7 @@ class HealthChecker:
 
 
 # Global health checker
-_health_checker: Optional[HealthChecker] = None
+_health_checker: HealthChecker | None = None
 
 
 def get_health_checker() -> HealthChecker:

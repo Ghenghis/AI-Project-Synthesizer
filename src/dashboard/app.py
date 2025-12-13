@@ -7,18 +7,18 @@ FastAPI-based web dashboard for visual project management.
 import asyncio
 import json
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from src.core.version import get_version, get_build_info
-from src.core.health import check_health
 from src.core.cache import get_cache
+from src.core.health import check_health
 from src.core.plugins import get_plugin_manager
 from src.core.security import get_secure_logger
+from src.core.version import get_build_info, get_version
 
 secure_logger = get_secure_logger(__name__)
 
@@ -26,13 +26,13 @@ secure_logger = get_secure_logger(__name__)
 # Request/Response models
 class SearchRequest(BaseModel):
     query: str
-    platforms: List[str] = ["github", "huggingface", "kaggle"]
+    platforms: list[str] = ["github", "huggingface", "kaggle"]
     max_results: int = 10
 
 
 class AssembleRequest(BaseModel):
     idea: str
-    name: Optional[str] = None
+    name: str | None = None
     output_dir: str = "G:/"
     create_github: bool = True
 
@@ -142,7 +142,10 @@ def create_app() -> FastAPI:
     async def assemble(request: AssembleRequest):
         """Assemble a project."""
         try:
-            from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
+            from src.synthesis.project_assembler import (
+                AssemblerConfig,
+                ProjectAssembler,
+            )
 
             config = AssemblerConfig(
                 base_output_dir=Path(request.output_dir),
@@ -221,10 +224,11 @@ def create_app() -> FastAPI:
         return collector.get_summary()
 
     @app.post("/api/metrics")
-    async def record_metrics(data: Dict[str, Any]):
+    async def record_metrics(data: dict[str, Any]):
         """Record metrics from n8n workflows."""
-        from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
+
+        from src.automation.metrics import TimingRecord, get_metrics_collector
 
         collector = get_metrics_collector()
 
@@ -247,10 +251,11 @@ def create_app() -> FastAPI:
         return {"status": "recorded"}
 
     @app.post("/api/metrics/health")
-    async def record_health_metrics(data: Dict[str, Any]):
+    async def record_health_metrics(data: dict[str, Any]):
         """Record health check metrics."""
-        from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
+
+        from src.automation.metrics import TimingRecord, get_metrics_collector
 
         collector = get_metrics_collector()
         record = TimingRecord(
@@ -266,10 +271,11 @@ def create_app() -> FastAPI:
         return {"status": "recorded"}
 
     @app.post("/api/metrics/tests")
-    async def record_test_metrics(data: Dict[str, Any]):
+    async def record_test_metrics(data: dict[str, Any]):
         """Record test run metrics."""
-        from src.automation.metrics import get_metrics_collector, TimingRecord
         import time
+
+        from src.automation.metrics import TimingRecord, get_metrics_collector
 
         collector = get_metrics_collector()
         summary = data.get("summary", {})
@@ -293,7 +299,7 @@ def create_app() -> FastAPI:
     # ============================================
 
     @app.post("/api/alerts")
-    async def receive_alert(data: Dict[str, Any]):
+    async def receive_alert(data: dict[str, Any]):
         """Receive alerts from n8n workflows."""
         alert_type = data.get("type", "unknown")
 
@@ -312,7 +318,7 @@ def create_app() -> FastAPI:
     # ============================================
 
     @app.post("/api/recovery/attempt")
-    async def attempt_recovery(data: Dict[str, Any]):
+    async def attempt_recovery(data: dict[str, Any]):
         """Attempt to recover unhealthy components."""
         components = data.get("components", [])
         if isinstance(components, str):
@@ -331,7 +337,7 @@ def create_app() -> FastAPI:
     # ============================================
 
     @app.post("/api/voice/speak")
-    async def speak(data: Dict[str, Any]):
+    async def speak(data: dict[str, Any]):
         """Generate speech from text."""
         text = data.get("text", "")
         voice = data.get("voice", "rachel")
@@ -370,7 +376,7 @@ def create_app() -> FastAPI:
         return default_topics
 
     @app.post("/api/research/save")
-    async def save_research(data: Dict[str, Any]):
+    async def save_research(data: dict[str, Any]):
         """Save research results."""
         results = data.get("results", [])
         timestamp = data.get("timestamp", "")
@@ -439,7 +445,7 @@ def create_app() -> FastAPI:
             return {"error": str(e), "running": False}
 
     @app.post("/api/automation/tests")
-    async def run_automation_tests(data: Dict[str, Any] = None):
+    async def run_automation_tests(data: dict[str, Any] = None):
         """Run integration tests."""
         try:
             from src.automation.coordinator import get_coordinator

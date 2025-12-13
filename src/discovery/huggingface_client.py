@@ -7,19 +7,19 @@ Provides model, dataset, and space search capabilities.
 
 import logging
 import time
-from pathlib import Path
-from typing import Optional, List, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 from src.discovery.base_client import (
-    PlatformClient,
-    RepositoryInfo,
-    SearchResult,
-    FileContent,
-    DirectoryListing,
     AuthenticationError,
+    DirectoryListing,
+    FileContent,
+    PlatformClient,
     RateLimitError,
+    RepositoryInfo,
     RepositoryNotFoundError,
+    SearchResult,
 )
 from src.utils.rate_limiter import RateLimiter
 
@@ -36,9 +36,9 @@ class HFModelInfo:
     private: bool
     downloads: int
     likes: int
-    tags: List[str]
-    pipeline_tag: Optional[str]
-    library_name: Optional[str]
+    tags: list[str]
+    pipeline_tag: str | None
+    library_name: str | None
 
     def to_repository_info(self) -> RepositoryInfo:
         """Convert to standard RepositoryInfo format."""
@@ -76,7 +76,7 @@ class HFDatasetInfo:
     private: bool
     downloads: int
     likes: int
-    tags: List[str]
+    tags: list[str]
 
     def to_repository_info(self) -> RepositoryInfo:
         """Convert to standard RepositoryInfo format."""
@@ -124,7 +124,7 @@ class HuggingFaceClient(PlatformClient):
 
     def __init__(
         self,
-        token: Optional[str] = None,
+        token: str | None = None,
         requests_per_minute: int = 300,
     ):
         """
@@ -163,7 +163,7 @@ class HuggingFaceClient(PlatformClient):
     async def search(
         self,
         query: str,
-        language: Optional[str] = None,
+        language: str | None = None,
         min_stars: int = 0,
         max_results: int = 20,
         sort_by: str = "likes",
@@ -225,11 +225,11 @@ class HuggingFaceClient(PlatformClient):
     async def _search_models(
         self,
         query: str,
-        library: Optional[str],
+        library: str | None,
         min_likes: int,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search HuggingFace models."""
         # Map sort field
         sort_map = {
@@ -287,7 +287,7 @@ class HuggingFaceClient(PlatformClient):
         min_likes: int,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search HuggingFace datasets."""
         sort_map = {
             "likes": "likes",
@@ -339,7 +339,7 @@ class HuggingFaceClient(PlatformClient):
         query: str,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search HuggingFace Spaces."""
         sort_map = {
             "likes": "likes",
@@ -585,7 +585,7 @@ class HuggingFaceClient(PlatformClient):
         repo_id: str,
         destination: Path,
         depth: int = 1,
-        branch: Optional[str] = None,
+        branch: str | None = None,
     ) -> Path:
         """Clone HuggingFace repository."""
         from huggingface_hub import snapshot_download

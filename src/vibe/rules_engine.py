@@ -11,11 +11,12 @@ Rules are loaded from YAML configuration files and can be
 dynamically applied based on context.
 """
 
-import yaml
-from pathlib import Path
-from typing import Dict, List, Optional, Set, Any
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 from src.core.config import get_settings
 
@@ -45,12 +46,12 @@ class Rule:
     description: str
     category: RuleCategory
     priority: RulePriority
-    pattern: Optional[str] = None  # Regex pattern to match
-    conditions: Optional[Dict[str, Any]] = None
-    action: Optional[str] = None  # What to do when rule matches
-    examples: List[str] = None
-    tags: Set[str] = None
-    
+    pattern: str | None = None  # Regex pattern to match
+    conditions: dict[str, Any] | None = None
+    action: str | None = None  # What to do when rule matches
+    examples: list[str] = None
+    tags: set[str] = None
+
     def __post_init__(self):
         if self.examples is None:
             self.examples = []
@@ -63,14 +64,14 @@ class RuleSet:
     """A collection of rules for a specific context."""
     name: str
     description: str
-    rules: List[Rule]
-    context: Dict[str, Any]
+    rules: list[Rule]
+    context: dict[str, Any]
 
 
 class RulesEngine:
     """
     Manages and applies rules for code generation.
-    
+
     Features:
     - YAML-based rule definitions
     - Context-aware rule selection
@@ -78,22 +79,22 @@ class RulesEngine:
     - Dynamic rule loading
     - Rule inheritance and overrides
     """
-    
+
     def __init__(self):
         self.config = get_settings()
-        self.rules: Dict[str, Rule] = {}
-        self.rule_sets: Dict[str, RuleSet] = {}
-        
+        self.rules: dict[str, Rule] = {}
+        self.rule_sets: dict[str, RuleSet] = {}
+
         # Rule directories
         self.rules_dir = Path("config/rules")
         self.rules_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Load default rules
         self._load_default_rules()
-        
+
         # Load custom rules from files
         self._load_custom_rules()
-    
+
     def _load_default_rules(self) -> None:
         """Load built-in default rules."""
         # Security rules
@@ -146,7 +147,7 @@ class RulesEngine:
                 tags={"security", "https", "api"}
             )
         ]
-        
+
         # Style rules
         style_rules = [
             Rule(
@@ -187,7 +188,7 @@ class RulesEngine:
                 tags={"style", "documentation"}
             )
         ]
-        
+
         # Pattern rules
         pattern_rules = [
             Rule(
@@ -218,22 +219,22 @@ class RulesEngine:
                 tags={"pattern", "architecture", "testing"}
             )
         ]
-        
+
         # Register all rules
         for rule in security_rules + style_rules + pattern_rules:
             self.register_rule(rule)
-    
+
     def _load_custom_rules(self) -> None:
         """Load custom rules from YAML files."""
         if not self.rules_dir.exists():
             return
-        
+
         # Load each YAML file
         for yaml_file in self.rules_dir.glob("*.yaml"):
             try:
-                with open(yaml_file, 'r') as f:
+                with open(yaml_file) as f:
                     data = yaml.safe_load(f)
-                
+
                 # Parse rules
                 if isinstance(data, dict) and "rules" in data:
                     rule_set = RuleSet(
@@ -242,19 +243,19 @@ class RulesEngine:
                         rules=[],
                         context=data.get("context", {})
                     )
-                    
+
                     for rule_data in data["rules"]:
                         rule = self._parse_rule_from_yaml(rule_data)
                         if rule:
                             self.register_rule(rule)
                             rule_set.rules.append(rule)
-                    
+
                     self.rule_sets[rule_set.name] = rule_set
-                    
+
             except Exception as e:
                 print(f"Failed to load rules from {yaml_file}: {e}")
-    
-    def _parse_rule_from_yaml(self, data: Dict[str, Any]) -> Optional[Rule]:
+
+    def _parse_rule_from_yaml(self, data: dict[str, Any]) -> Rule | None:
         """Parse a rule from YAML data."""
         try:
             return Rule(
@@ -272,55 +273,53 @@ class RulesEngine:
         except KeyError as e:
             print(f"Missing required field in rule: {e}")
             return None
-    
+
     def register_rule(self, rule: Rule) -> None:
         """Register a new rule."""
         self.rules[rule.id] = rule
-    
-    def get_rule(self, rule_id: str) -> Optional[Rule]:
+
+    def get_rule(self, rule_id: str) -> Rule | None:
         """Get a rule by ID."""
         return self.rules.get(rule_id)
-    
-    async def get_applicable_rules(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> List[Rule]:
+
+    async def get_applicable_rules(self, prompt: str, context: dict[str, Any] | None = None) -> list[Rule]:
         """
         Get rules applicable to the given prompt and context.
-        
+
         Args:
             prompt: The user prompt
             context: Additional context (language, project type, etc.)
-            
+
         Returns:
             List of applicable rules sorted by priority
         """
         applicable = []
-        
+
         for rule in self.rules.values():
             if self._is_rule_applicable(rule, prompt, context):
                 applicable.append(rule)
-        
+
         # Sort by priority (lower number = higher priority)
         applicable.sort(key=lambda r: r.priority.value)
-        
+
         return applicable
-    
-    def _is_rule_applicable(self, rule: Rule, prompt: str, context: Optional[Dict[str, Any]]) -> bool:
+
+    def _is_rule_applicable(self, rule: Rule, prompt: str, context: dict[str, Any] | None) -> bool:
         """Check if a rule applies to the given prompt and context."""
         prompt_lower = prompt.lower()
-        
+
         # Check pattern match
         if rule.pattern:
             import re
             if not re.search(rule.pattern, prompt_lower):
                 return False
-        
+
         # Check conditions
         if rule.conditions:
             context = context or {}
-            
+
             for condition, value in rule.conditions.items():
-                if condition == "language" and context.get("language") != value:
-                    return False
-                elif condition == "has_user_input" and value and "input" not in prompt_lower:
+                if condition == "language" and context.get("language") != value or condition == "has_user_input" and value and "input" not in prompt_lower:
                     return False
                 elif condition == "has_risky_operation" and value:
                     risky_keywords = ["file", "network", "database", "api", "external"]
@@ -332,24 +331,24 @@ class RulesEngine:
                         return False
                 elif condition == "is_public" and value and "test" in prompt_lower:
                     return False  # Test files don't need public docstrings
-        
+
         return True
-    
-    def get_rules_by_category(self, category: RuleCategory) -> List[Rule]:
+
+    def get_rules_by_category(self, category: RuleCategory) -> list[Rule]:
         """Get all rules in a category."""
         return [r for r in self.rules.values() if r.category == category]
-    
-    def get_rules_by_tag(self, tag: str) -> List[Rule]:
+
+    def get_rules_by_tag(self, tag: str) -> list[Rule]:
         """Get all rules with a specific tag."""
         return [r for r in self.rules.values() if tag in r.tags]
-    
-    def resolve_conflicts(self, rules: List[Rule]) -> List[Rule]:
+
+    def resolve_conflicts(self, rules: list[Rule]) -> list[Rule]:
         """
         Resolve conflicts between rules based on priority.
-        
+
         Args:
             rules: List of potentially conflicting rules
-            
+
         Returns:
             Resolved list of rules
         """
@@ -359,14 +358,14 @@ class RulesEngine:
             if rule.category not in by_category:
                 by_category[rule.category] = []
             by_category[rule.category].append(rule)
-        
+
         resolved = []
-        
+
         # Keep highest priority rules from each category
         for category, category_rules in by_category.items():
             # Sort by priority
             category_rules.sort(key=lambda r: r.priority.value)
-            
+
             # Keep top rules (limit per category)
             max_per_category = {
                 RuleCategory.SECURITY: 5,
@@ -375,12 +374,12 @@ class RulesEngine:
                 RuleCategory.PROJECT: 5,
                 RuleCategory.PERFORMANCE: 2
             }
-            
+
             max_rules = max_per_category.get(category, 3)
             resolved.extend(category_rules[:max_rules])
-        
+
         return resolved
-    
+
     def create_rule_files(self) -> None:
         """Create example rule configuration files."""
         # Security rules file
@@ -401,7 +400,7 @@ class RulesEngine:
                 }
             ]
         }
-        
+
         # Project-specific rules file
         project_rules = {
             "name": "project_rules",
@@ -420,14 +419,14 @@ class RulesEngine:
                 }
             ]
         }
-        
+
         # Write files
         with open(self.rules_dir / "security.yaml", 'w') as f:
             yaml.dump(security_rules, f, default_flow_style=False)
-        
+
         with open(self.rules_dir / "project.yaml", 'w') as f:
             yaml.dump(project_rules, f, default_flow_style=False)
-    
+
     def export_rules(self, output_path: str) -> None:
         """Export all rules to a YAML file."""
         export_data = {
@@ -436,12 +435,12 @@ class RulesEngine:
             "categories": {},
             "rules": []
         }
-        
+
         # Group by category
         for category in RuleCategory:
             category_rules = self.get_rules_by_category(category)
             export_data["categories"][category.value] = len(category_rules)
-            
+
             for rule in category_rules:
                 rule_dict = {
                     "id": rule.id,
@@ -451,20 +450,20 @@ class RulesEngine:
                     "priority": rule.priority.value,
                     "tags": list(rule.tags)
                 }
-                
+
                 if rule.pattern:
                     rule_dict["pattern"] = rule.pattern
                 if rule.action:
                     rule_dict["action"] = rule.action
                 if rule.conditions:
                     rule_dict["conditions"] = rule.conditions
-                
+
                 export_data["rules"].append(rule_dict)
-        
+
         # Write export
         with open(output_path, 'w') as f:
             yaml.dump(export_data, f, default_flow_style=False)
-    
+
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
         from datetime import datetime
@@ -474,30 +473,29 @@ class RulesEngine:
 # CLI interface for testing
 if __name__ == "__main__":
     import asyncio
-    import sys
-    
+
     async def main():
         engine = RulesEngine()
-        
+
         # Create example rule files
         engine.create_rule_files()
         print("Created example rule files in config/rules/")
-        
+
         # Test rule application
         test_prompt = "Create a login API with database authentication"
         context = {"language": "python", "has_user_input": True}
-        
+
         rules = await engine.get_applicable_rules(test_prompt, context)
-        
+
         print(f"\nFound {len(rules)} applicable rules for prompt:")
         print(f"'{test_prompt}'")
         print("\nApplicable rules:")
         for rule in rules[:10]:  # Show first 10
             print(f"  - [{rule.category.value.upper()}] {rule.name}")
             print(f"    {rule.description}")
-        
+
         # Export rules
         engine.export_rules("exported_rules.yaml")
         print("\nExported all rules to exported_rules.yaml")
-    
+
     asyncio.run(main())

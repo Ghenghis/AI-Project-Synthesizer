@@ -41,9 +41,19 @@ deptry>=0.16.0                  # Unused dependency detection
 GitPython>=3.1.0                # Git interface
 
 # ============================================
-# LLM Integration - Core
+# Memory & LLM Integration
 # ============================================
-ollama>=0.3.0                   # Ollama client
+mem0>=0.1.0                      # Advanced memory system (26% better than OpenAI)
+
+# ============================================
+# Platform Integrations
+# ============================================
+gitpython>=3.1.0                     # Git repository operations for GitLab integration
+aiohttp>=3.9.0                       # Async HTTP client for web scraping
+beautifulsoup4>=4.12.0               # HTML parsing for web scraping
+markdownify>=0.12.0                  # HTML to Markdown conversion
+playwright>=1.40.0                   # Browser automation for agents
+litellm>=1.0.0                   # Unified LLM access (100+ providers)
 openai>=1.0.0                   # OpenAI client
 anthropic>=0.30.0               # Anthropic client
 google-generativeai>=0.8.0      # Google Gemini
@@ -73,11 +83,16 @@ numpy>=1.26.0                   # Numerical computing
 pandas>=2.2.0                   # Data manipulation
 
 # ============================================
-# Voice & Audio
+# Voice & Audio Processing
 # ============================================
-elevenlabs>=1.0.0               # ElevenLabs TTS
-pyaudio>=0.2.14                 # Audio I/O
-sounddevice>=0.4.6              # Audio playback
+elevenlabs>=0.2.0               # ElevenLabs TTS API
+pyaudio>=0.2.11                # Audio playback
+pygame>=2.5.0                   # Audio system fallback
+librosa>=0.10.0                 # Audio analysis and processing
+soundfile>=0.12.1               # Audio file I/O
+transformers>=4.36.0            # HuggingFace transformers (GLM-ASR)
+torch>=2.1.0                    # PyTorch for GLM-ASR inference
+torchaudio>=2.1.0               # Audio processing for PyTorch
 pydub>=0.25.1                   # Audio processing
 speechrecognition>=3.10.0       # Speech recognition
 
@@ -113,6 +128,14 @@ jinja2>=3.1.0                   # Templating
 email-validator>=2.1.0          # Email validation
 orjson>=3.10.0                  # Fast JSON
 msgpack>=1.0.0                  # MessagePack serialization
+
+# ============================================
+# Agent Frameworks
+# ============================================
+pyautogen>=0.2.0                # AutoGen multi-agent framework
+# Swarm - installed from GitHub (experimental)
+# pip install git+https://github.com/openai/swarm.git
+crewai>=0.1.0                    # CrewAI for role-based teams
 
 # ============================================
 # Caching & Storage

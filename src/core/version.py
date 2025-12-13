@@ -4,9 +4,8 @@ AI Project Synthesizer - Version Management
 Semantic versioning with automatic version bumping.
 """
 
-from dataclasses import dataclass
-from typing import Optional
 import re
+from dataclasses import dataclass
 from datetime import datetime
 
 __version__ = "2.0.0"
@@ -19,8 +18,8 @@ class VersionInfo:
     major: int
     minor: int
     patch: int
-    prerelease: Optional[str] = None  # alpha, beta, rc
-    build: Optional[str] = None
+    prerelease: str | None = None  # alpha, beta, rc
+    build: str | None = None
 
     def __str__(self) -> str:
         version = f"{self.major}.{self.minor}.{self.patch}"

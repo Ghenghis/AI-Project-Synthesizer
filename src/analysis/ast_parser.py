@@ -6,10 +6,10 @@ Extracts code structure, imports, functions, and classes.
 """
 
 import logging
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class Import:
     """Represents an import statement."""
     module: str
-    names: List[str] = field(default_factory=list)
-    alias: Optional[str] = None
+    names: list[str] = field(default_factory=list)
+    alias: str | None = None
     is_relative: bool = False
     line_number: int = 0
 
@@ -28,10 +28,10 @@ class Import:
 class Function:
     """Represents a function definition."""
     name: str
-    parameters: List[str]
-    return_type: Optional[str] = None
-    decorators: List[str] = field(default_factory=list)
-    docstring: Optional[str] = None
+    parameters: list[str]
+    return_type: str | None = None
+    decorators: list[str] = field(default_factory=list)
+    docstring: str | None = None
     line_start: int = 0
     line_end: int = 0
     is_async: bool = False
@@ -42,10 +42,10 @@ class Function:
 class Class:
     """Represents a class definition."""
     name: str
-    bases: List[str] = field(default_factory=list)
-    methods: List[Function] = field(default_factory=list)
-    decorators: List[str] = field(default_factory=list)
-    docstring: Optional[str] = None
+    bases: list[str] = field(default_factory=list)
+    methods: list[Function] = field(default_factory=list)
+    decorators: list[str] = field(default_factory=list)
+    docstring: str | None = None
     line_start: int = 0
     line_end: int = 0
 
@@ -55,13 +55,13 @@ class ParsedFile:
     """Result of parsing a single file."""
     path: str
     language: str
-    imports: List[Import] = field(default_factory=list)
-    functions: List[Function] = field(default_factory=list)
-    classes: List[Class] = field(default_factory=list)
+    imports: list[Import] = field(default_factory=list)
+    functions: list[Function] = field(default_factory=list)
+    classes: list[Class] = field(default_factory=list)
     loc: int = 0
     sloc: int = 0  # Source lines (excluding comments/blanks)
     complexity: float = 0.0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 class ASTParser:
@@ -155,7 +155,7 @@ class ASTParser:
             # Fallback: basic metrics only
             return await self._parse_generic(file_path, content, language)
 
-    async def analyze_project(self, project_path: Path) -> Dict[str, Any]:
+    async def analyze_project(self, project_path: Path) -> dict[str, Any]:
         """
         Analyze entire project structure.
 
@@ -165,8 +165,8 @@ class ASTParser:
         Returns:
             Dictionary with project analysis results
         """
-        files: List[ParsedFile] = []
-        languages: Dict[str, int] = {}
+        files: list[ParsedFile] = []
+        languages: dict[str, int] = {}
         total_loc = 0
         total_functions = 0
         total_classes = 0
@@ -224,9 +224,9 @@ class ASTParser:
 
     async def _parse_python(self, file_path: Path, content: str) -> ParsedFile:
         """Parse Python source file."""
-        imports: List[Import] = []
-        functions: List[Function] = []
-        classes: List[Class] = []
+        imports: list[Import] = []
+        functions: list[Function] = []
+        classes: list[Class] = []
 
         try:
             import ast
@@ -253,7 +253,7 @@ class ASTParser:
                     ))
 
                 # Extract functions
-                elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                     func = Function(
                         name=node.name,
                         parameters=[arg.arg for arg in node.args.args],
@@ -287,7 +287,7 @@ class ASTParser:
 
                     # Get methods
                     for item in node.body:
-                        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
                             cls.methods.append(Function(
                                 name=item.name,
                                 parameters=[arg.arg for arg in item.args.args],
@@ -345,9 +345,9 @@ class ASTParser:
         language: str,
     ) -> ParsedFile:
         """Parse JavaScript/TypeScript source file."""
-        imports: List[Import] = []
-        functions: List[Function] = []
-        classes: List[Class] = []
+        imports: list[Import] = []
+        functions: list[Function] = []
+        classes: list[Class] = []
 
         # Regex-based parsing for JS/TS
         # Import patterns

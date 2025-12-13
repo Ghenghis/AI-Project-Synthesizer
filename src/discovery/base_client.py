@@ -9,8 +9,8 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Dict, Any
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class AuthenticationError(DiscoveryError):
 class RateLimitError(DiscoveryError):
     """Rate limit exceeded."""
 
-    def __init__(self, message: str, retry_after: Optional[int] = None):
+    def __init__(self, message: str, retry_after: int | None = None):
         super().__init__(message)
         self.retry_after = retry_after
 
@@ -65,7 +65,7 @@ class RepositoryInfo:
     full_name: str
 
     # Metadata
-    description: Optional[str] = None
+    description: str | None = None
     owner: str = ""
 
     # Metrics
@@ -75,20 +75,20 @@ class RepositoryInfo:
     open_issues: int = 0
 
     # Languages
-    language: Optional[str] = None
-    languages: Dict[str, int] = field(default_factory=dict)
+    language: str | None = None
+    languages: dict[str, int] = field(default_factory=dict)
 
     # License
-    license: Optional[str] = None
-    license_url: Optional[str] = None
+    license: str | None = None
+    license_url: str | None = None
 
     # Timestamps
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    pushed_at: Optional[str] = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    pushed_at: str | None = None
 
     # Topics/Tags
-    topics: List[str] = field(default_factory=list)
+    topics: list[str] = field(default_factory=list)
 
     # Repository info
     default_branch: str = "main"
@@ -104,7 +104,7 @@ class RepositoryInfo:
     relevance_score: float = 0.0
     quality_score: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "platform": self.platform,
@@ -132,12 +132,12 @@ class SearchResult:
     query: str
     platform: str
     total_count: int
-    repositories: List[RepositoryInfo]
+    repositories: list[RepositoryInfo]
     search_time_ms: int
     has_more: bool = False
-    next_page_token: Optional[str] = None
+    next_page_token: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "query": self.query,
@@ -157,7 +157,7 @@ class FileContent:
     content: bytes
     size: int
     encoding: str = "utf-8"
-    sha: Optional[str] = None
+    sha: str | None = None
 
     @property
     def text(self) -> str:
@@ -169,8 +169,8 @@ class FileContent:
 class DirectoryListing:
     """Listing of files in a repository directory."""
     path: str
-    files: List[Dict[str, Any]]
-    directories: List[Dict[str, Any]]
+    files: list[dict[str, Any]]
+    directories: list[dict[str, Any]]
 
 
 class PlatformClient(ABC):
@@ -216,7 +216,7 @@ class PlatformClient(ABC):
     async def search(
         self,
         query: str,
-        language: Optional[str] = None,
+        language: str | None = None,
         min_stars: int = 0,
         max_results: int = 20,
         sort_by: str = "stars",
@@ -300,7 +300,7 @@ class PlatformClient(ABC):
         repo_id: str,
         destination: Path,
         depth: int = 1,
-        branch: Optional[str] = None,
+        branch: str | None = None,
     ) -> Path:
         """
         Clone repository to local filesystem.
@@ -316,7 +316,7 @@ class PlatformClient(ABC):
         """
         pass
 
-    async def get_readme(self, repo_id: str) -> Optional[str]:
+    async def get_readme(self, repo_id: str) -> str | None:
         """
         Get repository README content.
 
@@ -338,7 +338,7 @@ class PlatformClient(ABC):
 
         return None
 
-    async def get_license(self, repo_id: str) -> Optional[str]:
+    async def get_license(self, repo_id: str) -> str | None:
         """
         Get repository license content.
 

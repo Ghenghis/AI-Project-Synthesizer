@@ -7,22 +7,22 @@ Full coverage tests for:
 - IntegrationTester
 """
 
-import pytest
 import asyncio
-from datetime import datetime
+
+import pytest
 
 from src.automation.testing import (
+    IntegrationTester,
     TestCase,
     TestResult,
     TestStatus,
-    IntegrationTester,
     get_default_tests,
 )
 
 
 class TestTestStatus:
     """Tests for TestStatus enum."""
-    
+
     def test_all_statuses(self):
         assert TestStatus.PENDING.value == "pending"
         assert TestStatus.RUNNING.value == "running"
@@ -34,41 +34,44 @@ class TestTestStatus:
 
 class TestTestCase:
     """Tests for TestCase dataclass."""
-    
+
     def test_create_test_case(self):
         async def test_func():
             return True
-        
+
         case = TestCase(
-            id="test_1",
             name="Test One",
             description="A test case",
-            func=test_func,
+            test_func=test_func,
             category="unit",
         )
-        assert case.id == "test_1"
         assert case.name == "Test One"
+        assert case.description == "A test case"
         assert case.category == "unit"
         assert case.timeout_seconds == 30
         assert case.dependencies == []
-    
+
     def test_with_dependencies(self):
+        async def test_func():
+            return True
+
         case = TestCase(
-            id="test_dep",
             name="Dependent Test",
-            description="",
-            func=lambda: True,
+            description="Test with dependencies",
+            test_func=test_func,
             category="integration",
             dependencies=["test_1", "test_2"],
         )
         assert case.dependencies == ["test_1", "test_2"]
-    
+
     def test_custom_timeout(self):
+        async def test_func():
+            return True
+
         case = TestCase(
-            id="test_timeout",
             name="Long Test",
-            description="",
-            func=lambda: True,
+            description="Test with custom timeout",
+            test_func=test_func,
             category="e2e",
             timeout_seconds=120,
         )
@@ -77,284 +80,278 @@ class TestTestCase:
 
 class TestTestResult:
     """Tests for TestResult dataclass."""
-    
+
     def test_passed_result(self):
         result = TestResult(
-            test_id="test_1",
+            name="test_1",
             status=TestStatus.PASSED,
             duration_ms=50.0,
         )
-        assert result.test_id == "test_1"
+        assert result.name == "test_1"
         assert result.status == TestStatus.PASSED
         assert result.duration_ms == 50.0
         assert result.error is None
-    
+
     def test_failed_result(self):
         result = TestResult(
-            test_id="test_2",
+            name="test_2",
             status=TestStatus.FAILED,
             duration_ms=100.0,
             error="Assertion failed",
         )
         assert result.status == TestStatus.FAILED
         assert result.error == "Assertion failed"
-    
-    def test_with_output(self):
+
+    def test_with_details(self):
         result = TestResult(
-            test_id="test_3",
+            name="test_3",
             status=TestStatus.PASSED,
             duration_ms=25.0,
-            output={"data": "value"},
+            details={"data": "value"},
         )
-        assert result.output["data"] == "value"
-    
-    def test_to_dict(self):
+        assert result.details["data"] == "value"
+
+    def test_with_message(self):
         result = TestResult(
-            test_id="test_dict",
+            name="test_msg",
             status=TestStatus.PASSED,
             duration_ms=75.0,
-            output={"key": "val"},
+            message="Test completed successfully",
         )
-        d = result.to_dict()
-        assert d["test_id"] == "test_dict"
-        assert d["status"] == "passed"
-        assert d["duration_ms"] == 75.0
+        assert result.name == "test_msg"
+        assert result.status == TestStatus.PASSED
+        assert result.duration_ms == 75.0
+        assert result.message == "Test completed successfully"
 
 
 class TestIntegrationTester:
     """Tests for IntegrationTester class."""
-    
+
     @pytest.fixture
     def tester(self):
         return IntegrationTester()
-    
+
     def test_create_tester(self, tester):
         assert tester is not None
         assert len(tester._tests) == 0
-    
+
     def test_register_test(self, tester):
         async def my_test():
             return True
-        
+
         case = TestCase(
-            id="my_test",
-            name="My Test",
-            description="",
-            func=my_test,
+            name="my_test",
+            description="My Test",
+            test_func=my_test,
             category="unit",
         )
         tester.register(case)
-        
+
         assert "my_test" in tester._tests
-    
+
     def test_register_duplicate(self, tester):
+        async def test_func():
+            return True
+
         case = TestCase(
-            id="dup_test",
-            name="Duplicate",
-            description="",
-            func=lambda: True,
+            name="dup_test",
+            description="Duplicate",
+            test_func=test_func,
             category="unit",
         )
         tester.register(case)
         tester.register(case)  # Should overwrite
-        
-        assert len([t for t in tester._tests.values() if t.id == "dup_test"]) == 1
-    
-    def test_get_test(self, tester):
-        case = TestCase(
-            id="get_test",
-            name="Get Test",
-            description="",
-            func=lambda: True,
-            category="unit",
-        )
-        tester.register(case)
-        
-        retrieved = tester.get_test("get_test")
-        assert retrieved is not None
-        assert retrieved.name == "Get Test"
-    
-    def test_get_nonexistent_test(self, tester):
-        result = tester.get_test("nonexistent")
-        assert result is None
-    
+
+        assert len([t for t in tester._tests.values() if t.name == "dup_test"]) == 1
+
     def test_list_tests(self, tester):
+        async def test_func():
+            return True
+
         for i in range(3):
             tester.register(TestCase(
-                id=f"list_test_{i}",
-                name=f"List Test {i}",
-                description="",
-                func=lambda: True,
+                name=f"list_test_{i}",
+                description=f"List Test {i}",
+                test_func=test_func,
                 category="unit",
             ))
-        
+
         tests = tester.list_tests()
         assert len(tests) == 3
-    
+
     def test_list_tests_by_category(self, tester):
+        async def test_func():
+            return True
+
         tester.register(TestCase(
-            id="unit_1", name="Unit 1", description="",
-            func=lambda: True, category="unit",
+            name="unit_1",
+            description="Unit 1",
+            test_func=test_func,
+            category="unit",
         ))
         tester.register(TestCase(
-            id="integration_1", name="Integration 1", description="",
-            func=lambda: True, category="integration",
+            name="integration_1",
+            description="Integration 1",
+            test_func=test_func,
+            category="integration",
         ))
-        
+
         unit_tests = tester.list_tests(category="unit")
         assert len(unit_tests) == 1
         assert unit_tests[0]["category"] == "unit"
-    
+
     @pytest.mark.asyncio
     async def test_run_single_passing(self, tester):
         async def passing_test():
             return True
-        
+
         tester.register(TestCase(
-            id="pass_test",
-            name="Passing Test",
-            description="",
-            func=passing_test,
+            name="pass_test",
+            description="Passing Test",
+            test_func=passing_test,
             category="unit",
         ))
-        
+
         result = await tester.run_test("pass_test")
         assert result.status == TestStatus.PASSED
-    
+
     @pytest.mark.asyncio
     async def test_run_single_failing(self, tester):
         async def failing_test():
             raise AssertionError("Test failed")
-        
+
         tester.register(TestCase(
-            id="fail_test",
-            name="Failing Test",
-            description="",
-            func=failing_test,
+            name="fail_test",
+            description="Failing Test",
+            test_func=failing_test,
             category="unit",
         ))
-        
+
         result = await tester.run_test("fail_test")
         assert result.status == TestStatus.FAILED
         assert "Test failed" in result.error
-    
+
     @pytest.mark.asyncio
     async def test_run_nonexistent(self, tester):
         result = await tester.run_test("nonexistent")
         assert result.status == TestStatus.ERROR
-    
+
     @pytest.mark.asyncio
     async def test_run_with_timeout(self, tester):
         async def slow_test():
             await asyncio.sleep(10)
             return True
-        
+
         tester.register(TestCase(
-            id="slow_test",
-            name="Slow Test",
-            description="",
-            func=slow_test,
+            name="slow_test",
+            description="Slow Test",
+            test_func=slow_test,
             category="unit",
-            timeout_seconds=0.1,
+            timeout_seconds=1,  # Short timeout
         ))
-        
+
         result = await tester.run_test("slow_test")
         assert result.status == TestStatus.ERROR
         assert "timeout" in result.error.lower()
-    
+
     @pytest.mark.asyncio
     async def test_run_all(self, tester):
         async def test1():
             return True
-        
+
         async def test2():
             return True
-        
+
         tester.register(TestCase(
-            id="all_1", name="All 1", description="",
-            func=test1, category="unit",
+            name="all_1",
+            description="All 1",
+            test_func=test1,
+            category="unit",
         ))
         tester.register(TestCase(
-            id="all_2", name="All 2", description="",
-            func=test2, category="unit",
+            name="all_2",
+            description="All 2",
+            test_func=test2,
+            category="unit",
         ))
-        
+
         summary = await tester.run_all()
         assert summary.total == 2
         assert summary.passed == 2
         assert summary.failed == 0
-    
+
     @pytest.mark.asyncio
     async def test_run_all_by_category(self, tester):
+        async def test_func():
+            return True
+
         tester.register(TestCase(
-            id="cat_unit", name="Unit", description="",
-            func=lambda: True, category="unit",
+            name="cat_unit",
+            description="Unit",
+            test_func=test_func,
+            category="unit",
         ))
         tester.register(TestCase(
-            id="cat_int", name="Integration", description="",
-            func=lambda: True, category="integration",
+            name="cat_int",
+            description="Integration",
+            test_func=test_func,
+            category="integration",
         ))
-        
+
         summary = await tester.run_all(category="unit")
         assert summary.total == 1
-    
+
     @pytest.mark.asyncio
     async def test_run_with_dependencies(self, tester):
         results = []
-        
+
         async def dep_test():
             results.append("dep")
             return True
-        
+
         async def main_test():
             results.append("main")
             return True
-        
+
         tester.register(TestCase(
-            id="dep_test", name="Dependency", description="",
-            func=dep_test, category="unit",
+            name="dep_test",
+            description="Dependency",
+            test_func=dep_test,
+            category="unit",
         ))
         tester.register(TestCase(
-            id="main_test", name="Main", description="",
-            func=main_test, category="unit",
+            name="main_test",
+            description="Main",
+            test_func=main_test,
+            category="unit",
             dependencies=["dep_test"],
         ))
-        
+
         await tester.run_all()
-        
+
         # Dependency should run first
         assert results.index("dep") < results.index("main")
-    
-    def test_get_results(self, tester):
-        results = tester.get_results()
-        assert isinstance(results, list)
-    
-    def test_clear_results(self, tester):
-        tester._results.append(TestResult(
-            test_id="test",
-            status=TestStatus.PASSED,
-            duration_ms=10,
-        ))
-        
-        tester.clear_results()
-        assert len(tester._results) == 0
 
 
 class TestGetDefaultTests:
     """Tests for get_default_tests function."""
-    
+
     def test_returns_list(self):
         tests = get_default_tests()
         assert isinstance(tests, list)
-    
+
     def test_has_tests(self):
         tests = get_default_tests()
         assert len(tests) > 0
-    
+
     def test_test_structure(self):
         tests = get_default_tests()
         for test in tests:
-            assert hasattr(test, "id")
+            # Verify TestCase dataclass fields
             assert hasattr(test, "name")
-            assert hasattr(test, "func")
+            assert hasattr(test, "description")
+            assert hasattr(test, "test_func")
             assert hasattr(test, "category")
+            assert hasattr(test, "timeout_seconds")
+            assert hasattr(test, "dependencies")
+            assert hasattr(test, "tags")

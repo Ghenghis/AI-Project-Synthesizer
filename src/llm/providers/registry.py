@@ -9,19 +9,18 @@ Central registry for managing multiple LLM providers with:
 """
 
 import asyncio
-from typing import Optional, List, Dict, Type
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
 
+from src.core.observability import correlation_manager
+from src.core.security import get_secure_logger
 from src.llm.providers.base import (
+    CompletionResult,
     LLMProvider,
     ProviderConfig,
-    ProviderType,
     ProviderStatus,
-    CompletionResult,
+    ProviderType,
 )
-from src.core.security import get_secure_logger
-from src.core.observability import correlation_manager
 
 secure_logger = get_secure_logger(__name__)
 
@@ -62,9 +61,9 @@ class ProviderRegistry:
     """
 
     def __init__(self):
-        self._providers: Dict[str, ProviderInfo] = {}
-        self._provider_classes: Dict[ProviderType, Type[LLMProvider]] = {}
-        self._default_provider: Optional[str] = None
+        self._providers: dict[str, ProviderInfo] = {}
+        self._provider_classes: dict[ProviderType, type[LLMProvider]] = {}
+        self._default_provider: str | None = None
         self._health_check_interval: float = 60.0
         self._lock = asyncio.Lock()
 
@@ -73,8 +72,8 @@ class ProviderRegistry:
 
     def _register_builtin_providers(self):
         """Register built-in provider implementations."""
-        from src.llm.providers.openai_compatible import OpenAICompatibleProvider
         from src.llm.providers.ollama import OllamaProvider
+        from src.llm.providers.openai_compatible import OpenAICompatibleProvider
 
         # Native Ollama provider
         self._provider_classes[ProviderType.OLLAMA] = OllamaProvider
@@ -105,7 +104,7 @@ class ProviderRegistry:
     def register_provider_class(
         self,
         provider_type: ProviderType,
-        provider_class: Type[LLMProvider]
+        provider_class: type[LLMProvider]
     ):
         """Register a custom provider class."""
         self._provider_classes[provider_type] = provider_class
@@ -152,16 +151,16 @@ class ProviderRegistry:
             if self._default_provider == name:
                 self._default_provider = next(iter(self._providers), None)
 
-    def get_provider(self, name: str) -> Optional[LLMProvider]:
+    def get_provider(self, name: str) -> LLMProvider | None:
         """Get a specific provider by name."""
         info = self._providers.get(name)
         return info.provider if info else None
 
-    def list_providers(self) -> List[str]:
+    def list_providers(self) -> list[str]:
         """List all registered provider names."""
         return list(self._providers.keys())
 
-    def get_provider_info(self, name: str) -> Optional[ProviderInfo]:
+    def get_provider_info(self, name: str) -> ProviderInfo | None:
         """Get detailed info about a provider."""
         return self._providers.get(name)
 
@@ -189,7 +188,7 @@ class ProviderRegistry:
             info.failure_count += 1
             return ProviderStatus.UNHEALTHY
 
-    async def check_all_health(self) -> Dict[str, ProviderStatus]:
+    async def check_all_health(self) -> dict[str, ProviderStatus]:
         """Check health of all providers."""
         results = {}
 
@@ -200,7 +199,7 @@ class ProviderRegistry:
 
         statuses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for name, status in zip(self._providers.keys(), statuses):
+        for name, status in zip(self._providers.keys(), statuses, strict=False):
             if isinstance(status, Exception):
                 results[name] = ProviderStatus.UNHEALTHY
             else:
@@ -211,8 +210,8 @@ class ProviderRegistry:
     async def get_best_provider(
         self,
         require_local: bool = False,
-        exclude: Optional[List[str]] = None
-    ) -> Optional[LLMProvider]:
+        exclude: list[str] | None = None
+    ) -> LLMProvider | None:
         """
         Get the best available provider.
 
@@ -253,11 +252,11 @@ class ProviderRegistry:
     async def complete(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        provider_name: Optional[str] = None,
+        provider_name: str | None = None,
         fallback: bool = True,
         **kwargs
     ) -> CompletionResult:
@@ -338,7 +337,7 @@ class ProviderRegistry:
 
 
 # Global registry instance
-_registry: Optional[ProviderRegistry] = None
+_registry: ProviderRegistry | None = None
 
 
 def get_provider_registry() -> ProviderRegistry:
@@ -350,7 +349,7 @@ def get_provider_registry() -> ProviderRegistry:
 
 
 # Pre-configured provider configs for common services
-PROVIDER_PRESETS: Dict[str, ProviderConfig] = {
+PROVIDER_PRESETS: dict[str, ProviderConfig] = {
     "ollama": ProviderConfig(
         provider_type=ProviderType.OLLAMA,
         name="ollama",

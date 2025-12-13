@@ -13,12 +13,11 @@ import asyncio
 import json
 import subprocess
 import tempfile
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
-from src.core.exceptions import SecurityScanError
 from src.core.config import get_settings
 
 
@@ -40,27 +39,27 @@ class SecurityIssue:
     severity: SeverityLevel
     file_path: str
     line_number: int
-    column_number: Optional[int] = None
-    cwe_id: Optional[str] = None
-    owasp_category: Optional[str] = None
-    fix_suggestion: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    column_number: int | None = None
+    cwe_id: str | None = None
+    owasp_category: str | None = None
+    fix_suggestion: str | None = None
+    metadata: dict[str, Any] = None
 
 
 @dataclass
 class ScanResult:
     """Result of a security scan."""
     passed: bool
-    issues: List[SecurityIssue]
+    issues: list[SecurityIssue]
     scan_time: float
     files_scanned: int
-    tool_results: Dict[str, Any]
+    tool_results: dict[str, Any]
 
 
 class SecurityScanner:
     """
     Comprehensive security scanning for generated code.
-    
+
     Features:
     - Multi-tool scanning (Semgrep, Bandit)
     - Custom VIBE MCP security rules
@@ -68,12 +67,12 @@ class SecurityScanner:
     - OWASP Top 10 coverage
     - CWE mapping
     """
-    
+
     def __init__(self):
         self.config = get_settings()
         self.temp_dir = Path(tempfile.gettempdir()) / "vibe_mcp_scans"
         self.temp_dir.mkdir(exist_ok=True)
-        
+
         # Tool configurations
         self.semgrep_rules = [
             "p/security-audit",  # OWASP Top 10
@@ -85,11 +84,11 @@ class SecurityScanner:
             "p/regex",
             "p/django"
         ]
-        
+
         # Custom VIBE MCP rules
         self.custom_rules = self._load_custom_rules()
-    
-    def _load_custom_rules(self) -> Dict[str, Any]:
+
+    def _load_custom_rules(self) -> dict[str, Any]:
         """Load VIBE MCP specific security rules."""
         return {
             "no_hardcoded_secrets": {
@@ -113,27 +112,27 @@ class SecurityScanner:
                 "message": "User input should be validated before use"
             }
         }
-    
+
     async def scan_code(self, code: str, file_path: str = "generated.py") -> ScanResult:
         """
         Scan code with all security tools.
-        
+
         Args:
             code: The code to scan
             file_path: Virtual file path for context
-            
+
         Returns:
             ScanResult with all found issues
         """
         import time
         start_time = time.time()
-        
+
         # Create temporary file for scanning
         temp_file = self.temp_dir / Path(file_path).name
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(code)
-            
+
             # Run all scans in parallel
             results = await asyncio.gather(
                 self._scan_with_semgrep(temp_file),
@@ -141,16 +140,16 @@ class SecurityScanner:
                 self._scan_with_custom_rules(code, file_path),
                 return_exceptions=True
             )
-            
+
             # Collect all issues
             all_issues = []
             tool_results = {}
-            
+
             for result in results:
                 if isinstance(result, Exception):
                     print(f"Scanner error: {result}")
                     continue
-                
+
                 issues, tool_name = result
                 all_issues.extend(issues)
                 tool_results[tool_name] = {
@@ -160,15 +159,15 @@ class SecurityScanner:
                     "medium": sum(1 for i in issues if i.severity == SeverityLevel.MEDIUM),
                     "low": sum(1 for i in issues if i.severity == SeverityLevel.LOW)
                 }
-            
+
             # Determine if scan passed (no critical/high issues)
             passed = not any(
-                i.severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH] 
+                i.severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH]
                 for i in all_issues
             )
-            
+
             scan_time = time.time() - start_time
-            
+
             return ScanResult(
                 passed=passed,
                 issues=all_issues,
@@ -176,16 +175,16 @@ class SecurityScanner:
                 files_scanned=1,
                 tool_results=tool_results
             )
-            
+
         finally:
             # Clean up
             if temp_file.exists():
                 temp_file.unlink()
-    
-    async def _scan_with_semgrep(self, file_path: Path) -> Tuple[List[SecurityIssue], str]:
+
+    async def _scan_with_semgrep(self, file_path: Path) -> tuple[list[SecurityIssue], str]:
         """Run Semgrep security scan."""
         issues = []
-        
+
         try:
             # Build semgrep command
             cmd = [
@@ -195,7 +194,7 @@ class SecurityScanner:
                 "--quiet",
                 str(file_path)
             ]
-            
+
             # Run semgrep
             result = subprocess.run(
                 cmd,
@@ -203,11 +202,11 @@ class SecurityScanner:
                 text=True,
                 timeout=30
             )
-            
+
             if result.returncode == 0:
                 # Parse results
                 data = json.loads(result.stdout)
-                
+
                 for finding in data.get('results', []):
                     issue = SecurityIssue(
                         tool="semgrep",
@@ -223,7 +222,7 @@ class SecurityScanner:
                         metadata=finding.get('metadata', {})
                     )
                     issues.append(issue)
-                    
+
         except subprocess.TimeoutExpired:
             print("Semgrep scan timed out")
         except json.JSONDecodeError as e:
@@ -232,13 +231,13 @@ class SecurityScanner:
             print("Semgrep not installed - skipping scan")
         except Exception as e:
             print(f"Semgrep scan error: {e}")
-        
+
         return issues, "semgrep"
-    
-    async def _scan_with_bandit(self, file_path: Path) -> Tuple[List[SecurityIssue], str]:
+
+    async def _scan_with_bandit(self, file_path: Path) -> tuple[list[SecurityIssue], str]:
         """Run Bandit Python security scan."""
         issues = []
-        
+
         try:
             # Build bandit command
             cmd = [
@@ -247,7 +246,7 @@ class SecurityScanner:
                 "-q",
                 str(file_path)
             ]
-            
+
             # Run bandit
             result = subprocess.run(
                 cmd,
@@ -255,11 +254,11 @@ class SecurityScanner:
                 text=True,
                 timeout=30
             )
-            
+
             if result.returncode in [0, 1]:  # 0 = no issues, 1 = issues found
                 # Parse results
                 data = json.loads(result.stdout)
-                
+
                 for finding in data.get('results', []):
                     issue = SecurityIssue(
                         tool="bandit",
@@ -276,7 +275,7 @@ class SecurityScanner:
                         }
                     )
                     issues.append(issue)
-                    
+
         except subprocess.TimeoutExpired:
             print("Bandit scan timed out")
         except json.JSONDecodeError as e:
@@ -285,19 +284,19 @@ class SecurityScanner:
             print("Bandit not installed - skipping scan")
         except Exception as e:
             print(f"Bandit scan error: {e}")
-        
+
         return issues, "bandit"
-    
-    async def _scan_with_custom_rules(self, code: str, file_path: str) -> Tuple[List[SecurityIssue], str]:
+
+    async def _scan_with_custom_rules(self, code: str, file_path: str) -> tuple[list[SecurityIssue], str]:
         """Scan with VIBE MCP custom rules."""
         import re
-        
+
         issues = []
         lines = code.split('\n')
-        
+
         for rule_name, rule_config in self.custom_rules.items():
             pattern = re.compile(rule_config['pattern'], re.IGNORECASE)
-            
+
             for line_num, line in enumerate(lines, 1):
                 if pattern.search(line):
                     issue = SecurityIssue(
@@ -311,9 +310,9 @@ class SecurityScanner:
                         metadata={"rule_type": "custom"}
                     )
                     issues.append(issue)
-        
+
         return issues, "vibe_mcp"
-    
+
     def _map_semgrep_severity(self, severity: str) -> SeverityLevel:
         """Map Semgrep severity to our enum."""
         mapping = {
@@ -322,7 +321,7 @@ class SecurityScanner:
             'INFO': SeverityLevel.INFO
         }
         return mapping.get(severity.upper(), SeverityLevel.LOW)
-    
+
     def _map_bandit_severity(self, severity: str) -> SeverityLevel:
         """Map Bandit severity to our enum."""
         mapping = {
@@ -331,7 +330,7 @@ class SecurityScanner:
             'LOW': SeverityLevel.LOW
         }
         return mapping.get(severity.upper(), SeverityLevel.LOW)
-    
+
     def _get_fix_suggestion(self, rule_name: str) -> str:
         """Get fix suggestion for custom rule."""
         suggestions = {
@@ -341,53 +340,53 @@ class SecurityScanner:
             "validate_user_input": "Add validation: if not input.is_valid(): raise ValueError()"
         }
         return suggestions.get(rule_name, "Review and fix the security issue")
-    
+
     async def scan_directory(self, directory: Path) -> ScanResult:
         """
         Scan an entire directory for security issues.
-        
+
         Args:
             directory: Directory path to scan
-            
+
         Returns:
             ScanResult with aggregated findings
         """
         import time
         start_time = time.time()
-        
+
         all_issues = []
         tool_results = {}
         files_scanned = 0
-        
+
         # Get all code files
         code_extensions = {'.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php'}
         code_files = []
-        
+
         for ext in code_extensions:
             code_files.extend(directory.rglob(f'*{ext}'))
-        
+
         # Limit to reasonable number of files
         if len(code_files) > 100:
             print(f"Warning: Limiting scan to first 100 files (found {len(code_files)})")
             code_files = code_files[:100]
-        
+
         # Scan files in batches
         batch_size = 10
         for i in range(0, len(code_files), batch_size):
             batch = code_files[i:i + batch_size]
-            
+
             tasks = []
             for file_path in batch:
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding='utf-8') as f:
                         code = f.read()
                     tasks.append(self.scan_code(code, str(file_path)))
                 except Exception as e:
                     print(f"Could not read {file_path}: {e}")
                     continue
-            
+
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             for result in batch_results:
                 if isinstance(result, ScanResult):
                     all_issues.extend(result.issues)
@@ -397,13 +396,13 @@ class SecurityScanner:
                         for key in data:
                             tool_results[tool][key] += data[key]
                     files_scanned += 1
-        
+
         scan_time = time.time() - start_time
         passed = not any(
-            i.severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH] 
+            i.severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH]
             for i in all_issues
         )
-        
+
         return ScanResult(
             passed=passed,
             issues=all_issues,
@@ -411,7 +410,7 @@ class SecurityScanner:
             files_scanned=files_scanned,
             tool_results=tool_results
         )
-    
+
     def generate_report(self, result: ScanResult) -> str:
         """Generate a human-readable security report."""
         report = []
@@ -422,7 +421,7 @@ class SecurityScanner:
         report.append(f"Files scanned: {result.files_scanned}")
         report.append(f"Scan time: {result.scan_time:.2f}s")
         report.append("")
-        
+
         # Summary by tool
         report.append("TOOL SUMMARY:")
         for tool, data in result.tool_results.items():
@@ -432,7 +431,7 @@ class SecurityScanner:
                     report.append(f"    - {key}: {value}")
             report.append(f"    - Total issues: {data['issues_found']}")
         report.append("")
-        
+
         # Issues by severity
         if result.issues:
             report.append("ISSUES BY SEVERITY:")
@@ -449,20 +448,20 @@ class SecurityScanner:
                         report.append(f"  ... and {len(issues) - 10} more")
         else:
             report.append("✅ No security issues found!")
-        
+
         report.append("\n" + "=" * 60)
-        
+
         return "\n".join(report)
-    
+
     async def install_tools(self) -> bool:
         """Install required security scanning tools."""
         tools = [
             ("semgrep", "pip install semgrep"),
             ("bandit", "pip install bandit")
         ]
-        
+
         installed = True
-        
+
         for tool, install_cmd in tools:
             try:
                 subprocess.run([tool, "--version"], capture_output=True, check=True)
@@ -475,25 +474,25 @@ class SecurityScanner:
                 except subprocess.CalledProcessError:
                     print(f"❌ Failed to install {tool}")
                     installed = False
-        
+
         return installed
 
 
 # CLI interface for testing
 if __name__ == "__main__":
     import sys
-    
+
     async def main():
         scanner = SecurityScanner()
-        
+
         # Install tools if needed
         await scanner.install_tools()
-        
+
         if len(sys.argv) > 1:
             # Scan file
             file_path = Path(sys.argv[1])
             if file_path.exists():
-                with open(file_path, 'r') as f:
+                with open(file_path) as f:
                     code = f.read()
                 result = await scanner.scan_code(code, str(file_path))
                 print(scanner.generate_report(result))
@@ -515,5 +514,5 @@ def process_query(query):
 """
             result = await scanner.scan_code(demo_code, "demo.py")
             print(scanner.generate_report(result))
-    
+
     asyncio.run(main())

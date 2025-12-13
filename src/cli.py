@@ -16,14 +16,13 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.table import Table
 from rich.syntax import Syntax
+from rich.table import Table
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
@@ -80,7 +79,7 @@ def search_repositories(
         "--max-results", "-n",
         help="Maximum number of results per platform"
     ),
-    language: Optional[str] = typer.Option(
+    language: str | None = typer.Option(
         None,
         "--language", "-l",
         help="Filter by programming language"
@@ -391,7 +390,7 @@ def resolve_dependencies(
         "--python", "-p",
         help="Target Python version"
     ),
-    output_file: Optional[str] = typer.Option(
+    output_file: str | None = typer.Option(
         None,
         "--output", "-o",
         help="Output file for resolved requirements"
@@ -663,9 +662,10 @@ def run_gap_check(
         ai-synthesizer check --report
     """
     import asyncio
-    from src.core.gap_analyzer import run_gap_analysis, GapSeverity
     from datetime import datetime
     from pathlib import Path
+
+    from src.core.gap_analyzer import GapSeverity, run_gap_analysis
 
     console.print("\n🔍 Running Gap Analysis...\n")
 
@@ -756,12 +756,12 @@ def manage_settings(
         "--show", "-s",
         help="Show current settings for the tab"
     ),
-    toggle: Optional[str] = typer.Option(
+    toggle: str | None = typer.Option(
         None,
         "--toggle",
         help="Toggle a boolean setting (e.g., auto_save)"
     ),
-    set_value: Optional[str] = typer.Option(
+    set_value: str | None = typer.Option(
         None,
         "--set",
         help="Set a value (format: key=value)"
@@ -782,7 +782,7 @@ def manage_settings(
         ai-synthesizer settings --tab voice --set mode=continuous
         ai-synthesizer settings --tab general --reset
     """
-    from src.core.settings_manager import get_settings_manager, SettingsTab
+    from src.core.settings_manager import SettingsTab, get_settings_manager
 
     manager = get_settings_manager()
 
@@ -823,7 +823,7 @@ def manage_settings(
             console.print(f"[red]Failed to set value: {e}[/red]")
         return
 
-    if show or True:  # Default to show
+    if True:  # Default to show
         tab_settings = manager.get_tab(settings_tab)
 
         table = Table(title=f"{tab.title()} Settings")
@@ -881,7 +881,7 @@ def wizard_command() -> None:
     Example:
         ai-synthesizer wizard
     """
-    from src.tui.wizard import run_wizard, execute_wizard_config
+    from src.tui.wizard import execute_wizard_config, run_wizard
 
     config = run_wizard()
 
@@ -906,8 +906,8 @@ def wizard_command() -> None:
 @app.command("recipe")
 def recipe_command(
     action: str = typer.Argument(..., help="Action: list, show, run, validate"),
-    name: Optional[str] = typer.Argument(None, help="Recipe name (for show/run/validate)"),
-    output: Optional[str] = typer.Option(
+    name: str | None = typer.Argument(None, help="Recipe name (for show/run/validate)"),
+    output: str | None = typer.Option(
         None,
         "--output", "-o",
         help="Output directory for run action"
@@ -1076,3 +1076,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Export for tests
+__all__ = ["app", "main"]

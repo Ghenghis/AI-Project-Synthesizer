@@ -9,7 +9,7 @@ Complete automation framework with:
 """
 
 from src.automation.coordinator import AutomationCoordinator
-from src.automation.metrics import MetricsCollector, ActionTimer
+from src.automation.metrics import ActionTimer, MetricsCollector
 from src.automation.testing import IntegrationTester
 
 __all__ = [

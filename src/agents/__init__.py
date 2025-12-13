@@ -9,12 +9,12 @@ AI/ML-powered agents for automated tasks:
 - Code Agent: Generates and fixes code
 """
 
-from src.agents.base import BaseAgent, AgentConfig, AgentResult
+from src.agents.automation_agent import AutomationAgent
+from src.agents.base import AgentConfig, AgentResult, BaseAgent
+from src.agents.code_agent import CodeAgent
 from src.agents.research_agent import ResearchAgent
 from src.agents.synthesis_agent import SynthesisAgent
 from src.agents.voice_agent import VoiceAgent
-from src.agents.automation_agent import AutomationAgent
-from src.agents.code_agent import CodeAgent
 
 __all__ = [
     "BaseAgent",

@@ -7,26 +7,26 @@ These handle the actual business logic for each tool.
 
 import asyncio
 import logging
-import tempfile
 import re
+import tempfile
 import threading
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from src.discovery.unified_search import UnifiedSearch, create_unified_search
-from src.analysis.dependency_analyzer import DependencyAnalyzer
 from src.analysis.ast_parser import ASTParser
 from src.analysis.code_extractor import CodeExtractor
-from src.analysis.quality_scorer import QualityScorer
 from src.analysis.compatibility_checker import CompatibilityChecker
-from src.synthesis.project_builder import ProjectBuilder
-from src.generation.readme_generator import ReadmeGenerator
-from src.generation.diagram_generator import DiagramGenerator
+from src.analysis.dependency_analyzer import DependencyAnalyzer
+from src.analysis.quality_scorer import QualityScorer
 from src.core.config import get_settings
+from src.core.observability import correlation_manager, metrics, track_performance
 from src.core.security import InputValidator, get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
+from src.discovery.unified_search import UnifiedSearch, create_unified_search
+from src.generation.diagram_generator import DiagramGenerator
+from src.generation.readme_generator import ReadmeGenerator
+from src.synthesis.project_builder import ProjectBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +39,19 @@ TIMEOUT_SYNTHESIS = 600  # seconds (10 minutes)
 secure_logger = get_secure_logger(__name__)
 
 # Global instances (initialized on first use)
-_unified_search: Optional[UnifiedSearch] = None
-_dependency_analyzer: Optional[DependencyAnalyzer] = None
-_synthesis_jobs: Dict[str, Dict[str, Any]] = {}
+_unified_search: UnifiedSearch | None = None
+_dependency_analyzer: DependencyAnalyzer | None = None
+_synthesis_jobs: dict[str, dict[str, Any]] = {}
 _synthesis_jobs_lock = threading.Lock()  # Thread-safe access to synthesis jobs
 
 
-def get_synthesis_job(job_id: str) -> Optional[Dict[str, Any]]:
+def get_synthesis_job(job_id: str) -> dict[str, Any] | None:
     """Thread-safe getter for synthesis job."""
     with _synthesis_jobs_lock:
         return _synthesis_jobs.get(job_id)
 
 
-def set_synthesis_job(job_id: str, job_data: Dict[str, Any]) -> None:
+def set_synthesis_job(job_id: str, job_data: dict[str, Any]) -> None:
     """Thread-safe setter for synthesis job."""
     with _synthesis_jobs_lock:
         _synthesis_jobs[job_id] = job_data
@@ -190,7 +190,7 @@ async def handle_search_repositories(args: dict) -> dict:
             "correlation_id": correlation_id
         }
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         secure_logger.error(
             f"Search timed out after {TIMEOUT_API_CALL}s",
             correlation_id=correlation_id
@@ -287,7 +287,7 @@ async def handle_analyze_repository(args: dict) -> dict:
                     client.clone(repo_id, temp_path, depth=1),
                     timeout=TIMEOUT_GIT_CLONE
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return {
                     "error": True,
                     "message": f"Git clone timed out after {TIMEOUT_GIT_CLONE} seconds",
@@ -574,7 +574,7 @@ async def handle_synthesize_project(args: dict) -> dict:
             "warnings": result.warnings,
         }
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         update_synthesis_job(job_id, status="failed", error=f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds")
         return {
             "error": True,
@@ -732,9 +732,9 @@ async def handle_get_synthesis_status(args: dict) -> dict:
 
 async def search_repositories(
     query: str,
-    platforms: List[str] = None,
+    platforms: list[str] = None,
     max_results: int = 20,
-    language_filter: Optional[str] = None,
+    language_filter: str | None = None,
     min_stars: int = 10,
 ) -> dict:
     """
@@ -769,7 +769,7 @@ async def analyze_repository(
 
 
 async def check_compatibility(
-    repo_urls: List[str],
+    repo_urls: list[str],
     target_python_version: str = "3.11",
 ) -> dict:
     """
@@ -784,8 +784,8 @@ async def check_compatibility(
 
 
 async def resolve_dependencies(
-    repositories: List[str],
-    constraints: List[str] = None,
+    repositories: list[str],
+    constraints: list[str] = None,
     python_version: str = "3.11",
 ) -> dict:
     """
@@ -801,7 +801,7 @@ async def resolve_dependencies(
 
 
 async def synthesize_project(
-    repositories: List[dict],
+    repositories: list[dict],
     project_name: str,
     output_path: str,
     template: str = "python-default",
@@ -821,7 +821,7 @@ async def synthesize_project(
 
 async def generate_documentation(
     project_path: str,
-    doc_types: List[str] = None,
+    doc_types: list[str] = None,
     llm_enhanced: bool = True,
 ) -> dict:
     """
@@ -888,7 +888,7 @@ def get_assistant():
     """Get or create assistant instance."""
     global _assistant
     if _assistant is None:
-        from src.assistant.core import ConversationalAssistant, AssistantConfig
+        from src.assistant.core import AssistantConfig, ConversationalAssistant
         _assistant = ConversationalAssistant(AssistantConfig(
             voice_enabled=True,
             auto_speak=False,  # Don't auto-generate audio for MCP
@@ -896,7 +896,7 @@ def get_assistant():
     return _assistant
 
 
-async def handle_assistant_chat(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_assistant_chat(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Chat with the AI assistant.
 
@@ -948,7 +948,7 @@ async def handle_assistant_chat(arguments: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 
-async def handle_assistant_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_assistant_voice(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Generate voice audio for text AND auto-play it.
 
@@ -1007,7 +1007,7 @@ async def handle_assistant_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": True, "message": f"Voice error: {str(e)}"}
 
 
-async def handle_assistant_toggle_voice(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_assistant_toggle_voice(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Toggle voice on/off for the assistant.
 
@@ -1029,7 +1029,7 @@ async def handle_assistant_toggle_voice(arguments: Dict[str, Any]) -> Dict[str, 
     }
 
 
-async def handle_get_voices(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_get_voices(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Get available voices for text-to-speech.
 
@@ -1053,7 +1053,7 @@ async def handle_get_voices(arguments: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def handle_speak_fast(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_speak_fast(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     FAST streaming voice - optimized for speed and smooth playback.
 
@@ -1091,7 +1091,7 @@ async def handle_speak_fast(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": True, "message": f"Streaming error: {str(e)}"}
 
 
-async def handle_assemble_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_assemble_project(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Assemble a complete project from an idea.
 
@@ -1121,8 +1121,9 @@ async def handle_assemble_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": True, "message": "Please provide a project idea"}
 
     try:
-        from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
         from pathlib import Path
+
+        from src.synthesis.project_assembler import AssemblerConfig, ProjectAssembler
 
         config = AssemblerConfig(
             base_output_dir=Path(output_dir),

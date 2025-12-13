@@ -12,14 +12,14 @@ Caches:
 - Downloaded resource metadata
 """
 
-import json
 import hashlib
+import json
 import sqlite3
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Any, Dict, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
 from src.core.security import get_secure_logger
 
@@ -34,7 +34,7 @@ class CacheEntry(Generic[T]):
     key: str
     value: T
     created_at: float
-    expires_at: Optional[float] = None
+    expires_at: float | None = None
     hits: int = 0
 
     @property
@@ -49,12 +49,12 @@ class CacheBackend(ABC):
     """Abstract cache backend."""
 
     @abstractmethod
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         pass
 
     @abstractmethod
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         """Set value in cache."""
         pass
 
@@ -69,7 +69,7 @@ class CacheBackend(ABC):
         pass
 
     @abstractmethod
-    async def stats(self) -> Dict[str, Any]:
+    async def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         pass
 
@@ -78,12 +78,12 @@ class MemoryCache(CacheBackend):
     """In-memory cache (fast, non-persistent)."""
 
     def __init__(self, max_size: int = 1000):
-        self._cache: Dict[str, CacheEntry] = {}
+        self._cache: dict[str, CacheEntry] = {}
         self._max_size = max_size
         self._hits = 0
         self._misses = 0
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         entry = self._cache.get(key)
         if entry is None:
             self._misses += 1
@@ -98,7 +98,7 @@ class MemoryCache(CacheBackend):
         self._hits += 1
         return entry.value
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         # Evict if at capacity
         if len(self._cache) >= self._max_size:
             self._evict_oldest()
@@ -123,7 +123,7 @@ class MemoryCache(CacheBackend):
         self._cache.clear()
         return count
 
-    async def stats(self) -> Dict[str, Any]:
+    async def stats(self) -> dict[str, Any]:
         return {
             "backend": "memory",
             "entries": len(self._cache),
@@ -144,7 +144,7 @@ class MemoryCache(CacheBackend):
 class SQLiteCache(CacheBackend):
     """SQLite-based persistent cache."""
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         self._db_path = db_path or Path(".cache/synthesizer_cache.db")
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -164,7 +164,7 @@ class SQLiteCache(CacheBackend):
             conn.execute("CREATE INDEX IF NOT EXISTS idx_expires ON cache(expires_at)")
             conn.commit()
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         with sqlite3.connect(self._db_path) as conn:
             cursor = conn.execute(
                 "SELECT value, expires_at FROM cache WHERE key = ?",
@@ -189,7 +189,7 @@ class SQLiteCache(CacheBackend):
 
             return json.loads(value)
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         expires_at = time.time() + ttl_seconds if ttl_seconds else None
 
         with sqlite3.connect(self._db_path) as conn:
@@ -213,7 +213,7 @@ class SQLiteCache(CacheBackend):
             conn.commit()
             return cursor.rowcount
 
-    async def stats(self) -> Dict[str, Any]:
+    async def stats(self) -> dict[str, Any]:
         with sqlite3.connect(self._db_path) as conn:
             cursor = conn.execute("SELECT COUNT(*), SUM(hits) FROM cache")
             count, total_hits = cursor.fetchone()
@@ -254,7 +254,7 @@ class RedisCache(CacheBackend):
                 raise RuntimeError("Redis not installed. Run: pip install redis")
         return self._client
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         try:
             client = await self._get_client()
             value = await client.get(self._prefix + key)
@@ -264,7 +264,7 @@ class RedisCache(CacheBackend):
             secure_logger.warning(f"Redis get error: {e}")
         return None
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         try:
             client = await self._get_client()
             await client.set(
@@ -296,7 +296,7 @@ class RedisCache(CacheBackend):
             secure_logger.warning(f"Redis clear error: {e}")
         return 0
 
-    async def stats(self) -> Dict[str, Any]:
+    async def stats(self) -> dict[str, Any]:
         try:
             client = await self._get_client()
             info = await client.info()
@@ -341,7 +341,7 @@ class CacheManager:
 
         self._backend_name = backend
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get cached value."""
         return await self._backend.get(key)
 
@@ -357,7 +357,7 @@ class CacheManager:
         """Clear all cache."""
         return await self._backend.clear()
 
-    async def stats(self) -> Dict[str, Any]:
+    async def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         return await self._backend.stats()
 
@@ -368,7 +368,7 @@ class CacheManager:
 
 
 # Global cache instance
-_cache: Optional[CacheManager] = None
+_cache: CacheManager | None = None
 
 
 def get_cache(backend: str = "sqlite") -> CacheManager:

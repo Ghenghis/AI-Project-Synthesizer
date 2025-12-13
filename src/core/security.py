@@ -5,13 +5,13 @@ Enterprise-grade security utilities for secret management,
 input validation, and secure logging.
 """
 
-import re
 import hashlib
-import secrets
-from typing import Dict, Any
-from urllib.parse import urlparse
 import logging
+import re
+import secrets
 from functools import wraps
+from typing import Any
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -140,10 +140,7 @@ class InputValidator:
             return True
 
         # Check other valid URLs
-        if InputValidator.URL_PATTERN.match(url):
-            return True
-
-        return False
+        return bool(InputValidator.URL_PATTERN.match(url))
 
     @staticmethod
     def sanitize_filename(filename: str) -> str:
@@ -194,10 +191,7 @@ class InputValidator:
             return False
 
         # Check length
-        if len(query.strip()) > 1000:
-            return False
-
-        return True
+        return not len(query.strip()) > 1000
 
     @staticmethod
     def sanitize_path(path: str) -> str:
@@ -234,7 +228,7 @@ class SecureLogger:
     def __init__(self, logger_name: str):
         self.logger = logging.getLogger(logger_name)
 
-    def _sanitize_message(self, message: str, **kwargs) -> tuple[str, Dict[str, Any]]:
+    def _sanitize_message(self, message: str, **kwargs) -> tuple[str, dict[str, Any]]:
         """
         Sanitize message and kwargs for logging.
 

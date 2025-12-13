@@ -14,12 +14,11 @@ import asyncio
 import json
 import subprocess
 import tempfile
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any, Union
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
-from src.core.exceptions import LintCheckError
 from src.core.config import get_settings
 
 
@@ -40,29 +39,29 @@ class LintIssue:
     level: LintLevel
     file_path: str
     line_number: int
-    column_number: Optional[int] = None
-    end_line: Optional[int] = None
-    end_column: Optional[int] = None
-    fix_suggestion: Optional[str] = None
-    category: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    column_number: int | None = None
+    end_line: int | None = None
+    end_column: int | None = None
+    fix_suggestion: str | None = None
+    category: str | None = None
+    metadata: dict[str, Any] = None
 
 
 @dataclass
 class LintResult:
     """Result of a lint check."""
     passed: bool
-    issues: List[LintIssue]
+    issues: list[LintIssue]
     check_time: float
     files_checked: int
-    tool_results: Dict[str, Any]
+    tool_results: dict[str, Any]
     fixable_issues: int
 
 
 class LintChecker:
     """
     Comprehensive lint checking for generated code.
-    
+
     Features:
     - Multi-language support (Python, JS/TS)
     - Auto-fix capabilities
@@ -70,12 +69,12 @@ class LintChecker:
     - Type safety verification
     - Performance impact analysis
     """
-    
+
     def __init__(self):
         self.config = get_settings()
         self.temp_dir = Path(tempfile.gettempdir()) / "vibe_mcp_lint"
         self.temp_dir.mkdir(exist_ok=True)
-        
+
         # Tool configurations
         self.ruff_config = {
             "select": [
@@ -101,7 +100,7 @@ class LintChecker:
             ],
             "fix": True  # Enable auto-fix
         }
-        
+
         self.eslint_config = {
             "extends": [
                 "eslint:recommended",
@@ -117,7 +116,7 @@ class LintChecker:
                 "curly": "error"
             }
         }
-        
+
         self.mypy_config = {
             "strict": True,
             "warn_return_any": True,
@@ -133,29 +132,29 @@ class LintChecker:
             "warn_unreachable": True,
             "strict_equality": True
         }
-    
+
     async def check_code(self, code: str, file_path: str, language: str = "python") -> LintResult:
         """
         Check code with appropriate linting tools.
-        
+
         Args:
             code: The code to check
             file_path: Virtual file path for context
             language: Programming language (python, javascript, typescript)
-            
+
         Returns:
             LintResult with all found issues
         """
         import time
         start_time = time.time()
-        
+
         # Create temporary file for checking
         temp_file = self.temp_dir / Path(file_path).name
-        
+
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(code)
-            
+
             # Select tools based on language
             if language == "python":
                 results = await asyncio.gather(
@@ -172,17 +171,17 @@ class LintChecker:
             else:
                 # Unknown language, just do basic checks
                 results = [([], "unknown")]
-            
+
             # Collect all issues
             all_issues = []
             tool_results = {}
             fixable_count = 0
-            
+
             for result in results:
                 if isinstance(result, Exception):
                     print(f"Lint check error: {result}")
                     continue
-                
+
                 issues, tool_name = result
                 all_issues.extend(issues)
                 tool_results[tool_name] = {
@@ -192,12 +191,12 @@ class LintChecker:
                     "fixable": sum(1 for i in issues if i.fix_suggestion)
                 }
                 fixable_count += sum(1 for i in issues if i.fix_suggestion)
-            
+
             # Determine if check passed (no errors)
             passed = not any(i.level == LintLevel.ERROR for i in all_issues)
-            
+
             check_time = time.time() - start_time
-            
+
             return LintResult(
                 passed=passed,
                 issues=all_issues,
@@ -206,16 +205,16 @@ class LintChecker:
                 tool_results=tool_results,
                 fixable_issues=fixable_count
             )
-            
+
         finally:
             # Clean up
             if temp_file.exists():
                 temp_file.unlink()
-    
-    async def _check_with_ruff(self, file_path: Path) -> Tuple[List[LintIssue], str]:
+
+    async def _check_with_ruff(self, file_path: Path) -> tuple[list[LintIssue], str]:
         """Run Ruff Python linter."""
         issues = []
-        
+
         try:
             # Build ruff command
             cmd = [
@@ -225,7 +224,7 @@ class LintChecker:
                 f"--config={'.'.join([f'{k}={v}' for k, v in self.ruff_config.items()])}",
                 str(file_path)
             ]
-            
+
             # Run ruff
             result = subprocess.run(
                 cmd,
@@ -233,11 +232,11 @@ class LintChecker:
                 text=True,
                 timeout=30
             )
-            
+
             # Parse results
             if result.stdout:
                 data = json.loads(result.stdout)
-                
+
                 for finding in data:
                     issue = LintIssue(
                         tool="ruff",
@@ -257,7 +256,7 @@ class LintChecker:
                         }
                     )
                     issues.append(issue)
-                    
+
         except subprocess.TimeoutExpired:
             print("Ruff check timed out")
         except json.JSONDecodeError as e:
@@ -266,13 +265,13 @@ class LintChecker:
             print("Ruff not installed - skipping check")
         except Exception as e:
             print(f"Ruff check error: {e}")
-        
+
         return issues, "ruff"
-    
-    async def _check_with_mypy(self, file_path: Path) -> Tuple[List[LintIssue], str]:
+
+    async def _check_with_mypy(self, file_path: Path) -> tuple[list[LintIssue], str]:
         """Run MyPy type checker."""
         issues = []
-        
+
         try:
             # Build mypy command
             cmd = [
@@ -283,7 +282,7 @@ class LintChecker:
                 f"--config-file={'.'.join([f'{k}={v}' for k, v in self.mypy_config.items()])}",
                 str(file_path)
             ]
-            
+
             # Run mypy
             result = subprocess.run(
                 cmd,
@@ -291,13 +290,13 @@ class LintChecker:
                 text=True,
                 timeout=30
             )
-            
+
             # Parse results
             if result.stdout:
                 for line in result.stdout.strip().split('\n'):
                     if line:
                         data = json.loads(line)
-                        
+
                         issue = LintIssue(
                             tool="mypy",
                             rule_id=data.get('code', ''),
@@ -316,7 +315,7 @@ class LintChecker:
                             }
                         )
                         issues.append(issue)
-                        
+
         except subprocess.TimeoutExpired:
             print("MyPy check timed out")
         except json.JSONDecodeError:
@@ -326,19 +325,19 @@ class LintChecker:
             print("MyPy not installed - skipping check")
         except Exception as e:
             print(f"MyPy check error: {e}")
-        
+
         return issues, "mypy"
-    
-    async def _check_with_eslint(self, file_path: Path) -> Tuple[List[LintIssue], str]:
+
+    async def _check_with_eslint(self, file_path: Path) -> tuple[list[LintIssue], str]:
         """Run ESLint for JavaScript/TypeScript."""
         issues = []
-        
+
         try:
             # Create temporary ESLint config
             eslint_config_path = self.temp_dir / ".eslintrc.json"
             with open(eslint_config_path, 'w') as f:
                 json.dump(self.eslint_config, f, indent=2)
-            
+
             # Build eslint command
             cmd = [
                 "eslint",
@@ -346,7 +345,7 @@ class LintChecker:
                 "--config", str(eslint_config_path),
                 str(file_path)
             ]
-            
+
             # Run eslint
             result = subprocess.run(
                 cmd,
@@ -354,11 +353,11 @@ class LintChecker:
                 text=True,
                 timeout=30
             )
-            
+
             # Parse results
             if result.stdout:
                 data = json.loads(result.stdout)
-                
+
                 for file_result in data:
                     for message in file_result.get('messages', []):
                         issue = LintIssue(
@@ -379,7 +378,7 @@ class LintChecker:
                             }
                         )
                         issues.append(issue)
-                        
+
         except subprocess.TimeoutExpired:
             print("ESLint check timed out")
         except json.JSONDecodeError as e:
@@ -392,13 +391,13 @@ class LintChecker:
             # Clean up config
             if 'eslint_config_path' in locals() and eslint_config_path.exists():
                 eslint_config_path.unlink()
-        
+
         return issues, "eslint"
-    
-    async def _check_with_prettier(self, file_path: Path) -> Tuple[List[LintIssue], str]:
+
+    async def _check_with_prettier(self, file_path: Path) -> tuple[list[LintIssue], str]:
         """Check code formatting with Prettier."""
         issues = []
-        
+
         try:
             # Build prettier command
             cmd = [
@@ -407,7 +406,7 @@ class LintChecker:
                 "--parser", "typescript" if file_path.suffix == ".ts" else "babel",
                 str(file_path)
             ]
-            
+
             # Run prettier
             result = subprocess.run(
                 cmd,
@@ -415,7 +414,7 @@ class LintChecker:
                 text=True,
                 timeout=30
             )
-            
+
             # If check failed, add formatting issue
             if result.returncode != 0:
                 issue = LintIssue(
@@ -429,17 +428,17 @@ class LintChecker:
                     category="formatting"
                 )
                 issues.append(issue)
-                
+
         except subprocess.TimeoutExpired:
             print("Prettier check timed out")
         except FileNotFoundError:
             print("Prettier not installed - skipping check")
         except Exception as e:
             print(f"Prettier check error: {e}")
-        
+
         return issues, "prettier"
-    
-    def _map_ruff_level(self, fix_availability: Optional[str]) -> LintLevel:
+
+    def _map_ruff_level(self, fix_availability: str | None) -> LintLevel:
         """Map Ruff fix availability to lint level."""
         if fix_availability == "none":
             return LintLevel.ERROR
@@ -447,7 +446,7 @@ class LintChecker:
             return LintLevel.WARNING
         else:
             return LintLevel.INFO
-    
+
     def _map_eslint_level(self, severity: int) -> LintLevel:
         """Map ESLint severity to lint level."""
         if severity == 2:
@@ -456,8 +455,8 @@ class LintChecker:
             return LintLevel.WARNING
         else:
             return LintLevel.INFO
-    
-    def _get_mypy_fix_suggestion(self, code: str) -> Optional[str]:
+
+    def _get_mypy_fix_suggestion(self, code: str) -> str | None:
         """Get fix suggestion for MyPy error."""
         suggestions = {
             "call-arg": "Add type annotation for function parameter",
@@ -470,47 +469,47 @@ class LintChecker:
             "override": "Check method signature matches parent class"
         }
         return suggestions.get(code, "Add appropriate type annotations")
-    
-    async def fix_code(self, code: str, file_path: str, language: str = "python") -> Tuple[str, List[str]]:
+
+    async def fix_code(self, code: str, file_path: str, language: str = "python") -> tuple[str, list[str]]:
         """
         Auto-fix linting issues in code.
-        
+
         Args:
             code: The code to fix
             file_path: Virtual file path for context
             language: Programming language
-            
+
         Returns:
             Tuple of (fixed_code, applied_fixes)
         """
         temp_file = self.temp_dir / Path(file_path).name
-        
+
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(code)
-            
+
             applied_fixes = []
             fixed_code = code
-            
+
             if language == "python":
                 # Use ruff to fix Python code
                 try:
                     cmd = ["ruff", "format", str(temp_file)]
                     subprocess.run(cmd, capture_output=True, timeout=30)
-                    
+
                     cmd = ["ruff", "check", "--fix", str(temp_file)]
                     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-                    
+
                     if "Fixed" in result.stdout:
                         applied_fixes.append("Ruff auto-fixes applied")
-                    
+
                     # Read fixed code
-                    with open(temp_file, 'r', encoding='utf-8') as f:
+                    with open(temp_file, encoding='utf-8') as f:
                         fixed_code = f.read()
-                        
+
                 except Exception as e:
                     print(f"Ruff fix failed: {e}")
-                    
+
             elif language in ["javascript", "typescript"]:
                 # Use prettier and eslint --fix
                 try:
@@ -518,25 +517,25 @@ class LintChecker:
                     cmd = ["prettier", "--write", str(temp_file)]
                     subprocess.run(cmd, capture_output=True, timeout=30)
                     applied_fixes.append("Prettier formatting applied")
-                    
+
                     # ESLint fix
                     cmd = ["eslint", "--fix", str(temp_file)]
                     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                     applied_fixes.append("ESLint auto-fixes applied")
-                    
+
                     # Read fixed code
-                    with open(temp_file, 'r', encoding='utf-8') as f:
+                    with open(temp_file, encoding='utf-8') as f:
                         fixed_code = f.read()
-                        
+
                 except Exception as e:
                     print(f"JS/TS fix failed: {e}")
-            
+
             return fixed_code, applied_fixes
-            
+
         finally:
             if temp_file.exists():
                 temp_file.unlink()
-    
+
     def generate_report(self, result: LintResult) -> str:
         """Generate a human-readable lint report."""
         report = []
@@ -548,7 +547,7 @@ class LintChecker:
         report.append(f"Check time: {result.check_time:.2f}s")
         report.append(f"Fixable issues: {result.fixable_issues}")
         report.append("")
-        
+
         # Summary by tool
         report.append("TOOL SUMMARY:")
         for tool, data in result.tool_results.items():
@@ -557,7 +556,7 @@ class LintChecker:
                 if value > 0:
                     report.append(f"    - {key}: {value}")
         report.append("")
-        
+
         # Issues by level
         if result.issues:
             report.append("ISSUES BY LEVEL:")
@@ -577,11 +576,11 @@ class LintChecker:
                         report.append(f"  ... and {len(issues) - 10} more")
         else:
             report.append("✅ No linting issues found!")
-        
+
         report.append("\n" + "=" * 60)
-        
+
         return "\n".join(report)
-    
+
     async def install_tools(self) -> bool:
         """Install required linting tools."""
         tools = [
@@ -589,9 +588,9 @@ class LintChecker:
             ("mypy", "pip install mypy"),
             ("black", "pip install black"),  # For ruff format compatibility
         ]
-        
+
         installed = True
-        
+
         for tool, install_cmd in tools:
             try:
                 subprocess.run([tool, "--version"], capture_output=True, check=True)
@@ -604,31 +603,31 @@ class LintChecker:
                 except subprocess.CalledProcessError:
                     print(f"❌ Failed to install {tool}")
                     installed = False
-        
+
         return installed
 
 
 # CLI interface for testing
 if __name__ == "__main__":
     import sys
-    
+
     async def main():
         checker = LintChecker()
-        
+
         # Install tools if needed
         await checker.install_tools()
-        
+
         if len(sys.argv) > 1:
             # Check file
             file_path = Path(sys.argv[1])
             if file_path.exists():
-                with open(file_path, 'r') as f:
+                with open(file_path) as f:
                     code = f.read()
-                
+
                 language = "python" if file_path.suffix == ".py" else "javascript"
                 result = await checker.check_code(code, str(file_path), language)
                 print(checker.generate_report(result))
-                
+
                 # Try to fix if issues found
                 if result.issues:
                     print("\nAttempting auto-fix...")
@@ -662,5 +661,5 @@ very_long_variable_name_that_exceeds_reasonable_limits = "this is a very long st
 """
             result = await checker.check_code(demo_code, "demo.py", "python")
             print(checker.generate_report(result))
-    
+
     asyncio.run(main())

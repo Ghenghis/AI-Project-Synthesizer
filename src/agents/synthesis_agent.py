@@ -8,10 +8,10 @@ AI-powered project synthesis agent for:
 - Documentation creation
 """
 
-from typing import Optional, Dict, Any, List
 from pathlib import Path
+from typing import Any
 
-from src.agents.base import BaseAgent, AgentConfig, AgentTool
+from src.agents.base import AgentConfig, AgentTool, BaseAgent
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -29,7 +29,7 @@ class SynthesisAgent(BaseAgent):
     - Set up configurations
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         config = config or AgentConfig(
             name="synthesis_agent",
             description="Assembles complete projects from ideas",
@@ -96,7 +96,7 @@ class SynthesisAgent(BaseAgent):
         self,
         idea: str,
         type: str = "python",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Plan project structure."""
         llm = await self._get_llm()
 
@@ -134,7 +134,7 @@ Be specific and practical."""
         self,
         path: str,
         description: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate a code file."""
         llm = await self._get_llm()
 
@@ -184,8 +184,8 @@ Return ONLY the code, no explanations."""
     async def _resolve_dependencies(
         self,
         project_type: str,
-        features: List[str],
-    ) -> Dict[str, Any]:
+        features: list[str],
+    ) -> dict[str, Any]:
         """Resolve project dependencies."""
         # Common dependencies by type
         base_deps = {
@@ -219,8 +219,8 @@ Return ONLY the code, no explanations."""
         self,
         project_name: str,
         description: str,
-        features: List[str],
-    ) -> Dict[str, Any]:
+        features: list[str],
+    ) -> dict[str, Any]:
         """Generate README."""
         llm = await self._get_llm()
 
@@ -251,10 +251,13 @@ Include:
         self,
         idea: str,
         output_dir: str = "G:/",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Assemble complete project."""
         try:
-            from src.synthesis.project_assembler import ProjectAssembler, AssemblerConfig
+            from src.synthesis.project_assembler import (
+                AssemblerConfig,
+                ProjectAssembler,
+            )
 
             config = AssemblerConfig(
                 base_output_dir=Path(output_dir),
@@ -274,7 +277,7 @@ Include:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a synthesis step."""
         llm = await self._get_llm()
 
@@ -354,11 +357,11 @@ SUMMARY: <what was created>
             "complete": False,
         }
 
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Check if should continue synthesis."""
         return not step_result.get("complete", False)
 
-    async def synthesize(self, idea: str, output_dir: str = "G:/") -> Dict[str, Any]:
+    async def synthesize(self, idea: str, output_dir: str = "G:/") -> dict[str, Any]:
         """
         Convenience method to synthesize a project.
 

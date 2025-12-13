@@ -8,13 +8,14 @@ Comprehensive voice management for:
 - Voice profiles
 """
 
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
-from pathlib import Path
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from src.core.security import get_secure_logger
+from src.voice.elevenlabs_client import VoiceSettings
 
 secure_logger = get_secure_logger(__name__)
 
@@ -24,6 +25,7 @@ class VoiceProvider(str, Enum):
     ELEVENLABS = "elevenlabs"
     OPENAI = "openai"
     LOCAL = "local"
+    PIPER = "piper"
 
 
 class AudioFormat(str, Enum):
@@ -48,7 +50,7 @@ class VoiceProfile:
     speed: float = 1.0
     model: str = "eleven_turbo_v2_5"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -64,7 +66,8 @@ class VoiceProfile:
 
 
 # Pre-defined voice profiles
-DEFAULT_VOICES: Dict[str, VoiceProfile] = {
+DEFAULT_VOICES: dict[str, VoiceProfile] = {
+    # ElevenLabs voices (existing)
     "rachel": VoiceProfile(
         id="rachel",
         name="Rachel",
@@ -100,6 +103,44 @@ DEFAULT_VOICES: Dict[str, VoiceProfile] = {
         description="Deep, authoritative male voice",
         stability=0.5,
         similarity_boost=0.75,
+    ),
+
+    # Piper TTS voices (new local voices)
+    "piper_default": VoiceProfile(
+        id="piper_default",
+        name="Piper Default",
+        provider=VoiceProvider.PIPER,
+        voice_id="en_US-lessac-medium",
+        description="Local American English male voice",
+        speed=1.0,
+        model="piper",
+    ),
+    "piper_female": VoiceProfile(
+        id="piper_female",
+        name="Piper Female",
+        provider=VoiceProvider.PIPER,
+        voice_id="en_US-lessac-medium",  # Would be female model
+        description="Local American English female voice",
+        speed=1.0,
+        model="piper",
+    ),
+    "piper_british": VoiceProfile(
+        id="piper_british",
+        name="Piper British",
+        provider=VoiceProvider.PIPER,
+        voice_id="en_GB-lessac-medium",
+        description="Local British English male voice",
+        speed=1.0,
+        model="piper",
+    ),
+    "rachel_local": VoiceProfile(
+        id="rachel_local",
+        name="Rachel (Local)",
+        provider=VoiceProvider.PIPER,
+        voice_id="rachel_cloned",
+        description="Local clone of Rachel voice from extracted samples",
+        speed=1.0,
+        model="piper",
     ),
     "adam": VoiceProfile(
         id="adam",
@@ -149,22 +190,32 @@ class VoiceManager:
 
     def __init__(self):
         self._profiles = dict(DEFAULT_VOICES)
-        self._current_session: Optional[AudioSession] = None
-        self._default_voice = "rachel"
-        self._client = None
+        self._current_session: AudioSession | None = None
+        self._default_voice = "piper_default"  # Switch to local by default
+        self._elevenlabs_client = None
+        self._piper_client = None
 
-    async def _get_client(self):
+    async def _get_elevenlabs_client(self):
         """Get ElevenLabs client."""
-        if self._client is None:
+        if self._elevenlabs_client is None:
             from src.voice.elevenlabs_client import ElevenLabsClient
-            self._client = ElevenLabsClient()
-        return self._client
+            self._elevenlabs_client = ElevenLabsClient()
+        return self._elevenlabs_client
 
-    def list_voices(self) -> List[Dict[str, Any]]:
+    async def _get_piper_client(self):
+        """Get Piper TTS client."""
+        if self._piper_client is None:
+            from src.voice.tts.piper_client import create_piper_client
+            self._piper_client = await create_piper_client()
+            if self._piper_client is None:
+                raise RuntimeError("Failed to initialize Piper TTS client")
+        return self._piper_client
+
+    def list_voices(self) -> list[dict[str, Any]]:
         """List available voice profiles."""
         return [p.to_dict() for p in self._profiles.values()]
 
-    def get_voice(self, voice_id: str) -> Optional[VoiceProfile]:
+    def get_voice(self, voice_id: str) -> VoiceProfile | None:
         """Get a voice profile by ID."""
         return self._profiles.get(voice_id)
 
@@ -180,9 +231,9 @@ class VoiceManager:
     async def speak(
         self,
         text: str,
-        voice: Optional[str] = None,
+        voice: str | None = None,
         stream: bool = False,
-    ) -> Optional[Path]:
+    ) -> Path | None:
         """
         Generate and play speech.
 
@@ -202,38 +253,67 @@ class VoiceManager:
             profile = self._profiles[self._default_voice]
 
         try:
-            client = await self._get_client()
+            # Route to appropriate provider based on voice profile
+            if profile.provider == VoiceProvider.ELEVENLABS:
+                client = await self._get_elevenlabs_client()
 
-            if stream:
-                await client.stream_speech(
+                if stream:
+                    await client.stream_speech(
+                        text,
+                        voice=profile.voice_id,
+                        model=profile.model,
+                        settings=VoiceSettings(
+                            stability=profile.stability,
+                            similarity_boost=profile.similarity_boost,
+                            style=profile.style,
+                            use_speaker_boost=True,
+                        ),
+                    )
+                else:
+                    audio_data = await client.text_to_speech(
+                        text,
+                        voice=profile.voice_id,
+                        model=profile.model,
+                        settings=VoiceSettings(
+                            stability=profile.stability,
+                            similarity_boost=profile.similarity_boost,
+                            style=profile.style,
+                            use_speaker_boost=True,
+                        ),
+                    )
+
+            elif profile.provider == VoiceProvider.PIPER:
+                client = await self._get_piper_client()
+
+                # Piper doesn't support streaming in the same way
+                if stream:
+                    secure_logger.warning("Streaming not fully supported with Piper TTS")
+
+                audio_data = await client.synthesize(
                     text,
                     voice=profile.voice_id,
-                    model=profile.model,
+                    speed=profile.speed,
                 )
-                return None
+
             else:
-                audio_path = await client.generate_speech(
-                    text,
-                    voice=profile.voice_id,
-                    model=profile.model,
-                    stability=profile.stability,
-                    similarity_boost=profile.similarity_boost,
-                )
-                return audio_path
+                raise RuntimeError(f"Unsupported voice provider: {profile.provider}")
+
+            if not stream:
+                return audio_data
 
         except Exception as e:
             secure_logger.error(f"Speech generation failed: {e}")
             raise
 
-    async def speak_fast(self, text: str, voice: Optional[str] = None):
+    async def speak_fast(self, text: str, voice: str | None = None):
         """Quick speech with streaming for low latency."""
         return await self.speak(text, voice, stream=True)
 
-    def get_session(self) -> Optional[AudioSession]:
+    def get_session(self) -> AudioSession | None:
         """Get current audio session."""
         return self._current_session
 
-    def start_session(self, voice: Optional[str] = None) -> AudioSession:
+    def start_session(self, voice: str | None = None) -> AudioSession:
         """Start a new audio session."""
         voice_id = voice or self._default_voice
         profile = self._profiles.get(voice_id, self._profiles[self._default_voice])
@@ -250,7 +330,7 @@ class VoiceManager:
 
 
 # Global voice manager instance
-_voice_manager: Optional[VoiceManager] = None
+_voice_manager: VoiceManager | None = None
 
 
 def get_voice_manager() -> VoiceManager:

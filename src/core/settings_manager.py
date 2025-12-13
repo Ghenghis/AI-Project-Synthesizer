@@ -10,10 +10,12 @@ Comprehensive settings system with:
 - Automation controls
 """
 
+import contextlib
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Callable
+from collections.abc import Callable
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -244,10 +246,10 @@ class SettingsManager:
     - Feature toggles
     """
 
-    def __init__(self, settings_path: Optional[Path] = None):
+    def __init__(self, settings_path: Path | None = None):
         self._settings_path = settings_path or Path("config/settings.json")
         self._settings = AllSettings()
-        self._listeners: Dict[str, List[Callable]] = {}
+        self._listeners: dict[str, list[Callable]] = {}
         self._loaded = False
 
     def load(self) -> AllSettings:
@@ -325,19 +327,15 @@ class SettingsManager:
     def _notify(self, key: str, value: Any):
         """Notify listeners of a change."""
         for listener in self._listeners.get(key, []):
-            try:
+            with contextlib.suppress(Exception):
                 listener(value)
-            except Exception:
-                pass
 
         # Also notify wildcard listeners
         for listener in self._listeners.get("*", []):
-            try:
+            with contextlib.suppress(Exception):
                 listener(key, value)
-            except Exception:
-                pass
 
-    def get_feature_toggles(self) -> Dict[str, Dict[str, bool]]:
+    def get_feature_toggles(self) -> dict[str, dict[str, bool]]:
         """Get all feature toggles organized by tab."""
         toggles = {}
 
@@ -354,16 +352,16 @@ class SettingsManager:
 
         return toggles
 
-    def export_settings(self) -> Dict[str, Any]:
+    def export_settings(self) -> dict[str, Any]:
         """Export all settings as dictionary."""
         return self._settings.model_dump()
 
-    def import_settings(self, data: Dict[str, Any]):
+    def import_settings(self, data: dict[str, Any]):
         """Import settings from dictionary."""
         self._settings = AllSettings(**data)
         self.save()
 
-    def reset_to_defaults(self, tab: Optional[SettingsTab] = None):
+    def reset_to_defaults(self, tab: SettingsTab | None = None):
         """Reset settings to defaults."""
         if tab:
             defaults = {
@@ -383,7 +381,7 @@ class SettingsManager:
 
 
 # Global settings manager
-_settings_manager: Optional[SettingsManager] = None
+_settings_manager: SettingsManager | None = None
 
 
 def get_settings_manager() -> SettingsManager:

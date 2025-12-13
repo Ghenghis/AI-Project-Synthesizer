@@ -12,9 +12,10 @@ The intelligent assistant that:
 This is the BRAIN that makes everything useful.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, Callable
 from enum import Enum
+from typing import Any
 
 from src.core.config import get_settings
 from src.core.security import get_secure_logger
@@ -49,8 +50,8 @@ class Message:
     role: str  # "user", "assistant", "system"
     content: str
     timestamp: float = 0.0
-    voice_audio: Optional[bytes] = None  # Audio if voice enabled
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    voice_audio: bytes | None = None  # Audio if voice enabled
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,9 +59,9 @@ class TaskContext:
     """Context for the current task."""
     task_type: TaskType
     description: str
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    clarifications_needed: List[str] = field(default_factory=list)
-    clarifications_received: Dict[str, str] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    clarifications_needed: list[str] = field(default_factory=list)
+    clarifications_received: dict[str, str] = field(default_factory=dict)
     results: Any = None
     completed: bool = False
 
@@ -101,12 +102,12 @@ class ConversationalAssistant:
         # Assistant: "I found these projects that could help..."
     """
 
-    def __init__(self, config: Optional[AssistantConfig] = None):
+    def __init__(self, config: AssistantConfig | None = None):
         """Initialize the assistant."""
         self.config = config or AssistantConfig()
         self.state = AssistantState.IDLE
-        self.conversation: List[Message] = []
-        self.current_task: Optional[TaskContext] = None
+        self.conversation: list[Message] = []
+        self.current_task: TaskContext | None = None
 
         # Initialize components lazily
         self._llm = None
@@ -114,10 +115,10 @@ class ConversationalAssistant:
         self._search = None
 
         # Callbacks for UI integration
-        self._on_state_change: Optional[Callable] = None
-        self._on_message: Optional[Callable] = None
-        self._on_voice_start: Optional[Callable] = None
-        self._on_voice_end: Optional[Callable] = None
+        self._on_state_change: Callable | None = None
+        self._on_message: Callable | None = None
+        self._on_voice_start: Callable | None = None
+        self._on_voice_end: Callable | None = None
 
         self._init_system_prompt()
 
@@ -200,7 +201,7 @@ When responding:
         if not enabled:
             self._voice = None
 
-    async def chat(self, user_input: str) -> Dict[str, Any]:
+    async def chat(self, user_input: str) -> dict[str, Any]:
         """
         Process user input and generate response.
 
@@ -289,7 +290,7 @@ When responding:
             secure_logger.error(f"LLM error: {e}")
             return await self._generate_basic_response(user_input)
 
-    async def _analyze_intent(self, user_input: str) -> Dict[str, Any]:
+    async def _analyze_intent(self, user_input: str) -> dict[str, Any]:
         """Analyze user intent to determine next action."""
         input_lower = user_input.lower()
 
@@ -366,7 +367,7 @@ When responding:
 
         return "Can you describe what you want to build in more detail? What problem should it solve?"
 
-    async def _execute_action(self, intent: Dict[str, Any]) -> str:
+    async def _execute_action(self, intent: dict[str, Any]) -> str:
         """Execute an action based on intent."""
         action = intent["action"]
 
@@ -464,7 +465,7 @@ What would you like to do?"""
 
         return "I'm here to help! You can ask me to search for projects, analyze repositories, or help you build something. What do you need?"
 
-    async def _generate_voice(self, text: str) -> Optional[bytes]:
+    async def _generate_voice(self, text: str) -> bytes | None:
         """Generate voice audio for text."""
         voice = await self._get_voice()
 
@@ -508,7 +509,7 @@ What would you like to do?"""
 
         return text
 
-    def _get_task_info(self) -> Optional[Dict[str, Any]]:
+    def _get_task_info(self) -> dict[str, Any] | None:
         """Get current task information."""
         if self.current_task is None:
             return None
@@ -520,7 +521,7 @@ What would you like to do?"""
             "clarifications_needed": self.current_task.clarifications_needed,
         }
 
-    def _get_suggested_actions(self) -> List[str]:
+    def _get_suggested_actions(self) -> list[str]:
         """Get suggested next actions."""
         if not self.conversation:
             return ["Search for projects", "Analyze a repository", "Help me build something"]
@@ -548,7 +549,7 @@ What would you like to do?"""
         """Register message callback."""
         self._on_message = callback
 
-    def get_conversation_history(self) -> List[Dict[str, Any]]:
+    def get_conversation_history(self) -> list[dict[str, Any]]:
         """Get conversation history."""
         return [
             {
@@ -566,7 +567,7 @@ What would you like to do?"""
 
 
 # Singleton instance
-_assistant: Optional[ConversationalAssistant] = None
+_assistant: ConversationalAssistant | None = None
 
 
 def get_assistant() -> ConversationalAssistant:

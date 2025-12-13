@@ -10,10 +10,10 @@ AI-powered automation agent for:
 """
 
 import asyncio
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any
 
-from src.agents.base import BaseAgent, AgentConfig, AgentTool
+from src.agents.base import AgentConfig, AgentTool, BaseAgent
 from src.core.security import get_secure_logger
 from src.core.settings_manager import get_settings_manager
 
@@ -32,7 +32,7 @@ class AutomationAgent(BaseAgent):
     - n8n integration
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         config = config or AgentConfig(
             name="automation_agent",
             description="Manages workflows and automation",
@@ -40,8 +40,8 @@ class AutomationAgent(BaseAgent):
             max_iterations=50,
         )
         super().__init__(config)
-        self._scheduled_tasks: Dict[str, Dict] = {}
-        self._running_workflows: Dict[str, Dict] = {}
+        self._scheduled_tasks: dict[str, dict] = {}
+        self._running_workflows: dict[str, dict] = {}
         self._setup_tools()
 
     def _setup_tools(self):
@@ -103,8 +103,8 @@ class AutomationAgent(BaseAgent):
     async def _run_workflow(
         self,
         workflow_id: str,
-        data: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        data: dict | None = None,
+    ) -> dict[str, Any]:
         """Execute an n8n workflow."""
         try:
             from src.workflows import N8NClient
@@ -129,8 +129,8 @@ class AutomationAgent(BaseAgent):
         task_id: str,
         task_type: str,
         schedule: str,
-        data: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        data: dict | None = None,
+    ) -> dict[str, Any]:
         """Schedule a task."""
         self._scheduled_tasks[task_id] = {
             "type": task_type,
@@ -146,7 +146,7 @@ class AutomationAgent(BaseAgent):
             "scheduled": True,
         }
 
-    async def _check_health(self) -> Dict[str, Any]:
+    async def _check_health(self) -> dict[str, Any]:
         """Check system health."""
         try:
             from src.core.health import check_health
@@ -174,7 +174,7 @@ class AutomationAgent(BaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _recover_component(self, component: str) -> Dict[str, Any]:
+    async def _recover_component(self, component: str) -> dict[str, Any]:
         """Attempt to recover a component."""
         recovery_actions = {
             "lm_studio": "Check if LM Studio is running and has a model loaded",
@@ -197,7 +197,7 @@ class AutomationAgent(BaseAgent):
             "status": "recovery_attempted",
         }
 
-    async def _run_tests(self, category: Optional[str] = None) -> Dict[str, Any]:
+    async def _run_tests(self, category: str | None = None) -> dict[str, Any]:
         """Run integration tests."""
         try:
             from src.automation import IntegrationTester
@@ -216,7 +216,7 @@ class AutomationAgent(BaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _get_metrics(self) -> Dict[str, Any]:
+    async def _get_metrics(self) -> dict[str, Any]:
         """Get system metrics."""
         try:
             from src.automation.metrics import get_metrics_collector
@@ -229,7 +229,7 @@ class AutomationAgent(BaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute an automation step."""
         llm = await self._get_llm()
         settings = get_settings_manager().settings.automation
@@ -317,7 +317,7 @@ SUMMARY: <summary>
             "complete": False,
         }
 
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Check if should continue automation."""
         return not step_result.get("complete", False)
 
@@ -335,7 +335,7 @@ SUMMARY: <summary>
 
             await asyncio.sleep(interval_seconds)
 
-    async def automate(self, task: str) -> Dict[str, Any]:
+    async def automate(self, task: str) -> dict[str, Any]:
         """
         Run automation task.
 

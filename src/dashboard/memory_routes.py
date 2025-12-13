@@ -9,23 +9,25 @@ API endpoints for:
 - Real-time events (SSE)
 """
 
-from typing import Dict, Any, Optional, List
+import contextlib
 from datetime import datetime
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.core.memory import (
-    get_memory_store,
+    Bookmark,
     MemoryEntry,
     MemoryType,
     SearchEntry,
-    Bookmark,
+    get_memory_store,
 )
 from src.core.realtime import (
-    get_event_bus,
     EventType,
     emit_notification,
+    get_event_bus,
 )
 from src.core.security import get_secure_logger
 
@@ -37,9 +39,9 @@ router = APIRouter(prefix="/api", tags=["memory"])
 # Request models
 class MemoryRequest(BaseModel):
     type: str
-    content: Dict[str, Any]
-    tags: List[str] = []
-    metadata: Dict[str, Any] = {}
+    content: dict[str, Any]
+    tags: list[str] = []
+    metadata: dict[str, Any] = {}
 
 
 class BookmarkRequest(BaseModel):
@@ -47,22 +49,22 @@ class BookmarkRequest(BaseModel):
     url: str
     type: str  # repo, model, dataset, paper, project
     description: str = ""
-    tags: List[str] = []
-    metadata: Dict[str, Any] = {}
+    tags: list[str] = []
+    metadata: dict[str, Any] = {}
 
 
 class SearchHistoryRequest(BaseModel):
     query: str
-    platforms: List[str]
+    platforms: list[str]
     results_count: int
-    filters: Dict[str, Any] = {}
+    filters: dict[str, Any] = {}
 
 
 class MessageRequest(BaseModel):
     session_id: str
     role: str
     content: str
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 # ============================================
@@ -70,7 +72,7 @@ class MessageRequest(BaseModel):
 # ============================================
 
 @router.post("/memory")
-async def save_memory(request: MemoryRequest) -> Dict[str, Any]:
+async def save_memory(request: MemoryRequest) -> dict[str, Any]:
     """Save a memory entry."""
     store = get_memory_store()
 
@@ -94,10 +96,10 @@ async def save_memory(request: MemoryRequest) -> Dict[str, Any]:
 
 @router.get("/memory")
 async def get_memories(
-    type: Optional[str] = None,
-    tags: Optional[str] = None,
+    type: str | None = None,
+    tags: str | None = None,
     limit: int = 50,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get memories with optional filtering."""
     store = get_memory_store()
 
@@ -119,7 +121,7 @@ async def get_memories(
 
 
 @router.get("/memory/{memory_id}")
-async def get_memory(memory_id: str) -> Dict[str, Any]:
+async def get_memory(memory_id: str) -> dict[str, Any]:
     """Get a specific memory entry."""
     store = get_memory_store()
     entry = store.get_memory(memory_id)
@@ -131,7 +133,7 @@ async def get_memory(memory_id: str) -> Dict[str, Any]:
 
 
 @router.delete("/memory/{memory_id}")
-async def delete_memory(memory_id: str) -> Dict[str, Any]:
+async def delete_memory(memory_id: str) -> dict[str, Any]:
     """Delete a memory entry."""
     store = get_memory_store()
     deleted = store.delete_memory(memory_id)
@@ -147,7 +149,7 @@ async def delete_memory(memory_id: str) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/search-history")
-async def save_search(request: SearchHistoryRequest) -> Dict[str, Any]:
+async def save_search(request: SearchHistoryRequest) -> dict[str, Any]:
     """Save a search to history."""
     store = get_memory_store()
 
@@ -168,7 +170,7 @@ async def save_search(request: SearchHistoryRequest) -> Dict[str, Any]:
 
 
 @router.get("/search-history")
-async def get_search_history(limit: int = 50) -> Dict[str, Any]:
+async def get_search_history(limit: int = 50) -> dict[str, Any]:
     """Get search history."""
     store = get_memory_store()
     entries = store.get_search_history(limit=limit)
@@ -180,7 +182,7 @@ async def get_search_history(limit: int = 50) -> Dict[str, Any]:
 
 
 @router.get("/search-history/{search_id}/replay")
-async def replay_search(search_id: str) -> Dict[str, Any]:
+async def replay_search(search_id: str) -> dict[str, Any]:
     """Get search details for replay."""
     store = get_memory_store()
     entry = store.replay_search(search_id)
@@ -196,7 +198,7 @@ async def replay_search(search_id: str) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/bookmarks")
-async def save_bookmark(request: BookmarkRequest) -> Dict[str, Any]:
+async def save_bookmark(request: BookmarkRequest) -> dict[str, Any]:
     """Save a bookmark."""
     store = get_memory_store()
 
@@ -213,7 +215,7 @@ async def save_bookmark(request: BookmarkRequest) -> Dict[str, Any]:
     bookmark_id = store.save_bookmark(bookmark)
 
     # Emit event
-    from src.core.realtime import get_event_bus, EventType
+    from src.core.realtime import EventType, get_event_bus
     bus = get_event_bus()
     bus.emit(EventType.BOOKMARK_ADDED, {
         "id": bookmark_id,
@@ -227,10 +229,10 @@ async def save_bookmark(request: BookmarkRequest) -> Dict[str, Any]:
 
 @router.get("/bookmarks")
 async def get_bookmarks(
-    type: Optional[str] = None,
-    tags: Optional[str] = None,
+    type: str | None = None,
+    tags: str | None = None,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get bookmarks with optional filtering."""
     store = get_memory_store()
 
@@ -244,7 +246,7 @@ async def get_bookmarks(
 
 
 @router.delete("/bookmarks/{bookmark_id}")
-async def delete_bookmark(bookmark_id: str) -> Dict[str, Any]:
+async def delete_bookmark(bookmark_id: str) -> dict[str, Any]:
     """Delete a bookmark."""
     store = get_memory_store()
     deleted = store.delete_bookmark(bookmark_id)
@@ -260,7 +262,7 @@ async def delete_bookmark(bookmark_id: str) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/conversations/message")
-async def save_message(request: MessageRequest) -> Dict[str, Any]:
+async def save_message(request: MessageRequest) -> dict[str, Any]:
     """Save a conversation message."""
     store = get_memory_store()
 
@@ -275,7 +277,7 @@ async def save_message(request: MessageRequest) -> Dict[str, Any]:
 
 
 @router.get("/conversations/{session_id}")
-async def get_conversation(session_id: str, limit: int = 100) -> Dict[str, Any]:
+async def get_conversation(session_id: str, limit: int = 100) -> dict[str, Any]:
     """Get conversation history."""
     store = get_memory_store()
     messages = store.get_conversation(session_id, limit=limit)
@@ -312,18 +314,16 @@ async def stream_events():
 
 @router.get("/events/history")
 async def get_event_history(
-    type: Optional[str] = None,
+    type: str | None = None,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get event history."""
     bus = get_event_bus()
 
     event_type = None
     if type:
-        try:
+        with contextlib.suppress(ValueError):
             event_type = EventType(type)
-        except ValueError:
-            pass
 
     events = bus.get_history(event_type=event_type, limit=limit)
 
@@ -334,7 +334,7 @@ async def get_event_history(
 
 
 @router.post("/events/emit")
-async def emit_event(data: Dict[str, Any]) -> Dict[str, Any]:
+async def emit_event(data: dict[str, Any]) -> dict[str, Any]:
     """Emit a custom event."""
     bus = get_event_bus()
 
@@ -358,7 +358,7 @@ async def emit_event(data: Dict[str, Any]) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/workflow-state/{workflow_id}")
-async def save_workflow_state(workflow_id: str, state: Dict[str, Any]) -> Dict[str, Any]:
+async def save_workflow_state(workflow_id: str, state: dict[str, Any]) -> dict[str, Any]:
     """Save workflow state."""
     store = get_memory_store()
     state_id = store.save_workflow_state(workflow_id, state)
@@ -367,7 +367,7 @@ async def save_workflow_state(workflow_id: str, state: Dict[str, Any]) -> Dict[s
 
 
 @router.get("/workflow-state/{workflow_id}")
-async def get_workflow_state(workflow_id: str) -> Dict[str, Any]:
+async def get_workflow_state(workflow_id: str) -> dict[str, Any]:
     """Get workflow state."""
     store = get_memory_store()
     state = store.get_workflow_state(workflow_id)

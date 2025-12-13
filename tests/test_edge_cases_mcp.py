@@ -7,16 +7,14 @@ use asserts so they show up in coverage and CI.
 
 from __future__ import annotations
 
-from typing import Any, Dict
-
 import pytest
 
 from src.mcp_server.tools import (
-    handle_search_repositories,
     handle_analyze_repository,
-    handle_synthesize_project,
     handle_generate_documentation,
     handle_get_synthesis_status,
+    handle_search_repositories,
+    handle_synthesize_project,
 )
 
 

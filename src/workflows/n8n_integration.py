@@ -10,10 +10,10 @@ Local n8n workflow automation for:
 n8n runs locally at http://localhost:5678
 """
 
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 import httpx
 
@@ -35,7 +35,7 @@ class WorkflowStatus(str, Enum):
 class N8NConfig:
     """n8n connection configuration."""
     base_url: str = "http://localhost:5678"
-    api_key: Optional[str] = None
+    api_key: str | None = None
     timeout: int = 30
 
 
@@ -45,11 +45,11 @@ class N8NWorkflow:
     id: str
     name: str
     active: bool = False
-    nodes: List[Dict[str, Any]] = field(default_factory=list)
-    connections: Dict[str, Any] = field(default_factory=dict)
-    settings: Dict[str, Any] = field(default_factory=dict)
+    nodes: list[dict[str, Any]] = field(default_factory=list)
+    connections: dict[str, Any] = field(default_factory=dict)
+    settings: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -67,9 +67,9 @@ class WorkflowExecution:
     workflow_id: str
     status: WorkflowStatus
     started_at: datetime
-    finished_at: Optional[datetime] = None
-    data: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[str] = None
+    finished_at: datetime | None = None
+    data: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
 
 
 class N8NClient:
@@ -94,10 +94,10 @@ class N8NClient:
             result = await client.execute_workflow("workflow-id", {"input": "data"})
     """
 
-    def __init__(self, config: Optional[N8NConfig] = None):
+    def __init__(self, config: N8NConfig | None = None):
         """Initialize n8n client."""
         self.config = config or N8NConfig()
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
@@ -129,7 +129,7 @@ class N8NClient:
             secure_logger.debug(f"n8n health check failed: {e}")
             return False
 
-    async def list_workflows(self) -> List[N8NWorkflow]:
+    async def list_workflows(self) -> list[N8NWorkflow]:
         """List all workflows."""
         try:
             client = await self._get_client()
@@ -152,7 +152,7 @@ class N8NClient:
 
         return []
 
-    async def get_workflow(self, workflow_id: str) -> Optional[N8NWorkflow]:
+    async def get_workflow(self, workflow_id: str) -> N8NWorkflow | None:
         """Get a specific workflow."""
         try:
             client = await self._get_client()
@@ -172,7 +172,7 @@ class N8NClient:
 
         return None
 
-    async def create_workflow(self, workflow: N8NWorkflow) -> Optional[str]:
+    async def create_workflow(self, workflow: N8NWorkflow) -> str | None:
         """Create a new workflow."""
         try:
             client = await self._get_client()
@@ -192,8 +192,8 @@ class N8NClient:
     async def execute_workflow(
         self,
         workflow_id: str,
-        input_data: Dict[str, Any] = None,
-    ) -> Optional[WorkflowExecution]:
+        input_data: dict[str, Any] = None,
+    ) -> WorkflowExecution | None:
         """Execute a workflow."""
         try:
             client = await self._get_client()
@@ -489,7 +489,7 @@ class N8NWorkflowTemplates:
         )
 
 
-async def setup_n8n_workflows(client: N8NClient) -> Dict[str, str]:
+async def setup_n8n_workflows(client: N8NClient) -> dict[str, str]:
     """
     Set up default workflows in n8n.
 

@@ -12,19 +12,19 @@ This module handles repository discovery across multiple platforms:
 """
 
 from src.discovery.base_client import (
+    DiscoveryError,
     PlatformClient,
     RepositoryInfo,
     SearchResult,
-    DiscoveryError,
 )
 from src.discovery.github_client import GitHubClient
 from src.discovery.huggingface_client import HuggingFaceClient
 from src.discovery.kaggle_client import (
     KaggleClient,
-    KaggleDataset,
     KaggleCompetition,
-    KaggleNotebook,
+    KaggleDataset,
     KaggleModel,
+    KaggleNotebook,
     KaggleResourceType,
 )
 from src.discovery.unified_search import UnifiedSearch, create_unified_search

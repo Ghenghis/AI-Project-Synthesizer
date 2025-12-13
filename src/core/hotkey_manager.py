@@ -9,9 +9,11 @@ Global hotkey system for:
 """
 
 import asyncio
-from typing import Optional, Dict, Callable, Any, List
+import contextlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -57,7 +59,7 @@ class HotkeyBinding:
     keys: str
     description: str
     enabled: bool = True
-    callback: Optional[Callable] = None
+    callback: Callable | None = None
     is_hold: bool = False  # True for push-to-talk style
 
 
@@ -73,10 +75,10 @@ class HotkeyManager:
     """
 
     def __init__(self):
-        self._bindings: Dict[HotkeyAction, HotkeyBinding] = {}
-        self._active_holds: Dict[str, bool] = {}
+        self._bindings: dict[HotkeyAction, HotkeyBinding] = {}
+        self._active_holds: dict[str, bool] = {}
         self._running = False
-        self._callbacks: Dict[HotkeyAction, List[Callable]] = {}
+        self._callbacks: dict[HotkeyAction, list[Callable]] = {}
         self._setup_default_bindings()
 
     def _setup_default_bindings(self):
@@ -147,7 +149,7 @@ class HotkeyManager:
         self,
         action: HotkeyAction,
         callback: Callable,
-        keys: Optional[str] = None,
+        keys: str | None = None,
     ):
         """Register a callback for a hotkey action."""
         if action not in self._callbacks:
@@ -157,7 +159,7 @@ class HotkeyManager:
         if keys and action in self._bindings:
             self._bindings[action].keys = keys
 
-    def unregister(self, action: HotkeyAction, callback: Optional[Callable] = None):
+    def unregister(self, action: HotkeyAction, callback: Callable | None = None):
         """Unregister a callback."""
         if callback and action in self._callbacks:
             self._callbacks[action] = [
@@ -174,10 +176,8 @@ class HotkeyManager:
 
             # Re-register if running
             if self._running and KEYBOARD_AVAILABLE:
-                try:
+                with contextlib.suppress(Exception):
                     keyboard.remove_hotkey(old_keys)
-                except Exception:
-                    pass
                 self._register_keyboard_hotkey(self._bindings[action])
 
     def enable(self, action: HotkeyAction):
@@ -266,7 +266,7 @@ class HotkeyManager:
 
         secure_logger.info("Hotkey manager stopped")
 
-    def get_bindings(self) -> List[Dict[str, Any]]:
+    def get_bindings(self) -> list[dict[str, Any]]:
         """Get all hotkey bindings."""
         return [
             {
@@ -285,7 +285,7 @@ class HotkeyManager:
 
 
 # Global hotkey manager
-_hotkey_manager: Optional[HotkeyManager] = None
+_hotkey_manager: HotkeyManager | None = None
 
 
 def get_hotkey_manager() -> HotkeyManager:

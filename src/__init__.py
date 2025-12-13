@@ -18,7 +18,7 @@ Example:
 __version__ = "1.0.0"
 __author__ = "AI Synthesizer Team"
 
-from src.core.config import get_settings, Settings
+from src.core.config import Settings, get_settings
 from src.core.exceptions import SynthesizerError
 
 __all__ = [

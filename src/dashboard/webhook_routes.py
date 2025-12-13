@@ -8,13 +8,14 @@ Webhook endpoints for external integrations:
 - Slack/Discord notifications
 """
 
-from typing import Dict, Any, Optional
-from datetime import datetime
-from fastapi import APIRouter, Request, Header
 import json
+from datetime import datetime
+from typing import Any
 
-from src.core.realtime import get_event_bus, EventType, emit_notification
-from src.core.memory import get_memory_store, MemoryEntry, MemoryType
+from fastapi import APIRouter, Header, Request
+
+from src.core.memory import MemoryEntry, MemoryType, get_memory_store
+from src.core.realtime import EventType, emit_notification, get_event_bus
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -29,8 +30,8 @@ router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 @router.post("/github")
 async def github_webhook(
     request: Request,
-    x_github_event: Optional[str] = Header(None),
-    x_hub_signature_256: Optional[str] = Header(None),
+    x_github_event: str | None = Header(None),
+    x_hub_signature_256: str | None = Header(None),
 ):
     """
     Handle GitHub webhooks.
@@ -322,7 +323,7 @@ async def list_webhooks():
 
 
 @router.post("/test")
-async def test_webhook(data: Dict[str, Any]):
+async def test_webhook(data: dict[str, Any]):
     """Test webhook endpoint for debugging."""
     secure_logger.info(f"Test webhook received: {data}")
 

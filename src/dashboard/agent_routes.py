@@ -9,7 +9,8 @@ API endpoints for agent management:
 - Code agent
 """
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -29,12 +30,12 @@ class ResearchRequest(BaseModel):
 class SynthesisRequest(BaseModel):
     idea: str
     output_dir: str = "G:/"
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class VoiceRequest(BaseModel):
     text: str
-    voice: Optional[str] = None
+    voice: str | None = None
 
 
 class CodeRequest(BaseModel):
@@ -58,7 +59,7 @@ class AutomationRequest(BaseModel):
 # ============================================
 
 @router.get("/status")
-async def get_agents_status() -> Dict[str, Any]:
+async def get_agents_status() -> dict[str, Any]:
     """Get status of all agents."""
 
     return {
@@ -77,7 +78,7 @@ async def get_agents_status() -> Dict[str, Any]:
 # ============================================
 
 @router.post("/research")
-async def run_research(request: ResearchRequest) -> Dict[str, Any]:
+async def run_research(request: ResearchRequest) -> dict[str, Any]:
     """Run research agent."""
     try:
         from src.agents import ResearchAgent
@@ -101,7 +102,7 @@ async def run_research(request: ResearchRequest) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/synthesis")
-async def run_synthesis(request: SynthesisRequest) -> Dict[str, Any]:
+async def run_synthesis(request: SynthesisRequest) -> dict[str, Any]:
     """Run synthesis agent."""
     try:
         from src.agents import SynthesisAgent
@@ -125,7 +126,7 @@ async def run_synthesis(request: SynthesisRequest) -> Dict[str, Any]:
 # ============================================
 
 @router.post("/voice/speak")
-async def voice_speak(request: VoiceRequest) -> Dict[str, Any]:
+async def voice_speak(request: VoiceRequest) -> dict[str, Any]:
     """Speak text using voice agent."""
     try:
         from src.agents.voice_agent import get_voice_agent
@@ -145,7 +146,7 @@ async def voice_speak(request: VoiceRequest) -> Dict[str, Any]:
 
 
 @router.post("/voice/process")
-async def voice_process(request: VoiceRequest) -> Dict[str, Any]:
+async def voice_process(request: VoiceRequest) -> dict[str, Any]:
     """Process text with voice agent."""
     try:
         from src.agents.voice_agent import get_voice_agent
@@ -165,7 +166,7 @@ async def voice_process(request: VoiceRequest) -> Dict[str, Any]:
 
 
 @router.get("/voice/state")
-async def voice_state() -> Dict[str, Any]:
+async def voice_state() -> dict[str, Any]:
     """Get voice agent state."""
     try:
         from src.agents.voice_agent import get_voice_agent
@@ -177,7 +178,7 @@ async def voice_state() -> Dict[str, Any]:
 
 
 @router.post("/voice/start")
-async def voice_start() -> Dict[str, Any]:
+async def voice_start() -> dict[str, Any]:
     """Start voice listening."""
     try:
         from src.agents.voice_agent import get_voice_agent
@@ -191,7 +192,7 @@ async def voice_start() -> Dict[str, Any]:
 
 
 @router.post("/voice/stop")
-async def voice_stop() -> Dict[str, Any]:
+async def voice_stop() -> dict[str, Any]:
     """Stop voice listening."""
     try:
         from src.agents.voice_agent import get_voice_agent
@@ -209,7 +210,7 @@ async def voice_stop() -> Dict[str, Any]:
 # ============================================
 
 @router.post("/automation")
-async def run_automation(request: AutomationRequest) -> Dict[str, Any]:
+async def run_automation(request: AutomationRequest) -> dict[str, Any]:
     """Run automation agent."""
     try:
         from src.agents import AutomationAgent
@@ -229,7 +230,7 @@ async def run_automation(request: AutomationRequest) -> Dict[str, Any]:
 
 
 @router.post("/automation/health-check")
-async def automation_health_check() -> Dict[str, Any]:
+async def automation_health_check() -> dict[str, Any]:
     """Run health check via automation agent."""
     try:
         from src.agents import AutomationAgent
@@ -247,7 +248,7 @@ async def automation_health_check() -> Dict[str, Any]:
 # ============================================
 
 @router.post("/code/generate")
-async def code_generate(request: CodeRequest) -> Dict[str, Any]:
+async def code_generate(request: CodeRequest) -> dict[str, Any]:
     """Generate code using code agent."""
     try:
         from src.agents import CodeAgent
@@ -268,7 +269,7 @@ async def code_generate(request: CodeRequest) -> Dict[str, Any]:
 
 
 @router.post("/code/fix")
-async def code_fix(request: FixCodeRequest) -> Dict[str, Any]:
+async def code_fix(request: FixCodeRequest) -> dict[str, Any]:
     """Fix code using code agent."""
     try:
         from src.agents import CodeAgent
@@ -289,7 +290,7 @@ async def code_fix(request: FixCodeRequest) -> Dict[str, Any]:
 
 
 @router.post("/code/review")
-async def code_review(request: CodeRequest) -> Dict[str, Any]:
+async def code_review(request: CodeRequest) -> dict[str, Any]:
     """Review code using code agent."""
     try:
         from src.agents import CodeAgent

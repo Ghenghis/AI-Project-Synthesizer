@@ -18,9 +18,9 @@ import importlib.util
 import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -45,8 +45,8 @@ class PluginMetadata:
     description: str
     author: str = ""
     plugin_type: PluginType = PluginType.PLATFORM
-    dependencies: List[str] = field(default_factory=list)
-    config_schema: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    config_schema: dict[str, Any] = field(default_factory=dict)
 
 
 class Plugin(ABC):
@@ -58,7 +58,7 @@ class Plugin(ABC):
         """Return plugin metadata."""
         pass
 
-    async def initialize(self, config: Dict[str, Any]) -> bool:
+    async def initialize(self, config: dict[str, Any]) -> bool:
         """Initialize plugin with config. Override if needed."""
         return True
 
@@ -88,11 +88,11 @@ class PlatformPlugin(Plugin):
     """
 
     @abstractmethod
-    async def search(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    async def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """Search the platform."""
         pass
 
-    async def get_details(self, identifier: str) -> Optional[Dict[str, Any]]:
+    async def get_details(self, identifier: str) -> dict[str, Any] | None:
         """Get details for a specific item."""
         return None
 
@@ -107,10 +107,10 @@ class SynthesisPlugin(Plugin):
     @abstractmethod
     async def synthesize(
         self,
-        sources: List[Dict[str, Any]],
+        sources: list[dict[str, Any]],
         output_path: Path,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Synthesize project from sources."""
         pass
 
@@ -119,7 +119,7 @@ class AnalysisPlugin(Plugin):
     """Plugin for custom code analysis."""
 
     @abstractmethod
-    async def analyze(self, path: Path) -> Dict[str, Any]:
+    async def analyze(self, path: Path) -> dict[str, Any]:
         """Analyze code at path."""
         pass
 
@@ -131,7 +131,7 @@ class HookPlugin(Plugin):
         """Called before search."""
         pass
 
-    async def on_search_complete(self, query: str, results: List[Any]) -> None:
+    async def on_search_complete(self, query: str, results: list[Any]) -> None:
         """Called after search."""
         pass
 
@@ -162,8 +162,8 @@ class PluginManager:
 
     def __init__(self):
         """Initialize plugin manager."""
-        self._plugins: Dict[str, Plugin] = {}
-        self._plugin_paths: List[Path] = [
+        self._plugins: dict[str, Plugin] = {}
+        self._plugin_paths: list[Path] = [
             Path(__file__).parent.parent / "plugins",  # Built-in
             Path.home() / ".synthesizer" / "plugins",   # User
             Path.cwd() / ".synthesizer" / "plugins",    # Project
@@ -197,7 +197,7 @@ class PluginManager:
 
         return count
 
-    async def _load_plugin_file(self, path: Path) -> Optional[Plugin]:
+    async def _load_plugin_file(self, path: Path) -> Plugin | None:
         """Load a plugin from file."""
         spec = importlib.util.spec_from_file_location(path.stem, path)
         if spec is None or spec.loader is None:
@@ -237,11 +237,11 @@ class PluginManager:
         secure_logger.info(f"Registered plugin: {name}")
         return True
 
-    def get_plugin(self, name: str) -> Optional[Plugin]:
+    def get_plugin(self, name: str) -> Plugin | None:
         """Get plugin by name."""
         return self._plugins.get(name)
 
-    def get_plugins(self, plugin_type: Optional[PluginType] = None) -> List[Plugin]:
+    def get_plugins(self, plugin_type: PluginType | None = None) -> list[Plugin]:
         """Get all plugins, optionally filtered by type."""
         plugins = list(self._plugins.values())
 
@@ -250,7 +250,7 @@ class PluginManager:
 
         return plugins
 
-    async def initialize_all(self, config: Dict[str, Any] = None) -> int:
+    async def initialize_all(self, config: dict[str, Any] = None) -> int:
         """Initialize all plugins."""
         config = config or {}
         count = 0
@@ -273,7 +273,7 @@ class PluginManager:
             except Exception as e:
                 secure_logger.error(f"Error shutting down plugin {name}: {e}")
 
-    def list_plugins(self) -> List[Dict[str, Any]]:
+    def list_plugins(self) -> list[dict[str, Any]]:
         """List all registered plugins."""
         return [
             {
@@ -287,7 +287,7 @@ class PluginManager:
 
 
 # Global plugin manager
-_plugin_manager: Optional[PluginManager] = None
+_plugin_manager: PluginManager | None = None
 
 
 def get_plugin_manager() -> PluginManager:

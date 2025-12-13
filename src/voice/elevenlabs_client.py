@@ -13,10 +13,12 @@ SPEED OPTIMIZATION:
 - PCM format for lowest latency
 """
 
-import aiohttp
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, AsyncIterator
 from pathlib import Path
+from typing import Any
+
+import aiohttp
 
 from src.core.config import get_settings
 from src.core.security import get_secure_logger
@@ -30,9 +32,9 @@ class Voice:
     voice_id: str
     name: str
     category: str  # premade, cloned, generated
-    description: Optional[str] = None
-    preview_url: Optional[str] = None
-    labels: Dict[str, str] = None
+    description: str | None = None
+    preview_url: str | None = None
+    labels: dict[str, str] = None
 
     def __post_init__(self):
         if self.labels is None:
@@ -91,7 +93,7 @@ class ElevenLabsClient:
 
     BASE_URL = "https://api.elevenlabs.io/v1"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Initialize ElevenLabs client."""
         settings = get_settings()
         self._api_key = api_key or settings.elevenlabs.elevenlabs_api_key.get_secret_value()
@@ -112,7 +114,7 @@ class ElevenLabsClient:
             use_speaker_boost=settings.elevenlabs.use_speaker_boost,
         )
 
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -130,7 +132,7 @@ class ElevenLabsClient:
         if self._session and not self._session.closed:
             await self._session.close()
 
-    def _resolve_voice_id(self, voice: Optional[str]) -> str:
+    def _resolve_voice_id(self, voice: str | None) -> str:
         """Resolve voice name or ID to voice ID."""
         if voice is None:
             return self._default_voice_id
@@ -146,10 +148,10 @@ class ElevenLabsClient:
     async def text_to_speech(
         self,
         text: str,
-        voice: Optional[str] = None,
-        model: Optional[str] = None,
-        settings: Optional[VoiceSettings] = None,
-        output_format: Optional[str] = None,
+        voice: str | None = None,
+        model: str | None = None,
+        settings: VoiceSettings | None = None,
+        output_format: str | None = None,
     ) -> bytes:
         """
         Convert text to speech audio.
@@ -203,9 +205,9 @@ class ElevenLabsClient:
     async def stream_speech(
         self,
         text: str,
-        voice: Optional[str] = None,
-        model: Optional[str] = None,
-        settings: Optional[VoiceSettings] = None,
+        voice: str | None = None,
+        model: str | None = None,
+        settings: VoiceSettings | None = None,
         chunk_size: int = 1024,
     ) -> AsyncIterator[bytes]:
         """
@@ -251,7 +253,7 @@ class ElevenLabsClient:
             async for chunk in response.content.iter_chunked(chunk_size):
                 yield chunk
 
-    async def get_voices(self) -> List[Voice]:
+    async def get_voices(self) -> list[Voice]:
         """Get all available voices."""
         if not self._api_key:
             return list(PREMADE_VOICES.values())
@@ -280,7 +282,7 @@ class ElevenLabsClient:
 
             return voices
 
-    async def get_voice(self, voice_id: str) -> Optional[Voice]:
+    async def get_voice(self, voice_id: str) -> Voice | None:
         """Get specific voice details."""
         url = f"{self.BASE_URL}/voices/{voice_id}"
         session = await self._get_session()
@@ -303,7 +305,7 @@ class ElevenLabsClient:
         self,
         text: str,
         output_path: Path,
-        voice: Optional[str] = None,
+        voice: str | None = None,
         **kwargs,
     ) -> Path:
         """
@@ -327,7 +329,7 @@ class ElevenLabsClient:
         secure_logger.info(f"Saved audio to {output_path}")
         return output_path
 
-    async def get_user_info(self) -> Dict[str, Any]:
+    async def get_user_info(self) -> dict[str, Any]:
         """Get user subscription info."""
         url = f"{self.BASE_URL}/user"
         session = await self._get_session()
@@ -337,7 +339,7 @@ class ElevenLabsClient:
                 return {}
             return await response.json()
 
-    async def get_usage(self) -> Dict[str, Any]:
+    async def get_usage(self) -> dict[str, Any]:
         """Get character usage info."""
         url = f"{self.BASE_URL}/user/subscription"
         session = await self._get_session()
@@ -348,7 +350,7 @@ class ElevenLabsClient:
             return await response.json()
 
 
-def create_elevenlabs_client() -> Optional[ElevenLabsClient]:
+def create_elevenlabs_client() -> ElevenLabsClient | None:
     """Factory function to create ElevenLabs client if API key is available."""
     settings = get_settings()
 

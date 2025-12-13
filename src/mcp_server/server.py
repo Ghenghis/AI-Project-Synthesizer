@@ -64,26 +64,26 @@ from typing import Any
 # Import from external mcp package
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 from src.core.config import get_settings
-from src.core.security import SecretManager, get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
 from src.core.lifecycle import lifecycle
+from src.core.observability import correlation_manager, metrics, track_performance
+from src.core.security import SecretManager, get_secure_logger
 from src.mcp_server.tools import (
-    handle_search_repositories,
     handle_analyze_repository,
+    handle_assemble_project,
+    handle_assistant_chat,
+    handle_assistant_toggle_voice,
+    handle_assistant_voice,
     handle_check_compatibility,
-    handle_resolve_dependencies,
-    handle_synthesize_project,
     handle_generate_documentation,
     handle_get_synthesis_status,
-    handle_assistant_chat,
-    handle_assistant_voice,
-    handle_assistant_toggle_voice,
     handle_get_voices,
+    handle_resolve_dependencies,
+    handle_search_repositories,
     handle_speak_fast,
-    handle_assemble_project,
+    handle_synthesize_project,
 )
 
 # Configure secure logging

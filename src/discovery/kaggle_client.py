@@ -7,24 +7,23 @@ notebooks, and models. Provides comprehensive search and analysis capabilities.
 
 import asyncio
 import os
-import time
 import tempfile
-from pathlib import Path
-from typing import Optional, List
+import time
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
-from src.discovery.base_client import (
-    PlatformClient,
-    RepositoryInfo,
-    SearchResult,
-    FileContent,
-    DirectoryListing,
-    AuthenticationError,
-    RepositoryNotFoundError,
-)
 from src.core.config import get_settings
 from src.core.security import get_secure_logger
+from src.discovery.base_client import (
+    AuthenticationError,
+    DirectoryListing,
+    FileContent,
+    PlatformClient,
+    RepositoryInfo,
+    RepositoryNotFoundError,
+    SearchResult,
+)
 
 secure_logger = get_secure_logger(__name__)
 
@@ -42,17 +41,17 @@ class KaggleDataset:
     """Kaggle dataset information."""
     ref: str  # owner/dataset-slug
     title: str
-    subtitle: Optional[str]
+    subtitle: str | None
     creator_name: str
     total_bytes: int
     url: str
-    last_updated: Optional[str]
+    last_updated: str | None
     download_count: int
     vote_count: int
     usability_rating: float
-    tags: List[str] = field(default_factory=list)
-    file_types: List[str] = field(default_factory=list)
-    license_name: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    file_types: list[str] = field(default_factory=list)
+    license_name: str | None = None
 
 
 @dataclass
@@ -60,15 +59,15 @@ class KaggleCompetition:
     """Kaggle competition information."""
     ref: str
     title: str
-    description: Optional[str]
+    description: str | None
     url: str
-    deadline: Optional[str]
+    deadline: str | None
     category: str
-    reward: Optional[str]
+    reward: str | None
     team_count: int
     user_has_entered: bool
-    tags: List[str] = field(default_factory=list)
-    evaluation_metric: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    evaluation_metric: str | None = None
 
 
 @dataclass
@@ -78,13 +77,13 @@ class KaggleNotebook:
     title: str
     author: str
     url: str
-    last_run_time: Optional[str]
+    last_run_time: str | None
     total_votes: int
     language: str
     kernel_type: str
     is_private: bool
-    dataset_sources: List[str] = field(default_factory=list)
-    competition_sources: List[str] = field(default_factory=list)
+    dataset_sources: list[str] = field(default_factory=list)
+    competition_sources: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -92,14 +91,14 @@ class KaggleModel:
     """Kaggle model information."""
     ref: str  # owner/model-slug
     title: str
-    subtitle: Optional[str]
+    subtitle: str | None
     author: str
     url: str
     model_framework: str
-    overview: Optional[str]
+    overview: str | None
     instance_count: int
     download_count: int
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 class KaggleClient(PlatformClient):
@@ -130,8 +129,8 @@ class KaggleClient(PlatformClient):
 
     def __init__(
         self,
-        username: Optional[str] = None,
-        key: Optional[str] = None,
+        username: str | None = None,
+        key: str | None = None,
     ):
         """
         Initialize Kaggle client.
@@ -180,7 +179,7 @@ class KaggleClient(PlatformClient):
     async def search(
         self,
         query: str,
-        language: Optional[str] = None,
+        language: str | None = None,
         min_stars: int = 0,
         max_results: int = 20,
         sort_by: str = "votes",
@@ -261,7 +260,7 @@ class KaggleClient(PlatformClient):
         min_votes: int,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search Kaggle datasets."""
         # Map sort field
         sort_map = {
@@ -321,7 +320,7 @@ class KaggleClient(PlatformClient):
         query: str,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search Kaggle competitions."""
         loop = asyncio.get_event_loop()
 
@@ -372,10 +371,10 @@ class KaggleClient(PlatformClient):
     async def _search_notebooks(
         self,
         query: str,
-        language: Optional[str],
+        language: str | None,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search Kaggle notebooks/kernels."""
         loop = asyncio.get_event_loop()
 
@@ -434,7 +433,7 @@ class KaggleClient(PlatformClient):
         query: str,
         max_results: int,
         sort_by: str,
-    ) -> List[RepositoryInfo]:
+    ) -> list[RepositoryInfo]:
         """Search Kaggle models."""
         loop = asyncio.get_event_loop()
 
@@ -561,7 +560,7 @@ class KaggleClient(PlatformClient):
         """Get contents of a specific file."""
         return await self.get_file_content(repo_id, file_path)
 
-    async def clone(self, repo_id: str, destination: Path, depth: int = 1, branch: Optional[str] = None) -> Path:
+    async def clone(self, repo_id: str, destination: Path, depth: int = 1, branch: str | None = None) -> Path:
         """Download dataset to local filesystem."""
         return await self.download_dataset(repo_id, destination, unzip=True)
 
@@ -655,7 +654,7 @@ class KaggleClient(PlatformClient):
     async def get_trending_datasets(
         self,
         max_results: int = 20,
-    ) -> List[KaggleDataset]:
+    ) -> list[KaggleDataset]:
         """Get trending/hot datasets."""
         if not self._api:
             return []
@@ -689,9 +688,9 @@ class KaggleClient(PlatformClient):
 
     async def get_active_competitions(
         self,
-        category: Optional[str] = None,
+        category: str | None = None,
         max_results: int = 20,
-    ) -> List[KaggleCompetition]:
+    ) -> list[KaggleCompetition]:
         """
         Get active competitions.
 
@@ -735,9 +734,9 @@ class KaggleClient(PlatformClient):
 
     async def get_trending_notebooks(
         self,
-        language: Optional[str] = None,
+        language: str | None = None,
         max_results: int = 20,
-    ) -> List[KaggleNotebook]:
+    ) -> list[KaggleNotebook]:
         """
         Get trending notebooks.
 
@@ -847,7 +846,7 @@ class KaggleClient(PlatformClient):
         return destination
 
 
-def create_kaggle_client() -> Optional[KaggleClient]:
+def create_kaggle_client() -> KaggleClient | None:
     """Factory function to create Kaggle client if credentials are available."""
     settings = get_settings()
 

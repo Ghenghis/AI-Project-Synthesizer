@@ -13,10 +13,6 @@ import pytest
 
 from src.analysis.ast_parser import (
     ASTParser,
-    ParsedFile,
-    Import,
-    Function,
-    Class,
 )
 
 
@@ -106,7 +102,7 @@ class TestASTParserPythonParsing:
         """Test parsing a file that doesn't exist."""
         parser = ASTParser()
         result = await parser.parse_file(Path("/nonexistent/file.py"))
-        
+
         assert result.language == "unknown"
         assert len(result.errors) > 0
         assert "not found" in result.errors[0].lower()
@@ -117,11 +113,11 @@ class TestASTParserPythonParsing:
         with tempfile.NamedTemporaryFile(suffix=".xyz", delete=False) as f:
             f.write(b"some content")
             temp_path = Path(f.name)
-        
+
         try:
             parser = ASTParser()
             result = await parser.parse_file(temp_path)
-            
+
             assert result.language == "unknown"
             assert "Unsupported file type" in result.errors
         finally:
@@ -145,11 +141,11 @@ class Greeter:
         pass
 ''')
             temp_path = Path(f.name)
-        
+
         try:
             parser = ASTParser()
             result = await parser.parse_file(temp_path)
-            
+
             assert result.language == "python"
             assert len(result.errors) == 0
             assert len(result.imports) == 2  # os and Path

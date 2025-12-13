@@ -10,11 +10,13 @@ Real-time event handling for:
 """
 
 import asyncio
-from typing import Optional, Dict, Any, List, Callable, Set
+import contextlib
+import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -64,11 +66,11 @@ class EventType(str, Enum):
 class Event:
     """Real-time event."""
     type: EventType
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     source: str = "system"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type.value,
             "data": self.data,
@@ -92,11 +94,11 @@ class EventBus:
     """
 
     def __init__(self, max_history: int = 1000):
-        self._subscribers: Dict[EventType, List[Callable]] = {}
-        self._global_subscribers: List[Callable] = []
-        self._history: List[Event] = []
+        self._subscribers: dict[EventType, list[Callable]] = {}
+        self._global_subscribers: list[Callable] = []
+        self._history: list[Event] = []
         self._max_history = max_history
-        self._queues: Set[asyncio.Queue] = set()
+        self._queues: set[asyncio.Queue] = set()
 
     def subscribe(
         self,
@@ -151,26 +153,24 @@ class EventBus:
 
         # Push to queues (for SSE/WebSocket)
         for queue in self._queues:
-            try:
+            with contextlib.suppress(Exception):
                 await queue.put(event)
-            except Exception:
-                pass
 
-    def emit(self, event_type: EventType, data: Dict[str, Any], source: str = "system"):
+    def emit(self, event_type: EventType, data: dict[str, Any], source: str = "system"):
         """Emit an event (sync wrapper)."""
         event = Event(type=event_type, data=data, source=source)
         asyncio.create_task(self.publish(event))
 
-    async def emit_async(self, event_type: EventType, data: Dict[str, Any], source: str = "system"):
+    async def emit_async(self, event_type: EventType, data: dict[str, Any], source: str = "system"):
         """Emit an event asynchronously."""
         event = Event(type=event_type, data=data, source=source)
         await self.publish(event)
 
     def get_history(
         self,
-        event_type: Optional[EventType] = None,
+        event_type: EventType | None = None,
         limit: int = 100,
-    ) -> List[Event]:
+    ) -> list[Event]:
         """Get event history."""
         events = self._history
 
@@ -191,7 +191,7 @@ class EventBus:
 
     async def stream_events(
         self,
-        event_types: Optional[List[EventType]] = None,
+        event_types: list[EventType] | None = None,
     ):
         """Async generator for streaming events."""
         queue = self.create_queue()
@@ -207,7 +207,7 @@ class EventBus:
 
 
 # Global event bus
-_event_bus: Optional[EventBus] = None
+_event_bus: EventBus | None = None
 
 
 def get_event_bus() -> EventBus:
@@ -225,7 +225,7 @@ def get_event_bus() -> EventBus:
 def emit_workflow_event(
     workflow_id: str,
     status: str,
-    progress: Optional[float] = None,
+    progress: float | None = None,
     message: str = "",
 ):
     """Emit a workflow event."""
@@ -251,8 +251,8 @@ def emit_workflow_event(
 def emit_agent_event(
     agent_name: str,
     status: str,
-    step: Optional[int] = None,
-    output: Optional[str] = None,
+    step: int | None = None,
+    output: str | None = None,
 ):
     """Emit an agent event."""
     bus = get_event_bus()
@@ -277,7 +277,7 @@ def emit_agent_event(
 def emit_search_event(
     query: str,
     status: str,
-    results: Optional[List[Dict]] = None,
+    results: list[dict] | None = None,
     count: int = 0,
 ):
     """Emit a search event."""

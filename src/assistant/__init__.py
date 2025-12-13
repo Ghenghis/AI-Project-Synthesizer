@@ -6,12 +6,12 @@ asks clarifying questions, and completes tasks.
 """
 
 from src.assistant.core import (
-    ConversationalAssistant,
     AssistantConfig,
     AssistantState,
-    TaskType,
+    ConversationalAssistant,
     Message,
     TaskContext,
+    TaskType,
     get_assistant,
 )
 

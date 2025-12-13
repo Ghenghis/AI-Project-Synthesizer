@@ -6,10 +6,11 @@ code organization, activity, and maintenance.
 """
 
 import logging
-from pathlib import Path
-from typing import Optional, Any
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from datetime import UTC
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class QualityScorer:
     async def score(
         self,
         repo_path: Path,
-        repo_info: Optional[Any] = None,
+        repo_info: Any | None = None,
     ) -> QualityScore:
         """
         Calculate quality score for a repository.
@@ -440,8 +441,8 @@ class QualityScorer:
         score = 0.5  # Base score
 
         if hasattr(repo_info, 'updated_at') and repo_info.updated_at:
-            from datetime import datetime, timezone
             import math
+            from datetime import datetime
 
             try:
                 if isinstance(repo_info.updated_at, str):
@@ -452,9 +453,9 @@ class QualityScorer:
                     updated = repo_info.updated_at
 
                 if updated.tzinfo is None:
-                    updated = updated.replace(tzinfo=timezone.utc)
+                    updated = updated.replace(tzinfo=UTC)
 
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 days_ago = (now - updated).days
 
                 # Exponential decay - recent updates score higher

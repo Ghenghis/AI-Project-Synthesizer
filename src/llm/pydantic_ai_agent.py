@@ -8,12 +8,13 @@ Type-safe AI agents using Pydantic AI for:
 - Multi-model support
 """
 
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
+from typing import Any
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
-from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.models.anthropic import AnthropicModel
+from pydantic_ai.models.openai import OpenAIModel
 
 from src.core.config import get_settings
 from src.core.security import get_secure_logger
@@ -28,15 +29,15 @@ secure_logger = get_secure_logger(__name__)
 class SearchQuery(BaseModel):
     """Structured search query."""
     query: str = Field(description="Main search query")
-    platforms: List[str] = Field(default=["github"], description="Platforms to search")
-    filters: Dict[str, Any] = Field(default_factory=dict, description="Search filters")
+    platforms: list[str] = Field(default=["github"], description="Platforms to search")
+    filters: dict[str, Any] = Field(default_factory=dict, description="Search filters")
 
 
 class ProjectIdea(BaseModel):
     """Structured project idea."""
     name: str = Field(description="Project name")
     description: str = Field(description="Project description")
-    technologies: List[str] = Field(description="Required technologies")
+    technologies: list[str] = Field(description="Required technologies")
     complexity: str = Field(description="Complexity level: simple, medium, complex")
     estimated_time: str = Field(description="Estimated development time")
 
@@ -53,19 +54,19 @@ class ResourceRecommendation(BaseModel):
 class SynthesisResult(BaseModel):
     """Project synthesis result."""
     project_name: str
-    resources: List[ResourceRecommendation]
+    resources: list[ResourceRecommendation]
     integration_plan: str
-    folder_structure: Dict[str, Any]
-    next_steps: List[str]
+    folder_structure: dict[str, Any]
+    next_steps: list[str]
 
 
 class ConversationResponse(BaseModel):
     """Structured conversation response."""
     message: str = Field(description="Response message to user")
     intent: str = Field(description="Detected user intent")
-    action: Optional[str] = Field(default=None, description="Action to take")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-    follow_up_questions: List[str] = Field(default_factory=list)
+    action: str | None = Field(default=None, description="Action to take")
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    follow_up_questions: list[str] = Field(default_factory=list)
 
 
 # ============================================
@@ -77,7 +78,7 @@ class AgentDeps:
     """Dependencies injected into agents."""
     user_id: str = "default"
     session_id: str = ""
-    context: Dict[str, Any] = None
+    context: dict[str, Any] = None
 
     def __post_init__(self):
         if self.context is None:
@@ -118,7 +119,7 @@ def create_anthropic_model(model: str = "claude-sonnet-4-20250514") -> Anthropic
 # Research Agent - Finds resources
 research_agent = Agent(
     create_lmstudio_model(),
-    result_type=List[ResourceRecommendation],
+    result_type=list[ResourceRecommendation],
     system_prompt="""You are a research agent that finds relevant open-source resources.
 
 Given a project idea or query, recommend the best resources from:
@@ -210,7 +211,7 @@ async def search_huggingface(ctx: RunContext[AgentDeps], query: str) -> str:
 @synthesis_agent.tool
 async def analyze_compatibility(
     ctx: RunContext[AgentDeps],
-    resources: List[str],
+    resources: list[str],
 ) -> str:
     """Analyze compatibility between resources."""
     # Simplified compatibility check
@@ -230,7 +231,7 @@ async def get_project_status(ctx: RunContext[AgentDeps]) -> str:
 # High-Level Functions
 # ============================================
 
-async def research_project(query: str) -> List[ResourceRecommendation]:
+async def research_project(query: str) -> list[ResourceRecommendation]:
     """Research resources for a project idea."""
     deps = AgentDeps(context={"query": query})
     result = await research_agent.run(
@@ -242,7 +243,7 @@ async def research_project(query: str) -> List[ResourceRecommendation]:
 
 async def synthesize_project(
     idea: str,
-    resources: List[ResourceRecommendation],
+    resources: list[ResourceRecommendation],
 ) -> SynthesisResult:
     """Plan project synthesis from resources."""
     deps = AgentDeps(context={"idea": idea, "resources": resources})
@@ -253,7 +254,7 @@ async def synthesize_project(
     return result.data
 
 
-async def chat(message: str, context: Dict[str, Any] = None) -> ConversationResponse:
+async def chat(message: str, context: dict[str, Any] = None) -> ConversationResponse:
     """Chat with the assistant."""
     deps = AgentDeps(context=context or {})
     result = await conversation_agent.run(message, deps=deps)

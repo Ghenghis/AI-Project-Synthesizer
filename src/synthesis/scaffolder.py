@@ -5,10 +5,9 @@ Project template scaffolding using standard project structures.
 """
 
 import logging
-from pathlib import Path
-from typing import List
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ class ScaffoldResult:
     """Result of scaffolding operation."""
     success: bool
     files_created: int = 0
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 

@@ -2,10 +2,11 @@
 Recipe Loader - Load and validate recipe files.
 """
 
-import yaml
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 
 @dataclass
@@ -13,9 +14,9 @@ class RecipeSource:
     """A source repository in a recipe."""
     repo: str
     branch: str = "main"
-    extract: List[str] = field(default_factory=list)
-    components: List[Dict[str, str]] = field(default_factory=list)
-    rename: Dict[str, str] = field(default_factory=dict)
+    extract: list[str] = field(default_factory=list)
+    components: list[dict[str, str]] = field(default_factory=list)
+    rename: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -24,8 +25,8 @@ class RecipeSynthesis:
     strategy: str = "selective"
     output_name: str = "project"
     template: str = "python-default"
-    dependencies: Dict[str, Any] = field(default_factory=lambda: {"merge": True, "python_version": "3.11"})
-    conflicts: Dict[str, str] = field(default_factory=lambda: {"strategy": "prefer_first"})
+    dependencies: dict[str, Any] = field(default_factory=lambda: {"merge": True, "python_version": "3.11"})
+    conflicts: dict[str, str] = field(default_factory=lambda: {"strategy": "prefer_first"})
 
 
 @dataclass
@@ -34,15 +35,15 @@ class Recipe:
     name: str
     version: str
     description: str
-    sources: List[RecipeSource]
+    sources: list[RecipeSource]
     synthesis: RecipeSynthesis
     author: str = ""
-    tags: List[str] = field(default_factory=list)
-    post_synthesis: List[str] = field(default_factory=list)
-    variables: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    post_synthesis: list[str] = field(default_factory=list)
+    variables: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Recipe":
+    def from_dict(cls, data: dict[str, Any]) -> "Recipe":
         """Create a Recipe from a dictionary."""
         sources = [
             RecipeSource(
@@ -80,7 +81,7 @@ class Recipe:
 class RecipeLoader:
     """Load recipes from the recipes directory."""
 
-    def __init__(self, recipes_dir: Optional[Path] = None):
+    def __init__(self, recipes_dir: Path | None = None):
         """Initialize the recipe loader."""
         if recipes_dir is None:
             # Default to project's recipes directory
@@ -88,7 +89,7 @@ class RecipeLoader:
         else:
             self.recipes_dir = Path(recipes_dir)
 
-    def list_recipes(self) -> List[Dict[str, str]]:
+    def list_recipes(self) -> list[dict[str, str]]:
         """List all available recipes."""
         recipes = []
 
@@ -100,7 +101,7 @@ class RecipeLoader:
                 continue
 
             try:
-                with open(file, "r", encoding="utf-8") as f:
+                with open(file, encoding="utf-8") as f:
                     data = yaml.safe_load(f)
                     recipes.append({
                         "name": data.get("name", file.stem),
@@ -120,7 +121,7 @@ class RecipeLoader:
 
         return recipes
 
-    def load_recipe(self, name: str) -> Optional[Recipe]:
+    def load_recipe(self, name: str) -> Recipe | None:
         """Load a recipe by name."""
         # Try exact filename first
         recipe_file = self.recipes_dir / f"{name}.yaml"
@@ -129,7 +130,7 @@ class RecipeLoader:
             # Try finding by recipe name
             for file in self.recipes_dir.glob("*.yaml"):
                 try:
-                    with open(file, "r", encoding="utf-8") as f:
+                    with open(file, encoding="utf-8") as f:
                         data = yaml.safe_load(f)
                         if data.get("name") == name:
                             recipe_file = file
@@ -141,13 +142,13 @@ class RecipeLoader:
             return None
 
         try:
-            with open(recipe_file, "r", encoding="utf-8") as f:
+            with open(recipe_file, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 return Recipe.from_dict(data)
         except Exception as e:
             raise ValueError(f"Failed to load recipe {name}: {e}")
 
-    def validate_recipe(self, recipe: Recipe) -> List[str]:
+    def validate_recipe(self, recipe: Recipe) -> list[str]:
         """Validate a recipe and return any errors."""
         errors = []
 

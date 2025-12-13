@@ -2,9 +2,8 @@
 Recipe Runner - Execute recipes to create projects.
 """
 
-from pathlib import Path
-from typing import Dict, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from .loader import Recipe, RecipeLoader
 
@@ -13,7 +12,7 @@ from .loader import Recipe, RecipeLoader
 class RecipeResult:
     """Result of running a recipe."""
     success: bool
-    project_path: Optional[Path] = None
+    project_path: Path | None = None
     repos_cloned: int = 0
     components_extracted: int = 0
     files_created: int = 0
@@ -32,7 +31,7 @@ class RecipeRunner:
         self,
         recipe_name: str,
         output_path: Path,
-        variables: Optional[Dict[str, str]] = None,
+        variables: dict[str, str] | None = None,
         dry_run: bool = False,
     ) -> RecipeResult:
         """

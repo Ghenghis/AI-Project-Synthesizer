@@ -10,13 +10,14 @@ Central coordinator for seamless automation:
 """
 
 import asyncio
-from typing import Optional, List, Dict, Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from src.automation.metrics import ActionTimer, get_metrics_collector
-from src.automation.testing import IntegrationTester, get_default_tests, TestSuiteResult
+from src.automation.testing import IntegrationTester, TestSuiteResult, get_default_tests
 from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
@@ -41,7 +42,7 @@ class SystemEvent:
     """A system event."""
     event_type: EventType
     timestamp: datetime = field(default_factory=datetime.now)
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     source: str = "system"
 
 
@@ -51,7 +52,7 @@ class ScheduledTask:
     name: str
     task_func: Callable[[], Awaitable[Any]]
     interval_seconds: int
-    last_run: Optional[datetime] = None
+    last_run: datetime | None = None
     enabled: bool = True
     run_immediately: bool = False
 
@@ -100,16 +101,16 @@ class AutomationCoordinator:
         status = coordinator.get_status()
     """
 
-    def __init__(self, config: Optional[AutomationConfig] = None):
+    def __init__(self, config: AutomationConfig | None = None):
         self.config = config or AutomationConfig()
         self._running = False
-        self._events: List[SystemEvent] = []
-        self._event_handlers: Dict[EventType, List[Callable]] = {}
-        self._scheduled_tasks: Dict[str, ScheduledTask] = {}
+        self._events: list[SystemEvent] = []
+        self._event_handlers: dict[EventType, list[Callable]] = {}
+        self._scheduled_tasks: dict[str, ScheduledTask] = {}
         self._metrics = get_metrics_collector()
         self._tester = IntegrationTester()
         self._n8n = None
-        self._background_tasks: List[asyncio.Task] = []
+        self._background_tasks: list[asyncio.Task] = []
 
         # Register default tests
         self._tester.register_many(get_default_tests())
@@ -202,7 +203,7 @@ class AutomationCoordinator:
     # Event System
     # ============================================
 
-    def emit(self, event_type: EventType, data: Dict[str, Any] = None, source: str = "system"):
+    def emit(self, event_type: EventType, data: dict[str, Any] = None, source: str = "system"):
         """Emit a system event."""
         event = SystemEvent(
             event_type=event_type,
@@ -296,17 +297,13 @@ class AutomationCoordinator:
             try:
                 now = datetime.now()
 
-                for name, task in self._scheduled_tasks.items():
+                for _name, task in self._scheduled_tasks.items():
                     if not task.enabled:
                         continue
 
                     should_run = False
 
-                    if task.run_immediately and task.last_run is None:
-                        should_run = True
-                    elif task.last_run is None:
-                        should_run = True
-                    elif (now - task.last_run).total_seconds() >= task.interval_seconds:
+                    if task.run_immediately and task.last_run is None or task.last_run is None or (now - task.last_run).total_seconds() >= task.interval_seconds:
                         should_run = True
 
                     if should_run:
@@ -365,7 +362,7 @@ class AutomationCoordinator:
 
         return result
 
-    async def _attempt_recovery(self, source: str, data: Dict[str, Any]):
+    async def _attempt_recovery(self, source: str, data: dict[str, Any]):
         """Attempt auto-recovery from error."""
         secure_logger.info(f"Attempting recovery for {source}")
 
@@ -382,8 +379,8 @@ class AutomationCoordinator:
     async def trigger_n8n_workflow(
         self,
         workflow_id: str,
-        data: Dict[str, Any] = None,
-    ) -> Optional[Dict[str, Any]]:
+        data: dict[str, Any] = None,
+    ) -> dict[str, Any] | None:
         """Trigger an n8n workflow."""
         if not self._n8n:
             return None
@@ -398,7 +395,7 @@ class AutomationCoordinator:
 
             return result.data if result else None
 
-    async def setup_n8n_workflows(self) -> Dict[str, str]:
+    async def setup_n8n_workflows(self) -> dict[str, str]:
         """Set up default n8n workflows."""
         if not self._n8n:
             return {}
@@ -410,7 +407,7 @@ class AutomationCoordinator:
     # Status & Monitoring
     # ============================================
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get coordinator status."""
         return {
             "running": self._running,
@@ -427,7 +424,7 @@ class AutomationCoordinator:
             ],
         }
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get metrics summary."""
         return self._metrics.get_summary()
 
@@ -439,7 +436,7 @@ class AutomationCoordinator:
 
 
 # Global coordinator instance
-_coordinator: Optional[AutomationCoordinator] = None
+_coordinator: AutomationCoordinator | None = None
 
 
 def get_coordinator() -> AutomationCoordinator:

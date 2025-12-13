@@ -9,12 +9,11 @@ Other MCP clients may have native audio support and won't need this.
 
 import asyncio
 import base64
-import tempfile
-import subprocess
 import platform
-from pathlib import Path
-from typing import Optional
+import subprocess
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 
 from src.core.security import get_secure_logger
 
@@ -26,7 +25,7 @@ class PlaybackResult:
     """Result of audio playback."""
     success: bool
     duration_ms: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class VoicePlayer:
@@ -42,11 +41,11 @@ class VoicePlayer:
         await player.play_base64(audio_base64, format="mp3")
     """
 
-    def __init__(self, temp_dir: Optional[Path] = None):
+    def __init__(self, temp_dir: Path | None = None):
         """Initialize voice player."""
         self.temp_dir = temp_dir or Path(tempfile.gettempdir()) / "ai_synthesizer_voice"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
-        self._current_process: Optional[subprocess.Popen] = None
+        self._current_process: subprocess.Popen | None = None
         self.system = platform.system()
 
     async def play_base64(
@@ -241,7 +240,7 @@ $player.Close()
 
 
 # Global player instance
-_player: Optional[VoicePlayer] = None
+_player: VoicePlayer | None = None
 
 
 def get_voice_player() -> VoicePlayer:

@@ -1,14 +1,16 @@
 """Test the conversational assistant."""
 import asyncio
-from src.assistant.core import ConversationalAssistant, AssistantConfig
+
+from src.assistant.core import AssistantConfig, ConversationalAssistant
+
 
 async def test():
     print("=== Testing Conversational Assistant ===\n")
-    
+
     # Create assistant with voice disabled for testing
     config = AssistantConfig(voice_enabled=False)
     assistant = ConversationalAssistant(config)
-    
+
     # Test conversations
     conversations = [
         "Hello!",
@@ -16,7 +18,7 @@ async def test():
         "Discord bot with AI capabilities",
         "Find me machine learning projects on GitHub",
     ]
-    
+
     for msg in conversations:
         print(f"User: {msg}")
         response = await assistant.chat(msg)

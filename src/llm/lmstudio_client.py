@@ -5,14 +5,14 @@ Client for local LLM inference using LM Studio.
 LM Studio provides an OpenAI-compatible API for local model serving.
 """
 
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 
 from openai import AsyncOpenAI
 
-from src.core.circuit_breaker import circuit_breaker, OLLAMA_BREAKER_CONFIG
+from src.core.circuit_breaker import OLLAMA_BREAKER_CONFIG, circuit_breaker
+from src.core.observability import correlation_manager, metrics, track_performance
 from src.core.security import get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
 
 secure_logger = get_secure_logger(__name__)
 
@@ -60,7 +60,7 @@ class LMStudioClient:
         self.api_key = api_key
         self.default_model = default_model or "local-model"  # Generic name
         self.timeout = timeout
-        self._client: Optional[AsyncOpenAI] = None
+        self._client: AsyncOpenAI | None = None
 
     async def _get_client(self) -> AsyncOpenAI:
         """Get or create OpenAI client."""
@@ -123,7 +123,7 @@ class LMStudioClient:
         expected_exception=Exception
     )
     @track_performance("lmstudio_list_models")
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available models."""
         correlation_id = correlation_manager.get_correlation_id()
 
@@ -372,7 +372,7 @@ class LMStudioClient:
         metrics.increment("lmstudio_code_generation_total", tags={"language": language})
         return content
 
-    async def get_model_info(self, model: str = None) -> Dict[str, Any]:
+    async def get_model_info(self, model: str = None) -> dict[str, Any]:
         """
         Get information about a specific model.
 

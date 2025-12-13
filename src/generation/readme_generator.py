@@ -6,10 +6,9 @@ Uses LLM enhancement when available.
 """
 
 import logging
-from pathlib import Path
-from typing import Optional, List
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -18,15 +17,15 @@ logger = logging.getLogger(__name__)
 class ProjectInfo:
     """Extracted project information."""
     name: str
-    description: Optional[str] = None
-    version: Optional[str] = None
-    language: Optional[str] = None
-    frameworks: List[str] = None
-    dependencies: List[str] = None
+    description: str | None = None
+    version: str | None = None
+    language: str | None = None
+    frameworks: list[str] = None
+    dependencies: list[str] = None
     has_tests: bool = False
     has_docs: bool = False
     has_ci: bool = False
-    license: Optional[str] = None
+    license: str | None = None
 
     def __post_init__(self):
         if self.frameworks is None:
@@ -129,7 +128,7 @@ class ReadmeGenerator:
     async def generate(
         self,
         project_path: Path,
-        output_path: Optional[Path] = None,
+        output_path: Path | None = None,
     ) -> Path:
         """
         Generate README for a project.
@@ -286,7 +285,7 @@ class ReadmeGenerator:
             return max(counts, key=counts.get)
         return "python"
 
-    def _detect_frameworks(self, project_path: Path) -> List[str]:
+    def _detect_frameworks(self, project_path: Path) -> list[str]:
         """Detect frameworks used in project."""
         frameworks = []
 

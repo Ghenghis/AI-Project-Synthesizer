@@ -6,10 +6,9 @@ Supports both synchronous and asynchronous usage.
 """
 
 import asyncio
+import logging
 import time
 from dataclasses import dataclass
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +204,7 @@ class MultiRateLimiter:
         await limiter.acquire("search")
     """
 
-    def __init__(self, limiters: Optional[dict[str, RateLimiter]] = None):
+    def __init__(self, limiters: dict[str, RateLimiter] | None = None):
         self.limiters = limiters or {}
         self._default = RateLimiter()
 
@@ -253,7 +252,7 @@ class AdaptiveRateLimiter(RateLimiter):
             )
             self._update_rate()
 
-    def report_rate_limited(self, retry_after: Optional[int] = None) -> None:
+    def report_rate_limited(self, retry_after: int | None = None) -> None:
         """Report rate limit hit."""
         # Reduce rate significantly
         self._current_rate = max(

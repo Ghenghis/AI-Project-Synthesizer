@@ -15,12 +15,12 @@ Components:
 
 from .browser_automation import (
     BrowserAutomation,
+    BrowserSession,
     BrowserType,
-    ViewportSize,
-    ScreenshotOptions,
     FormField,
     PageAction,
-    BrowserSession,
+    ScreenshotOptions,
+    ViewportSize,
     create_browser_automation,
 )
 

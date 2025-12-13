@@ -8,10 +8,11 @@ Precise timing metrics for:
 - System health metrics
 """
 
-import time
-from typing import Optional, List, Dict, Any, Callable
-from dataclasses import dataclass, field
 import statistics
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Optional
 
 from src.core.security import get_secure_logger
 
@@ -26,7 +27,7 @@ class TimingRecord:
     end_time: float
     duration_ms: float
     success: bool
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def duration_seconds(self) -> float:
@@ -43,7 +44,7 @@ class ActionMetrics:
     max_ms: float = 0
     success_count: int = 0
     failure_count: int = 0
-    samples: List[float] = field(default_factory=list)
+    samples: list[float] = field(default_factory=list)
 
     @property
     def avg_ms(self) -> float:
@@ -78,7 +79,7 @@ class ActionMetrics:
         idx = int(len(sorted_samples) * 0.99)
         return sorted_samples[idx]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "action": self.action,
             "count": self.count,
@@ -112,7 +113,7 @@ class ActionTimer:
         self.start_time: float = 0
         self.end_time: float = 0
         self.success: bool = True
-        self.metadata: Dict[str, Any] = {}
+        self.metadata: dict[str, Any] = {}
 
     async def __aenter__(self) -> "ActionTimer":
         self.start_time = time.perf_counter()
@@ -141,7 +142,7 @@ class ActionTimer:
                 f"Slow action: {self.action} took {duration_ms:.2f}ms"
             )
 
-    def add_metadata(self, data: Dict[str, Any]):
+    def add_metadata(self, data: dict[str, Any]):
         """Add metadata to the timing record."""
         self.metadata.update(data)
 
@@ -163,8 +164,8 @@ class MetricsCollector:
     """
 
     def __init__(self, max_samples: int = 1000):
-        self._metrics: Dict[str, ActionMetrics] = {}
-        self._records: List[TimingRecord] = []
+        self._metrics: dict[str, ActionMetrics] = {}
+        self._records: list[TimingRecord] = []
         self._max_samples = max_samples
         self._start_time = time.time()
 
@@ -195,15 +196,15 @@ class MetricsCollector:
         if len(metrics.samples) > self._max_samples:
             metrics.samples = metrics.samples[-self._max_samples:]
 
-    def get_metrics(self, action: str) -> Optional[ActionMetrics]:
+    def get_metrics(self, action: str) -> ActionMetrics | None:
         """Get metrics for a specific action."""
         return self._metrics.get(action)
 
-    def get_all_metrics(self) -> Dict[str, ActionMetrics]:
+    def get_all_metrics(self) -> dict[str, ActionMetrics]:
         """Get all metrics."""
         return dict(self._metrics)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of all metrics."""
         return {
             "uptime_seconds": time.time() - self._start_time,
@@ -214,7 +215,7 @@ class MetricsCollector:
             },
         }
 
-    def get_recent_records(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_recent_records(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get recent timing records."""
         return [
             {
@@ -234,7 +235,7 @@ class MetricsCollector:
 
 
 # Global metrics collector
-_metrics_collector: Optional[MetricsCollector] = None
+_metrics_collector: MetricsCollector | None = None
 
 
 def get_metrics_collector() -> MetricsCollector:

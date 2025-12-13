@@ -6,20 +6,21 @@ Supports all Ollama-specific features including model management.
 """
 
 import time
-from typing import Optional, List, Dict, Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 
-from src.llm.providers.base import (
-    LLMProvider,
-    ProviderConfig,
-    CompletionResult,
-    StreamChunk,
-    ProviderCapabilities,
-)
-from src.core.circuit_breaker import circuit_breaker, CircuitBreakerConfig
+from src.core.circuit_breaker import CircuitBreakerConfig, circuit_breaker
+from src.core.observability import correlation_manager, metrics, track_performance
 from src.core.security import get_secure_logger
-from src.core.observability import correlation_manager, track_performance, metrics
+from src.llm.providers.base import (
+    CompletionResult,
+    LLMProvider,
+    ProviderCapabilities,
+    ProviderConfig,
+    StreamChunk,
+)
 
 secure_logger = get_secure_logger(__name__)
 
@@ -106,7 +107,7 @@ class OllamaProvider(LLMProvider):
 
     @circuit_breaker("ollama", OLLAMA_BREAKER)
     @track_performance("ollama_list_models")
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available Ollama models."""
         try:
             response = await self.client.get("/api/tags")
@@ -118,7 +119,7 @@ class OllamaProvider(LLMProvider):
             secure_logger.error(f"Failed to list Ollama models: {e}")
             return []
 
-    async def get_model_info(self, model: str) -> Optional[Dict[str, Any]]:
+    async def get_model_info(self, model: str) -> dict[str, Any] | None:
         """Get detailed information about a model."""
         try:
             response = await self.client.post(
@@ -149,8 +150,8 @@ class OllamaProvider(LLMProvider):
     async def complete(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs
@@ -248,8 +249,8 @@ class OllamaProvider(LLMProvider):
     async def stream(
         self,
         prompt: str,
-        model: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs

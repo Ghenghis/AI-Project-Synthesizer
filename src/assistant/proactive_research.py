@@ -17,10 +17,12 @@ All research happens in background - ready when user returns.
 """
 
 import asyncio
+import contextlib
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, Callable
 from enum import Enum
+from typing import Any
 
 from src.core.security import get_secure_logger
 
@@ -41,15 +43,15 @@ class ResearchResult:
     depth: ResearchDepth
 
     # Discovered items
-    projects: List[Dict[str, Any]] = field(default_factory=list)
-    papers: List[Dict[str, Any]] = field(default_factory=list)
-    datasets: List[Dict[str, Any]] = field(default_factory=list)
-    models: List[Dict[str, Any]] = field(default_factory=list)
+    projects: list[dict[str, Any]] = field(default_factory=list)
+    papers: list[dict[str, Any]] = field(default_factory=list)
+    datasets: list[dict[str, Any]] = field(default_factory=list)
+    models: list[dict[str, Any]] = field(default_factory=list)
 
     # Analysis
-    recommendations: List[str] = field(default_factory=list)
-    synthesis_ideas: List[str] = field(default_factory=list)
-    next_steps: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
+    synthesis_ideas: list[str] = field(default_factory=list)
+    next_steps: list[str] = field(default_factory=list)
 
     # Metadata
     research_time_seconds: float = 0.0
@@ -93,8 +95,8 @@ class ResearchConfig:
     search_arxiv: bool = True
 
     # Callbacks
-    on_research_start: Optional[Callable[[ResearchDepth], None]] = None
-    on_research_complete: Optional[Callable[[ResearchResult], None]] = None
+    on_research_start: Callable[[ResearchDepth], None] | None = None
+    on_research_complete: Callable[[ResearchResult], None] | None = None
 
 
 class ProactiveResearchEngine:
@@ -117,20 +119,20 @@ class ProactiveResearchEngine:
         print(results.summary())
     """
 
-    def __init__(self, config: Optional[ResearchConfig] = None):
+    def __init__(self, config: ResearchConfig | None = None):
         """Initialize research engine."""
         self.config = config or ResearchConfig()
 
         # State
-        self._context: List[str] = []  # Conversation context
+        self._context: list[str] = []  # Conversation context
         self._current_topic: str = ""
         self._last_user_activity: float = time.time()
-        self._research_results: List[ResearchResult] = []
+        self._research_results: list[ResearchResult] = []
 
         # Control
         self._running = False
-        self._research_task: Optional[asyncio.Task] = None
-        self._current_depth: Optional[ResearchDepth] = None
+        self._research_task: asyncio.Task | None = None
+        self._current_depth: ResearchDepth | None = None
 
         # Components
         self._search = None
@@ -189,10 +191,8 @@ class ProactiveResearchEngine:
         self._running = False
         if self._research_task:
             self._research_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._research_task
-            except asyncio.CancelledError:
-                pass
 
     async def _monitor_loop(self):
         """Monitor idle time and trigger research."""
@@ -315,7 +315,7 @@ class ProactiveResearchEngine:
         except Exception as e:
             secure_logger.warning(f"arXiv search error: {e}")
 
-    def _parse_arxiv_response(self, xml_text: str) -> List[Dict[str, Any]]:
+    def _parse_arxiv_response(self, xml_text: str) -> list[dict[str, Any]]:
         """Parse arXiv API response."""
         import re
 
@@ -376,11 +376,11 @@ class ProactiveResearchEngine:
             "4. Integrate the HuggingFace model",
         ]
 
-    def get_latest_research(self) -> Optional[ResearchResult]:
+    def get_latest_research(self) -> ResearchResult | None:
         """Get the most recent research results."""
         return self._research_results[-1] if self._research_results else None
 
-    def get_all_research(self) -> List[ResearchResult]:
+    def get_all_research(self) -> list[ResearchResult]:
         """Get all research results."""
         return self._research_results.copy()
 
@@ -435,7 +435,7 @@ class ProactiveResearchEngine:
 
 
 # Global instance
-_research_engine: Optional[ProactiveResearchEngine] = None
+_research_engine: ProactiveResearchEngine | None = None
 
 
 def get_research_engine() -> ProactiveResearchEngine:

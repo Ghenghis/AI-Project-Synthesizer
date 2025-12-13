@@ -5,13 +5,13 @@ Orchestrates the complete project synthesis pipeline.
 Combines discovery, analysis, resolution, and generation.
 """
 
+import logging
 import time
 import uuid
-import logging
-from pathlib import Path
-from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,8 @@ class SynthesisStatus(str, Enum):
 class ExtractionSpec:
     """Specification for extracting code from a repository."""
     repo_url: str
-    components: List[str]  # Paths to extract
-    rename_map: Dict[str, str] = field(default_factory=dict)
+    components: list[str]  # Paths to extract
+    rename_map: dict[str, str] = field(default_factory=dict)
     destination: str = ""
 
 
@@ -42,7 +42,7 @@ class SynthesisRequest:
     """Request for project synthesis."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     query: str = ""
-    repositories: List[ExtractionSpec] = field(default_factory=list)
+    repositories: list[ExtractionSpec] = field(default_factory=list)
     project_name: str = ""
     output_path: str = ""
     template: str = "python-default"
@@ -55,16 +55,16 @@ class SynthesisResult:
     """Result of synthesis operation."""
     request_id: str
     status: SynthesisStatus
-    output_path: Optional[str] = None
-    repositories_used: List[str] = field(default_factory=list)
+    output_path: str | None = None
+    repositories_used: list[str] = field(default_factory=list)
     dependencies_resolved: int = 0
     files_generated: int = 0
-    documentation_generated: List[str] = field(default_factory=list)
+    documentation_generated: list[str] = field(default_factory=list)
     duration_seconds: float = 0.0
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "request_id": self.request_id,
@@ -88,8 +88,8 @@ class BuildResult:
     components_extracted: int = 0
     deps_merged: int = 0
     files_created: int = 0
-    docs_generated: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    docs_generated: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 class ProjectBuilder:
@@ -114,7 +114,7 @@ class ProjectBuilder:
         )
     """
 
-    def __init__(self, work_dir: Optional[Path] = None):
+    def __init__(self, work_dir: Path | None = None):
         """
         Initialize project builder.
 
@@ -125,7 +125,7 @@ class ProjectBuilder:
         self.work_dir.mkdir(parents=True, exist_ok=True)
 
         # Track active synthesis operations
-        self._active_syntheses: Dict[str, SynthesisResult] = {}
+        self._active_syntheses: dict[str, SynthesisResult] = {}
 
     async def synthesize(
         self,
@@ -220,7 +220,7 @@ class ProjectBuilder:
     async def _discover_repositories(
         self,
         query: str,
-    ) -> List[ExtractionSpec]:
+    ) -> list[ExtractionSpec]:
         """Discover repositories based on query."""
         from src.discovery.unified_search import UnifiedSearch
 
@@ -240,8 +240,8 @@ class ProjectBuilder:
 
     async def _analyze_repositories(
         self,
-        repositories: List[ExtractionSpec],
-    ) -> List[Dict]:
+        repositories: list[ExtractionSpec],
+    ) -> list[dict]:
         """Analyze all repositories."""
         # # // DONE: Implement with analysis layer
         analyses = []
@@ -255,8 +255,8 @@ class ProjectBuilder:
 
     async def _resolve_dependencies(
         self,
-        analyses: List[Dict],
-    ) -> Dict:
+        analyses: list[dict],
+    ) -> dict:
         """Resolve dependencies across all repositories."""
         from src.resolution.python_resolver import PythonResolver
 
@@ -280,15 +280,16 @@ class ProjectBuilder:
 
     async def _synthesize_code(
         self,
-        repositories: List[ExtractionSpec],
+        repositories: list[ExtractionSpec],
         output_path: Path,
         template: str,
-    ) -> Dict:
+    ) -> dict:
         """Synthesize code from repositories."""
         import shutil
         import tempfile
-        from src.discovery.unified_search import UnifiedSearch
+
         from src.analysis.code_extractor import CodeExtractor
+        from src.discovery.unified_search import UnifiedSearch
 
         files_created = 0
 
@@ -373,7 +374,7 @@ class ProjectBuilder:
     async def _write_dependencies(
         self,
         output_path: Path,
-        resolved_deps: Dict,
+        resolved_deps: dict,
     ) -> None:
         """Write dependency files."""
         # Write requirements.txt
@@ -392,7 +393,7 @@ class ProjectBuilder:
     async def _generate_documentation(
         self,
         output_path: Path,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate project documentation."""
         docs_generated = []
 
@@ -508,11 +509,11 @@ ruff format src/
 MIT
 """
 
-    def get_status(self, synthesis_id: str) -> Optional[SynthesisResult]:
+    def get_status(self, synthesis_id: str) -> SynthesisResult | None:
         """Get status of a synthesis operation."""
         return self._active_syntheses.get(synthesis_id)
 
-    def list_active(self) -> List[Dict]:
+    def list_active(self) -> list[dict]:
         """List all active synthesis operations."""
         return [
             r.to_dict() for r in self._active_syntheses.values()
@@ -521,11 +522,11 @@ MIT
 
     async def build(
         self,
-        repositories: List[Dict],
+        repositories: list[dict],
         project_name: str,
         output_path: Path,
         template: str = "python-default",
-        progress_callback: Optional[Any] = None,
+        progress_callback: Any | None = None,
     ) -> BuildResult:
         """
         Build a project from repository specifications.

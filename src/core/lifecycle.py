@@ -6,15 +6,16 @@ signal handling, and cleanup procedures for production deployment.
 """
 
 import asyncio
-import signal
 import logging
+import signal
 import threading
 import time
-from typing import Set, Callable, Dict, Any, Optional, List
+import weakref
+from collections.abc import Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
-from contextlib import asynccontextmanager
-import weakref
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +54,13 @@ class LifecycleManager:
         """
         self.shutdown_timeout = shutdown_timeout
         self._state = ShutdownState.RUNNING
-        self._shutdown_tasks: List[ShutdownTask] = []
-        self._running_tasks: Set[asyncio.Task] = set()
+        self._shutdown_tasks: list[ShutdownTask] = []
+        self._running_tasks: set[asyncio.Task] = set()
         self._shutdown_event = asyncio.Event()
         self._shutdown_complete_event = asyncio.Event()
         self._lock = threading.Lock()
         self._startup_time = time.time()
-        self._shutdown_reason: Optional[str] = None
+        self._shutdown_reason: str | None = None
 
         # Register signal handlers
         self._setup_signal_handlers()
@@ -165,7 +166,7 @@ class LifecycleManager:
         """Check if shutdown is complete."""
         return self._state == ShutdownState.SHUTDOWN_COMPLETE
 
-    async def shutdown(self, reason: Optional[str] = None):
+    async def shutdown(self, reason: str | None = None):
         """
         Execute graceful shutdown.
 
@@ -228,7 +229,7 @@ class LifecycleManager:
                     asyncio.gather(*self._running_tasks, return_exceptions=True),
                     timeout=10.0
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Some tasks did not complete within timeout")
 
         self._running_tasks.clear()
@@ -251,7 +252,7 @@ class LifecycleManager:
                 duration = time.time() - start_time
                 logger.info(f"Shutdown task {task.name} completed in {duration:.2f}s")
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 error_msg = f"Shutdown task {task.name} timed out after {task.timeout}s"
                 logger.error(error_msg)
                 if task.required:
@@ -273,7 +274,7 @@ class LifecycleManager:
 
         logger.info("Resource cleanup completed")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current lifecycle status."""
         uptime = time.time() - self._startup_time
 
@@ -297,7 +298,7 @@ class ResourceManager:
     """
 
     def __init__(self):
-        self._resources: Dict[str, Callable] = {}
+        self._resources: dict[str, Callable] = {}
         self._lock = threading.Lock()
 
     def register(self, name: str, cleanup_func: Callable):
@@ -402,7 +403,7 @@ def shutdown_on_signal(shutdown_func: Callable, priority: int = 0):
     return shutdown_func
 
 
-def get_lifecycle_status() -> Dict[str, Any]:
+def get_lifecycle_status() -> dict[str, Any]:
     """Get global lifecycle status."""
     return lifecycle.get_status()
 
@@ -412,7 +413,7 @@ async def wait_for_shutdown_signal():
     await lifecycle.wait_for_shutdown()
 
 
-async def initiate_shutdown(reason: Optional[str] = None):
+async def initiate_shutdown(reason: str | None = None):
     """Initiate graceful shutdown."""
     await lifecycle.shutdown(reason)
 
@@ -458,9 +459,9 @@ class BackgroundTaskManager:
     def __init__(self, max_concurrent: int = 10):
         self.max_concurrent = max_concurrent
         self._semaphore = asyncio.Semaphore(max_concurrent)
-        self._tasks: Set[asyncio.Task] = set()
+        self._tasks: set[asyncio.Task] = set()
 
-    async def submit(self, coro, name: Optional[str] = None):
+    async def submit(self, coro, name: str | None = None):
         """
         Submit background task.
 
@@ -490,7 +491,7 @@ class BackgroundTaskManager:
 
         return task
 
-    async def wait_all(self, timeout: Optional[float] = None):
+    async def wait_all(self, timeout: float | None = None):
         """Wait for all tasks to complete."""
         if not self._tasks:
             return
@@ -500,7 +501,7 @@ class BackgroundTaskManager:
                 asyncio.gather(*self._tasks, return_exceptions=True),
                 timeout=timeout
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Background tasks did not complete within timeout")
 
 

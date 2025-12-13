@@ -9,10 +9,12 @@ AI-powered voice agent for:
 - Auto-continue conversations
 """
 
-from typing import Optional, Dict, Any, Callable
+import contextlib
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
-from src.agents.base import BaseAgent, AgentConfig, AgentTool
+from src.agents.base import AgentConfig, AgentTool, BaseAgent
 from src.core.security import get_secure_logger
 from src.core.settings_manager import get_settings_manager
 
@@ -42,7 +44,7 @@ class VoiceAgent(BaseAgent):
     - Multi-voice support
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         config = config or AgentConfig(
             name="voice_agent",
             description="Handles voice interactions without pause limits",
@@ -53,8 +55,8 @@ class VoiceAgent(BaseAgent):
         super().__init__(config)
         self._state = VoiceState()
         self._voice_manager = None
-        self._on_transcription: Optional[Callable] = None
-        self._on_response: Optional[Callable] = None
+        self._on_transcription: Callable | None = None
+        self._on_response: Callable | None = None
         self._setup_tools()
 
     def _setup_tools(self):
@@ -94,7 +96,7 @@ class VoiceAgent(BaseAgent):
             self._voice_manager = get_voice_manager()
         return self._voice_manager
 
-    async def _speak(self, text: str, voice: Optional[str] = None) -> Dict[str, Any]:
+    async def _speak(self, text: str, voice: str | None = None) -> dict[str, Any]:
         """Speak text aloud."""
         self._state.is_speaking = True
 
@@ -120,7 +122,7 @@ class VoiceAgent(BaseAgent):
         finally:
             self._state.is_speaking = False
 
-    async def _listen(self, timeout: int = 0) -> Dict[str, Any]:
+    async def _listen(self, timeout: int = 0) -> dict[str, Any]:
         """Listen for voice input (no pause limits when timeout=0)."""
         self._state.is_listening = True
 
@@ -147,7 +149,7 @@ class VoiceAgent(BaseAgent):
         finally:
             self._state.is_listening = False
 
-    async def _execute_command(self, command: str) -> Dict[str, Any]:
+    async def _execute_command(self, command: str) -> dict[str, Any]:
         """Execute a voice command."""
         command_lower = command.lower().strip()
 
@@ -172,7 +174,7 @@ class VoiceAgent(BaseAgent):
         # Default: treat as chat
         return {"action": "chat", "message": command, "success": True}
 
-    async def _execute_step(self, task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a voice interaction step."""
         llm = await self._get_llm()
         settings = get_settings_manager().settings.voice
@@ -209,10 +211,8 @@ Response:"""
 
         # Notify callback
         if self._on_response:
-            try:
+            with contextlib.suppress(Exception):
                 self._on_response(response)
-            except Exception:
-                pass
 
         # Check for action commands in response
         action = None
@@ -229,7 +229,7 @@ Response:"""
             "complete": not self._state.auto_continue,
         }
 
-    def _should_continue(self, step_result: Dict[str, Any]) -> bool:
+    def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Check if should continue conversation."""
         # Continue if auto-continue is enabled and not explicitly completed
         return self._state.auto_continue and not step_result.get("complete", False)
@@ -278,7 +278,7 @@ Response:"""
         result = await self._speak(text)
         return result.get("success", False)
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get current voice state."""
         return {
             "is_listening": self._state.is_listening,
@@ -290,7 +290,7 @@ Response:"""
 
 
 # Global voice agent
-_voice_agent: Optional[VoiceAgent] = None
+_voice_agent: VoiceAgent | None = None
 
 
 def get_voice_agent() -> VoiceAgent:

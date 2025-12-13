@@ -11,15 +11,15 @@ LM STUDIO INTEGRATION:
 This provides seamless voice output for MCP clients without native audio.
 """
 
-import wave
-import tempfile
-import subprocess
 import platform
-from pathlib import Path
-from typing import Optional, AsyncIterator, Callable
-from dataclasses import dataclass
-import threading
 import queue
+import subprocess
+import tempfile
+import threading
+import wave
+from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass
+from pathlib import Path
 
 from src.core.security import get_secure_logger
 
@@ -60,13 +60,13 @@ class StreamingVoicePlayer:
         await player.speak("Hello, this plays immediately!")
     """
 
-    def __init__(self, config: Optional[StreamConfig] = None):
+    def __init__(self, config: StreamConfig | None = None):
         """Initialize streaming player."""
         self.config = config or StreamConfig()
         self._api_key = None
         self._playing = False
         self._audio_queue = queue.Queue()
-        self._player_thread: Optional[threading.Thread] = None
+        self._player_thread: threading.Thread | None = None
         self.system = platform.system()
 
         self._init_api_key()
@@ -84,7 +84,7 @@ class StreamingVoicePlayer:
         self,
         text: str,
         voice_id: str = "21m00Tcm4TlvDq8ikWAM",  # Rachel
-        on_chunk: Optional[Callable[[bytes], None]] = None,
+        on_chunk: Callable[[bytes], None] | None = None,
     ) -> bool:
         """
         Speak text with streaming playback.
@@ -159,20 +159,19 @@ class StreamingVoicePlayer:
             "optimize_streaming_latency": self.config.optimize_streaming_latency,
         }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                url,
-                headers=headers,
-                json=payload,
-                params=params,
-            ) as response:
-                if response.status != 200:
-                    error = await response.text()
-                    raise Exception(f"ElevenLabs API error: {response.status} - {error}")
+        async with aiohttp.ClientSession() as session, session.post(
+            url,
+            headers=headers,
+            json=payload,
+            params=params,
+        ) as response:
+            if response.status != 200:
+                error = await response.text()
+                raise Exception(f"ElevenLabs API error: {response.status} - {error}")
 
-                # Stream chunks as they arrive
-                async for chunk in response.content.iter_chunked(self.config.chunk_size):
-                    yield chunk
+            # Stream chunks as they arrive
+            async for chunk in response.content.iter_chunked(self.config.chunk_size):
+                yield chunk
 
     def _start_player_thread(self):
         """Start background audio player thread."""
@@ -297,7 +296,7 @@ class StreamingVoicePlayer:
 
 
 # Singleton instance
-_streaming_player: Optional[StreamingVoicePlayer] = None
+_streaming_player: StreamingVoicePlayer | None = None
 
 
 def get_streaming_player() -> StreamingVoicePlayer:
