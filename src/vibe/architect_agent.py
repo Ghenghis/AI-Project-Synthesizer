@@ -14,6 +14,7 @@ Runs before TaskDecomposer to provide architectural context.
 import json
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 from src.agents.autogen_integration import AutoGenIntegration
@@ -166,7 +167,7 @@ class ArchitectAgent:
 
         return max(pattern_scores, key=pattern_scores.get)
 
-    async def _generate_architectural_plan(self, requirements: str, context: dict[str, Any] | None,
+    def _generate_architectural_plan(self, requirements: str, context: dict[str, Any] | None,
                                          pattern: ArchitecturePattern) -> ArchitecturePlan:
         """Generate detailed architectural plan using LLM."""
         # Build prompt

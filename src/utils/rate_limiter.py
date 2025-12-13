@@ -252,7 +252,7 @@ class AdaptiveRateLimiter(RateLimiter):
             )
             self._update_rate()
 
-    def report_rate_limited(self, retry_after: int | None = None) -> None:
+    def report_rate_limited(self, _retry_after: int | None = None) -> None:
         """Report rate limit hit."""
         # Reduce rate significantly
         self._current_rate = max(

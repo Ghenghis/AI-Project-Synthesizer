@@ -464,7 +464,7 @@ Return as JSON:
                 timestamp=datetime.now()
             )
 
-    def _parse_text_explanation(self, text: str, level: ExplanationLevel) -> dict[str, Any]:
+    def _parse_text_explanation(self, text: str, _level: ExplanationLevel) -> dict[str, Any]:
         """Parse text explanation into structured format."""
         lines = text.strip().split('\n')
 
@@ -502,7 +502,7 @@ Return as JSON:
             changes["lines_added"] = len(after.split('\n')) - len(before.split('\n'))
             changes["lines_removed"] = max(0, -changes["lines_added"])
 
-        except:
+        except Exception:
             # Fallback to line counting
             changes["lines_added"] = len(after.split('\n'))
             changes["lines_removed"] = len(before.split('\n'))

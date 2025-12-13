@@ -129,7 +129,7 @@ class AutoCommit:
             text=True
         )
 
-    def _get_changed_files(self, phase_id: str) -> list[str]:
+    def _get_changed_files(self, _phase_id: str) -> list[str]:
         """Get list of files changed since last phase commit."""
         if not self.is_git_repo:
             return []
@@ -235,7 +235,7 @@ class AutoCommit:
 
         return '\n'.join(message)
 
-    async def commit_phase(self, task_id: str, phase_id: str, phase_name: str,
+    async def commit_phase(self, task_id: str, _phase_id: str, phase_name: str,
                           artifacts: dict[str, Any] | None = None,
                           force: bool = False) -> CommitInfo:
         """
@@ -254,7 +254,7 @@ class AutoCommit:
         if not self.is_git_repo:
             return CommitInfo(
                 commit_hash="",
-                phase_id=phase_id,
+                phase_id=_phase_id,
                 timestamp=datetime.now(),
                 message="Not in a Git repository",
                 files_changed=[],
@@ -264,10 +264,10 @@ class AutoCommit:
             )
 
         # Check if already committed
-        if phase_id in self._committed_phases and not force:
+        if _phase_id in self._committed_phases and not force:
             return CommitInfo(
                 commit_hash="",
-                phase_id=phase_id,
+                phase_id=_phase_id,
                 timestamp=datetime.now(),
                 message="Phase already committed",
                 files_changed=[],
@@ -277,12 +277,12 @@ class AutoCommit:
             )
 
         # Get changed files
-        changed_files = self._get_changed_files(phase_id)
+        changed_files = self._get_changed_files(_phase_id)
 
         if not changed_files and not force:
             return CommitInfo(
                 commit_hash="",
-                phase_id=phase_id,
+                phase_id=_phase_id,
                 timestamp=datetime.now(),
                 message="No changes to commit",
                 files_changed=[],
@@ -295,7 +295,7 @@ class AutoCommit:
         if not self._stage_changes(changed_files):
             return CommitInfo(
                 commit_hash="",
-                phase_id=phase_id,
+                phase_id=_phase_id,
                 timestamp=datetime.now(),
                 message="Failed to stage changes",
                 files_changed=[],
@@ -308,7 +308,7 @@ class AutoCommit:
         additions, deletions = self._get_diff_stats()
 
         # Create commit message
-        commit_message = self._create_commit_message(phase_id, phase_name, artifacts)
+        commit_message = self._create_commit_message(_phase_id, phase_name, artifacts)
 
         # Create commit
         result = self._run_git_command(["commit", "-m", commit_message])
@@ -316,7 +316,7 @@ class AutoCommit:
         if result.returncode != 0:
             return CommitInfo(
                 commit_hash="",
-                phase_id=phase_id,
+                phase_id=_phase_id,
                 timestamp=datetime.now(),
                 message=f"Commit failed: {result.stderr}",
                 files_changed=changed_files,
@@ -332,7 +332,7 @@ class AutoCommit:
         # Create commit info
         commit_info = CommitInfo(
             commit_hash=commit_hash,
-            phase_id=phase_id,
+            phase_id=_phase_id,
             timestamp=datetime.now(),
             message=commit_message,
             files_changed=changed_files,
@@ -343,7 +343,7 @@ class AutoCommit:
 
         # Track commit
         self._commits.append(commit_info)
-        self._committed_phases.add(phase_id)
+        self._committed_phases.add(_phase_id)
 
         # Auto push if configured
         if self.config.auto_push:

@@ -206,7 +206,7 @@ class ContextInjector:
                 with open(directory / "package.json") as f:
                     data = json.load(f)
                 return data.get("name", directory.name)
-            except:
+            except Exception:
                 pass
 
         if (directory / "pyproject.toml").exists():
@@ -215,7 +215,7 @@ class ContextInjector:
                 with open(directory / "pyproject.toml") as f:
                     data = toml.load(f)
                 return data.get("project", {}).get("name", directory.name)
-            except:
+            except Exception:
                 pass
 
         # Use directory name

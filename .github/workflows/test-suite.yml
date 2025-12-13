@@ -64,6 +64,11 @@ jobs:
             venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
           path: .venv
       
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev libsndfile1-dev
+      
       - name: Install dependencies
         run: |
           python -m venv .venv
@@ -135,6 +140,11 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev libsndfile1-dev
+      
       - name: Install dependencies
         run: |
           pip install pytest pytest-cov pytest-timeout
@@ -173,6 +183,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev libsndfile1-dev
       
       - run: pip install -r requirements.txt
       

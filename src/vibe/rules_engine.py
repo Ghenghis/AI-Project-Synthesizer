@@ -304,7 +304,7 @@ class RulesEngine:
 
         return applicable
 
-    def _is_rule_applicable(self, rule: Rule, prompt: str, context: dict[str, Any] | None) -> bool:
+    def _is_rule_applicable(self, rule: Rule, prompt: str, _context: dict[str, Any] | None) -> bool:
         """Check if a rule applies to the given prompt and context."""
         prompt_lower = prompt.lower()
 
@@ -316,10 +316,10 @@ class RulesEngine:
 
         # Check conditions
         if rule.conditions:
-            context = context or {}
+            local_context = context or {}
 
             for condition, value in rule.conditions.items():
-                if condition == "language" and context.get("language") != value or condition == "has_user_input" and value and "input" not in prompt_lower:
+                if condition == "language" and local_context.get("language") != value or condition == "has_user_input" and value and "input" not in prompt_lower:
                     return False
                 elif condition == "has_risky_operation" and value:
                     risky_keywords = ["file", "network", "database", "api", "external"]

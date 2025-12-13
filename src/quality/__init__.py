@@ -26,11 +26,11 @@ from .dependency_scanner import (
     Vulnerability,
 )
 from .lint_checker import LintChecker, LintIssue, LintLevel
-from .quality_gate import QualityGate, QualityMetrics, GateStatus
+from .quality_gate import GateStatus, QualityGate, QualityMetrics
 from .review_agent import ReviewAgent, ReviewIssue, ReviewSeverity, ReviewStatus
 from .security_scanner import SecurityIssue, SecurityScanner
 from .security_scanner import SeverityLevel as SecuritySeverity
-from .test_generator import TestGenerator, TestType, TestSuite
+from .test_generator import TestGenerator, TestSuite, TestType
 
 __version__ = "1.0.0"
 __all__ = [

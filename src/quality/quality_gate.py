@@ -25,6 +25,8 @@ from src.quality.security_scanner import (
     ScanResult,
     SecurityIssue,
     SecurityScanner,
+)
+from src.quality.security_scanner import (
     SeverityLevel as SecuritySeverity,
 )
 from src.quality.test_generator import TestGenerator, TestSuite
@@ -228,12 +230,12 @@ class QualityGate:
             evaluation_time=time.time() - start_time
         )
 
-    async def _run_all_checks(self, code: str, file_path: str, language: str) -> dict[str, Any]:
+    async def _run_all_checks(self, code: str, file_path: str, _language: str) -> dict[str, Any]:
         """Run all quality checks in parallel."""
         tasks = {
             "security": self.security_scanner.scan_code(code, file_path),
-            "lint": self.lint_checker.check_code(code, file_path, language),
-            "test": self.test_generator.generate_tests(code, file_path, language),
+            "lint": self.lint_checker.check_code(code, file_path, _language),
+            "test": self.test_generator.generate_tests(code, file_path, _language),
             "review": self.review_agent.review_code(code, file_path)
         }
 
@@ -318,7 +320,7 @@ class QualityGate:
 
         return True
 
-    async def _apply_auto_fixes(self, code: str, file_path: str, language: str,
+    async def _apply_auto_fixes(self, code: str, file_path: str, _language: str,
                                results: dict[str, Any]) -> tuple[str, list[str]]:
         """Apply automatic fixes where possible."""
         fixed_code = code
@@ -328,7 +330,7 @@ class QualityGate:
         if self.auto_fix_enabled["lint"] and results.get("lint"):
             try:
                 lint_fixed, lint_fixes = await self.lint_checker.fix_code(
-                    fixed_code, file_path, language
+                    fixed_code, file_path, _language
                 )
                 if lint_fixed != fixed_code:
                     fixed_code = lint_fixed

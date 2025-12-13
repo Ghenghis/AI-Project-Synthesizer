@@ -244,7 +244,7 @@ class ProjectClassifier:
                 with open(file_path, encoding='utf-8') as f:
                     lines = len(f.readlines())
                     structure["total_lines"] += lines
-            except:
+            except Exception:
                 pass
 
             # Count languages
@@ -281,7 +281,7 @@ class ProjectClassifier:
                 with open(file_path, encoding='utf-8') as f:
                     content = f.read().lower()
                     file_contents[str(file_path)] = content
-            except:
+            except Exception:
                 pass
 
         # Detect languages
@@ -381,7 +381,7 @@ class ProjectClassifier:
                 with open(file_path, encoding='utf-8') as f:
                     content = f.read()
                     file_contents[str(file_path)] = content
-            except:
+            except Exception:
                 pass
 
         # Common patterns
@@ -466,7 +466,7 @@ class ProjectClassifier:
 
         return ProjectType.UNKNOWN
 
-    def _assess_complexity(self, structure: dict[str, int], files: list[Path]) -> ComplexityLevel:
+    def _assess_complexity(self, structure: dict[str, int], _files: list[Path]) -> ComplexityLevel:
         """Assess project complexity."""
         lines = structure["total_lines"]
         files_count = structure["total_files"]
@@ -577,7 +577,7 @@ class ProjectClassifier:
 
         return ArchitecturePattern.UNKNOWN
 
-    def _detect_conventions(self, files: list[Path], stack: TechnologyStack) -> list[str]:
+    def _detect_conventions(self, files: list[Path], _stack: TechnologyStack) -> list[str]:
         """Detect coding conventions used."""
         conventions = []
 
@@ -623,7 +623,7 @@ class ProjectClassifier:
                         conventions.append("semicolons")
 
                     break  # Only need to check one file for style
-            except:
+            except Exception:
                 pass
 
         return conventions

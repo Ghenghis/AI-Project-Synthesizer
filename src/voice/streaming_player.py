@@ -196,7 +196,6 @@ class StreamingVoicePlayer:
     def _play_windows_stream(self):
         """Play streaming audio on Windows using winsound or pyaudio."""
         try:
-            import pyaudio
             self._play_with_pyaudio()
         except ImportError:
             # Fallback: collect all chunks and play as file
@@ -271,7 +270,6 @@ class StreamingVoicePlayer:
     def _play_macos_stream(self):
         """Play streaming audio on macOS."""
         try:
-            import pyaudio
             self._play_with_pyaudio()
         except ImportError:
             self._play_collected_chunks()
@@ -279,7 +277,6 @@ class StreamingVoicePlayer:
     def _play_linux_stream(self):
         """Play streaming audio on Linux."""
         try:
-            import pyaudio
             self._play_with_pyaudio()
         except ImportError:
             self._play_collected_chunks()

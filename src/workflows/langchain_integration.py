@@ -14,10 +14,10 @@ from typing import Any
 
 # Try importing LangChain components with fallbacks
 try:
-    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    from langchain_core.messages import SystemMessage
     from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
     from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-    from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+    from langchain_core.runnables import RunnableLambda
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
@@ -42,7 +42,7 @@ except ImportError:
 
 try:
     from langchain.agents import AgentExecutor, create_react_agent
-    from langchain.chains import LLMChain, SequentialChain
+    from langchain.chains import LLMChain
     from langchain.memory import ConversationBufferMemory
     from langchain.tools import Tool
     LANGCHAIN_AVAILABLE = True

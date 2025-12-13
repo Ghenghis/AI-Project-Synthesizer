@@ -187,7 +187,7 @@ class TaskDecomposer:
 
         return "general"
 
-    def _estimate_complexity(self, request: str, context: dict[str, Any] | None) -> TaskComplexity:
+    def _estimate_complexity(self, request: str, _context: dict[str, Any] | None) -> TaskComplexity:
         """Estimate task complexity based on request and context."""
         request_lower = request.lower()
 

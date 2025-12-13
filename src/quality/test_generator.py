@@ -349,10 +349,10 @@ if __name__ == "__main__":
 
         return patterns
 
-    async def _generate_function_tests(self, func_info: dict[str, Any], language: str, class_name: str | None = None) -> list[TestFunction]:
+    async def _generate_function_tests(self, func_info: dict[str, Any], language: str, _class_name: str | None = None) -> list[TestFunction]:
         """Generate tests for a specific function using LLM."""
         # Build prompt for LLM
-        target = f"{class_name}.{func_info['name']}" if class_name else func_info['name']
+        target = f"{_class_name}.{func_info['name']}" if _class_name else func_info['name']
 
         prompt = f"""Generate 3-5 comprehensive unit tests for the {language} function '{target}'.
 
@@ -411,15 +411,15 @@ Return JSON format:
 
             except json.JSONDecodeError:
                 # Fallback: generate basic tests
-                return self._generate_fallback_tests(func_info, language, class_name)
+                return self._generate_fallback_tests(func_info, language, _class_name)
 
         except Exception as e:
             print(f"LLM test generation failed: {e}")
-            return self._generate_fallback_tests(func_info, language, class_name)
+            return self._generate_fallback_tests(func_info, language, _class_name)
 
-    def _generate_fallback_tests(self, func_info: dict[str, Any], language: str, class_name: str | None = None) -> list[TestFunction]:
+    def _generate_fallback_tests(self, func_info: dict[str, Any], language: str, _class_name: str | None = None) -> list[TestFunction]:
         """Generate basic tests as fallback."""
-        target = f"{class_name}.{func_info['name']}" if class_name else func_info['name']
+        target = f"{_class_name}.{func_info['name']}" if _class_name else func_info['name']
 
         if language == "python":
             test_code = f"""def test_{func_info['name']}_basic():

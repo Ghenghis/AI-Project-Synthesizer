@@ -266,10 +266,10 @@ class LiteLLMRouter:
             if self.config.track_costs:
                 litellm.success_callback = [self._on_success]
 
-    def _on_success(self, kwargs, completion_response, start_time, end_time):
+    def _on_success(self, _kwargs, completion_response, start_time, end_time):
         """Callback for successful completions (cost tracking)."""
         try:
-            model = kwargs.get("model", "unknown")
+            model = _kwargs.get("model", "unknown")
             usage = completion_response.get("usage", {})
 
             # Calculate cost

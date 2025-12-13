@@ -427,7 +427,7 @@ class AutoRollback:
                 )
                 if result.stdout:
                     files = result.stdout.strip().split('\n')
-            except:
+            except Exception:
                 pass
 
         # If not git or error, get common project files
@@ -451,92 +451,8 @@ class AutoRollback:
                 text=True
             )
             return result.stdout.strip() if result.returncode == 0 else "unknown"
-        except:
+        except Exception:
             return "unknown"
-
-    async def _dry_run_rollback(self, rollback_point: RollbackPoint) -> RollbackResult:
-        """Perform a dry run rollback showing what would be done."""
-        actions = []
-
-        actions.append(f"Would restore context to checkpoint: {rollback_point.checkpoint_id}")
-
-        if rollback_point.strategy in [RollbackStrategy.GIT, RollbackStrategy.HYBRID]:
-            if "git" in rollback_point.artifacts:
-                git_state = rollback_point.artifacts["git"]
-                actions.append(f"Would reset Git to commit: {git_state.get('commit', 'unknown')}")
-                if git_state.get("staged_files"):
-                    actions.append(f"Would unstage {len(git_state['staged_files'])} files")
-
-        if rollback_point.strategy in [RollbackStrategy.FILE_SYSTEM, RollbackStrategy.HYBRID]:
-            if "files" in rollback_point.artifacts:
-                file_count = len([f for f in rollback_point.artifacts["files"].values()
-                                if not isinstance(f, dict)])
-                actions.append(f"Would restore {file_count} files")
-
-        return RollbackResult(
-            status=RollbackStatus.DRY_RUN,
-            strategy_used=rollback_point.strategy,
-            files_restored=[],
-            commits_reverted=[],
-            errors=[],
-            metadata={
-                "actions": actions,
-                "message": "Dry run - no changes made"
-            }
-        )
-
-    async def _confirm_rollback(self, rollback_point: RollbackPoint, failure_reason: str) -> bool:
-        """Ask user to confirm rollback."""
-        print(f"\n⚠️ Phase failed: {failure_reason}")
-        print(f"📅 Rollback point created: {rollback_point.timestamp}")
-        print(f"🔄 Strategy: {rollback_point.strategy.value}")
-
-        if rollback_point.strategy in [RollbackStrategy.GIT, RollbackStrategy.HYBRID]:
-            if "git" in rollback_point.artifacts:
-                git_state = rollback_point.artifacts["git"]
-                print(f"📦 Git commit: {git_state.get('commit', 'unknown')[:8]}")
-
-        if rollback_point.strategy in [RollbackStrategy.FILE_SYSTEM, RollbackStrategy.HYBRID]:
-            if "files" in rollback_point.artifacts:
-                file_count = len([f for f in rollback_point.artifacts["files"].values()
-                                if not isinstance(f, dict)])
-                print(f"📁 Files to restore: {file_count}")
-
-        while True:
-            response = input("\nRollback to this point? [y/N/skip] ").lower().strip()
-            if response in ['y', 'yes']:
-                return True
-            elif response in ['n', 'no', '']:
-                return False
-            elif response in ['skip', 'disable']:
-                self.mode = RollbackMode.DISABLED
-                return False
-            else:
-                print("Please enter 'y', 'n', or 'skip'")
-
-    async def _save_rollback_point(self, rollback_point: RollbackPoint) -> None:
-        """Save rollback point to disk and memory."""
-        # Save to disk
-        rollback_file = self.backup_dir / f"rollback_{rollback_point.checkpoint_id}.json"
-
-        data = {
-            "checkpoint_id": rollback_point.checkpoint_id,
-            "timestamp": rollback_point.timestamp.isoformat(),
-            "strategy": rollback_point.strategy.value,
-            "metadata": rollback_point.metadata,
-            "artifacts": rollback_point.artifacts
-        }
-
-        with open(rollback_file, 'w') as f:
-            json.dump(data, f, indent=2)
-
-        # Save to memory
-        await self.memory.add(
-            content=json.dumps(data),
-            category="ROLLBACK",
-            tags=["rollback", rollback_point.metadata["task_id"], rollback_point.metadata["phase_id"]],
-            importance=0.8
-        )
 
     async def _get_latest_rollback_point(self, task_id: str, phase_id: str) -> RollbackPoint | None:
         """Get the latest rollback point for a task/phase."""
@@ -562,7 +478,7 @@ class AutoRollback:
                 if not latest_time or timestamp > latest_time:
                     latest = data
                     latest_time = timestamp
-            except:
+            except Exception:
                 continue
 
         if latest:
@@ -576,38 +492,6 @@ class AutoRollback:
 
         return None
 
-    async def _track_failure_pattern(self, task_id: str, phase_id: str,
-                                    failure_reason: str, result: RollbackResult) -> None:
-        """Track failure patterns for learning."""
-        pattern = {
-            "task_id": task_id,
-            "phase_id": phase_id,
-            "failure_reason": failure_reason,
-            "rollback_successful": result.status == RollbackStatus.SUCCESS,
-            "strategy_used": result.strategy_used.value,
-            "timestamp": datetime.now().isoformat(),
-            "error_count": len(result.errors)
-        }
-
-        await self.memory.add(
-            content=json.dumps(pattern),
-            category="FAILURE_PATTERN",
-            tags=["failure", task_id, phase_id],
-            importance=0.7
-        )
-
-    def get_rollback_history(self, task_id: str | None = None) -> list[RollbackResult]:
-        """Get rollback history."""
-        if task_id:
-            return [r for r in self._rollback_history
-                   if r.metadata.get("rollback_point_id", "").startswith(task_id)]
-        return self._rollback_history.copy()
-
-    def set_mode(self, mode: RollbackMode) -> None:
-        """Change rollback mode."""
-        self.mode = mode
-        print(f"Rollback mode set to: {mode.value}")
-
     def cleanup_old_backups(self, days: int = 7) -> int:
         """Clean up old backup files."""
         cutoff = datetime.now().timestamp() - (days * 24 * 3600)
@@ -619,7 +503,7 @@ class AutoRollback:
                     if backup_dir.stat().st_mtime < cutoff:
                         shutil.rmtree(backup_dir)
                         cleaned += 1
-                except:
+                except Exception:
                     pass
 
         # Clean up rollback point files
@@ -628,14 +512,10 @@ class AutoRollback:
                 if rollback_file.stat().st_mtime < cutoff:
                     rollback_file.unlink()
                     cleaned += 1
-            except:
+            except Exception:
                 pass
 
         return cleaned
-
-
-# CLI interface for testing
-if __name__ == "__main__":
     import asyncio
 
     async def main():

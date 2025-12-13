@@ -327,8 +327,8 @@ class DependencyScanner:
                 cwd=validate_path(path)
             , timeout=30)
             if result.returncode == 0:
-                total_packages = len([l for l in result.stdout.split('\n') if l.strip()])
-        except:
+                total_packages = len([line for line in result.stdout.split('\n') if line.strip()])
+        except Exception:
             pass
 
         summary = self._generate_summary(vulnerabilities)
@@ -453,7 +453,7 @@ class DependencyScanner:
             if result.stdout:
                 data = json.loads(result.stdout)
                 total_packages = len(data.get("trees", []))
-        except:
+        except Exception:
             pass
 
         summary = self._generate_summary(vulnerabilities)
@@ -525,8 +525,8 @@ class DependencyScanner:
             try:
                 with open(path / "Pipfile") as f:
                     content = f.read()
-                    total_packages = len([l for l in content.split('\n')
-                                        if l.strip() and '=' in l and not l.startswith('#')])
+                    total_packages = len([line for line in content.split('\n')
+                                        if line.strip() and '=' in line and not line.startswith('#')])
             except:
                 pass
 

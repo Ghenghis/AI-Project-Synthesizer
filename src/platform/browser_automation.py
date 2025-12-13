@@ -316,7 +316,7 @@ class BrowserAutomation:
             # Get page title
             try:
                 metrics["title"] = await self.page.title()
-            except:
+            except Exception:
                 metrics["title"] = ""
 
             secure_logger.info(f"Navigated to {url} in {load_time:.2f}s")
@@ -479,7 +479,7 @@ class BrowserAutomation:
             submit_selector = "input[type='submit'], button[type='submit'], button:not([type])"
             try:
                 await self.page.click(submit_selector)
-            except:
+            except Exception:
                 # Try to submit form directly
                 await self.page.evaluate("document.querySelector('form').submit()")
 
@@ -703,7 +703,7 @@ class BrowserAutomation:
     # UTILITY METHODS
     # ========================================================================
 
-    async def wait_for_network_idle(self, timeout: int = 5000):
+    async def wait_for_network_idle(self, _timeout: int = 5000):
         """
         Wait for network to be idle.
 
@@ -713,9 +713,9 @@ class BrowserAutomation:
         if not self.page:
             raise RuntimeError("Browser not started")
 
-        await self.page.wait_for_load_state("networkidle", timeout=timeout)
+        await self.page.wait_for_load_state("networkidle", timeout=_timeout)
 
-    async def set_user_agent(self, user_agent: str):
+    async def set_user_agent(self, _user_agent: str):
         """
         Set custom user agent.
 
@@ -730,7 +730,7 @@ class BrowserAutomation:
         await self.context.close()
 
         self.context = await self.browser.new_context(
-            user_agent=user_agent,
+            user_agent=_user_agent,
             viewport={"width": self.viewport[0], "height": self.viewport[1]},
         )
 

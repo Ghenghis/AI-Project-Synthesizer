@@ -119,8 +119,7 @@ Additional Constraints:
         complexity = self._detect_complexity(user_prompt)
 
         # Skip enhancement for simple prompts unless forced
-        if not self.enable_enhancement and not force_enhance:
-            if complexity == self.min_complexity_for_enhancement:
+        if not self.enable_enhancement and not force_enhance and complexity == self.min_complexity_for_enhancement:
                 return EnhancedPrompt(
                     original=user_prompt,
                     layers=[PromptLayer("task", user_prompt, 1)],
@@ -198,10 +197,10 @@ Additional Constraints:
         # Default to moderate
         return PromptComplexity.MODERATE
 
-    async def _build_context_layer(self, prompt: str, project_context: dict[str, Any] | None) -> PromptLayer:
+    async def _build_context_layer(self, prompt: str, _project_context: dict[str, Any] | None) -> PromptLayer:
         """Build the context layer of the enhanced prompt."""
         # Get context from injector
-        context_data = await self.context_injector.get_context(prompt, project_context)
+        context_data = await self.context_injector.get_context(prompt, _project_context)
 
         # Format using template
         content = self.layer_templates["context"].format(
@@ -237,10 +236,10 @@ Additional Constraints:
             priority=1
         )
 
-    async def _build_constraints_layer(self, prompt: str, project_context: dict[str, Any] | None) -> PromptLayer:
+    async def _build_constraints_layer(self, prompt: str, _project_context: dict[str, Any] | None) -> PromptLayer:
         """Build the constraints layer using rules engine."""
         # Get applicable rules
-        rules = await self.rules_engine.get_applicable_rules(prompt, project_context)
+        rules = await self.rules_engine.get_applicable_rules(prompt, _project_context)
 
         # Categorize rules
         security_rules = [r for r in rules if r.category == "security"]

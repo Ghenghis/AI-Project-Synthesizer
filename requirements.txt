@@ -86,7 +86,7 @@ pandas>=2.2.0                   # Data manipulation
 # Voice & Audio Processing
 # ============================================
 elevenlabs>=0.2.0               # ElevenLabs TTS API
-pyaudio>=0.2.11                # Audio playback
+pyaudio>=0.2.11; sys_platform == "win32" or sys_platform == "darwin"  # Audio playback (Windows/macOS only)
 pygame>=2.5.0                   # Audio system fallback
 librosa>=0.10.0                 # Audio analysis and processing
 soundfile>=0.12.1               # Audio file I/O

@@ -39,7 +39,7 @@ class GitLabPlugin(PlatformPlugin):
         self._token = config.get("token", "")
         return True
 
-    async def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
+    async def search(self, query: str, _max_results: int = 10) -> list[dict[str, Any]]:
         """
         Search GitLab repositories.
 
@@ -64,12 +64,12 @@ class GitLabPlugin(PlatformPlugin):
     async def get_details(self, identifier: str) -> dict[str, Any] | None:
         """Get repository details."""
         return {
-            "name": identifier,
-            "url": f"{self._url}/{identifier}",
+            "name": "identifier",
+            "url": f"{self._url}/identifier",
             "platform": "gitlab",
         }
 
-    async def download(self, identifier: str, destination: Path) -> bool:
+    async def download(self, identifier: str, _destination: Path) -> bool:
         """Clone GitLab repository."""
         # git clone implementation
         return False

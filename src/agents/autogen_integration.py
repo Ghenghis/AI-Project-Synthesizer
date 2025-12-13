@@ -18,7 +18,7 @@ from typing import Any
 
 try:
     from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
-    from autogen_agentchat.teams import RoundRobinGroupChat, GroupChatManager
+    from autogen_agentchat.teams import GroupChatManager, RoundRobinGroupChat
     AUTOGEN_AVAILABLE = True
 except ImportError:
     AUTOGEN_AVAILABLE = False
@@ -127,7 +127,7 @@ class AutoGenIntegration:
         if not AUTOGEN_AVAILABLE:
             secure_logger.warning("AutoGen not available - agents not initialized")
             return
-            
+
         # Code Review Agent - focuses on quality, patterns, best practices
         self.code_reviewer = AssistantAgent(
             name="CodeReviewer",

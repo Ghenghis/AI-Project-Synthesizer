@@ -23,7 +23,7 @@ from typing import Any
 
 from src.core.safe_formatter import MR_FORMATTER
 from src.llm.litellm_router import LiteLLMRouter
-from src.platform.browser_automation import BrowserAutomation, BrowserType
+from src.platform.browser_automation import BrowserAutomation, BrowserType, create_browser_automation
 
 from .gitlab_client import (
     GitLabClient,
@@ -407,7 +407,7 @@ Format your response as JSON:
                     suggested_changes=data.get("suggestions", []),
                     confidence_score=data.get("confidence", 0.0),
                 )
-        except:
+        except Exception:
             pass
 
         # Fallback

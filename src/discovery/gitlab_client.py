@@ -429,7 +429,7 @@ class GitLabClient:
                 ) as response:
                     if response.status == 200:
                         return await response.text()
-            except:
+            except Exception:
                 # Try other common README names
                 for name in ["README.rst", "README.txt", "readme.md", "README"]:
                     try:
@@ -440,7 +440,7 @@ class GitLabClient:
                         ) as response:
                             if response.status == 200:
                                 return await response.text()
-                    except:
+                    except Exception:
                         continue
 
             return None
