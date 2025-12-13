@@ -6,7 +6,8 @@
 - **Document**: `docs/PROFESSIONAL_TESTING_STRATEGY.md`
 - **Approach**: 50-100 high-impact integration tests instead of 3000 unit tests
 - **Focus**: Workflow testing, API contracts, and agent coordination
-- **Coverage Target**: 85% overall, 95% for critical paths
+- **Coverage Target**: 80% overall, 95% for critical paths
+- **CI/CD**: Parallel GitHub Actions with 10 shards (see [CI/CD Guide](CI_CD_GUIDE.md))
 
 ### 2. Built Integration Test Infrastructure
 - **Location**: `tests/integration/`

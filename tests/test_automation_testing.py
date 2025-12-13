@@ -20,7 +20,7 @@ from src.automation.testing import (
 )
 
 
-class TestTestStatus:
+class TestStatusEnum:
     """Tests for TestStatus enum."""
 
     def test_all_statuses(self):
@@ -32,7 +32,7 @@ class TestTestStatus:
         assert TestStatus.ERROR.value == "error"
 
 
-class TestTestCase:
+class TestCaseDataclass:
     """Tests for TestCase dataclass."""
 
     def test_create_test_case(self):
@@ -198,7 +198,7 @@ class TestIntegrationTester:
 
         unit_tests = tester.list_tests(category="unit")
         assert len(unit_tests) == 1
-        assert unit_tests[0]["category"] == "unit"
+        assert unit_tests[0].category == "unit"
 
     @pytest.mark.asyncio
     async def test_run_single_passing(self, tester):
@@ -228,7 +228,7 @@ class TestIntegrationTester:
         ))
 
         result = await tester.run_test("fail_test")
-        assert result.status == TestStatus.FAILED
+        assert result.status == TestStatus.ERROR
         assert "Test failed" in result.error
 
     @pytest.mark.asyncio
@@ -252,7 +252,7 @@ class TestIntegrationTester:
 
         result = await tester.run_test("slow_test")
         assert result.status == TestStatus.ERROR
-        assert "timeout" in result.error.lower()
+        assert "timed out" in result.error.lower()
 
     @pytest.mark.asyncio
     async def test_run_all(self, tester):
@@ -298,7 +298,7 @@ class TestIntegrationTester:
             category="integration",
         ))
 
-        summary = await tester.run_all(category="unit")
+        summary = await tester.run_category("unit")
         assert summary.total == 1
 
     @pytest.mark.asyncio

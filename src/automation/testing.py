@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class TestStatus(str, Enum):
     """Test execution status."""
+    __test__ = False  # Prevent pytest from collecting as test class
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"
@@ -36,6 +37,7 @@ class TestStatus(str, Enum):
 @dataclass
 class TestCase:
     """A single test case."""
+    __test__ = False  # Prevent pytest from collecting as test class
     name: str
     description: str
     test_func: Callable[[], Awaitable[bool]]
@@ -48,6 +50,7 @@ class TestCase:
 @dataclass
 class TestResult:
     """Result of a test execution."""
+    __test__ = False  # Prevent pytest from collecting as test class
     name: str
     status: TestStatus
     duration_ms: float
@@ -136,6 +139,12 @@ class IntegrationTester:
         """Register multiple test cases."""
         for test in tests:
             self.register(test)
+
+    def list_tests(self, category: str | None = None) -> list[TestCase]:
+        """List registered tests, optionally filtered by category."""
+        if category:
+            return [test for test in self._tests.values() if test.category == category]
+        return list(self._tests.values())
 
     async def run_test(self, name: str) -> TestResult:
         """Run a single test."""

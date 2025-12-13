@@ -19,10 +19,26 @@ from enum import Enum
 from typing import Any
 
 # Import all framework integrations
-from src.agents.autogen_integration import AutoGenIntegration
-from src.agents.crewai_integration import CrewAIIntegration
-from src.agents.langgraph_integration import LangGraphIntegration
-from src.agents.swarm_integration import SwarmIntegration
+try:
+    from src.agents.autogen_integration import AutoGenIntegration
+except ImportError:
+    AutoGenIntegration = None
+
+try:
+    from src.agents.crewai_integration import CrewAIIntegration
+except ImportError:
+    CrewAIIntegration = None
+
+try:
+    from src.agents.langgraph_integration import LangGraphIntegration
+except ImportError:
+    LangGraphIntegration = None
+
+try:
+    from src.agents.swarm_integration import SwarmIntegration
+except ImportError:
+    SwarmIntegration = None
+
 from src.core.security import get_secure_logger
 from src.llm.litellm_router import LiteLLMRouter
 from src.voice.manager import VoiceManager

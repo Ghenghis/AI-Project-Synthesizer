@@ -9,6 +9,15 @@ import os
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+# Check if AutoGen is available
+try:
+    from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
+    AUTOGEN_AVAILABLE = True
+except ImportError:
+    AUTOGEN_AVAILABLE = False
+    AssistantAgent = None
+    UserProxyAgent = None
+
 from src.agents.autogen_integration import (
     AutoGenIntegration,
     CodeReviewResult,
@@ -35,6 +44,7 @@ class TestAutoGenIntegration:
         return router
     
     @pytest.fixture
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def autogen_integration(self, mock_voice_manager, mock_llm_router):
         """Create an AutoGen integration instance for testing."""
         with patch.dict(os.environ, {
@@ -47,6 +57,7 @@ class TestAutoGenIntegration:
                 llm_router=mock_llm_router
             )
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_init_with_env_vars(self, mock_voice_manager, mock_llm_router):
         """Test initialization with environment variables."""
         with patch.dict(os.environ, {
@@ -66,6 +77,7 @@ class TestAutoGenIntegration:
             assert len(integration.llm_config['config_list']) > 0
             assert integration.llm_config['config_list'][0]['model'] == 'gpt-4'
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_init_without_api_key(self, mock_voice_manager, mock_llm_router):
         """Test initialization without API key falls back to mock mode."""
         with patch.dict(os.environ, {}, clear=True):
@@ -77,6 +89,7 @@ class TestAutoGenIntegration:
             
             assert integration.llm_config['config_list'][0]['model'] == 'mock'
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_get_llm_config_with_multiple_keys(self, mock_voice_manager):
         """Test LLM config building with multiple API keys available."""
         with patch.dict(os.environ, {
@@ -95,6 +108,7 @@ class TestAutoGenIntegration:
             assert openai_config['api_key'] == 'openai-key'
             assert openai_config['api_base'] == 'https://api.openai.com/v1'
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_review_code_success(self, autogen_integration):
         """Test successful code review."""
@@ -124,6 +138,7 @@ def hello_world():
             assert result.approved is True
             assert len(result.suggestions) > 0
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_review_code_with_security_issues(self, autogen_integration):
         """Test code review that identifies security issues."""
@@ -146,6 +161,7 @@ def hello_world():
             assert result.code_quality_score == 4.0
             assert len(result.security_issues) > 0
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_review_code_with_voice_output(self, autogen_integration):
         """Test code review with voice output enabled."""
@@ -166,6 +182,7 @@ def hello_world():
             # Check that voice was used
             autogen_integration.voice_manager.speak.assert_called()
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_review_code_error_handling(self, autogen_integration):
         """Test error handling during code review."""
@@ -181,6 +198,7 @@ def hello_world():
             assert "Review failed" in result.security_issues[0]
             assert result.agent_consensus == "Review failed - system error"
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_simple_conversation_test(self, autogen_integration):
         """Test basic conversation between agents."""
@@ -192,6 +210,7 @@ def hello_world():
             assert result is True
             mock_chat.assert_called_once()
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_create_autogen_integration_success(self):
         """Test factory function creates integration successfully."""
@@ -203,6 +222,7 @@ def hello_world():
             assert integration is not None
             assert isinstance(integration, AutoGenIntegration)
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_create_autogen_integration_failure(self):
         """Test factory function handles initialization failure."""
@@ -215,6 +235,7 @@ def hello_world():
             
             assert integration is None
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_parse_conversation_result_empty(self, autogen_integration):
         """Test parsing empty conversation history."""
         result = autogen_integration._parse_conversation_result([])
@@ -223,6 +244,7 @@ def hello_world():
         assert "No conversation history" in result.security_issues[0]
         assert result.approved is False
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_parse_conversation_result_with_scores(self, autogen_integration):
         """Test parsing conversation with quality scores."""
         history = [
@@ -235,6 +257,7 @@ def hello_world():
         assert result.code_quality_score == 9.0
         assert result.approved is True
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     def test_parse_conversation_result_rejected(self, autogen_integration):
         """Test parsing conversation with rejection."""
         history = [
@@ -246,6 +269,7 @@ def hello_world():
         assert result.code_quality_score == 3.0
         assert result.approved is False
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_speak_if_enabled(self, autogen_integration):
         """Test speaking only when enabled."""
@@ -258,6 +282,7 @@ def hello_world():
             voice="piper_default"
         )
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_speak_if_disabled(self, autogen_integration):
         """Test not speaking when disabled."""
@@ -267,6 +292,7 @@ def hello_world():
         
         autogen_integration.voice_manager.speak.assert_not_called()
     
+    @pytest.mark.skipif(not AUTOGEN_AVAILABLE, reason="AutoGen not installed")
     @pytest.mark.asyncio
     async def test_announce_results(self, autogen_integration):
         """Test result announcements."""

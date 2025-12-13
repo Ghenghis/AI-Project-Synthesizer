@@ -8,7 +8,7 @@ import asyncio
 import pytest
 from pathlib import Path
 
-from src.cli import (
+from src.cli_executor import (
     AgentCLI,
     CLIExecutor,
     CommandResult,
@@ -16,7 +16,7 @@ from src.cli import (
     ExecutionMode,
     ExecutorConfig,
 )
-from src.cli.executor import ErrorType
+from src.cli_executor.executor import ErrorType
 
 
 class TestCLIExecutor:

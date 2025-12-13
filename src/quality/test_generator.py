@@ -26,6 +26,7 @@ from src.llm.litellm_router import LiteLLMRouter
 
 class TestType(Enum):
     """Types of tests to generate."""
+    __test__ = False  # Prevent pytest from collecting as test class
     UNIT = "unit"
     INTEGRATION = "integration"
     E2E = "e2e"
@@ -34,6 +35,7 @@ class TestType(Enum):
 @dataclass
 class TestFunction:
     """Represents a generated test function."""
+    __test__ = False  # Prevent pytest from collecting as test class
     name: str
     code: str
     description: str
@@ -45,6 +47,7 @@ class TestFunction:
 @dataclass
 class TestSuite:
     """Represents a complete test suite."""
+    __test__ = False  # Prevent pytest from collecting as test class
     file_path: str
     test_file_path: str
     language: str

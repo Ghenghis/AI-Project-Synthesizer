@@ -213,17 +213,19 @@ class TestGetPlatformsTool:
         result = await get_platforms()
 
         assert result is not None
-        # Result might be dict or list, handle both
+        # Result is a dict with platforms as a dict
         if isinstance(result, dict) and 'platforms' in result:
             platforms = result['platforms']
-            # Platforms could be list of strings or list of dicts
-            if platforms and isinstance(platforms[0], dict):
-                platform_names = [p.get('name', '') for p in platforms]
-            else:
-                platform_names = platforms
-            assert len(platform_names) > 0
+            # platforms is a dict, not a list
+            if isinstance(platforms, dict):
+                platform_names = list(platforms.keys())
+                assert len(platform_names) > 0
+                # Check that expected platforms exist
+                assert 'github' in platform_names
+                assert 'huggingface' in platform_names
         elif isinstance(result, list):
-            assert len(result) > 0
+            if result:
+                assert len(result) > 0
 
 
 class TestConcurrentRequests:

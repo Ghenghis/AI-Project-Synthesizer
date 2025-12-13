@@ -20,8 +20,7 @@ except ImportError:
 
 from src.agents.autogen_integration import (
     AutoGenIntegration,
-    CodeReviewResult,
-    ReviewParticipant
+    CodeReviewResult
 )
 from src.llm.litellm_router import LiteLLMRouter
 

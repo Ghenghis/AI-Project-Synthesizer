@@ -5,6 +5,30 @@ All notable changes to the AI Project Synthesizer will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2024-12-13
+
+### Added
+
+- **Parallel CI/CD System**
+  - Two-tier parallelization (10 CI shards × 2 pytest-xdist workers)
+  - Duration-based test sharding with pytest-split
+  - Coverage aggregation across parallel shards
+  - Expected runtime: 5-10 minutes for 8,145+ tests
+  - Automatic retries for flaky tests
+  - Skip markers for optional dependencies (AutoGen, Swarm, Piper, GLM ASR)
+  - GitHub Actions workflow with 5-stage pipeline
+
+- **Documentation**
+  - Comprehensive CI/CD Guide (`docs/CI_CD_GUIDE.md`)
+  - Updated README.md with CI badge and test metrics
+  - Updated CONTRIBUTING.md with CI/CD references
+
+### Changed
+
+- Updated pytest.ini with CI optimizations and timeout settings
+- Updated pyproject.toml with coverage configuration for parallel execution
+- Updated tests/conftest.py with skip markers for optional dependencies
+
 ## [2.0.0] - 2024-12-11
 
 ### Added
