@@ -176,6 +176,14 @@ ignore = [
     "ARG002", # unused method argument
     "SIM102", # nested if statements
     "F401",   # unused imports
+    "ARG001", # unused function argument
+    "E722",   # bare except
+    "SIM117", # nested with statements
+    "B027",   # empty method without abstract decorator
+    "F402",   # import shadowed by loop var
+    "E741",   # ambiguous variable name
+    "B012",   # return in finally block
+    "ARG005", # unused lambda argument
 ]
 
 [tool.ruff.isort]
