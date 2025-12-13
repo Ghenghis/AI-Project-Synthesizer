@@ -79,17 +79,17 @@ The **AI Project Synthesizer** is a production-ready **Vibe Coder** system that 
 
 | Version | Milestone | Key Features | Date |
 |---------|-----------|--------------|------|
-| **v1.0** | Core Engine | Discovery, Analysis, Basic Synthesis | Dec 2024 |
-| **v1.1** | Multi-Platform | GitHub, HuggingFace, Kaggle integration | Dec 2024 |
-| **v1.2** | AST Parsing | Tree-sitter for 100+ languages, dependency analysis | Dec 2024 |
-| **v1.3** | Synthesis | Project merging, SAT conflict resolution | Dec 2024 |
-| **v1.4** | MCP Server | 8 MCP tools, Windsurf IDE integration | Dec 2024 |
-| **v1.5** | Voice System | ElevenLabs TTS, 20+ voices, streaming audio | Dec 2024 |
-| **v1.6** | Terminal UI | Rich dashboard, 7 views, real-time updates | Dec 2024 |
-| **v1.7** | Automation | 10 n8n workflows, webhooks, scheduled tasks | Dec 2024 |
-| **v1.8** | Multi-Agent | 5 agents, AutoGen/CrewAI/LangGraph/Swarm | Dec 2024 |
-| **v1.9** | Memory System | Mem0 integration, conversation history, learning | Dec 2024 |
-| **v2.0** | Vibe Coding | Complete pipeline: prompt → quality gate → commit | Dec 2024 |
+| **v1.0** | Core Engine | Discovery, Analysis, Basic Synthesis | Dec 2025 |
+| **v1.1** | Multi-Platform | GitHub, HuggingFace, Kaggle integration | Dec 2025 |
+| **v1.2** | AST Parsing | Tree-sitter for 100+ languages, dependency analysis | Dec 2025 |
+| **v1.3** | Synthesis | Project merging, SAT conflict resolution | Dec 2025 |
+| **v1.4** | MCP Server | 8 MCP tools, Windsurf IDE integration | Dec 2025 |
+| **v1.5** | Voice System | ElevenLabs TTS, 20+ voices, streaming audio | Dec 2025 |
+| **v1.6** | Terminal UI | Rich dashboard, 7 views, real-time updates | Dec 2025 |
+| **v1.7** | Automation | 10 n8n workflows, webhooks, scheduled tasks | Dec 2025 |
+| **v1.8** | Multi-Agent | 5 agents, AutoGen/CrewAI/LangGraph/Swarm | Dec 2025 |
+| **v1.9** | Memory System | Mem0 integration, conversation history, learning | Dec 2025 |
+| **v2.0** | Vibe Coding | Complete pipeline: prompt → quality gate → commit | Dec 2025 |
 
 ### 🚀 Current Focus (v2.x)
 
