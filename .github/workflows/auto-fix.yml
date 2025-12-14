@@ -1,0 +1,181 @@
+name: Auto-Fix Code Issues
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      fix_type:
+        description: 'Type of fixes to apply'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - lint
+          - format
+          - imports
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    name: Auto-Fix Linting & Formatting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tools
+        run: |
+          pip install ruff black isort mypy
+
+      - name: Run Ruff auto-fix
+        id: ruff_fix
+        run: |
+          echo "::group::Running ruff --fix"
+          ruff check src/ tests/ --fix --unsafe-fixes || true
+          ruff format src/ tests/ || true
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Run isort
+        run: |
+          isort src/ tests/ --profile black || true
+        continue-on-error: true
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff --stat
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes needed"
+          fi
+
+      - name: Commit fixes
+        if: steps.check_changes.outputs.has_changes == 'true' && github.event_name == 'push'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "🤖 Auto-fix: linting and formatting issues
+
+          Applied automatic fixes:
+          - Ruff linting fixes
+          - Code formatting (ruff format)
+          - Import sorting (isort)
+          
+          [skip ci]"
+          git push
+
+      - name: Create PR comment (if PR)
+        if: steps.check_changes.outputs.has_changes == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const diff = execSync('git diff --stat').toString();
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 Auto-Fix Available
+              
+              The following fixes can be applied automatically:
+              
+              \`\`\`
+              ${diff}
+              \`\`\`
+              
+              Run \`ruff check --fix && ruff format\` locally to apply these fixes.`
+            });
+
+  type-check-fix:
+    name: Type Error Detection & Suggestions
+    runs-on: ubuntu-latest
+    needs: auto-fix
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install mypy types-requests types-PyYAML
+
+      - name: Run mypy and capture errors
+        id: mypy
+        run: |
+          echo "::group::Type checking with mypy"
+          mypy src/ --ignore-missing-imports --no-error-summary 2>&1 | tee mypy_output.txt || true
+          echo "::endgroup::"
+          
+          # Count errors
+          ERROR_COUNT=$(grep -c "error:" mypy_output.txt || echo "0")
+          echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Generate fix suggestions
+        if: steps.mypy.outputs.error_count != '0'
+        run: |
+          echo "## Type Error Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Found ${{ steps.mypy.outputs.error_count }} type errors." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Common Fixes:" >> $GITHUB_STEP_SUMMARY
+          echo "- Add type hints: \`def func(arg: str) -> int:\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Use Optional: \`from typing import Optional\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Add # type: ignore for third-party issues" >> $GITHUB_STEP_SUMMARY
+
+  dependency-check:
+    name: Dependency Auto-Update
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for outdated packages
+        run: |
+          pip install pip-tools
+          pip list --outdated --format=json > outdated.json
+          cat outdated.json
+
+      - name: Update requirements if needed
+        run: |
+          if [ -s outdated.json ] && [ "$(cat outdated.json)" != "[]" ]; then
+            echo "Outdated packages found"
+            # Log but don't auto-update (safety)
+            cat outdated.json
+          fi

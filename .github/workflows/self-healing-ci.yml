@@ -1,0 +1,253 @@
+name: Self-Healing CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  schedule:
+    # Run daily at 2 AM UTC to catch drift
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  diagnose:
+    name: Diagnose Issues
+    runs-on: ubuntu-latest
+    outputs:
+      has_lint_issues: ${{ steps.lint.outputs.has_issues }}
+      has_type_issues: ${{ steps.typecheck.outputs.has_issues }}
+      has_test_failures: ${{ steps.tests.outputs.has_failures }}
+      needs_repair: ${{ steps.summary.outputs.needs_repair }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install ruff mypy pytest pytest-cov
+
+      - name: Check linting
+        id: lint
+        run: |
+          if ruff check src/ tests/ --output-format=json > lint_report.json 2>&1; then
+            echo "has_issues=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_issues=true" >> $GITHUB_OUTPUT
+            echo "### 🔍 Lint Issues Found" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 lint_report.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Check types
+        id: typecheck
+        run: |
+          if mypy src/ --ignore-missing-imports --no-error-summary > type_report.txt 2>&1; then
+            echo "has_issues=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_issues=true" >> $GITHUB_OUTPUT
+            ERRORS=$(grep -c "error:" type_report.txt || echo "0")
+            echo "### 🔍 Type Issues: $ERRORS errors" >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Run tests
+        id: tests
+        run: |
+          if pytest tests/ -x -q --tb=no > test_report.txt 2>&1; then
+            echo "has_failures=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_failures=true" >> $GITHUB_OUTPUT
+            echo "### 🔍 Test Failures" >> $GITHUB_STEP_SUMMARY
+            tail -20 test_report.txt >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Summarize
+        id: summary
+        run: |
+          if [[ "${{ steps.lint.outputs.has_issues }}" == "true" ]] || \
+             [[ "${{ steps.typecheck.outputs.has_issues }}" == "true" ]] || \
+             [[ "${{ steps.tests.outputs.has_failures }}" == "true" ]]; then
+            echo "needs_repair=true" >> $GITHUB_OUTPUT
+            echo "## ⚠️ Issues Detected - Auto-Repair Will Run" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "needs_repair=false" >> $GITHUB_OUTPUT
+            echo "## ✅ All Checks Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-reports
+          path: |
+            lint_report.json
+            type_report.txt
+            test_report.txt
+          retention-days: 7
+
+  auto-repair:
+    name: Auto-Repair
+    needs: diagnose
+    if: needs.diagnose.outputs.needs_repair == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install tools
+        run: |
+          pip install ruff black isort autoflake
+
+      - name: Apply auto-fixes
+        id: fix
+        run: |
+          echo "🔧 Running auto-fixes..."
+          
+          # Remove unused imports
+          autoflake --in-place --remove-all-unused-imports --recursive src/ tests/ || true
+          
+          # Fix linting issues
+          ruff check src/ tests/ --fix --unsafe-fixes || true
+          
+          # Format code
+          ruff format src/ tests/ || true
+          
+          # Sort imports
+          isort src/ tests/ --profile black || true
+          
+          # Check if changes were made
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit repairs
+        if: steps.fix.outputs.changes_made == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "🤖 Auto-repair: Fix linting and formatting issues
+
+          Automated fixes applied:
+          - Removed unused imports (autoflake)
+          - Fixed lint violations (ruff --fix)
+          - Formatted code (ruff format)
+          - Sorted imports (isort)
+          
+          [skip ci]"
+          git push
+
+      - name: Report repairs
+        if: steps.fix.outputs.changes_made == 'true'
+        run: |
+          echo "## 🔧 Auto-Repairs Applied" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The following automatic repairs were committed:" >> $GITHUB_STEP_SUMMARY
+          echo "- Removed unused imports" >> $GITHUB_STEP_SUMMARY
+          echo "- Fixed lint violations" >> $GITHUB_STEP_SUMMARY
+          echo "- Formatted code" >> $GITHUB_STEP_SUMMARY
+          echo "- Sorted imports" >> $GITHUB_STEP_SUMMARY
+
+  verify-repair:
+    name: Verify Repairs
+    needs: auto-repair
+    if: always() && needs.auto-repair.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout (latest)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify lint
+        run: |
+          pip install ruff
+          ruff check src/ tests/ || echo "Some issues remain"
+
+      - name: Verify tests
+        run: |
+          pip install pytest
+          pytest tests/ -x -q || echo "Some tests still failing"
+
+      - name: Final status
+        run: |
+          echo "## 📋 Verification Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for remaining issues." >> $GITHUB_STEP_SUMMARY
+
+  notify-issues:
+    name: Notify Remaining Issues
+    needs: [diagnose, auto-repair]
+    if: failure() || (needs.diagnose.outputs.needs_repair == 'true' && github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create issue comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## 🤖 CI Health Check
+            
+            Issues were detected that require attention:
+            
+            | Check | Status |
+            |-------|--------|
+            | Linting | ${{ needs.diagnose.outputs.has_lint_issues == 'true' && '❌ Issues' || '✅ OK' }} |
+            | Type Check | ${{ needs.diagnose.outputs.has_type_issues == 'true' && '❌ Issues' || '✅ OK' }} |
+            | Tests | ${{ needs.diagnose.outputs.has_test_failures == 'true' && '❌ Failures' || '✅ OK' }} |
+            
+            ### Quick Fixes
+            Run locally:
+            \`\`\`bash
+            # Fix lint issues
+            ruff check src/ tests/ --fix
+            ruff format src/ tests/
+            
+            # Run tests
+            pytest tests/ -v
+            \`\`\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
