@@ -1262,10 +1262,16 @@ async def handle_auto_fix_code(arguments: dict[str, Any]) -> dict[str, Any]:
         # Run ruff fix
         if fix_type in ["lint", "all"]:
             target = file_path or "src/ tests/"
-            cmd = f"ruff check {target} --fix" if not dry_run else f"ruff check {target}"
+            cmd = (
+                f"ruff check {target} --fix" if not dry_run else f"ruff check {target}"
+            )
             result = subprocess.run(
-                cmd, shell=True, cwd=project_root,
-                capture_output=True, text=True, timeout=60
+                cmd,
+                shell=True,
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode == 0:
                 results["fixes_applied"].append("ruff lint fixes")
@@ -1276,8 +1282,12 @@ async def handle_auto_fix_code(arguments: dict[str, Any]) -> dict[str, Any]:
         if fix_type in ["format", "all"] and not dry_run:
             target = file_path or "src/ tests/"
             result = subprocess.run(
-                f"ruff format {target}", shell=True, cwd=project_root,
-                capture_output=True, text=True, timeout=60
+                f"ruff format {target}",
+                shell=True,
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode == 0:
                 results["fixes_applied"].append("code formatting")
@@ -1286,8 +1296,12 @@ async def handle_auto_fix_code(arguments: dict[str, Any]) -> dict[str, Any]:
         if fix_type in ["imports", "all"] and not dry_run:
             target = file_path or "src/ tests/"
             result = subprocess.run(
-                f"isort {target} --profile black", shell=True, cwd=project_root,
-                capture_output=True, text=True, timeout=60
+                f"isort {target} --profile black",
+                shell=True,
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode == 0:
                 results["fixes_applied"].append("import sorting")
@@ -1297,7 +1311,9 @@ async def handle_auto_fix_code(arguments: dict[str, Any]) -> dict[str, Any]:
             "dry_run": dry_run,
             "fixes_applied": results["fixes_applied"],
             "errors": results["errors"],
-            "message": f"Applied {len(results['fixes_applied'])} fix types" if not dry_run else "Dry run complete",
+            "message": f"Applied {len(results['fixes_applied'])} fix types"
+            if not dry_run
+            else "Dry run complete",
         }
 
     except Exception as e:
@@ -1366,7 +1382,9 @@ async def handle_generate_tests(arguments: dict[str, Any]) -> dict[str, Any]:
         return {
             "success": True,
             "source_file": str(source_path),
-            "test_code": test_code[:2000] + "..." if len(test_code) > 2000 else test_code,
+            "test_code": test_code[:2000] + "..."
+            if len(test_code) > 2000
+            else test_code,
             "output_path": str(out_path) if saved else None,
             "saved": saved,
             "coverage_target": coverage_target,
@@ -1461,9 +1479,11 @@ async def handle_project_health(arguments: dict[str, Any]) -> dict[str, Any]:
 
         result = {
             "success": True,
-            "overall_status": "healthy" if all(
+            "overall_status": "healthy"
+            if all(
                 h.get("status") == "ok" for h in health.values() if isinstance(h, dict)
-            ) else "needs_attention",
+            )
+            else "needs_attention",
             "checks": {
                 "lint": {
                     "status": health["lint"]["status"],
@@ -1482,9 +1502,7 @@ async def handle_project_health(arguments: dict[str, Any]) -> dict[str, Any]:
                 f"Fix {health['lint']['issues']} lint issues: ruff check --fix"
             )
         if health["tests"]["status"] != "ok":
-            result["recommendations"].append(
-                "Fix failing tests: pytest -v"
-            )
+            result["recommendations"].append("Fix failing tests: pytest -v")
 
         if detailed:
             result["report"] = automation.generate_health_report()
@@ -1529,8 +1547,12 @@ async def handle_run_ci_repair(arguments: dict[str, Any]) -> dict[str, Any]:
             cmd += " --report"
 
         result = subprocess.run(
-            cmd, shell=True, cwd=project_root,
-            capture_output=True, text=True, timeout=300
+            cmd,
+            shell=True,
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=300,
         )
 
         return {
@@ -1542,7 +1564,9 @@ async def handle_run_ci_repair(arguments: dict[str, Any]) -> dict[str, Any]:
                 "Review changes with: git diff",
                 "Commit fixes: git add -A && git commit -m 'Auto-repair fixes'",
                 "Push to trigger CI: git push",
-            ] if apply_fix else ["Run with --fix to apply repairs"],
+            ]
+            if apply_fix
+            else ["Run with --fix to apply repairs"],
         }
 
     except Exception as e:
