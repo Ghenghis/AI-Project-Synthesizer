@@ -99,7 +99,6 @@ Returns:
     async def test_start_edge_cases(self, mock_dependencies):
         """Test edge cases for start."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_start_error_handling(self, mock_dependencies):
@@ -128,7 +127,6 @@ Returns:
     async def test_close_edge_cases(self, mock_dependencies):
         """Test edge cases for close."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_error_handling(self, mock_dependencies):
@@ -157,7 +155,6 @@ Returns:
     async def test_setup_monitoring_edge_cases(self, mock_dependencies):
         """Test edge cases for _setup_monitoring."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_setup_monitoring_error_handling(self, mock_dependencies):
@@ -918,7 +915,6 @@ Returns:
     async def test_get_page_content_edge_cases(self, mock_dependencies):
         """Test edge cases for get_page_content."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_page_content_error_handling(self, mock_dependencies):
@@ -947,7 +943,6 @@ Returns:
     async def test_get_performance_metrics_edge_cases(self, mock_dependencies):
         """Test edge cases for get_performance_metrics."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_performance_metrics_error_handling(self, mock_dependencies):
@@ -1090,7 +1085,6 @@ Returns:
     async def test_get_cookies_edge_cases(self, mock_dependencies):
         """Test edge cases for get_cookies."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_cookies_error_handling(self, mock_dependencies):
@@ -1115,7 +1109,6 @@ Returns:
     def test_clear_network_logs_edge_cases(self, mock_dependencies):
         """Test edge cases for clear_network_logs."""
         # No edge cases identified
-        pass
     
     def test_clear_network_logs_error_handling(self, mock_dependencies):
         """Test error handling for clear_network_logs."""

@@ -37,7 +37,6 @@ class TestSrcCoreAutoRepair:
     def test_get_auto_repair_edge_cases(self, mock_dependencies):
         """Test edge cases for get_auto_repair."""
         # No edge cases identified
-        pass
     
     def test_get_auto_repair_error_handling(self, mock_dependencies):
         """Test error handling for get_auto_repair."""
@@ -98,7 +97,6 @@ class TestSrcCoreAutoRepair:
     def test_to_dict_edge_cases(self):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self):
         """Test error handling for to_dict."""
@@ -123,7 +121,6 @@ class TestSrcCoreAutoRepair:
     def test_to_dict_edge_cases(self, mock_dependencies):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self, mock_dependencies):
         """Test error handling for to_dict."""
@@ -699,7 +696,6 @@ class TestSrcCoreAutoRepair:
     def test_get_repair_history_edge_cases(self, mock_dependencies):
         """Test edge cases for get_repair_history."""
         # No edge cases identified
-        pass
     
     def test_get_repair_history_error_handling(self, mock_dependencies):
         """Test error handling for get_repair_history."""

@@ -39,7 +39,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_all_settings_edge_cases(self, mock_dependencies):
         """Test edge cases for get_all_settings."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_all_settings_error_handling(self, mock_dependencies):
@@ -67,7 +66,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_tabs_edge_cases(self, mock_dependencies):
         """Test edge cases for get_tabs."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_tabs_error_handling(self, mock_dependencies):
@@ -209,7 +207,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_all_toggles_edge_cases(self, mock_dependencies):
         """Test edge cases for get_all_toggles."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_all_toggles_error_handling(self, mock_dependencies):
@@ -271,7 +268,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_export_settings_edge_cases(self, mock_dependencies):
         """Test edge cases for export_settings."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_export_settings_error_handling(self, mock_dependencies):
@@ -335,7 +331,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_hotkey_bindings_edge_cases(self, mock_dependencies):
         """Test edge cases for get_hotkey_bindings."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_hotkey_bindings_error_handling(self, mock_dependencies):
@@ -471,7 +466,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_voice_quick_settings_edge_cases(self, mock_dependencies):
         """Test edge cases for get_voice_quick_settings."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_voice_quick_settings_error_handling(self, mock_dependencies):
@@ -499,7 +493,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_toggle_voice_pause_edge_cases(self, mock_dependencies):
         """Test edge cases for toggle_voice_pause."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_toggle_voice_pause_error_handling(self, mock_dependencies):
@@ -527,7 +520,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_toggle_auto_speak_edge_cases(self, mock_dependencies):
         """Test edge cases for toggle_auto_speak."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_toggle_auto_speak_error_handling(self, mock_dependencies):
@@ -555,7 +547,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_get_automation_quick_settings_edge_cases(self, mock_dependencies):
         """Test edge cases for get_automation_quick_settings."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_automation_quick_settings_error_handling(self, mock_dependencies):
@@ -583,7 +574,6 @@ class TestSrcDashboardSettingsRoutes:
     async def test_toggle_auto_continue_edge_cases(self, mock_dependencies):
         """Test edge cases for toggle_auto_continue."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_toggle_auto_continue_error_handling(self, mock_dependencies):

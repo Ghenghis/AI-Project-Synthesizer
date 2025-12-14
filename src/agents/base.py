@@ -174,12 +174,10 @@ class BaseAgent(ABC):
     @abstractmethod
     async def _execute_step(self, task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute a single step. Override in subclasses."""
-        pass
 
     @abstractmethod
     def _should_continue(self, step_result: dict[str, Any]) -> bool:
         """Determine if agent should continue. Override in subclasses."""
-        pass
 
     async def run(
         self, task: str, context: dict[str, Any] | None = None

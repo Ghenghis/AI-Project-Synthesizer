@@ -30,13 +30,9 @@ class Platform(str, Enum):
 class DiscoveryError(Exception):
     """Base exception for discovery errors."""
 
-    pass
-
 
 class AuthenticationError(DiscoveryError):
     """Authentication failed."""
-
-    pass
 
 
 class RateLimitError(DiscoveryError):
@@ -49,8 +45,6 @@ class RateLimitError(DiscoveryError):
 
 class RepositoryNotFoundError(DiscoveryError):
     """Repository not found."""
-
-    pass
 
 
 @dataclass
@@ -208,7 +202,6 @@ class PlatformClient(ABC):
         Returns:
             Platform name (e.g., "github", "huggingface")
         """
-        pass
 
     @property
     def is_authenticated(self) -> bool:
@@ -248,7 +241,6 @@ class PlatformClient(ABC):
             AuthenticationError: If authentication fails
             RateLimitError: If rate limit exceeded
         """
-        pass
 
     @abstractmethod
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
@@ -264,7 +256,6 @@ class PlatformClient(ABC):
         Raises:
             RepositoryNotFoundError: If repository doesn't exist
         """
-        pass
 
     @abstractmethod
     async def get_contents(
@@ -282,7 +273,6 @@ class PlatformClient(ABC):
         Returns:
             DirectoryListing with files and subdirectories
         """
-        pass
 
     @abstractmethod
     async def get_file(
@@ -300,7 +290,6 @@ class PlatformClient(ABC):
         Returns:
             FileContent with file data
         """
-        pass
 
     @abstractmethod
     async def clone(
@@ -322,7 +311,6 @@ class PlatformClient(ABC):
         Returns:
             Path to cloned repository
         """
-        pass
 
     async def get_readme(self, repo_id: str) -> str | None:
         """

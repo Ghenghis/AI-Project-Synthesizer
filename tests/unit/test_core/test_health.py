@@ -2,8 +2,6 @@
 Unit tests for core health module.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from src.core.health import (

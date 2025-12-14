@@ -108,7 +108,6 @@ class QualityScorer:
 
     def __init__(self):
         """Initialize the quality scorer."""
-        pass
 
     async def score(
         self,

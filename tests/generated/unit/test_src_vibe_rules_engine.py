@@ -37,7 +37,6 @@ class TestSrcVibeRulesEngine:
     def test_load_default_rules_edge_cases(self, mock_dependencies):
         """Test edge cases for _load_default_rules."""
         # No edge cases identified
-        pass
     
     def test_load_default_rules_error_handling(self, mock_dependencies):
         """Test error handling for _load_default_rules."""
@@ -62,7 +61,6 @@ class TestSrcVibeRulesEngine:
     def test_load_custom_rules_edge_cases(self, mock_dependencies):
         """Test edge cases for _load_custom_rules."""
         # No edge cases identified
-        pass
     
     def test_load_custom_rules_error_handling(self, mock_dependencies):
         """Test error handling for _load_custom_rules."""
@@ -379,7 +377,6 @@ Args:
     def test_create_rule_files_edge_cases(self, mock_dependencies):
         """Test edge cases for create_rule_files."""
         # No edge cases identified
-        pass
     
     def test_create_rule_files_error_handling(self, mock_dependencies):
         """Test error handling for create_rule_files."""
@@ -437,7 +434,6 @@ Args:
     def test_get_timestamp_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_timestamp."""
         # No edge cases identified
-        pass
     
     def test_get_timestamp_error_handling(self, mock_dependencies):
         """Test error handling for _get_timestamp."""

@@ -4,7 +4,6 @@ Tests for AutoGen Integration
 Tests the multi-agent conversation system for code review.
 """
 
-import asyncio
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 

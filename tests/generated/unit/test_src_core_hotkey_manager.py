@@ -37,7 +37,6 @@ class TestSrcCoreHotkeyManager:
     def test_get_hotkey_manager_edge_cases(self, mock_dependencies):
         """Test edge cases for get_hotkey_manager."""
         # No edge cases identified
-        pass
     
     def test_get_hotkey_manager_error_handling(self, mock_dependencies):
         """Test error handling for get_hotkey_manager."""
@@ -63,7 +62,6 @@ class TestSrcCoreHotkeyManager:
     def test_setup_default_bindings_edge_cases(self, mock_dependencies):
         """Test edge cases for _setup_default_bindings."""
         # No edge cases identified
-        pass
     
     def test_setup_default_bindings_error_handling(self, mock_dependencies):
         """Test error handling for _setup_default_bindings."""
@@ -395,7 +393,6 @@ class TestSrcCoreHotkeyManager:
     def test_start_edge_cases(self, mock_dependencies):
         """Test edge cases for start."""
         # No edge cases identified
-        pass
     
     def test_start_error_handling(self, mock_dependencies):
         """Test error handling for start."""
@@ -421,7 +418,6 @@ class TestSrcCoreHotkeyManager:
     def test_stop_edge_cases(self, mock_dependencies):
         """Test edge cases for stop."""
         # No edge cases identified
-        pass
     
     def test_stop_error_handling(self, mock_dependencies):
         """Test error handling for stop."""
@@ -446,7 +442,6 @@ class TestSrcCoreHotkeyManager:
     def test_get_bindings_edge_cases(self, mock_dependencies):
         """Test edge cases for get_bindings."""
         # No edge cases identified
-        pass
     
     def test_get_bindings_error_handling(self, mock_dependencies):
         """Test error handling for get_bindings."""

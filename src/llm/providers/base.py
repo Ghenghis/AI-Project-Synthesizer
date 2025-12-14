@@ -157,12 +157,10 @@ class LLMProvider(ABC):
     @abstractmethod
     async def is_available(self) -> bool:
         """Check if provider is available and healthy."""
-        pass
 
     @abstractmethod
     async def list_models(self) -> list[str]:
         """List available models from this provider."""
-        pass
 
     @abstractmethod
     async def complete(
@@ -175,7 +173,6 @@ class LLMProvider(ABC):
         **kwargs,
     ) -> CompletionResult:
         """Generate completion for prompt."""
-        pass
 
     async def stream(
         self,
@@ -225,7 +222,6 @@ class LLMProvider(ABC):
 
     async def close(self):
         """Clean up provider resources."""
-        pass
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name}, type={self.provider_type.value})"

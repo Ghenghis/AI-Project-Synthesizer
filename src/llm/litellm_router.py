@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 # Try to import litellm
 try:
     import litellm
-    from litellm import acompletion, completion
+    from litellm import acompletion
 
     LITELLM_AVAILABLE = True
 except ImportError:

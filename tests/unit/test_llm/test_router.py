@@ -2,8 +2,6 @@
 Unit tests for LLM router module.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from src.llm.router import (

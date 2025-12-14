@@ -37,7 +37,6 @@ class TestSrcQualitySecurityScanner:
     def test_load_custom_rules_edge_cases(self):
         """Test edge cases for _load_custom_rules."""
         # No edge cases identified
-        pass
     
     def test_load_custom_rules_error_handling(self):
         """Test error handling for _load_custom_rules."""
@@ -402,7 +401,6 @@ Retur..."""
     async def test_install_tools_edge_cases(self, mock_dependencies):
         """Test edge cases for install_tools."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_install_tools_error_handling(self, mock_dependencies):

@@ -339,7 +339,6 @@ Args:
     def test_generate_task_id_edge_cases(self, mock_dependencies):
         """Test edge cases for _generate_task_id."""
         # No edge cases identified
-        pass
     
     def test_generate_task_id_error_handling(self, mock_dependencies):
         """Test error handling for _generate_task_id."""

@@ -4,8 +4,7 @@ Tests: Multi-agent code review, coordination, and collaboration.
 """
 
 import asyncio
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -141,8 +140,6 @@ def authenticate_user(username, password):
     @pytest.mark.integration
     async def test_conversation_with_memory_system(self):
         """Test conversation integrates with memory system."""
-
-        from src.memory.mem0_integration import MemoryCategory, MemorySystem
 
         # Mock memory system
         with patch("src.memory.mem0_integration.MemorySystem") as mock_memory_class:

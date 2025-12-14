@@ -108,7 +108,7 @@ class ASTParser:
     def _check_tree_sitter(self) -> bool:
         """Check if tree-sitter is available."""
         try:
-            import tree_sitter
+            pass
 
             return True
         except ImportError:

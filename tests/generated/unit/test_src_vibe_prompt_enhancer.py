@@ -325,7 +325,6 @@ Args:
     def test_get_timestamp_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_timestamp."""
         # No edge cases identified
-        pass
     
     def test_get_timestamp_error_handling(self, mock_dependencies):
         """Test error handling for _get_timestamp."""

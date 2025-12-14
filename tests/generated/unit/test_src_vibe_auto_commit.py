@@ -37,7 +37,6 @@ class TestSrcVibeAutoCommit:
     def test_find_repo_root_edge_cases(self, mock_dependencies):
         """Test edge cases for _find_repo_root."""
         # No edge cases identified
-        pass
     
     def test_find_repo_root_error_handling(self, mock_dependencies):
         """Test error handling for _find_repo_root."""
@@ -214,7 +213,6 @@ class TestSrcVibeAutoCommit:
     def test_get_diff_stats_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_diff_stats."""
         # No edge cases identified
-        pass
     
     def test_get_diff_stats_error_handling(self, mock_dependencies):
         """Test error handling for _get_diff_stats."""
@@ -381,7 +379,6 @@ Args:
     async def test_push_changes_edge_cases(self, mock_dependencies):
         """Test edge cases for _push_changes."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_push_changes_error_handling(self, mock_dependencies):
@@ -536,7 +533,6 @@ Returns:
     def test_get_status_edge_cases(self, mock_dependencies):
         """Test edge cases for get_status."""
         # No edge cases identified
-        pass
     
     def test_get_status_error_handling(self, mock_dependencies):
         """Test error handling for get_status."""

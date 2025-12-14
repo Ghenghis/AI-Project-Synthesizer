@@ -37,7 +37,6 @@ class TestSrcAssistantProactiveResearch:
     def test_get_research_engine_edge_cases(self, mock_dependencies):
         """Test edge cases for get_research_engine."""
         # No edge cases identified
-        pass
     
     def test_get_research_engine_error_handling(self, mock_dependencies):
         """Test error handling for get_research_engine."""
@@ -62,7 +61,6 @@ class TestSrcAssistantProactiveResearch:
     def test_summary_edge_cases(self, mock_dependencies):
         """Test edge cases for summary."""
         # No edge cases identified
-        pass
     
     def test_summary_error_handling(self, mock_dependencies):
         """Test error handling for summary."""
@@ -122,7 +120,6 @@ class TestSrcAssistantProactiveResearch:
     def test_user_active_edge_cases(self, mock_dependencies):
         """Test edge cases for user_active."""
         # No edge cases identified
-        pass
     
     def test_user_active_error_handling(self, mock_dependencies):
         """Test error handling for user_active."""
@@ -147,7 +144,6 @@ class TestSrcAssistantProactiveResearch:
     def test_extract_topic_edge_cases(self, mock_dependencies):
         """Test edge cases for _extract_topic."""
         # No edge cases identified
-        pass
     
     def test_extract_topic_error_handling(self, mock_dependencies):
         """Test error handling for _extract_topic."""
@@ -175,7 +171,6 @@ class TestSrcAssistantProactiveResearch:
     async def test_start_monitoring_edge_cases(self, mock_dependencies):
         """Test edge cases for start_monitoring."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_start_monitoring_error_handling(self, mock_dependencies):
@@ -204,7 +199,6 @@ class TestSrcAssistantProactiveResearch:
     async def test_stop_monitoring_edge_cases(self, mock_dependencies):
         """Test edge cases for stop_monitoring."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_stop_monitoring_error_handling(self, mock_dependencies):
@@ -233,7 +227,6 @@ class TestSrcAssistantProactiveResearch:
     async def test_monitor_loop_edge_cases(self, mock_dependencies):
         """Test edge cases for _monitor_loop."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_monitor_loop_error_handling(self, mock_dependencies):
@@ -426,7 +419,6 @@ class TestSrcAssistantProactiveResearch:
     def test_get_latest_research_edge_cases(self):
         """Test edge cases for get_latest_research."""
         # No edge cases identified
-        pass
     
     def test_get_latest_research_error_handling(self):
         """Test error handling for get_latest_research."""
@@ -451,7 +443,6 @@ class TestSrcAssistantProactiveResearch:
     def test_get_all_research_edge_cases(self, mock_dependencies):
         """Test edge cases for get_all_research."""
         # No edge cases identified
-        pass
     
     def test_get_all_research_error_handling(self, mock_dependencies):
         """Test error handling for get_all_research."""
@@ -476,7 +467,6 @@ class TestSrcAssistantProactiveResearch:
     def test_format_for_user_edge_cases(self, mock_dependencies):
         """Test edge cases for format_for_user."""
         # No edge cases identified
-        pass
     
     def test_format_for_user_error_handling(self, mock_dependencies):
         """Test error handling for format_for_user."""

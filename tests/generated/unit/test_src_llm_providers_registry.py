@@ -37,7 +37,6 @@ class TestSrcLlmProvidersRegistry:
     def test_get_provider_registry_edge_cases(self, mock_dependencies):
         """Test edge cases for get_provider_registry."""
         # No edge cases identified
-        pass
     
     def test_get_provider_registry_error_handling(self, mock_dependencies):
         """Test error handling for get_provider_registry."""
@@ -63,7 +62,6 @@ class TestSrcLlmProvidersRegistry:
     def test_register_builtin_providers_edge_cases(self):
         """Test edge cases for _register_builtin_providers."""
         # No edge cases identified
-        pass
     
     def test_register_builtin_providers_error_handling(self):
         """Test error handling for _register_builtin_providers."""
@@ -222,7 +220,6 @@ Returns:
     def test_list_providers_edge_cases(self, mock_dependencies):
         """Test edge cases for list_providers."""
         # No edge cases identified
-        pass
     
     def test_list_providers_error_handling(self, mock_dependencies):
         """Test error handling for list_providers."""
@@ -318,7 +315,6 @@ Returns:
     async def test_check_all_health_edge_cases(self, mock_dependencies):
         """Test edge cases for check_all_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_all_health_error_handling(self, mock_dependencies):
@@ -513,7 +509,6 @@ Args:
     async def test_close_all_edge_cases(self, mock_dependencies):
         """Test edge cases for close_all."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_all_error_handling(self, mock_dependencies):

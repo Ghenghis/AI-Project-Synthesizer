@@ -79,7 +79,6 @@ Args:
     def test_load_mr_templates_edge_cases(self, mock_dependencies):
         """Test edge cases for _load_mr_templates."""
         # No edge cases identified
-        pass
     
     def test_load_mr_templates_error_handling(self, mock_dependencies):
         """Test error handling for _load_mr_templates."""
@@ -1129,7 +1128,6 @@ Args:
     async def test_close_browser_edge_cases(self, mock_dependencies):
         """Test edge cases for close_browser."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_browser_error_handling(self, mock_dependencies):

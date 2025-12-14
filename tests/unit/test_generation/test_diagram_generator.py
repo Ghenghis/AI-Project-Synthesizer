@@ -2,8 +2,6 @@
 Unit tests for generation diagram generator module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.generation.diagram_generator import DiagramGenerator

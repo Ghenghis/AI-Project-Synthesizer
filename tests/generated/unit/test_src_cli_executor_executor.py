@@ -98,7 +98,6 @@ Usage:
     def test_to_dict_edge_cases(self):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self):
         """Test error handling for to_dict."""
@@ -123,7 +122,6 @@ Usage:
     def test_detect_environment_edge_cases(self, mock_dependencies):
         """Test edge cases for _detect_environment."""
         # No edge cases identified
-        pass
     
     def test_detect_environment_error_handling(self, mock_dependencies):
         """Test error handling for _detect_environment."""
@@ -148,7 +146,6 @@ Usage:
     def test_check_wsl_edge_cases(self, mock_dependencies):
         """Test edge cases for _check_wsl."""
         # No edge cases identified
-        pass
     
     def test_check_wsl_error_handling(self, mock_dependencies):
         """Test error handling for _check_wsl."""
@@ -173,7 +170,6 @@ Usage:
     def test_check_docker_edge_cases(self, mock_dependencies):
         """Test edge cases for _check_docker."""
         # No edge cases identified
-        pass
     
     def test_check_docker_error_handling(self, mock_dependencies):
         """Test error handling for _check_docker."""
@@ -624,7 +620,6 @@ Args:
     def test_clear_history_edge_cases(self, mock_dependencies):
         """Test edge cases for clear_history."""
         # No edge cases identified
-        pass
     
     def test_clear_history_error_handling(self, mock_dependencies):
         """Test error handling for clear_history."""
@@ -649,7 +644,6 @@ Args:
     def test_get_stats_edge_cases(self, mock_dependencies):
         """Test edge cases for get_stats."""
         # No edge cases identified
-        pass
     
     def test_get_stats_error_handling(self, mock_dependencies):
         """Test error handling for get_stats."""

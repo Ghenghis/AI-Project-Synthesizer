@@ -76,7 +76,6 @@ Args:
     def test_is_expired_edge_cases(self, mock_dependencies):
         """Test edge cases for is_expired."""
         # No edge cases identified
-        pass
     
     def test_is_expired_error_handling(self, mock_dependencies):
         """Test error handling for is_expired."""
@@ -101,7 +100,6 @@ Args:
     def test_age_seconds_edge_cases(self, mock_dependencies):
         """Test edge cases for age_seconds."""
         # No edge cases identified
-        pass
     
     def test_age_seconds_error_handling(self, mock_dependencies):
         """Test error handling for age_seconds."""
@@ -127,7 +125,6 @@ Args:
     def test_init_disk_cache_edge_cases(self, mock_dependencies):
         """Test edge cases for _init_disk_cache."""
         # No edge cases identified
-        pass
     
     def test_init_disk_cache_error_handling(self, mock_dependencies):
         """Test error handling for _init_disk_cache."""
@@ -735,7 +732,6 @@ Args:
     async def test_get_cache_stats_edge_cases(self, mock_dependencies):
         """Test edge cases for get_cache_stats."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_cache_stats_error_handling(self, mock_dependencies):
@@ -764,7 +760,6 @@ Args:
     async def test_close_edge_cases(self, mock_dependencies):
         """Test edge cases for close."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_error_handling(self, mock_dependencies):
@@ -793,7 +788,6 @@ Args:
     async def test_acquire_edge_cases(self, mock_dependencies):
         """Test edge cases for acquire."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_acquire_error_handling(self, mock_dependencies):
@@ -822,7 +816,6 @@ Args:
     async def test_fixed_wait_edge_cases(self, mock_dependencies):
         """Test edge cases for _fixed_wait."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_fixed_wait_error_handling(self, mock_dependencies):
@@ -851,7 +844,6 @@ Args:
     async def test_exponential_backoff_wait_edge_cases(self, mock_dependencies):
         """Test edge cases for _exponential_backoff_wait."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_exponential_backoff_wait_error_handling(self, mock_dependencies):
@@ -880,7 +872,6 @@ Args:
     async def test_adaptive_wait_edge_cases(self, mock_dependencies):
         """Test edge cases for _adaptive_wait."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_adaptive_wait_error_handling(self, mock_dependencies):
@@ -909,7 +900,6 @@ Args:
     async def test_token_bucket_wait_edge_cases(self, mock_dependencies):
         """Test edge cases for _token_bucket_wait."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_token_bucket_wait_error_handling(self, mock_dependencies):
@@ -936,7 +926,6 @@ Args:
     def test_record_success_edge_cases(self):
         """Test edge cases for record_success."""
         # No edge cases identified
-        pass
     
     def test_record_success_error_handling(self):
         """Test error handling for record_success."""
@@ -962,7 +951,6 @@ Args:
     def test_record_failure_edge_cases(self, mock_dependencies):
         """Test edge cases for record_failure."""
         # No edge cases identified
-        pass
     
     def test_record_failure_error_handling(self, mock_dependencies):
         """Test error handling for record_failure."""

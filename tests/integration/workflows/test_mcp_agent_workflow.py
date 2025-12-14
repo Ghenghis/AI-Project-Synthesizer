@@ -3,8 +3,6 @@ Integration test for MCP Server and Agent workflow.
 Tests: MCP Server → Tools → Agent Execution → Response
 """
 
-import json
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

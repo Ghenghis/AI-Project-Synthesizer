@@ -666,8 +666,6 @@ def mock_requests():
 class TestGenerationError(Exception):
     """Raised when test generation fails."""
 
-    pass
-
 
 # CLI interface for testing
 if __name__ == "__main__":

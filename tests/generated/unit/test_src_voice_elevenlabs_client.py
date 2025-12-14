@@ -38,7 +38,6 @@ class TestSrcVoiceElevenlabsClient:
     def test_create_elevenlabs_client_edge_cases(self, mock_dependencies):
         """Test edge cases for create_elevenlabs_client."""
         # No edge cases identified
-        pass
     
     def test_create_elevenlabs_client_error_handling(self, mock_dependencies):
         """Test error handling for create_elevenlabs_client."""
@@ -65,7 +64,6 @@ class TestSrcVoiceElevenlabsClient:
     async def test_get_session_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_session."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_session_error_handling(self, mock_dependencies):
@@ -94,7 +92,6 @@ class TestSrcVoiceElevenlabsClient:
     async def test_close_edge_cases(self, mock_dependencies):
         """Test edge cases for close."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_error_handling(self, mock_dependencies):
@@ -315,7 +312,6 @@ Args:
     async def test_get_voices_edge_cases(self, mock_dependencies):
         """Test edge cases for get_voices."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_voices_error_handling(self, mock_dependencies):
@@ -452,7 +448,6 @@ Args:
     async def test_get_user_info_edge_cases(self, mock_dependencies):
         """Test edge cases for get_user_info."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_user_info_error_handling(self, mock_dependencies):
@@ -480,7 +475,6 @@ Args:
     async def test_get_usage_edge_cases(self, mock_dependencies):
         """Test edge cases for get_usage."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_usage_error_handling(self, mock_dependencies):

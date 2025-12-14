@@ -2,8 +2,6 @@
 Unit tests for core security module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.core.security import (

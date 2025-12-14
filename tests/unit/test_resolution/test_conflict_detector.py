@@ -2,8 +2,6 @@
 Unit tests for resolution conflict detector module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.resolution.conflict_detector import (

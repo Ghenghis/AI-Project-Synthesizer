@@ -495,7 +495,6 @@ class TestSrcDashboardMemoryRoutes:
     async def test_stream_events_edge_cases(self, mock_dependencies):
         """Test edge cases for stream_events."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_stream_events_error_handling(self, mock_dependencies):

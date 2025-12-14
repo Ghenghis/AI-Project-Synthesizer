@@ -37,7 +37,6 @@ class TestSrcLlmLitellmRouter:
     def test_get_litellm_router_edge_cases(self, mock_dependencies):
         """Test edge cases for get_litellm_router."""
         # No edge cases identified
-        pass
     
     def test_get_litellm_router_error_handling(self, mock_dependencies):
         """Test error handling for get_litellm_router."""
@@ -607,7 +606,6 @@ Args:
     def test_get_stats_edge_cases(self, mock_dependencies):
         """Test edge cases for get_stats."""
         # No edge cases identified
-        pass
     
     def test_get_stats_error_handling(self, mock_dependencies):
         """Test error handling for get_stats."""
@@ -632,7 +630,6 @@ Args:
     def test_get_available_models_edge_cases(self, mock_dependencies):
         """Test edge cases for get_available_models."""
         # No edge cases identified
-        pass
     
     def test_get_available_models_error_handling(self, mock_dependencies):
         """Test error handling for get_available_models."""
@@ -657,7 +654,6 @@ Args:
     def test_reset_stats_edge_cases(self):
         """Test edge cases for reset_stats."""
         # No edge cases identified
-        pass
     
     def test_reset_stats_error_handling(self):
         """Test error handling for reset_stats."""

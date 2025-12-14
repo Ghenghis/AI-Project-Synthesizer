@@ -14,8 +14,6 @@ from src.cli_executor import (
     CLIExecutor,
     CommandResult,
     ErrorRecovery,
-    ExecutionMode,
-    ExecutorConfig,
 )
 from src.cli_executor.executor import ErrorType
 

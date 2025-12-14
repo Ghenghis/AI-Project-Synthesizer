@@ -20,8 +20,6 @@ from typing import Any
 
 try:
     from crewai import Agent, Crew, Process, Task
-    from crewai.tools import BaseTool
-    from langchain.tools import tool
 
     CREWAI_AVAILABLE = True
 except ImportError:

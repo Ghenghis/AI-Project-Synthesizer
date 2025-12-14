@@ -3,7 +3,6 @@ Unit tests for core.lifecycle module.
 """
 
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

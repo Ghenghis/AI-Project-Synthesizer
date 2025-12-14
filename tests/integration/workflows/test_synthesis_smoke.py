@@ -3,7 +3,6 @@ Smoke test for synthesis workflow.
 Tests core components work together without external dependencies.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest

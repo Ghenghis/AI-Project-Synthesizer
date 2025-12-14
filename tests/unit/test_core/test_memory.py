@@ -3,8 +3,6 @@ Unit tests for core.memory module.
 """
 
 import os
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

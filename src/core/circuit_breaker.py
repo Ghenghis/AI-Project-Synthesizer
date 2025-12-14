@@ -69,19 +69,13 @@ class CircuitBreakerStats:
 class CircuitBreakerError(Exception):
     """Base exception for circuit breaker errors."""
 
-    pass
-
 
 class CircuitOpenError(CircuitBreakerError):
     """Raised when circuit is open."""
 
-    pass
-
 
 class CircuitTimeoutError(CircuitBreakerError):
     """Raised when call times out."""
-
-    pass
 
 
 class CircuitBreaker:

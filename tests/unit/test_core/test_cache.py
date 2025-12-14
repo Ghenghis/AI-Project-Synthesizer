@@ -3,12 +3,10 @@ Unit tests for core cache module.
 """
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.core.cache import (
-    CacheBackend,
     CacheEntry,
     MemoryCache,
 )

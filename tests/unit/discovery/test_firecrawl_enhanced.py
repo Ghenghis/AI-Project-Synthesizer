@@ -402,7 +402,6 @@ class TestRateLimiter:
         from src.discovery.firecrawl_enhanced import (
             RateLimitConfig,
             RateLimiter,
-            RateLimitStrategy,
         )
 
         config = RateLimitConfig(requests_per_second=2.0, burst_limit=5)

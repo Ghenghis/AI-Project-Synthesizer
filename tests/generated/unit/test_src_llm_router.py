@@ -79,7 +79,6 @@ Returns:
     async def test_get_best_provider_edge_cases(self, mock_dependencies):
         """Test edge cases for get_best_provider."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_best_provider_error_handling(self, mock_dependencies):

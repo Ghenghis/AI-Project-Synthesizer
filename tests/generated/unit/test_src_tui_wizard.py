@@ -37,7 +37,6 @@ class TestSrcTuiWizard:
     def test_run_wizard_edge_cases(self, mock_dependencies):
         """Test edge cases for run_wizard."""
         # No edge cases identified
-        pass
     
     def test_run_wizard_error_handling(self, mock_dependencies):
         """Test error handling for run_wizard."""
@@ -98,7 +97,6 @@ class TestSrcTuiWizard:
     def test_run_edge_cases(self, mock_dependencies):
         """Test edge cases for run."""
         # No edge cases identified
-        pass
     
     def test_run_error_handling(self, mock_dependencies):
         """Test error handling for run."""
@@ -123,7 +121,6 @@ class TestSrcTuiWizard:
     def test_step_project_type_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_project_type."""
         # No edge cases identified
-        pass
     
     def test_step_project_type_error_handling(self, mock_dependencies):
         """Test error handling for _step_project_type."""
@@ -148,7 +145,6 @@ class TestSrcTuiWizard:
     def test_step_project_name_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_project_name."""
         # No edge cases identified
-        pass
     
     def test_step_project_name_error_handling(self, mock_dependencies):
         """Test error handling for _step_project_name."""
@@ -173,7 +169,6 @@ class TestSrcTuiWizard:
     def test_step_tech_stack_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_tech_stack."""
         # No edge cases identified
-        pass
     
     def test_step_tech_stack_error_handling(self, mock_dependencies):
         """Test error handling for _step_tech_stack."""
@@ -198,7 +193,6 @@ class TestSrcTuiWizard:
     def test_step_example_repos_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_example_repos."""
         # No edge cases identified
-        pass
     
     def test_step_example_repos_error_handling(self, mock_dependencies):
         """Test error handling for _step_example_repos."""
@@ -223,7 +217,6 @@ class TestSrcTuiWizard:
     def test_step_output_location_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_output_location."""
         # No edge cases identified
-        pass
     
     def test_step_output_location_error_handling(self, mock_dependencies):
         """Test error handling for _step_output_location."""
@@ -248,7 +241,6 @@ class TestSrcTuiWizard:
     def test_step_confirm_edge_cases(self, mock_dependencies):
         """Test edge cases for _step_confirm."""
         # No edge cases identified
-        pass
     
     def test_step_confirm_error_handling(self, mock_dependencies):
         """Test error handling for _step_confirm."""

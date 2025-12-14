@@ -125,7 +125,6 @@ async def test_mcp_check_compatibility_tool():
 @pytest.mark.asyncio
 async def test_mcp_server_can_start():
     """Test that MCP server can start without errors."""
-    import sys
     from unittest.mock import AsyncMock, patch
 
     # Mock the stdio_server to avoid actually starting it

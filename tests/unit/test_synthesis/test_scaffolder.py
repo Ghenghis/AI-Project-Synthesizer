@@ -2,9 +2,6 @@
 Unit tests for synthesis scaffolder module.
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.synthesis.scaffolder import (

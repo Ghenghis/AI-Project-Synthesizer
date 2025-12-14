@@ -2,8 +2,6 @@
 Unit tests for utils rate limiter module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.utils.rate_limiter import (

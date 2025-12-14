@@ -37,7 +37,6 @@ class TestSrcAnalysisDependencyAnalyzer:
     def test_normalized_name_edge_cases(self, mock_dependencies):
         """Test edge cases for normalized_name."""
         # No edge cases identified
-        pass
     
     def test_normalized_name_error_handling(self, mock_dependencies):
         """Test error handling for normalized_name."""
@@ -62,7 +61,6 @@ class TestSrcAnalysisDependencyAnalyzer:
     def test_all_dependencies_edge_cases(self):
         """Test edge cases for all_dependencies."""
         # No edge cases identified
-        pass
     
     def test_all_dependencies_error_handling(self):
         """Test error handling for all_dependencies."""
@@ -87,7 +85,6 @@ class TestSrcAnalysisDependencyAnalyzer:
     def test_has_conflicts_edge_cases(self, mock_dependencies):
         """Test edge cases for has_conflicts."""
         # No edge cases identified
-        pass
     
     def test_has_conflicts_error_handling(self, mock_dependencies):
         """Test error handling for has_conflicts."""
@@ -112,7 +109,6 @@ class TestSrcAnalysisDependencyAnalyzer:
     def test_to_dict_edge_cases(self, mock_dependencies):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self, mock_dependencies):
         """Test error handling for to_dict."""

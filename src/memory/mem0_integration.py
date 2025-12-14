@@ -49,7 +49,6 @@ logger = logging.getLogger(__name__)
 # Try to import mem0
 try:
     from mem0 import Memory
-    from mem0.configs.base import MemoryConfig as Mem0Config
 
     MEM0_AVAILABLE = True
 except ImportError:

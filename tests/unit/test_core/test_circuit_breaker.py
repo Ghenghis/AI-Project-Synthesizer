@@ -2,9 +2,6 @@
 Unit tests for core circuit breaker module.
 """
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from src.core.circuit_breaker import (

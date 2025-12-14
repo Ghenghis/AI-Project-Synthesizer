@@ -318,7 +318,6 @@ Args:
     def test_cleanup_all_edge_cases(self, mock_dependencies):
         """Test edge cases for cleanup_all."""
         # No edge cases identified
-        pass
     
     def test_cleanup_all_error_handling(self, mock_dependencies):
         """Test error handling for cleanup_all."""
@@ -376,7 +375,6 @@ Args:
     def test_get_stats_edge_cases(self, mock_dependencies):
         """Test edge cases for get_stats."""
         # No edge cases identified
-        pass
     
     def test_get_stats_error_handling(self, mock_dependencies):
         """Test error handling for get_stats."""
@@ -404,7 +402,6 @@ Returns:
     def test_check_for_leaks_edge_cases(self, mock_dependencies):
         """Test edge cases for check_for_leaks."""
         # No edge cases identified
-        pass
     
     def test_check_for_leaks_error_handling(self, mock_dependencies):
         """Test error handling for check_for_leaks."""
@@ -429,7 +426,6 @@ Returns:
     def test_get_current_usage_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_current_usage."""
         # No edge cases identified
-        pass
     
     def test_get_current_usage_error_handling(self, mock_dependencies):
         """Test error handling for _get_current_usage."""

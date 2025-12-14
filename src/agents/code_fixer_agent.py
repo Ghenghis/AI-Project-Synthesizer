@@ -11,7 +11,6 @@ AI-powered agent that automatically fixes code issues:
 Integrates with LM Studio / Ollama for local AI inference.
 """
 
-import asyncio
 import json
 import re
 from dataclasses import dataclass, field

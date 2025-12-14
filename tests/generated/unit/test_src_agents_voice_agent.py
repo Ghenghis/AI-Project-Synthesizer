@@ -37,7 +37,6 @@ class TestSrcAgentsVoiceAgent:
     def test_get_voice_agent_edge_cases(self, mock_dependencies):
         """Test edge cases for get_voice_agent."""
         # No edge cases identified
-        pass
     
     def test_get_voice_agent_error_handling(self, mock_dependencies):
         """Test error handling for get_voice_agent."""
@@ -63,7 +62,6 @@ class TestSrcAgentsVoiceAgent:
     def test_setup_tools_edge_cases(self, mock_dependencies):
         """Test edge cases for _setup_tools."""
         # No edge cases identified
-        pass
     
     def test_setup_tools_error_handling(self, mock_dependencies):
         """Test error handling for _setup_tools."""
@@ -91,7 +89,6 @@ class TestSrcAgentsVoiceAgent:
     async def test_get_voice_manager_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_voice_manager."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_voice_manager_error_handling(self, mock_dependencies):
@@ -377,7 +374,6 @@ class TestSrcAgentsVoiceAgent:
     async def test_start_listening_edge_cases(self, mock_dependencies):
         """Test edge cases for start_listening."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_start_listening_error_handling(self, mock_dependencies):
@@ -406,7 +402,6 @@ class TestSrcAgentsVoiceAgent:
     async def test_stop_listening_edge_cases(self, mock_dependencies):
         """Test edge cases for stop_listening."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_stop_listening_error_handling(self, mock_dependencies):
@@ -510,7 +505,6 @@ Returns:
     def test_get_state_edge_cases(self):
         """Test edge cases for get_state."""
         # No edge cases identified
-        pass
     
     def test_get_state_error_handling(self):
         """Test error handling for get_state."""

@@ -2,15 +2,14 @@
 Security tests for critical vulnerabilities and fixes.
 """
 
-import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.core.resource_manager import ResourceManager, managed_browser
-from src.core.safe_formatter import MR_FORMATTER, SafeTemplateFormatter
+from src.core.resource_manager import ResourceManager
+from src.core.safe_formatter import MR_FORMATTER
 from src.core.security_utils import (
     safe_subprocess_run,
     sanitize_template_string,
@@ -178,7 +177,6 @@ class TestDependencyScannerSecurity:
         """Test all subprocess calls use safe_subprocess_run."""
         # Check that safe_subprocess_run is imported
         import src.quality.dependency_scanner as ds
-        from src.quality.dependency_scanner import DependencyScanner
 
         assert hasattr(ds, "safe_subprocess_run")
 

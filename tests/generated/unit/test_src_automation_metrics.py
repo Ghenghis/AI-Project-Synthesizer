@@ -37,7 +37,6 @@ class TestSrcAutomationMetrics:
     def test_get_metrics_collector_edge_cases(self, mock_dependencies):
         """Test edge cases for get_metrics_collector."""
         # No edge cases identified
-        pass
     
     def test_get_metrics_collector_error_handling(self, mock_dependencies):
         """Test error handling for get_metrics_collector."""
@@ -100,7 +99,6 @@ Usage:
     def test_duration_seconds_edge_cases(self):
         """Test edge cases for duration_seconds."""
         # No edge cases identified
-        pass
     
     def test_duration_seconds_error_handling(self):
         """Test error handling for duration_seconds."""
@@ -125,7 +123,6 @@ Usage:
     def test_avg_ms_edge_cases(self):
         """Test edge cases for avg_ms."""
         # No edge cases identified
-        pass
     
     def test_avg_ms_error_handling(self):
         """Test error handling for avg_ms."""
@@ -150,7 +147,6 @@ Usage:
     def test_success_rate_edge_cases(self):
         """Test edge cases for success_rate."""
         # No edge cases identified
-        pass
     
     def test_success_rate_error_handling(self):
         """Test error handling for success_rate."""
@@ -175,7 +171,6 @@ Usage:
     def test_p50_ms_edge_cases(self, mock_dependencies):
         """Test edge cases for p50_ms."""
         # No edge cases identified
-        pass
     
     def test_p50_ms_error_handling(self, mock_dependencies):
         """Test error handling for p50_ms."""
@@ -200,7 +195,6 @@ Usage:
     def test_p95_ms_edge_cases(self, mock_dependencies):
         """Test edge cases for p95_ms."""
         # No edge cases identified
-        pass
     
     def test_p95_ms_error_handling(self, mock_dependencies):
         """Test error handling for p95_ms."""
@@ -225,7 +219,6 @@ Usage:
     def test_p99_ms_edge_cases(self, mock_dependencies):
         """Test edge cases for p99_ms."""
         # No edge cases identified
-        pass
     
     def test_p99_ms_error_handling(self, mock_dependencies):
         """Test error handling for p99_ms."""
@@ -250,7 +243,6 @@ Usage:
     def test_to_dict_edge_cases(self, mock_dependencies):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self, mock_dependencies):
         """Test error handling for to_dict."""
@@ -309,7 +301,6 @@ Usage:
     def test_elapsed_ms_edge_cases(self, mock_dependencies):
         """Test edge cases for elapsed_ms."""
         # No edge cases identified
-        pass
     
     def test_elapsed_ms_error_handling(self, mock_dependencies):
         """Test error handling for elapsed_ms."""
@@ -396,7 +387,6 @@ Usage:
     def test_get_all_metrics_edge_cases(self, mock_dependencies):
         """Test edge cases for get_all_metrics."""
         # No edge cases identified
-        pass
     
     def test_get_all_metrics_error_handling(self, mock_dependencies):
         """Test error handling for get_all_metrics."""
@@ -421,7 +411,6 @@ Usage:
     def test_get_summary_edge_cases(self, mock_dependencies):
         """Test edge cases for get_summary."""
         # No edge cases identified
-        pass
     
     def test_get_summary_error_handling(self, mock_dependencies):
         """Test error handling for get_summary."""
@@ -480,7 +469,6 @@ Usage:
     def test_reset_edge_cases(self, mock_dependencies):
         """Test edge cases for reset."""
         # No edge cases identified
-        pass
     
     def test_reset_error_handling(self, mock_dependencies):
         """Test error handling for reset."""

@@ -2,8 +2,6 @@
 Unit tests for analysis dependency analyzer module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.analysis.dependency_analyzer import (

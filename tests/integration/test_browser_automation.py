@@ -10,19 +10,15 @@ Tests browser automation functionality including:
 """
 
 import asyncio
-import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 
 from src.platform.browser_automation import (
     BrowserAutomation,
     BrowserType,
-    FormField,
-    ScreenshotOptions,
     ViewportSize,
     create_browser_automation,
 )

@@ -10,10 +10,8 @@ Tests enhanced web scraping functionality including:
 """
 
 import asyncio
-import json
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 
@@ -22,7 +20,6 @@ from src.discovery.firecrawl_enhanced import (
     CacheStrategy,
     ContentExtractionConfig,
     ContentPriority,
-    FirecrawlEnhanced,
     RateLimitConfig,
     RateLimitStrategy,
     create_firecrawl_enhanced,

@@ -39,7 +39,6 @@ class TestSrcLlmLmstudioClient:
     async def test_get_client_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_client."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_client_error_handling(self, mock_dependencies):
@@ -68,7 +67,6 @@ class TestSrcLlmLmstudioClient:
     async def test_close_edge_cases(self, mock_dependencies):
         """Test edge cases for close."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_close_error_handling(self, mock_dependencies):
@@ -96,7 +94,6 @@ class TestSrcLlmLmstudioClient:
     async def test_is_available_edge_cases(self, mock_dependencies):
         """Test edge cases for is_available."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_is_available_error_handling(self, mock_dependencies):
@@ -124,7 +121,6 @@ class TestSrcLlmLmstudioClient:
     async def test_list_models_edge_cases(self, mock_dependencies):
         """Test edge cases for list_models."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_list_models_error_handling(self, mock_dependencies):

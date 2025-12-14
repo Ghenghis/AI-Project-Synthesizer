@@ -38,7 +38,6 @@ class TestSrcAgentsAutomationAgent:
     def test_setup_tools_edge_cases(self, mock_dependencies):
         """Test edge cases for _setup_tools."""
         # No edge cases identified
-        pass
     
     def test_setup_tools_error_handling(self, mock_dependencies):
         """Test error handling for _setup_tools."""
@@ -181,7 +180,6 @@ class TestSrcAgentsAutomationAgent:
     async def test_check_health_edge_cases(self, mock_dependencies):
         """Test edge cases for _check_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_health_error_handling(self, mock_dependencies):
@@ -281,7 +279,6 @@ class TestSrcAgentsAutomationAgent:
     async def test_get_metrics_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_metrics."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_metrics_error_handling(self, mock_dependencies):

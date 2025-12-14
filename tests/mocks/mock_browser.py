@@ -4,8 +4,8 @@ Mock browser automation for testing.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any
+from unittest.mock import MagicMock
 
 
 class MockBrowserAutomation:

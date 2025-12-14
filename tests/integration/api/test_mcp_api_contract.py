@@ -3,13 +3,9 @@ Integration test for MCP API contracts.
 Tests: API contracts, provider fallback, and error handling.
 """
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
-from requests import Response
-from requests.structures import CaseInsensitiveDict
 
 from src.discovery.github_client import GitHubClient
 from src.discovery.gitlab_client import GitLabClient

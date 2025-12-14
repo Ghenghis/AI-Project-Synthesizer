@@ -36,7 +36,7 @@ import pytest
 def _has_autogen():
     """Check if AutoGen is available."""
     try:
-        from autogen_agentchat.agents import AssistantAgent
+        pass
 
         return True
     except ImportError:
@@ -46,7 +46,7 @@ def _has_autogen():
 def _has_swarm():
     """Check if Swarm is available."""
     try:
-        import swarm
+        pass
 
         return True
     except ImportError:
@@ -70,8 +70,7 @@ def _has_piper():
 def _has_glm_asr():
     """Check if GLM ASR dependencies are available."""
     try:
-        import torch
-        import transformers
+        pass
 
         return True
     except ImportError:

@@ -39,7 +39,6 @@ class TestSrcAutomationTesting:
     async def test_test_lm_studio_connection_edge_cases(self, mock_dependencies):
         """Test edge cases for test_lm_studio_connection."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_lm_studio_connection_error_handling(self, mock_dependencies):
@@ -67,7 +66,6 @@ class TestSrcAutomationTesting:
     async def test_test_ollama_connection_edge_cases(self, mock_dependencies):
         """Test edge cases for test_ollama_connection."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_ollama_connection_error_handling(self, mock_dependencies):
@@ -95,7 +93,6 @@ class TestSrcAutomationTesting:
     async def test_test_github_api_edge_cases(self, mock_dependencies):
         """Test edge cases for test_github_api."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_github_api_error_handling(self, mock_dependencies):
@@ -123,7 +120,6 @@ class TestSrcAutomationTesting:
     async def test_test_huggingface_api_edge_cases(self, mock_dependencies):
         """Test edge cases for test_huggingface_api."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_huggingface_api_error_handling(self, mock_dependencies):
@@ -151,7 +147,6 @@ class TestSrcAutomationTesting:
     async def test_test_elevenlabs_api_edge_cases(self, mock_dependencies):
         """Test edge cases for test_elevenlabs_api."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_elevenlabs_api_error_handling(self, mock_dependencies):
@@ -179,7 +174,6 @@ class TestSrcAutomationTesting:
     async def test_test_search_workflow_edge_cases(self, mock_dependencies):
         """Test edge cases for test_search_workflow."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_search_workflow_error_handling(self, mock_dependencies):
@@ -207,7 +201,6 @@ class TestSrcAutomationTesting:
     async def test_test_cache_operations_edge_cases(self, mock_dependencies):
         """Test edge cases for test_cache_operations."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_cache_operations_error_handling(self, mock_dependencies):
@@ -235,7 +228,6 @@ class TestSrcAutomationTesting:
     async def test_test_metrics_collection_edge_cases(self, mock_dependencies):
         """Test edge cases for test_metrics_collection."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_metrics_collection_error_handling(self, mock_dependencies):
@@ -261,7 +253,6 @@ class TestSrcAutomationTesting:
     def test_get_default_tests_edge_cases(self, mock_dependencies):
         """Test edge cases for get_default_tests."""
         # No edge cases identified
-        pass
     
     def test_get_default_tests_error_handling(self, mock_dependencies):
         """Test error handling for get_default_tests."""
@@ -286,7 +277,6 @@ class TestSrcAutomationTesting:
     def test_success_rate_edge_cases(self):
         """Test edge cases for success_rate."""
         # No edge cases identified
-        pass
     
     def test_success_rate_error_handling(self):
         """Test error handling for success_rate."""
@@ -311,7 +301,6 @@ class TestSrcAutomationTesting:
     def test_to_dict_edge_cases(self, mock_dependencies):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self, mock_dependencies):
         """Test error handling for to_dict."""
@@ -470,7 +459,6 @@ class TestSrcAutomationTesting:
     async def test_run_all_edge_cases(self, mock_dependencies):
         """Test edge cases for run_all."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_run_all_error_handling(self, mock_dependencies):

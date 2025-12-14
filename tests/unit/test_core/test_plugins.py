@@ -2,12 +2,9 @@
 Unit tests for core plugins module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.core.plugins import (
-    Plugin,
     PluginManager,
     PluginMetadata,
     PluginType,

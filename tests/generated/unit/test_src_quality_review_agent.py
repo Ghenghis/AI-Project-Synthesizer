@@ -101,7 +101,6 @@ Args:
     async def test_initialize_agents_edge_cases(self, mock_dependencies):
         """Test edge cases for _initialize_agents."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_initialize_agents_error_handling(self, mock_dependencies):

@@ -1,7 +1,5 @@
 """Tests for voice.realtime_conversation."""
 
-import asyncio
-import json
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 

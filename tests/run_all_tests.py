@@ -5,7 +5,6 @@ Runs all test suites with proper configuration and reporting.
 """
 
 import asyncio
-import os
 import subprocess
 import sys
 from datetime import datetime

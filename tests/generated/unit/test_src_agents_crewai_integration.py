@@ -85,7 +85,6 @@ Args:
     async def test_main_edge_cases(self, mock_dependencies):
         """Test edge cases for main."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_main_error_handling(self, mock_dependencies):
@@ -111,7 +110,6 @@ Args:
     def test_get_llm_config_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_llm_config."""
         # No edge cases identified
-        pass
     
     def test_get_llm_config_error_handling(self, mock_dependencies):
         """Test error handling for _get_llm_config."""
@@ -137,7 +135,6 @@ Args:
     def test_create_agents_edge_cases(self, mock_dependencies):
         """Test edge cases for _create_agents."""
         # No edge cases identified
-        pass
     
     def test_create_agents_error_handling(self, mock_dependencies):
         """Test error handling for _create_agents."""
@@ -163,7 +160,6 @@ Args:
     def test_create_default_crews_edge_cases(self, mock_dependencies):
         """Test edge cases for _create_default_crews."""
         # No edge cases identified
-        pass
     
     def test_create_default_crews_error_handling(self, mock_dependencies):
         """Test error handling for _create_default_crews."""
@@ -477,7 +473,6 @@ Args:
     async def test_get_team_list_edge_cases(self):
         """Test edge cases for get_team_list."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_team_list_error_handling(self):
@@ -505,7 +500,6 @@ Args:
     async def test_get_task_history_edge_cases(self):
         """Test edge cases for get_task_history."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_task_history_error_handling(self):
@@ -600,7 +594,6 @@ Args:
     def test_get_statistics_edge_cases(self, mock_dependencies):
         """Test edge cases for get_statistics."""
         # No edge cases identified
-        pass
     
     def test_get_statistics_error_handling(self, mock_dependencies):
         """Test error handling for get_statistics."""

@@ -9,7 +9,6 @@ Usage:
 """
 
 import asyncio
-import json
 import logging
 import sys
 from pathlib import Path
@@ -17,7 +16,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.core.config import Settings, get_settings
+from src.core.config import get_settings
 from src.mcp_server.server import server
 
 logger = logging.getLogger(__name__)

@@ -58,7 +58,6 @@ class Plugin(ABC):
     @abstractmethod
     def metadata(self) -> PluginMetadata:
         """Return plugin metadata."""
-        pass
 
     async def initialize(self, config: dict[str, Any]) -> bool:
         """Initialize plugin with config. Override if needed."""
@@ -66,7 +65,6 @@ class Plugin(ABC):
 
     async def shutdown(self) -> None:
         """Cleanup on shutdown. Override if needed."""
-        pass
 
 
 class PlatformPlugin(Plugin):
@@ -92,7 +90,6 @@ class PlatformPlugin(Plugin):
     @abstractmethod
     async def search(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """Search the platform."""
-        pass
 
     async def get_details(self, identifier: str) -> dict[str, Any] | None:
         """Get details for a specific item."""
@@ -114,7 +111,6 @@ class SynthesisPlugin(Plugin):
         config: dict[str, Any],
     ) -> dict[str, Any]:
         """Synthesize project from sources."""
-        pass
 
 
 class AnalysisPlugin(Plugin):
@@ -123,7 +119,6 @@ class AnalysisPlugin(Plugin):
     @abstractmethod
     async def analyze(self, path: Path) -> dict[str, Any]:
         """Analyze code at path."""
-        pass
 
 
 class HookPlugin(Plugin):
@@ -131,19 +126,15 @@ class HookPlugin(Plugin):
 
     async def on_search_start(self, query: str) -> None:
         """Called before search."""
-        pass
 
     async def on_search_complete(self, query: str, results: list[Any]) -> None:
         """Called after search."""
-        pass
 
     async def on_synthesis_start(self, project_name: str) -> None:
         """Called before synthesis."""
-        pass
 
     async def on_synthesis_complete(self, project_path: Path) -> None:
         """Called after synthesis."""
-        pass
 
 
 class PluginManager:

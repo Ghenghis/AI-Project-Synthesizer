@@ -439,7 +439,6 @@ Args:
     async def test_install_tools_edge_cases(self, mock_dependencies):
         """Test edge cases for install_tools."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_install_tools_error_handling(self, mock_dependencies):

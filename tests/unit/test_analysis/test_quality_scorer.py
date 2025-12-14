@@ -2,8 +2,6 @@
 Unit tests for analysis quality scorer module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.analysis.quality_scorer import QualityScorer

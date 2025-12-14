@@ -90,7 +90,6 @@ Args:
     async def test_main_edge_cases(self, mock_dependencies):
         """Test edge cases for main."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_main_error_handling(self, mock_dependencies):
@@ -118,7 +117,6 @@ Args:
     async def test_start_edge_cases(self, mock_dependencies):
         """Test edge cases for start."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_start_error_handling(self, mock_dependencies):
@@ -146,7 +144,6 @@ Args:
     async def test_stop_edge_cases(self, mock_dependencies):
         """Test edge cases for stop."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_stop_error_handling(self, mock_dependencies):
@@ -263,7 +260,6 @@ Returns:
     async def test_go_back_edge_cases(self, mock_dependencies):
         """Test edge cases for go_back."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_go_back_error_handling(self, mock_dependencies):
@@ -289,7 +285,6 @@ Returns:
     async def test_go_forward_edge_cases(self, mock_dependencies):
         """Test edge cases for go_forward."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_go_forward_error_handling(self, mock_dependencies):
@@ -895,7 +890,6 @@ Returns:
     async def test_get_sessions_edge_cases(self, mock_dependencies):
         """Test edge cases for get_sessions."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_sessions_error_handling(self, mock_dependencies):
@@ -923,7 +917,6 @@ Returns:
     async def test_get_current_session_edge_cases(self, mock_dependencies):
         """Test edge cases for get_current_session."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_current_session_error_handling(self, mock_dependencies):
@@ -951,7 +944,6 @@ Returns:
     async def test_new_tab_edge_cases(self, mock_dependencies):
         """Test edge cases for new_tab."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_new_tab_error_handling(self, mock_dependencies):
@@ -977,7 +969,6 @@ Returns:
     async def test_get_browser_info_edge_cases(self, mock_dependencies):
         """Test edge cases for get_browser_info."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_browser_info_error_handling(self, mock_dependencies):
@@ -1005,7 +996,6 @@ Returns:
     async def test_test_connection_edge_cases(self, mock_dependencies):
         """Test edge cases for test_connection."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_connection_error_handling(self, mock_dependencies):

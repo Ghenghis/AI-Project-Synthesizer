@@ -2,8 +2,8 @@
 Mock LLM services for testing.
 """
 
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any
+from unittest.mock import AsyncMock
 
 
 class MockLiteLLMRouter:

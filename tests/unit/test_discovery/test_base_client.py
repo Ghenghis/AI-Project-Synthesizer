@@ -2,8 +2,6 @@
 Unit tests for discovery base client module.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from src.discovery.base_client import (

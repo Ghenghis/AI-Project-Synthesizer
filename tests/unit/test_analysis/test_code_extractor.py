@@ -2,8 +2,6 @@
 Unit tests for analysis code extractor module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.analysis.code_extractor import CodeExtractor

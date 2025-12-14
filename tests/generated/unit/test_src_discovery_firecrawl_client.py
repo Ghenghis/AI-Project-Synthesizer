@@ -92,7 +92,6 @@ Args:
     async def test_main_edge_cases(self, mock_dependencies):
         """Test edge cases for main."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_main_error_handling(self, mock_dependencies):
@@ -121,7 +120,6 @@ Args:
     async def test_ensure_session_edge_cases(self, mock_dependencies):
         """Test edge cases for _ensure_session."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_ensure_session_error_handling(self, mock_dependencies):
@@ -224,7 +222,6 @@ Args:
     async def test_check_rate_limit_edge_cases(self, mock_dependencies):
         """Test edge cases for _check_rate_limit."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_rate_limit_error_handling(self, mock_dependencies):
@@ -620,7 +617,6 @@ Args:
     async def test_test_connection_edge_cases(self, mock_dependencies):
         """Test edge cases for test_connection."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_test_connection_error_handling(self, mock_dependencies):
@@ -647,7 +643,6 @@ Args:
     def test_clear_cache_edge_cases(self, mock_dependencies):
         """Test edge cases for clear_cache."""
         # No edge cases identified
-        pass
     
     def test_clear_cache_error_handling(self, mock_dependencies):
         """Test error handling for clear_cache."""
@@ -674,7 +669,6 @@ Args:
     async def test_get_rate_limit_status_edge_cases(self, mock_dependencies):
         """Test edge cases for get_rate_limit_status."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_get_rate_limit_status_error_handling(self, mock_dependencies):

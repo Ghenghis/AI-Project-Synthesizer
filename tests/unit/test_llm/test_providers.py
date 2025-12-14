@@ -2,8 +2,6 @@
 Unit tests for LLM providers module.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from src.llm.providers.base import (

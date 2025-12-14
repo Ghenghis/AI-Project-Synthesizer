@@ -2,8 +2,6 @@
 Unit tests for generation readme generator module.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from src.generation.readme_generator import ReadmeGenerator

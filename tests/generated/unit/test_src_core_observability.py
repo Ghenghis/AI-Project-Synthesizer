@@ -39,7 +39,6 @@ class TestSrcCoreObservability:
     async def test_check_ollama_health_edge_cases(self, mock_dependencies):
         """Test edge cases for check_ollama_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_ollama_health_error_handling(self, mock_dependencies):
@@ -67,7 +66,6 @@ class TestSrcCoreObservability:
     async def test_check_github_api_health_edge_cases(self, mock_dependencies):
         """Test edge cases for check_github_api_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_github_api_health_error_handling(self, mock_dependencies):
@@ -95,7 +93,6 @@ class TestSrcCoreObservability:
     async def test_check_disk_space_health_edge_cases(self, mock_dependencies):
         """Test edge cases for check_disk_space_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_disk_space_health_error_handling(self, mock_dependencies):
@@ -217,7 +214,6 @@ Args:
     def test_get_correlation_id_edge_cases(self, mock_dependencies):
         """Test edge cases for get_correlation_id."""
         # No edge cases identified
-        pass
     
     def test_get_correlation_id_error_handling(self, mock_dependencies):
         """Test error handling for get_correlation_id."""
@@ -281,7 +277,6 @@ Returns:
     async def test_check_lmstudio_health_edge_cases(self, mock_dependencies):
         """Test edge cases for check_lmstudio_health."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_lmstudio_health_error_handling(self, mock_dependencies):
@@ -310,7 +305,6 @@ Returns:
     async def test_register_default_health_checks_edge_cases(self, mock_dependencies):
         """Test edge cases for register_default_health_checks."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_register_default_health_checks_error_handling(self, mock_dependencies):
@@ -336,7 +330,6 @@ Returns:
     def test_generate_id_edge_cases(self, mock_dependencies):
         """Test edge cases for generate_id."""
         # No edge cases identified
-        pass
     
     def test_generate_id_error_handling(self, mock_dependencies):
         """Test error handling for generate_id."""
@@ -395,7 +388,6 @@ Returns:
     def test_get_correlation_id_edge_cases(self, mock_dependencies):
         """Test edge cases for get_correlation_id."""
         # No edge cases identified
-        pass
     
     def test_get_correlation_id_error_handling(self, mock_dependencies):
         """Test error handling for get_correlation_id."""
@@ -421,7 +413,6 @@ Returns:
     def test_clear_correlation_id_edge_cases(self, mock_dependencies):
         """Test edge cases for clear_correlation_id."""
         # No edge cases identified
-        pass
     
     def test_clear_correlation_id_error_handling(self, mock_dependencies):
         """Test error handling for clear_correlation_id."""
@@ -893,7 +884,6 @@ Args:
     def test_get_all_metrics_edge_cases(self, mock_dependencies):
         """Test edge cases for get_all_metrics."""
         # No edge cases identified
-        pass
     
     def test_get_all_metrics_error_handling(self, mock_dependencies):
         """Test error handling for get_all_metrics."""
@@ -919,7 +909,6 @@ Args:
     def test_reset_edge_cases(self, mock_dependencies):
         """Test edge cases for reset."""
         # No edge cases identified
-        pass
     
     def test_reset_error_handling(self, mock_dependencies):
         """Test error handling for reset."""
@@ -949,7 +938,6 @@ Returns:
     async def test_check_edge_cases(self, mock_dependencies):
         """Test edge cases for check."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_error_handling(self, mock_dependencies):
@@ -1043,7 +1031,6 @@ Returns:
     async def test_check_all_edge_cases(self, mock_dependencies):
         """Test edge cases for check_all."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_check_all_error_handling(self, mock_dependencies):
@@ -1105,7 +1092,6 @@ Returns:
     def test_get_check_names_edge_cases(self, mock_dependencies):
         """Test edge cases for get_check_names."""
         # No edge cases identified
-        pass
     
     def test_get_check_names_error_handling(self, mock_dependencies):
         """Test error handling for get_check_names."""

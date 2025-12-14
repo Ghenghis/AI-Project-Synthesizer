@@ -3,8 +3,6 @@ Unit tests for core.gap_analyzer module.
 """
 
 import os
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

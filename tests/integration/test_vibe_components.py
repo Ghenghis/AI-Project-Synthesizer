@@ -10,7 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -19,9 +19,7 @@ sys.path.insert(0, str(project_root))
 from src.quality import (
     LintChecker,
     QualityGate,
-    ReviewAgent,
     SecurityScanner,
-    TestGenerator,
 )
 from src.vibe import (
     ArchitectAgent,

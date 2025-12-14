@@ -1577,16 +1577,13 @@ async def handle_run_ci_repair(arguments: dict[str, Any]) -> dict[str, Any]:
 def register_all_tools(server):
     """Register all tool handlers with the MCP server."""
     # Tools are registered via decorators in server.py
-    pass
 
 
 def register_all_resources(server):
     """Register all resources with the MCP server."""
     # Resources for cached data access
-    pass
 
 
 def register_all_prompts(server):
     """Register all prompts with the MCP server."""
     # Pre-defined prompts for common tasks
-    pass

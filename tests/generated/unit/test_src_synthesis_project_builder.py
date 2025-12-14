@@ -37,7 +37,6 @@ class TestSrcSynthesisProjectBuilder:
     def test_to_dict_edge_cases(self):
         """Test edge cases for to_dict."""
         # No edge cases identified
-        pass
     
     def test_to_dict_error_handling(self):
         """Test error handling for to_dict."""
@@ -440,7 +439,6 @@ Returns:
     def test_list_active_edge_cases(self, mock_dependencies):
         """Test edge cases for list_active."""
         # No edge cases identified
-        pass
     
     def test_list_active_error_handling(self, mock_dependencies):
         """Test error handling for list_active."""

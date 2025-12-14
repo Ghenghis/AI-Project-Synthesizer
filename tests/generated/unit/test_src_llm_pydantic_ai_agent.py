@@ -41,7 +41,6 @@ class TestSrcLlmPydanticAiAgent:
     def test_create_lmstudio_model_edge_cases(self, mock_dependencies):
         """Test edge cases for create_lmstudio_model."""
         # No edge cases identified
-        pass
     
     def test_create_lmstudio_model_error_handling(self, mock_dependencies):
         """Test error handling for create_lmstudio_model."""

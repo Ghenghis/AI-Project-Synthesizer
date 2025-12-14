@@ -4,8 +4,6 @@ Tests for Swarm Integration
 Tests the lightweight agent handoff system for fast routing.
 """
 
-import asyncio
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,7 +18,6 @@ except ImportError:
     swarm = None
 
 from src.agents.swarm_integration import (
-    HandoffResult,
     SwarmIntegration,
     create_swarm_integration,
 )

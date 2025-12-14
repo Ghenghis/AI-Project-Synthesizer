@@ -37,7 +37,6 @@ class TestSrcVibeAutoRollback:
     def test_detect_git_repo_edge_cases(self, mock_dependencies):
         """Test edge cases for _detect_git_repo."""
         # No edge cases identified
-        pass
     
     def test_detect_git_repo_error_handling(self, mock_dependencies):
         """Test error handling for _detect_git_repo."""
@@ -246,7 +245,6 @@ Args:
     async def test_backup_git_state_edge_cases(self, mock_dependencies):
         """Test edge cases for _backup_git_state."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_backup_git_state_error_handling(self, mock_dependencies):
@@ -380,7 +378,6 @@ Args:
     def test_get_tracked_files_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_tracked_files."""
         # No edge cases identified
-        pass
     
     def test_get_tracked_files_error_handling(self, mock_dependencies):
         """Test error handling for _get_tracked_files."""
@@ -405,7 +402,6 @@ Args:
     def test_get_current_branch_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_current_branch."""
         # No edge cases identified
-        pass
     
     def test_get_current_branch_error_handling(self, mock_dependencies):
         """Test error handling for _get_current_branch."""

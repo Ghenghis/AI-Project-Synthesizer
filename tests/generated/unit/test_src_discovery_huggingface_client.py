@@ -38,7 +38,6 @@ class TestSrcDiscoveryHuggingfaceClient:
     def test_to_repository_info_edge_cases(self, mock_dependencies):
         """Test edge cases for to_repository_info."""
         # No edge cases identified
-        pass
     
     def test_to_repository_info_error_handling(self, mock_dependencies):
         """Test error handling for to_repository_info."""
@@ -63,7 +62,6 @@ class TestSrcDiscoveryHuggingfaceClient:
     def test_to_repository_info_edge_cases(self, mock_dependencies):
         """Test edge cases for to_repository_info."""
         # No edge cases identified
-        pass
     
     def test_to_repository_info_error_handling(self, mock_dependencies):
         """Test error handling for to_repository_info."""
@@ -89,7 +87,6 @@ class TestSrcDiscoveryHuggingfaceClient:
     def test_init_api_edge_cases(self, mock_dependencies):
         """Test edge cases for _init_api."""
         # No edge cases identified
-        pass
     
     def test_init_api_error_handling(self, mock_dependencies):
         """Test error handling for _init_api."""
@@ -114,7 +111,6 @@ class TestSrcDiscoveryHuggingfaceClient:
     def test_platform_name_edge_cases(self):
         """Test edge cases for platform_name."""
         # No edge cases identified
-        pass
     
     def test_platform_name_error_handling(self):
         """Test error handling for platform_name."""
@@ -139,7 +135,6 @@ class TestSrcDiscoveryHuggingfaceClient:
     def test_is_authenticated_edge_cases(self):
         """Test edge cases for is_authenticated."""
         # No edge cases identified
-        pass
     
     def test_is_authenticated_error_handling(self):
         """Test error handling for is_authenticated."""

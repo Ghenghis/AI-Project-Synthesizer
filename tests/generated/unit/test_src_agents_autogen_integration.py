@@ -85,7 +85,6 @@ Args:
     async def test_main_edge_cases(self, mock_dependencies):
         """Test edge cases for main."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_main_error_handling(self, mock_dependencies):
@@ -111,7 +110,6 @@ Args:
     def test_get_llm_config_edge_cases(self, mock_dependencies):
         """Test edge cases for _get_llm_config."""
         # No edge cases identified
-        pass
     
     def test_get_llm_config_error_handling(self, mock_dependencies):
         """Test error handling for _get_llm_config."""
@@ -137,7 +135,6 @@ Args:
     def test_initialize_agents_edge_cases(self, mock_dependencies):
         """Test edge cases for _initialize_agents."""
         # No edge cases identified
-        pass
     
     def test_initialize_agents_error_handling(self, mock_dependencies):
         """Test error handling for _initialize_agents."""
@@ -383,7 +380,6 @@ Args:
     async def test_simple_conversation_test_edge_cases(self, mock_dependencies):
         """Test edge cases for simple_conversation_test."""
         # No edge cases identified
-        pass
     
     @pytest.mark.asyncio
     async def test_simple_conversation_test_error_handling(self, mock_dependencies):

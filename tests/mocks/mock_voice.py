@@ -2,10 +2,8 @@
 Mock voice services for testing.
 """
 
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock
+from typing import Any
 
 
 class MockVoicePlayer:
@@ -68,7 +66,6 @@ class MockVoicePlayer:
 
     async def set_volume(self, volume: float):
         """Mock set volume."""
-        pass
 
 
 class MockASRClient:

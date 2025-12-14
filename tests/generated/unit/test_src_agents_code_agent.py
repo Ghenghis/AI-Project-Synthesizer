@@ -38,7 +38,6 @@ class TestSrcAgentsCodeAgent:
     def test_setup_tools_edge_cases(self, mock_dependencies):
         """Test edge cases for _setup_tools."""
         # No edge cases identified
-        pass
     
     def test_setup_tools_error_handling(self, mock_dependencies):
         """Test error handling for _setup_tools."""

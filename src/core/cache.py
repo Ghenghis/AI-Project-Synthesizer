@@ -52,27 +52,22 @@ class CacheBackend(ABC):
     @abstractmethod
     async def get(self, key: str) -> Any | None:
         """Get value from cache."""
-        pass
 
     @abstractmethod
     async def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         """Set value in cache."""
-        pass
 
     @abstractmethod
     async def delete(self, key: str) -> bool:
         """Delete value from cache."""
-        pass
 
     @abstractmethod
     async def clear(self) -> int:
         """Clear all cache entries. Returns count deleted."""
-        pass
 
     @abstractmethod
     async def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
-        pass
 
 
 class MemoryCache(CacheBackend):

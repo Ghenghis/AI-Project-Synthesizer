@@ -375,7 +375,6 @@ class AutomationCoordinator:
     async def _cleanup_metrics(self):
         """Cleanup old metrics."""
         # Metrics collector handles its own cleanup
-        pass
 
     async def _run_integration_tests(self) -> TestSuiteResult:
         """Run integration tests."""

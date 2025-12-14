@@ -11,19 +11,15 @@ Tests enhanced GitLab functionality including:
 
 import asyncio
 import json
-from typing import Any, Dict
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.discovery.gitlab_enhanced import (
     GitLabEnhanced,
-    MRAction,
-    MRReviewResult,
     MRTemplate,
     PipelineConfig,
     PipelineTrigger,
-    create_gitlab_enhanced,
 )
 
 

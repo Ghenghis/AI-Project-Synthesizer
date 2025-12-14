@@ -3,10 +3,7 @@ Unit tests for resource manager.
 """
 
 import asyncio
-import gc
-from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
-from weakref import WeakSet
 
 import pytest
 
