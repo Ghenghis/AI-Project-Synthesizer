@@ -76,11 +76,16 @@ from src.mcp_server.tools import (
     handle_assistant_chat,
     handle_assistant_toggle_voice,
     handle_assistant_voice,
+    handle_auto_fix_code,
     handle_check_compatibility,
     handle_generate_documentation,
+    handle_generate_tests,
     handle_get_synthesis_status,
     handle_get_voices,
+    handle_project_health,
     handle_resolve_dependencies,
+    handle_review_code,
+    handle_run_ci_repair,
     handle_search_repositories,
     handle_speak_fast,
     handle_synthesize_project,
@@ -444,6 +449,113 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["idea"]
             }
+        ),
+        # ==================== AI AGENT TOOLS ====================
+        Tool(
+            name="auto_fix_code",
+            description="AI-powered automatic code fixing. Fixes linting errors, formatting issues, and import problems automatically.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to file to fix (optional, fixes all src/ tests/ if not provided)"
+                    },
+                    "fix_type": {
+                        "type": "string",
+                        "default": "all",
+                        "description": "Type of fix: lint, format, imports, all"
+                    },
+                    "dry_run": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "If true, only report what would be fixed"
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="generate_tests",
+            description="AI-powered automatic test generation. Uses LLM to generate comprehensive pytest tests targeting 80%+ coverage.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to source file to generate tests for"
+                    },
+                    "output_path": {
+                        "type": "string",
+                        "description": "Where to save generated tests (optional)"
+                    },
+                    "save": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Save tests to file"
+                    },
+                    "coverage_target": {
+                        "type": "integer",
+                        "default": 80,
+                        "description": "Target coverage percentage"
+                    }
+                },
+                "required": ["file_path"]
+            }
+        ),
+        Tool(
+            name="review_code",
+            description="AI-powered code review. Analyzes code for security issues, performance problems, best practices, and potential bugs.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to file to review"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Raw code to review (if no file_path)"
+                    },
+                    "focus": {
+                        "type": "string",
+                        "default": "all",
+                        "description": "Review focus: security, performance, style, all"
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="project_health",
+            description="Get overall project health status including linting, tests, coverage, and recommendations.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "detailed": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Include detailed breakdown"
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="ci_repair",
+            description="Run CI auto-repair to fix common issues: linting errors, import issues, missing __init__.py files, and conftest.py problems.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "fix": {
+                        "type": "boolean",
+                        "default": True,
+                        "description": "Apply fixes (default: true)"
+                    },
+                    "report": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Generate detailed report"
+                    }
+                }
+            }
         )
     ]
 
@@ -502,6 +614,17 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 result = await handle_speak_fast(arguments)
             elif name == "assemble_project":
                 result = await handle_assemble_project(arguments)
+            # AI Agent tools
+            elif name == "auto_fix_code":
+                result = await handle_auto_fix_code(arguments)
+            elif name == "generate_tests":
+                result = await handle_generate_tests(arguments)
+            elif name == "review_code":
+                result = await handle_review_code(arguments)
+            elif name == "project_health":
+                result = await handle_project_health(arguments)
+            elif name == "ci_repair":
+                result = await handle_run_ci_repair(arguments)
             else:
                 result = {"error": f"Unknown tool: {name}"}
                 metrics.increment("tool_errors_total", tags={"tool": name, "error_type": "unknown_tool"})

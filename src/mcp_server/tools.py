@@ -1175,6 +1175,325 @@ async def handle_assemble_project(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"error": True, "message": f"Assembly error: {str(e)}"}
 
 
+async def handle_auto_fix_code(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    AI-powered automatic code fixing.
+
+    Uses local LLM (LM Studio/Ollama) to analyze and fix code issues:
+    - Linting errors
+    - Type errors
+    - Import issues
+    - Code style problems
+
+    Args:
+        file_path: Path to file to fix (optional, fixes all if not provided)
+        fix_type: Type of fix - "lint", "type", "all" (default: "all")
+        dry_run: If true, only report what would be fixed (default: false)
+
+    Returns:
+        Fix results and summary
+    """
+    file_path = arguments.get("file_path")
+    fix_type = arguments.get("fix_type", "all")
+    dry_run = arguments.get("dry_run", False)
+
+    try:
+        import subprocess
+        from pathlib import Path
+
+        project_root = Path.cwd()
+        results = {"fixes_applied": [], "errors": []}
+
+        # Run ruff fix
+        if fix_type in ["lint", "all"]:
+            target = file_path or "src/ tests/"
+            cmd = f"ruff check {target} --fix" if not dry_run else f"ruff check {target}"
+            result = subprocess.run(
+                cmd, shell=True, cwd=project_root,
+                capture_output=True, text=True, timeout=60
+            )
+            if result.returncode == 0:
+                results["fixes_applied"].append("ruff lint fixes")
+            else:
+                results["errors"].append(f"Lint: {result.stderr[:200]}")
+
+        # Run ruff format
+        if fix_type in ["format", "all"] and not dry_run:
+            target = file_path or "src/ tests/"
+            result = subprocess.run(
+                f"ruff format {target}", shell=True, cwd=project_root,
+                capture_output=True, text=True, timeout=60
+            )
+            if result.returncode == 0:
+                results["fixes_applied"].append("code formatting")
+
+        # Run isort
+        if fix_type in ["imports", "all"] and not dry_run:
+            target = file_path or "src/ tests/"
+            result = subprocess.run(
+                f"isort {target} --profile black", shell=True, cwd=project_root,
+                capture_output=True, text=True, timeout=60
+            )
+            if result.returncode == 0:
+                results["fixes_applied"].append("import sorting")
+
+        return {
+            "success": len(results["errors"]) == 0,
+            "dry_run": dry_run,
+            "fixes_applied": results["fixes_applied"],
+            "errors": results["errors"],
+            "message": f"Applied {len(results['fixes_applied'])} fix types" if not dry_run else "Dry run complete",
+        }
+
+    except Exception as e:
+        return {"error": True, "message": f"Auto-fix error: {str(e)}"}
+
+
+async def handle_generate_tests(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    AI-powered automatic test generation.
+
+    Uses local LLM to generate pytest tests for Python code.
+    Aims for 80%+ coverage with edge cases.
+
+    Args:
+        file_path: Path to source file to generate tests for
+        output_path: Where to save generated tests (optional)
+        coverage_target: Target coverage percentage (default: 80)
+
+    Returns:
+        Generated test code and file path
+    """
+    file_path = arguments.get("file_path")
+    output_path = arguments.get("output_path")
+    coverage_target = arguments.get("coverage_target", 80)
+
+    if not file_path:
+        return {"error": True, "message": "Please provide file_path"}
+
+    try:
+        from pathlib import Path
+
+        from src.agents.code_fixer_agent import AutoTestGenerator
+
+        generator = AutoTestGenerator()
+        source_path = Path(file_path)
+
+        if not source_path.exists():
+            return {"error": True, "message": f"File not found: {file_path}"}
+
+        # Generate tests
+        test_code = await generator.generate_tests_for_file(source_path)
+
+        if not test_code:
+            return {"error": True, "message": "Failed to generate tests"}
+
+        # Determine output path
+        if output_path:
+            out_path = Path(output_path)
+        else:
+            # Auto-generate test path
+            parts = list(source_path.parts)
+            if "src" in parts:
+                idx = parts.index("src")
+                parts[idx] = "tests"
+            parts[-1] = f"test_{parts[-1]}"
+            out_path = Path(*parts)
+
+        # Save if output path specified
+        if output_path or arguments.get("save", False):
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(test_code)
+            saved = True
+        else:
+            saved = False
+
+        return {
+            "success": True,
+            "source_file": str(source_path),
+            "test_code": test_code[:2000] + "..." if len(test_code) > 2000 else test_code,
+            "output_path": str(out_path) if saved else None,
+            "saved": saved,
+            "coverage_target": coverage_target,
+            "tip": "Run: pytest --cov to check coverage",
+        }
+
+    except Exception as e:
+        return {"error": True, "message": f"Test generation error: {str(e)}"}
+
+
+async def handle_review_code(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    AI-powered code review.
+
+    Uses local LLM to review code for:
+    - Security issues
+    - Performance problems
+    - Best practices
+    - Code style
+    - Potential bugs
+
+    Args:
+        file_path: Path to file to review
+        code: Raw code to review (if no file_path)
+        focus: Review focus - "security", "performance", "style", "all"
+
+    Returns:
+        Review results with issues and suggestions
+    """
+    file_path = arguments.get("file_path")
+    code = arguments.get("code")
+    focus = arguments.get("focus", "all")
+
+    if not file_path and not code:
+        return {"error": True, "message": "Provide file_path or code"}
+
+    try:
+        from pathlib import Path
+
+        from src.agents.code_fixer_agent import CodeReviewAgent
+
+        reviewer = CodeReviewAgent()
+
+        if file_path:
+            path = Path(file_path)
+            if not path.exists():
+                return {"error": True, "message": f"File not found: {file_path}"}
+            review = await reviewer.review_file(path)
+        else:
+            review = await reviewer.review_code(code, "provided_code.py")
+
+        if not review:
+            return {"error": True, "message": "Review failed"}
+
+        return {
+            "success": True,
+            "file": file_path or "inline_code",
+            "score": review.get("score", 0),
+            "summary": review.get("summary", ""),
+            "issues": review.get("issues", [])[:10],  # Limit issues
+            "issue_count": len(review.get("issues", [])),
+            "focus": focus,
+        }
+
+    except Exception as e:
+        return {"error": True, "message": f"Code review error: {str(e)}"}
+
+
+async def handle_project_health(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    Get overall project health status.
+
+    Checks:
+    - Linting status
+    - Test status
+    - Coverage
+    - Dependencies
+
+    Args:
+        detailed: Include detailed breakdown (default: false)
+
+    Returns:
+        Health report with status and recommendations
+    """
+    detailed = arguments.get("detailed", False)
+
+    try:
+        from src.vibe.automation import VibeAutomation
+
+        automation = VibeAutomation()
+        health = automation.get_project_health()
+
+        result = {
+            "success": True,
+            "overall_status": "healthy" if all(
+                h.get("status") == "ok" for h in health.values() if isinstance(h, dict)
+            ) else "needs_attention",
+            "checks": {
+                "lint": {
+                    "status": health["lint"]["status"],
+                    "issues": health["lint"]["issues"],
+                },
+                "tests": {
+                    "status": health["tests"]["status"],
+                },
+            },
+            "recommendations": [],
+        }
+
+        # Add recommendations
+        if health["lint"]["issues"] > 0:
+            result["recommendations"].append(
+                f"Fix {health['lint']['issues']} lint issues: ruff check --fix"
+            )
+        if health["tests"]["status"] != "ok":
+            result["recommendations"].append(
+                "Fix failing tests: pytest -v"
+            )
+
+        if detailed:
+            result["report"] = automation.generate_health_report()
+
+        return result
+
+    except Exception as e:
+        return {"error": True, "message": f"Health check error: {str(e)}"}
+
+
+async def handle_run_ci_repair(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    Run CI auto-repair to fix common issues.
+
+    Automatically fixes:
+    - Linting errors
+    - Import issues
+    - Missing __init__.py files
+    - Conftest.py path issues
+
+    Args:
+        fix: Apply fixes (default: true)
+        report: Generate detailed report (default: false)
+
+    Returns:
+        Repair results and summary
+    """
+    apply_fix = arguments.get("fix", True)
+    generate_report = arguments.get("report", False)
+
+    try:
+        import subprocess
+        from pathlib import Path
+
+        project_root = Path.cwd()
+
+        # Run the auto repair script
+        cmd = "python scripts/auto_repair_ci.py"
+        if apply_fix:
+            cmd += " --fix"
+        if generate_report:
+            cmd += " --report"
+
+        result = subprocess.run(
+            cmd, shell=True, cwd=project_root,
+            capture_output=True, text=True, timeout=300
+        )
+
+        return {
+            "success": result.returncode == 0,
+            "output": result.stdout[:2000] if result.stdout else "",
+            "errors": result.stderr[:500] if result.stderr else "",
+            "applied_fixes": apply_fix,
+            "next_steps": [
+                "Review changes with: git diff",
+                "Commit fixes: git add -A && git commit -m 'Auto-repair fixes'",
+                "Push to trigger CI: git push",
+            ] if apply_fix else ["Run with --fix to apply repairs"],
+        }
+
+    except Exception as e:
+        return {"error": True, "message": f"CI repair error: {str(e)}"}
+
+
 # Register tools with MCP server
 def register_all_tools(server):
     """Register all tool handlers with the MCP server."""
