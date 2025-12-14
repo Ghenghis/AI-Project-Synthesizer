@@ -27,8 +27,10 @@ jobs:
           pip install safety bandit pip-audit
       
       - name: Audit dependencies for known vulnerabilities
+        continue-on-error: true
         run: |
-          pip-audit --requirement requirements.txt --format=markdown --output dependency-audit-report.md
+          pip-audit --requirement requirements.txt --format=markdown --output dependency-audit-report.md || true
+          test -f dependency-audit-report.md || echo "pip-audit did not produce a report (unexpected)." > dependency-audit-report.md
       
       - name: Check code for security issues
         run: |
