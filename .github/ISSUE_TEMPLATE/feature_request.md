@@ -1,38 +1,46 @@
 ---
-name: Feature Request
-about: Suggest an idea for this project
-title: '[FEATURE] '
-labels: enhancement
-assignees: ''
+name: 🚀 Feature Request
+about: Suggest an idea for the AI Project Synthesizer
+title: "[FEATURE] "
+labels: ["enhancement"]
+assignees: ""
 ---
 
 ## Problem Statement
-A clear and concise description of the problem or limitation you're facing.
-Ex. I'm always frustrated when [...]
+What problem does this feature solve? What limitation does it address?
 
 ## Proposed Solution
-A clear and concise description of what you want to happen.
+Describe the solution you'd like to see in detail.
+
+## Use Cases
+Provide specific examples of how this feature would be used:
+
+1. **Use Case 1**: [Describe a specific scenario]
+2. **Use Case 2**: [Describe another scenario]
+
+## Feature Category
+Which area does this feature belong to?
+- [ ] Project Synthesis (core functionality)
+- [ ] MCP Server Tools
+- [ ] File Operations
+- [ ] Git Operations
+- [ ] LLM Integration
+- [ ] Documentation
+- [ ] CI/CD & Deployment
+- [ ] Other (specify)
 
 ## Alternatives Considered
-A clear and concise description of any alternative solutions or features you've considered.
-
-## Use Case
-Describe a specific scenario where this feature would be useful.
-
-## Implementation Ideas
-If you have ideas about how this could be implemented, share them here.
-
-## Additional Context
-Add any other context, mockups, or screenshots about the feature request here.
+Describe any alternative solutions or features you've considered.
 
 ## Priority
 How important is this feature to you?
-- [ ] Critical - blocking my work
-- [ ] High - significantly impacts productivity
-- [ ] Medium - would be nice to have
-- [ ] Low - minor improvement
+- [ ] Critical - I can't use the tool without it
+- [ ] High - Would significantly improve my workflow
+- [ ] Medium - Nice to have
+- [ ] Low - Minor improvement
 
-## Checklist
-- [ ] I have searched existing issues/discussions for similar requests
-- [ ] I have provided a clear use case
-- [ ] This feature aligns with the project's goals
+## Additional Context
+Add any other context, mockups, or examples about the feature request here.
+
+## Implementation Ideas (Optional)
+If you have thoughts on how this could be implemented, please share them.
