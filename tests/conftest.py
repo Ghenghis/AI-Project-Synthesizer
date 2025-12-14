@@ -16,8 +16,10 @@ os.environ.setdefault("LOG_LEVEL", "DEBUG")
 os.environ.setdefault("GITHUB_TOKEN", "test_github_token")
 os.environ.setdefault("CACHE_ENABLED", "false")
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add project root and src to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "src"))
 
 # Now import other modules
 import asyncio
