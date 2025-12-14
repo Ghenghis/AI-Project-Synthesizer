@@ -89,6 +89,7 @@ class UnifiedResolver:
             UnifiedResolutionResult with merged dependencies
         """
         import time
+
         start_time = time.time()
 
         result = UnifiedResolutionResult(success=False)
@@ -104,7 +105,13 @@ class UnifiedResolver:
                 for dep in deps:
                     name = dep.lower().replace("_", "-")
                     # Extract just the package name for tracking
-                    pkg_name = name.split("[")[0].split("<")[0].split(">")[0].split("=")[0].split("!")[0]
+                    pkg_name = (
+                        name.split("[")[0]
+                        .split("<")[0]
+                        .split(">")[0]
+                        .split("=")[0]
+                        .split("!")[0]
+                    )
 
                     if pkg_name not in seen_packages:
                         seen_packages[pkg_name] = []
@@ -255,7 +262,7 @@ name = "{project_name}"
 version = "{project_version}"
 description = "Synthesized project"
 readme = "README.md"
-requires-python = ">={result.packages[0].version if result.packages else '3.11'}"
+requires-python = ">={result.packages[0].version if result.packages else "3.11"}"
 dependencies = [
     {deps_str}
 ]

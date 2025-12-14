@@ -127,7 +127,10 @@ class UnifiedSearch:
 
         # HuggingFace client
         if settings.platforms.huggingface_token.get_secret_value():
-            token = huggingface_token or settings.platforms.huggingface_token.get_secret_value()
+            token = (
+                huggingface_token
+                or settings.platforms.huggingface_token.get_secret_value()
+            )
             try:
                 self._clients["huggingface"] = HuggingFaceClient(token=token)
                 logger.info("HuggingFace client initialized")
@@ -135,9 +138,13 @@ class UnifiedSearch:
                 logger.warning(f"Failed to initialize HuggingFace client: {e}")
 
         # Kaggle client
-        if settings.platforms.kaggle_username and settings.platforms.kaggle_key.get_secret_value():
+        if (
+            settings.platforms.kaggle_username
+            and settings.platforms.kaggle_key.get_secret_value()
+        ):
             try:
                 from src.discovery.kaggle_client import KaggleClient
+
                 kaggle_creds = kaggle_credentials or {
                     "username": settings.platforms.kaggle_username,
                     "key": settings.platforms.kaggle_key.get_secret_value(),
@@ -242,7 +249,7 @@ class UnifiedSearch:
         ranked_repos = self._rank_results(unique_repos, query, sort_by)
 
         # Limit total results
-        final_repos = ranked_repos[:max_results * len(platforms)]
+        final_repos = ranked_repos[: max_results * len(platforms)]
 
         result = UnifiedSearchResult(
             query=query,
@@ -339,7 +346,9 @@ class UnifiedSearch:
             score += 0.3
         else:
             name_terms = set(name_lower.replace("-", " ").replace("_", " ").split())
-            term_overlap = len(query_terms & name_terms) / len(query_terms) if query_terms else 0
+            term_overlap = (
+                len(query_terms & name_terms) / len(query_terms) if query_terms else 0
+            )
             score += 0.3 * term_overlap
 
         # Description match (0.2)
@@ -349,7 +358,11 @@ class UnifiedSearch:
                 score += 0.2
             else:
                 desc_terms = set(desc_lower.split())
-                term_overlap = len(query_terms & desc_terms) / len(query_terms) if query_terms else 0
+                term_overlap = (
+                    len(query_terms & desc_terms) / len(query_terms)
+                    if query_terms
+                    else 0
+                )
                 score += 0.2 * term_overlap
 
         # Topics match (0.15)
@@ -360,6 +373,7 @@ class UnifiedSearch:
 
         # Popularity (0.2) - log scaled
         import math
+
         if repo.stars > 0:
             star_score = min(1.0, math.log10(repo.stars + 1) / 5)
             score += 0.2 * star_score
@@ -367,9 +381,12 @@ class UnifiedSearch:
         # Recency (0.15)
         if repo.updated_at:
             from datetime import datetime
+
             try:
                 if isinstance(repo.updated_at, str):
-                    updated = datetime.fromisoformat(repo.updated_at.replace("Z", "+00:00"))
+                    updated = datetime.fromisoformat(
+                        repo.updated_at.replace("Z", "+00:00")
+                    )
                 else:
                     updated = repo.updated_at
 

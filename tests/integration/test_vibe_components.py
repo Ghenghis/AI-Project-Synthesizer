@@ -62,6 +62,7 @@ def get_users():
         """Clean up."""
         os.chdir(Path(__file__).parent.parent.parent)
         import shutil
+
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     async def test_prompt_enhancer(self):
@@ -72,7 +73,7 @@ def get_users():
         context = {
             "project_type": "web_api",
             "tech_stack": ["Python", "Flask"],
-            "security_level": "high"
+            "security_level": "high",
         }
 
         enhanced = await enhancer.enhance(raw_prompt, context)
@@ -130,6 +131,7 @@ class TestStructuredProcess(unittest.TestCase):
         """Clean up."""
         os.chdir(Path(__file__).parent.parent.parent)
         import shutil
+
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     async def test_task_decomposer(self):
@@ -150,12 +152,12 @@ class TestStructuredProcess(unittest.TestCase):
                     "estimated_time": 60,
                     "dependencies": [],
                     "success_criteria": ["Auth system working"],
-                    "prompt": "Implement JWT authentication"
+                    "prompt": "Implement JWT authentication",
                 }
-            ]
+            ],
         }
 
-        with patch('src.llm.litellm_router.LiteLLMRouter.generate') as mock:
+        with patch("src.llm.litellm_router.LiteLLMRouter.generate") as mock:
             mock.return_value = json.dumps(mock_response)
 
             plan = await decomposer.decompose(request)
@@ -185,14 +187,14 @@ class TestStructuredProcess(unittest.TestCase):
             estimated_time=30,
             dependencies=[],
             success_criteria=["Done"],
-            prompt="Test prompt"
+            prompt="Test prompt",
         )
 
         plan = TaskPlan(
             task_id="test_task",
             description="Test plan",
             phases=[phase],
-            estimated_total_time=30
+            estimated_total_time=30,
         )
 
         # Test context creation
@@ -241,21 +243,20 @@ class TestStructuredProcess(unittest.TestCase):
                     "responsibilities": ["Handle requests"],
                     "interfaces": ["HTTP"],
                     "dependencies": [],
-                    "technology": "FastAPI"
+                    "technology": "FastAPI",
                 }
             ],
             "data_flows": [],
             "technology_stack": {"backend": ["FastAPI"]},
             "non_functional_requirements": {},
-            "considerations": []
+            "considerations": [],
         }
 
-        with patch('src.llm.litellm_router.LiteLLMRouter.generate') as mock:
+        with patch("src.llm.litellm_router.LiteLLMRouter.generate") as mock:
             mock.return_value = json.dumps(mock_response)
 
             plan = await architect.create_architecture(
-                "Create a simple API",
-                {"project_type": "web_api"}
+                "Create a simple API", {"project_type": "web_api"}
             )
 
             self.assertEqual(len(plan.components), 1)
@@ -284,6 +285,7 @@ def get_user(id):
         """Clean up."""
         os.chdir(Path(__file__).parent.parent.parent)
         import shutil
+
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     async def test_security_scanner(self):
@@ -299,17 +301,17 @@ def get_user(id):
                     "message": "SQL injection vulnerability",
                     "severity": "HIGH",
                     "file": "bad_code.py",
-                    "line": 4
+                    "line": 4,
                 }
             ],
-            "summary": {"high": 1, "medium": 0, "low": 0}
+            "summary": {"high": 1, "medium": 0, "low": 0},
         }
 
-        with patch.object(scanner, 'scan') as mock_scan:
+        with patch.object(scanner, "scan") as mock_scan:
             mock_scan.return_value = MagicMock(
                 success=True,
                 issues=mock_result["issues"],
-                summary=mock_result["summary"]
+                summary=mock_result["summary"],
             )
 
             result = await scanner.scan("bad_code.py")
@@ -332,16 +334,14 @@ def get_user(id):
                     "message": "Line too long",
                     "severity": "warning",
                     "file": "bad_code.py",
-                    "line": 2
+                    "line": 2,
                 }
-            ]
+            ],
         }
 
-        with patch.object(checker, 'check') as mock_check:
+        with patch.object(checker, "check") as mock_check:
             mock_check.return_value = MagicMock(
-                success=True,
-                issues=mock_result["issues"],
-                fixed=0
+                success=True, issues=mock_result["issues"], fixed=0
             )
 
             result = await checker.check("bad_code.py")
@@ -355,12 +355,8 @@ def get_user(id):
         gate = QualityGate()
 
         # Mock evaluation
-        with patch.object(gate, 'evaluate') as mock_eval:
-            mock_eval.return_value = MagicMock(
-                passed=True,
-                issues=[],
-                score=85
-            )
+        with patch.object(gate, "evaluate") as mock_eval:
+            mock_eval.return_value = MagicMock(passed=True, issues=[], score=85)
 
             result = await gate.evaluate("sample_code", {})
 
@@ -381,6 +377,7 @@ class TestLearningIteration(unittest.TestCase):
         """Clean up."""
         os.chdir(Path(__file__).parent.parent.parent)
         import shutil
+
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     async def test_auto_rollback(self):
@@ -391,19 +388,14 @@ class TestLearningIteration(unittest.TestCase):
 
         # Create rollback point
         point = await rollback.create_rollback_point(
-            "test_task",
-            "test_phase",
-            RollbackStrategy.FILE_SYSTEM
+            "test_task", "test_phase", RollbackStrategy.FILE_SYSTEM
         )
 
         self.assertIsNotNone(point.checkpoint_id)
 
         # Test rollback (dry run)
         result = await rollback.rollback_on_failure(
-            "test_task",
-            "test_phase",
-            "Test failure",
-            point
+            "test_task", "test_phase", "Test failure", point
         )
 
         self.assertEqual(result.status.value, "dry_run")
@@ -422,7 +414,7 @@ class TestLearningIteration(unittest.TestCase):
             "reasoning": ["Type safety", "Better documentation"],
             "alternatives": ["Use type comments"],
             "impact": {"readability": "High"},
-            "best_practices": ["Type hints"]
+            "best_practices": ["Type hints"],
         }
 
         change = CodeChange(
@@ -430,16 +422,14 @@ class TestLearningIteration(unittest.TestCase):
             old_code="def add(a, b):",
             new_code="def add(a: int, b: int) -> int:",
             change_type="modify",
-            line_numbers=(1, 1)
+            line_numbers=(1, 1),
         )
 
-        with patch('src.llm.litellm_router.LiteLLMRouter.generate') as mock:
+        with patch("src.llm.litellm_router.LiteLLMRouter.generate") as mock:
             mock.return_value = json.dumps(mock_response)
 
             explanation = await explainer.explain_code_change(
-                change,
-                {},
-                ExplanationLevel.STANDARD
+                change, {}, ExplanationLevel.STANDARD
             )
 
             self.assertEqual(explanation.title, "Code improvement")
@@ -475,7 +465,7 @@ class ComponentTestRunner:
             TestPromptEngineering,
             TestStructuredProcess,
             TestQualityPipeline,
-            TestLearningIteration
+            TestLearningIteration,
         ]
 
         for test_class in test_classes:
@@ -508,4 +498,5 @@ class ComponentTestRunner:
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(ComponentTestRunner.run_all())

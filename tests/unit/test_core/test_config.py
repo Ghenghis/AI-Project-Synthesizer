@@ -3,7 +3,6 @@ Unit tests for the core configuration module.
 """
 
 
-
 class TestAppSettings:
     """Test application settings."""
 
@@ -14,7 +13,10 @@ class TestAppSettings:
         settings = AppSettings()
 
         assert settings.app_name == "AI Project Synthesizer"
-        assert settings.log_level in ("INFO", "DEBUG")  # Accept both as environment may override
+        assert settings.log_level in (
+            "INFO",
+            "DEBUG",
+        )  # Accept both as environment may override
 
     def test_environment_override(self, monkeypatch):
         """Test environment variable overrides."""

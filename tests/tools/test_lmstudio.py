@@ -82,7 +82,6 @@ class LMStudioConnectivityTest:
             logger.exception("Completion error")
             return False
 
-
     async def test_direct_http(self) -> bool:
         """Test direct HTTP connection to LM Studio API (simplified)."""
         print("\n🌐 Testing direct HTTP connection...")
@@ -147,7 +146,7 @@ class LMStudioConnectivityTest:
     async def cleanup(self):
         """Clean up resources."""
         try:
-            if hasattr(self.lmstudio_client, 'close'):
+            if hasattr(self.lmstudio_client, "close"):
                 await self.lmstudio_client.close()
         except:
             pass

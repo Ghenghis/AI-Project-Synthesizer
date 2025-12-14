@@ -18,6 +18,7 @@ try:
         SeverityLevel,
         Vulnerability,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for quality.dependency_scanner: {e}")
@@ -61,7 +62,7 @@ class TestVulnerability:
             description="Test vulnerability",
             cve_id="CVE-2024-0001",
             references=[],
-            advisory_data={}
+            advisory_data={},
         )
         assert instance is not None
         assert instance.package == "test-package"
@@ -77,6 +78,5 @@ class TestDependencyScanner:
         assert instance is not None
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -22,6 +22,7 @@ try:
         get_statistics,
         set_entry_point,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for agents.langgraph_integration: {e}")
@@ -37,6 +38,7 @@ class TestWorkflowStatus:
         instance = WorkflowStatus()
         assert instance is not None
 
+
 class TestWorkflowState:
     """Test WorkflowState."""
 
@@ -46,6 +48,7 @@ class TestWorkflowState:
         instance = WorkflowState()
         assert instance is not None
 
+
 class TestWorkflowResult:
     """Test WorkflowResult."""
 
@@ -54,6 +57,7 @@ class TestWorkflowResult:
         """Should create WorkflowResult."""
         instance = WorkflowResult()
         assert instance is not None
+
 
 class TestLangGraphIntegration:
     """Test LangGraphIntegration."""
@@ -68,8 +72,9 @@ class TestLangGraphIntegration:
     def test_get_statistics_exists(self):
         """Should have get_statistics method."""
         instance = LangGraphIntegration()
-        assert hasattr(instance, 'get_statistics')
+        assert hasattr(instance, "get_statistics")
         assert callable(instance.get_statistics)
+
 
 class TestStateGraph:
     """Test StateGraph."""
@@ -84,36 +89,37 @@ class TestStateGraph:
     def test_add_node_exists(self):
         """Should have add_node method."""
         instance = StateGraph()
-        assert hasattr(instance, 'add_node')
+        assert hasattr(instance, "add_node")
         assert callable(instance.add_node)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_add_edge_exists(self):
         """Should have add_edge method."""
         instance = StateGraph()
-        assert hasattr(instance, 'add_edge')
+        assert hasattr(instance, "add_edge")
         assert callable(instance.add_edge)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_add_conditional_edges_exists(self):
         """Should have add_conditional_edges method."""
         instance = StateGraph()
-        assert hasattr(instance, 'add_conditional_edges')
+        assert hasattr(instance, "add_conditional_edges")
         assert callable(instance.add_conditional_edges)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_set_entry_point_exists(self):
         """Should have set_entry_point method."""
         instance = StateGraph()
-        assert hasattr(instance, 'set_entry_point')
+        assert hasattr(instance, "set_entry_point")
         assert callable(instance.set_entry_point)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_compile_exists(self):
         """Should have compile method."""
         instance = StateGraph()
-        assert hasattr(instance, 'compile')
+        assert hasattr(instance, "compile")
         assert callable(instance.compile)
+
 
 class TestEND:
     """Test END."""
@@ -161,6 +167,5 @@ def test_compile_exists():
     assert callable(compile)
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

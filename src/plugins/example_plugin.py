@@ -30,7 +30,7 @@ class GitLabPlugin(PlatformPlugin):
             config_schema={
                 "url": {"type": "string", "default": "https://gitlab.com"},
                 "token": {"type": "string", "secret": True},
-            }
+            },
         )
 
     async def initialize(self, config: dict[str, Any]) -> bool:

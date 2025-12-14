@@ -48,7 +48,7 @@ class TestLLMRouter:
     def test_router_has_route_method(self):
         """Should have route method."""
         router = LLMRouter()
-        assert hasattr(router, 'route') or hasattr(router, 'complete')
+        assert hasattr(router, "route") or hasattr(router, "complete")
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ __version_info__ = (2, 0, 0)
 @dataclass
 class VersionInfo:
     """Semantic version information."""
+
     major: int
     minor: int
     patch: int
@@ -81,5 +82,5 @@ def get_build_info() -> dict:
             "synthesis": True,
             "voice": True,
             "assistant": True,
-        }
+        },
     }

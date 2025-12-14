@@ -15,6 +15,7 @@ try:
         VoiceProvider,
         get_voice_manager,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for voice.manager: {e}")
@@ -61,7 +62,7 @@ class TestVoiceProfile:
             similarity_boost=0.5,
             style=0.0,
             speed=1.0,
-            model="eleven_turbo_v2_5"
+            model="eleven_turbo_v2_5",
         )
         assert profile.id == "test_voice"
         assert profile.name == "Test Voice"
@@ -92,7 +93,7 @@ class TestVoiceManager:
             id="test_voice",
             name="Test Voice",
             provider=VoiceProvider.ELEVENLABS,
-            voice_id="voice123"
+            voice_id="voice123",
         )
 
         manager.add_voice(profile)
@@ -189,5 +190,5 @@ class TestVoiceManager:
         assert manager1 is manager2
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

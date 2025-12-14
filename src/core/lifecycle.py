@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ShutdownState(Enum):
     """Shutdown states."""
+
     RUNNING = "running"
     SHUTTING_DOWN = "shutting_down"
     SHUTDOWN_COMPLETE = "shutdown_complete"
@@ -30,6 +31,7 @@ class ShutdownState(Enum):
 @dataclass
 class ShutdownTask:
     """Task to execute during shutdown."""
+
     name: str
     func: Callable
     priority: int = 0  # Higher priority runs first
@@ -71,13 +73,13 @@ class LifecycleManager:
         """Setup signal handlers for graceful shutdown."""
         try:
             # Windows doesn't support SIGTERM properly
-            if hasattr(signal, 'SIGTERM'):
+            if hasattr(signal, "SIGTERM"):
                 signal.signal(signal.SIGTERM, self._signal_handler)
 
             signal.signal(signal.SIGINT, self._signal_handler)
 
             # Windows-specific signals
-            if hasattr(signal, 'SIGBREAK'):
+            if hasattr(signal, "SIGBREAK"):
                 signal.signal(signal.SIGBREAK, self._signal_handler)
 
         except Exception as e:
@@ -85,7 +87,9 @@ class LifecycleManager:
 
     def _signal_handler(self, signum: int, frame):
         """Handle shutdown signals."""
-        signal_name = signal.Signals(signum).name if hasattr(signal, 'Signals') else str(signum)
+        signal_name = (
+            signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+        )
         logger.info(f"Received signal {signal_name}, initiating graceful shutdown")
         self._shutdown_reason = f"Signal {signal_name}"
 
@@ -106,7 +110,7 @@ class LifecycleManager:
         func: Callable,
         priority: int = 0,
         timeout: float = 30.0,
-        required: bool = True
+        required: bool = True,
     ):
         """
         Add shutdown task.
@@ -227,7 +231,7 @@ class LifecycleManager:
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*self._running_tasks, return_exceptions=True),
-                    timeout=10.0
+                    timeout=10.0,
                 )
             except TimeoutError:
                 logger.warning("Some tasks did not complete within timeout")
@@ -394,11 +398,7 @@ def shutdown_on_signal(shutdown_func: Callable, priority: int = 0):
     # Generate unique task name
     task_name = f"{shutdown_func.__name__}_{id(shutdown_func)}"
 
-    lifecycle.add_shutdown_task(
-        name=task_name,
-        func=shutdown_func,
-        priority=priority
-    )
+    lifecycle.add_shutdown_task(name=task_name, func=shutdown_func, priority=priority)
 
     return shutdown_func
 
@@ -428,8 +428,9 @@ async def shutdown_logging():
     """Flush logging during shutdown."""
     try:
         import logging
+
         for handler in logging.root.handlers:
-            if hasattr(handler, 'flush'):
+            if hasattr(handler, "flush"):
                 handler.flush()
     except Exception as e:
         logger.error(f"Failed to flush logging: {e}")
@@ -439,6 +440,7 @@ async def shutdown_metrics():
     """Finalize metrics during shutdown."""
     try:
         from src.core.observability import metrics
+
         # Log final metrics summary
         summary = metrics.get_all_metrics()
         logger.info(f"Final metrics: {len(summary)} metrics collected")
@@ -472,6 +474,7 @@ class BackgroundTaskManager:
         Returns:
             Task handle
         """
+
         async def wrapped_task():
             async with self._semaphore:
                 try:
@@ -498,8 +501,7 @@ class BackgroundTaskManager:
 
         try:
             await asyncio.wait_for(
-                asyncio.gather(*self._tasks, return_exceptions=True),
-                timeout=timeout
+                asyncio.gather(*self._tasks, return_exceptions=True), timeout=timeout
             )
         except TimeoutError:
             logger.warning("Background tasks did not complete within timeout")

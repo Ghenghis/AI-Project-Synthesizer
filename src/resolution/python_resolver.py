@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResolvedPackage:
     """A resolved package with exact version."""
+
     name: str
     version: str
     source: str = "pypi"
@@ -34,6 +35,7 @@ class ResolvedPackage:
 @dataclass
 class ResolutionResult:
     """Result of dependency resolution."""
+
     success: bool
     packages: list[ResolvedPackage] = field(default_factory=list)
     conflicts: list[str] = field(default_factory=list)
@@ -134,6 +136,7 @@ class PythonResolver:
             ResolutionResult with resolved packages
         """
         import time
+
         start_time = time.time()
 
         python_ver = python_version or self.python_version
@@ -172,10 +175,14 @@ class PythonResolver:
 
             try:
                 process = await asyncio.create_subprocess_exec(
-                    "uv", "pip", "compile",
+                    "uv",
+                    "pip",
+                    "compile",
                     str(req_file),
-                    "--output-file", str(output_file),
-                    "--python-version", python_version,
+                    "--output-file",
+                    str(output_file),
+                    "--python-version",
+                    python_version,
                     "--quiet",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -232,7 +239,8 @@ class PythonResolver:
                 process = await asyncio.create_subprocess_exec(
                     "pip-compile",
                     str(req_file),
-                    "--output-file", str(output_file),
+                    "--output-file",
+                    str(output_file),
                     "--quiet",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -276,8 +284,7 @@ class PythonResolver:
         for req in requirements:
             # Parse requirement
             match = re.match(
-                r'^([a-zA-Z0-9][-a-zA-Z0-9._]*)(?:\[([^\]]+)\])?(.*)$',
-                req.strip()
+                r"^([a-zA-Z0-9][-a-zA-Z0-9._]*)(?:\[([^\]]+)\])?(.*)$", req.strip()
             )
 
             if match:
@@ -286,15 +293,17 @@ class PythonResolver:
                 # Extract version if exact
                 version = "latest"
                 if version_spec:
-                    version_match = re.search(r'==([^\s,]+)', version_spec)
+                    version_match = re.search(r"==([^\s,]+)", version_spec)
                     if version_match:
                         version = version_match.group(1)
 
-                packages.append(ResolvedPackage(
-                    name=name,
-                    version=version,
-                    extras=extras.split(",") if extras else [],
-                ))
+                packages.append(
+                    ResolvedPackage(
+                        name=name,
+                        version=version,
+                        extras=extras.split(",") if extras else [],
+                    )
+                )
 
         # Generate simple lockfile
         lockfile = "# Resolved dependencies (simple mode)\n"
@@ -322,17 +331,18 @@ class PythonResolver:
 
             # Parse package==version
             match = re.match(
-                r'^([a-zA-Z0-9][-a-zA-Z0-9._]*)(?:\[([^\]]+)\])?==([^\s]+)',
-                line
+                r"^([a-zA-Z0-9][-a-zA-Z0-9._]*)(?:\[([^\]]+)\])?==([^\s]+)", line
             )
 
             if match:
                 name, extras, version = match.groups()
-                packages.append(ResolvedPackage(
-                    name=name,
-                    version=version,
-                    extras=extras.split(",") if extras else [],
-                ))
+                packages.append(
+                    ResolvedPackage(
+                        name=name,
+                        version=version,
+                        extras=extras.split(",") if extras else [],
+                    )
+                )
 
         return packages
 
@@ -370,7 +380,7 @@ class PythonResolver:
         by_name: dict[str, list[str]] = {}
 
         for req in requirements:
-            match = re.match(r'^([a-zA-Z0-9][-a-zA-Z0-9._]*)', req)
+            match = re.match(r"^([a-zA-Z0-9][-a-zA-Z0-9._]*)", req)
             if match:
                 name = match.group(1).lower().replace("_", "-")
                 by_name.setdefault(name, []).append(req)
@@ -382,7 +392,7 @@ class PythonResolver:
                 # Check if versions are compatible
                 exact_versions = set()
                 for req in reqs:
-                    match = re.search(r'==([^\s,]+)', req)
+                    match = re.search(r"==([^\s,]+)", req)
                     if match:
                         exact_versions.add(match.group(1))
 

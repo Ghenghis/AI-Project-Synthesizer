@@ -29,7 +29,7 @@ class TestSynthesisSmoke:
             language="Python",
             stars=42,
             forks=5,
-            open_issues=3
+            open_issues=3,
         )
 
         assert repo.name == "test-repo"
@@ -57,7 +57,7 @@ class TestSynthesisSmoke:
         score = scorer.score_repository(str(sample_repository))
 
         assert score is not None
-        assert hasattr(score, 'overall_score')
+        assert hasattr(score, "overall_score")
         assert score.overall_score >= 0
         assert score.overall_score <= 100
 
@@ -72,7 +72,7 @@ class TestSynthesisSmoke:
             name="test-project",
             url="https://github.com/test/test-project",
             description="Test project",
-            language="Python"
+            language="Python",
         )
 
         dependencies = ["pytest", "requests"]
@@ -83,9 +83,7 @@ class TestSynthesisSmoke:
 
         # Test assembly
         result = assembler.assemble_project(
-            repo_info=repo,
-            analysis=dependencies,
-            quality_score=quality_score
+            repo_info=repo, analysis=dependencies, quality_score=quality_score
         )
 
         assert result is not None
@@ -126,11 +124,11 @@ class TestSynthesisSmoke:
             url="https://github.com/test/workflow-test",
             description="Workflow test repository",
             language="Python",
-            stars=100
+            stars=100,
         )
 
         # Analyze dependencies (mock)
-        with patch.object(DependencyAnalyzer, 'analyze_directory') as mock_analyze:
+        with patch.object(DependencyAnalyzer, "analyze_directory") as mock_analyze:
             mock_analyze.return_value = ["pytest", "requests", "numpy"]
 
             analyzer = DependencyAnalyzer()
@@ -139,12 +137,12 @@ class TestSynthesisSmoke:
             assert len(dependencies) == 3
 
         # Score quality (mock)
-        with patch.object(QualityScorer, 'score_repository') as mock_score:
+        with patch.object(QualityScorer, "score_repository") as mock_score:
             mock_score.return_value = MagicMock(
                 overall_score=88,
                 structure_score=90,
                 documentation_score=85,
-                test_score=80
+                test_score=80,
             )
 
             scorer = QualityScorer()
@@ -155,9 +153,7 @@ class TestSynthesisSmoke:
         # Assemble project
         assembler = ProjectAssembler()
         synthesis = assembler.assemble_project(
-            repo_info=repo,
-            analysis=dependencies,
-            quality_score=quality
+            repo_info=repo, analysis=dependencies, quality_score=quality
         )
 
         assert synthesis is not None
@@ -178,7 +174,7 @@ class TestSynthesisSmoke:
             repo = RepositoryInfo(
                 name=None,  # Invalid
                 url="invalid-url",
-                description="Test"
+                description="Test",
             )
             # Validation should catch this
             if not repo.name:
@@ -201,15 +197,13 @@ class TestSynthesisSmoke:
             name=sample_repository.name,
             url="https://github.com/test/" + sample_repository.name,
             description="Sample repository",
-            language="Python"
+            language="Python",
         )
 
         # Assemble with real data
         assembler = ProjectAssembler()
         synthesis = assembler.assemble_project(
-            repo_info=repo,
-            analysis=dependencies,
-            quality_score=quality
+            repo_info=repo, analysis=dependencies, quality_score=quality
         )
 
         # Generate with real synthesis

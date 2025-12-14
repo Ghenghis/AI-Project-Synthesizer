@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CompletionResult:
     """Result from LLM completion."""
+
     content: str
     model: str
     tokens_used: int
@@ -119,6 +120,7 @@ class OllamaClient:
             CompletionResult with generated content
         """
         import time
+
         start_time = time.time()
 
         model = model or self.default_model
@@ -242,7 +244,12 @@ class OllamaClient:
                 if i % 2 == 1:  # Inside code block
                     # Remove language identifier
                     code_lines = block.split("\n")
-                    if code_lines and code_lines[0].strip() in ["python", "javascript", "typescript", language]:
+                    if code_lines and code_lines[0].strip() in [
+                        "python",
+                        "javascript",
+                        "typescript",
+                        language,
+                    ]:
                         code_lines = code_lines[1:]
                     return "\n".join(code_lines).strip()
 

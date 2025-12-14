@@ -13,6 +13,7 @@ async def test_mcp_server_imports():
     """Test that MCP server can be imported without errors."""
     try:
         from src.mcp_server.server import MCPServer, server
+
         assert MCPServer is not None
         assert server is not None
     except ImportError as e:
@@ -28,9 +29,9 @@ async def test_mcp_server_initialization():
     mcp_server = MCPServer()
 
     # Verify attributes exist
-    assert hasattr(mcp_server, 'llm_router')
-    assert hasattr(mcp_server, 'memory_system')
-    assert hasattr(mcp_server, 'server')
+    assert hasattr(mcp_server, "llm_router")
+    assert hasattr(mcp_server, "memory_system")
+    assert hasattr(mcp_server, "server")
 
     # Verify server info
     info = mcp_server.get_server_info()
@@ -58,6 +59,7 @@ async def test_mcp_tool_handlers_import():
             handle_search_repositories,
             handle_synthesize_project,
         )
+
         assert handle_search_repositories is not None
         assert handle_analyze_repository is not None
         assert handle_check_compatibility is not None
@@ -73,6 +75,7 @@ async def test_unified_search_import():
     """Test that unified search can be imported."""
     try:
         from src.discovery.unified_search import UnifiedSearch, create_unified_search
+
         search = create_unified_search()
         assert search is not None
         assert isinstance(search, UnifiedSearch)
@@ -85,6 +88,7 @@ async def test_dependency_analyzer_import():
     """Test that dependency analyzer can be imported."""
     try:
         from src.analysis.dependency_analyzer import DependencyAnalyzer
+
         analyzer = DependencyAnalyzer()
         assert analyzer is not None
     except ImportError as e:

@@ -31,6 +31,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class TelemetryEvent:
     """A telemetry event."""
+
     event_type: str
     timestamp: float = field(default_factory=time.time)
     properties: dict[str, Any] = field(default_factory=dict)
@@ -46,6 +47,7 @@ class TelemetryEvent:
 @dataclass
 class TelemetryConfig:
     """Telemetry configuration."""
+
     enabled: bool = False  # OPT-IN: Disabled by default
     anonymous_id: str = ""  # Anonymous machine ID
     send_interval_seconds: int = 3600  # Send every hour
@@ -107,7 +109,9 @@ class TelemetryCollector:
             try:
                 data = json.loads(config_path.read_text())
                 self.config.enabled = data.get("enabled", False)
-                self.config.anonymous_id = data.get("anonymous_id", self.config.anonymous_id)
+                self.config.anonymous_id = data.get(
+                    "anonymous_id", self.config.anonymous_id
+                )
             except Exception:
                 pass
 
@@ -115,16 +119,22 @@ class TelemetryCollector:
         """Save telemetry config."""
         config_path = Path(".cache/telemetry_config.json")
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "enabled": self.config.enabled,
-            "anonymous_id": self.config.anonymous_id,
-        }))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "enabled": self.config.enabled,
+                    "anonymous_id": self.config.anonymous_id,
+                }
+            )
+        )
 
     def enable(self):
         """Enable telemetry (opt-in)."""
         self.config.enabled = True
         self._save_config()
-        secure_logger.info("Telemetry enabled (thank you for helping improve the project!)")
+        secure_logger.info(
+            "Telemetry enabled (thank you for helping improve the project!)"
+        )
 
     def disable(self):
         """Disable telemetry."""
@@ -166,15 +176,28 @@ class TelemetryCollector:
 
         # Allowed keys (whitelist approach)
         allowed_keys = {
-            "platform", "platforms", "count", "results", "duration_ms",
-            "success", "error_type", "version", "python_version",
-            "os", "resource_type", "cache_hit",
+            "platform",
+            "platforms",
+            "count",
+            "results",
+            "duration_ms",
+            "success",
+            "error_type",
+            "version",
+            "python_version",
+            "os",
+            "resource_type",
+            "cache_hit",
         }
 
         for key, value in props.items():
             if key in allowed_keys:
                 # Only include simple values
-                if isinstance(value, str | int | float | bool) or isinstance(value, list) and all(isinstance(v, str) for v in value):
+                if (
+                    isinstance(value, str | int | float | bool)
+                    or isinstance(value, list)
+                    and all(isinstance(v, str) for v in value)
+                ):
                     safe[key] = value
 
         return safe
@@ -204,30 +227,41 @@ class TelemetryCollector:
         }
 
     # Convenience methods for common events
-    def track_search(self, platforms: list[str], results_count: int, duration_ms: float):
+    def track_search(
+        self, platforms: list[str], results_count: int, duration_ms: float
+    ):
         """Track a search event."""
         if self.config.track_searches:
-            self.track("search", {
-                "platforms": platforms,
-                "count": results_count,
-                "duration_ms": duration_ms,
-            })
+            self.track(
+                "search",
+                {
+                    "platforms": platforms,
+                    "count": results_count,
+                    "duration_ms": duration_ms,
+                },
+            )
 
     def track_assembly(self, success: bool, resources_count: int, duration_ms: float):
         """Track a project assembly."""
         if self.config.track_assemblies:
-            self.track("assembly", {
-                "success": success,
-                "count": resources_count,
-                "duration_ms": duration_ms,
-            })
+            self.track(
+                "assembly",
+                {
+                    "success": success,
+                    "count": resources_count,
+                    "duration_ms": duration_ms,
+                },
+            )
 
     def track_error(self, error_type: str):
         """Track an error (type only, no details)."""
         if self.config.track_errors:
-            self.track("error", {
-                "error_type": error_type,
-            })
+            self.track(
+                "error",
+                {
+                    "error_type": error_type,
+                },
+            )
 
 
 # Global telemetry instance

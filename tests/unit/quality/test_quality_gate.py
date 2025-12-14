@@ -17,6 +17,7 @@ try:
         QualityGate,
         QualityMetrics,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for quality.quality_gate: {e}")
@@ -55,13 +56,12 @@ class TestQualityMetrics:
             lint_score=85.0,
             test_coverage=80.0,
             review_score=7.5,
-            overall_score=85.0
+            overall_score=85.0,
         )
         assert instance is not None
         assert instance.security_score == 90.0
         assert instance.test_coverage == 80.0
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -15,11 +15,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ScaffoldResult:
     """Result of scaffolding operation."""
+
     success: bool
     files_created: int = 0
     warnings: list[str] = field(default_factory=list)
-
-
 
 
 class Scaffolder:
@@ -48,7 +47,7 @@ class Scaffolder:
                 "src/__init__.py": "",
                 "tests/__init__.py": "",
                 "tests/conftest.py": '"""Pytest configuration."""\n\nimport pytest\n',
-            }
+            },
         },
         "python-fastapi": {
             "dirs": ["src", "src/api", "src/models", "src/services", "tests", "docs"],
@@ -81,7 +80,7 @@ async def health_check():
     """Health check endpoint."""
     return {{"status": "healthy"}}
 ''',
-            }
+            },
         },
         "python-ml": {
             "dirs": ["src", "data", "models", "notebooks", "tests", "docs"],
@@ -90,7 +89,7 @@ async def health_check():
                 "data/.gitkeep": "",
                 "models/.gitkeep": "",
                 "notebooks/.gitkeep": "",
-            }
+            },
         },
     }
 
@@ -143,7 +142,9 @@ async def health_check():
         # Generate common files
         files_created += self._generate_gitignore(output_path)
         files_created += self._generate_readme(output_path, project_name)
-        files_created += self._generate_pyproject(output_path, project_name, python_version)
+        files_created += self._generate_pyproject(
+            output_path, project_name, python_version
+        )
 
         if include_docker:
             files_created += self._generate_docker(output_path, project_name)
@@ -271,10 +272,7 @@ MIT License
         return 1
 
     def _generate_pyproject(
-        self,
-        path: Path,
-        project_name: str,
-        python_version: str
+        self, path: Path, project_name: str, python_version: str
     ) -> int:
         """Generate pyproject.toml if not exists."""
         pyproject = path / "pyproject.toml"
@@ -314,7 +312,7 @@ warn_return_any = true
         # Dockerfile
         dockerfile = path / "Dockerfile"
         if not dockerfile.exists():
-            content = '''FROM python:3.11-slim
+            content = """FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -332,14 +330,14 @@ COPY . .
 
 # Run
 CMD ["python", "-m", "src.main"]
-'''
+"""
             dockerfile.write_text(content)
             files_created += 1
 
         # docker-compose.yml
         compose = path / "docker-compose.yml"
         if not compose.exists():
-            content = f'''version: "3.8"
+            content = f"""version: "3.8"
 
 services:
   app:
@@ -351,7 +349,7 @@ services:
       - .:/app
     environment:
       - PYTHONUNBUFFERED=1
-'''
+"""
             compose.write_text(content)
             files_created += 1
 
@@ -367,7 +365,7 @@ services:
 
         ci_file = workflows_dir / "ci.yml"
         if not ci_file.exists():
-            content = '''name: CI
+            content = """name: CI
 
 on:
   push:
@@ -401,7 +399,7 @@ jobs:
 
       - name: Test
         run: pytest tests/ -v
-'''
+"""
             ci_file.write_text(content)
             files_created += 1
 

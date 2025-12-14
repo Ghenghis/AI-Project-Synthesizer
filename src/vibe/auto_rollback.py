@@ -26,6 +26,7 @@ from src.vibe.context_manager import ContextManager
 
 class RollbackStrategy(Enum):
     """Available rollback strategies."""
+
     GIT = "git"  # Use Git to rollback commits
     FILE_SYSTEM = "file_system"  # Restore files from backup
     STATE = "state"  # Restore only in-memory state
@@ -34,6 +35,7 @@ class RollbackStrategy(Enum):
 
 class RollbackMode(Enum):
     """Rollback execution modes."""
+
     AUTO = "auto"  # Automatically rollback on failure
     INTERACTIVE = "interactive"  # Ask for confirmation
     DRY_RUN = "dry_run"  # Show what would be rolled back
@@ -42,6 +44,7 @@ class RollbackMode(Enum):
 
 class RollbackStatus(Enum):
     """Status of a rollback operation."""
+
     SUCCESS = "success"
     FAILED = "failed"
     PARTIAL = "partial"
@@ -52,6 +55,7 @@ class RollbackStatus(Enum):
 @dataclass
 class RollbackPoint:
     """A point in time that can be rolled back to."""
+
     checkpoint_id: str
     timestamp: datetime
     strategy: RollbackStrategy
@@ -62,6 +66,7 @@ class RollbackPoint:
 @dataclass
 class RollbackResult:
     """Result of a rollback operation."""
+
     status: RollbackStatus
     strategy_used: RollbackStrategy
     files_restored: list[str]
@@ -103,18 +108,21 @@ class AutoRollback:
         """Check if current directory is a Git repository."""
         try:
             import subprocess
+
             result = subprocess.run(
-                ["git", "rev-parse", "--git-dir"],
-                capture_output=True,
-                text=True
+                ["git", "rev-parse", "--git-dir"], capture_output=True, text=True
             )
             return result.returncode == 0
         except FileNotFoundError:
             return False
 
-    async def create_rollback_point(self, task_id: str, phase_id: str,
-                                  strategy: RollbackStrategy = RollbackStrategy.HYBRID,
-                                  files: list[str] | None = None) -> RollbackPoint:
+    async def create_rollback_point(
+        self,
+        task_id: str,
+        phase_id: str,
+        strategy: RollbackStrategy = RollbackStrategy.HYBRID,
+        files: list[str] | None = None,
+    ) -> RollbackPoint:
         """
         Create a rollback point before executing a phase.
 
@@ -136,11 +144,16 @@ class AutoRollback:
         )
 
         # Strategy-specific backups
-        if strategy in [RollbackStrategy.GIT, RollbackStrategy.HYBRID] and self._is_git_repo:
+        if (
+            strategy in [RollbackStrategy.GIT, RollbackStrategy.HYBRID]
+            and self._is_git_repo
+        ):
             artifacts["git"] = await self._backup_git_state()
 
         if strategy in [RollbackStrategy.FILE_SYSTEM, RollbackStrategy.HYBRID]:
-            artifacts["files"] = await self._backup_files(files or self._get_tracked_files())
+            artifacts["files"] = await self._backup_files(
+                files or self._get_tracked_files()
+            )
 
         # Create rollback point
         rollback_point = RollbackPoint(
@@ -151,9 +164,9 @@ class AutoRollback:
                 "task_id": task_id,
                 "phase_id": phase_id,
                 "mode": self.mode.value,
-                "git_repo": self._is_git_repo
+                "git_repo": self._is_git_repo,
             },
-            artifacts=artifacts
+            artifacts=artifacts,
         )
 
         # Save rollback point
@@ -161,9 +174,13 @@ class AutoRollback:
 
         return rollback_point
 
-    async def rollback_on_failure(self, task_id: str, phase_id: str,
-                                failure_reason: str,
-                                rollback_point: RollbackPoint | None = None) -> RollbackResult:
+    async def rollback_on_failure(
+        self,
+        task_id: str,
+        phase_id: str,
+        failure_reason: str,
+        rollback_point: RollbackPoint | None = None,
+    ) -> RollbackResult:
         """
         Perform rollback when a phase fails.
 
@@ -186,7 +203,7 @@ class AutoRollback:
                     files_restored=[],
                     commits_reverted=[],
                     errors=["No rollback point found"],
-                    metadata={}
+                    metadata={},
                 )
 
         # Check if rollback is enabled
@@ -197,7 +214,7 @@ class AutoRollback:
                 files_restored=[],
                 commits_reverted=[],
                 errors=["Rollback is disabled"],
-                metadata={}
+                metadata={},
             )
 
         # Dry run mode
@@ -213,7 +230,7 @@ class AutoRollback:
                     files_restored=[],
                     commits_reverted=[],
                     errors=["User cancelled rollback"],
-                    metadata={}
+                    metadata={},
                 )
 
         # Perform rollback
@@ -236,23 +253,32 @@ class AutoRollback:
         try:
             # Restore ContextManager state
             success = await self.context_manager.restore_checkpoint(
-                rollback_point.metadata["task_id"],
-                rollback_point.checkpoint_id
+                rollback_point.metadata["task_id"], rollback_point.checkpoint_id
             )
             if not success:
                 errors.append("Failed to restore context state")
 
             # Strategy-specific rollback
-            if rollback_point.strategy in [RollbackStrategy.GIT, RollbackStrategy.HYBRID]:
+            if rollback_point.strategy in [
+                RollbackStrategy.GIT,
+                RollbackStrategy.HYBRID,
+            ]:
                 if "git" in rollback_point.artifacts:
-                    git_result = await self._rollback_git(rollback_point.artifacts["git"])
+                    git_result = await self._rollback_git(
+                        rollback_point.artifacts["git"]
+                    )
                     commits_reverted = git_result.get("commits", [])
                     if git_result.get("errors"):
                         errors.extend(git_result["errors"])
 
-            if rollback_point.strategy in [RollbackStrategy.FILE_SYSTEM, RollbackStrategy.HYBRID]:
+            if rollback_point.strategy in [
+                RollbackStrategy.FILE_SYSTEM,
+                RollbackStrategy.HYBRID,
+            ]:
                 if "files" in rollback_point.artifacts:
-                    file_result = await self._rollback_files(rollback_point.artifacts["files"])
+                    file_result = await self._rollback_files(
+                        rollback_point.artifacts["files"]
+                    )
                     files_restored = file_result.get("files", [])
                     if file_result.get("errors"):
                         errors.extend(file_result["errors"])
@@ -268,8 +294,8 @@ class AutoRollback:
                 errors=errors,
                 metadata={
                     "rollback_point_id": rollback_point.checkpoint_id,
-                    "timestamp": datetime.now().isoformat()
-                }
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
         except Exception as e:
@@ -279,7 +305,7 @@ class AutoRollback:
                 files_restored=files_restored,
                 commits_reverted=commits_reverted,
                 errors=[str(e)],
-                metadata={}
+                metadata={},
             )
 
     async def _backup_git_state(self) -> dict[str, Any]:
@@ -292,9 +318,7 @@ class AutoRollback:
         try:
             # Get current commit
             result = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                capture_output=True,
-                text=True
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True
             )
             current_commit = result.stdout.strip() if result.returncode == 0 else None
 
@@ -302,23 +326,21 @@ class AutoRollback:
             result = subprocess.run(
                 ["git", "diff", "--cached", "--name-only"],
                 capture_output=True,
-                text=True
+                text=True,
             )
-            staged_files = result.stdout.strip().split('\n') if result.stdout else []
+            staged_files = result.stdout.strip().split("\n") if result.stdout else []
 
             # Get modified files
             result = subprocess.run(
-                ["git", "diff", "--name-only"],
-                capture_output=True,
-                text=True
+                ["git", "diff", "--name-only"], capture_output=True, text=True
             )
-            modified_files = result.stdout.strip().split('\n') if result.stdout else []
+            modified_files = result.stdout.strip().split("\n") if result.stdout else []
 
             return {
                 "commit": current_commit,
                 "staged_files": [f for f in staged_files if f],
                 "modified_files": [f for f in modified_files if f],
-                "branch": self._get_current_branch()
+                "branch": self._get_current_branch(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -338,7 +360,7 @@ class AutoRollback:
             result = subprocess.run(
                 ["git", "reset", "--hard", git_state["commit"]],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
@@ -349,10 +371,7 @@ class AutoRollback:
             # Clear staging area
             subprocess.run(["git", "reset", "HEAD"], capture_output=True)
 
-            return {
-                "commits": commits,
-                "errors": errors
-            }
+            return {"commits": commits, "errors": errors}
         except Exception as e:
             return {"errors": [str(e)]}
 
@@ -381,7 +400,7 @@ class AutoRollback:
         return {
             "backup_path": str(backup_path),
             "files": backup_info,
-            "timestamp": timestamp
+            "timestamp": timestamp,
         }
 
     async def _rollback_files(self, file_backup: dict[str, Any]) -> dict[str, Any]:
@@ -407,10 +426,7 @@ class AutoRollback:
             except Exception as e:
                 errors.append(f"Failed to restore {rel_path}: {str(e)}")
 
-        return {
-            "files": files,
-            "errors": errors
-        }
+        return {"files": files, "errors": errors}
 
     def _get_tracked_files(self) -> list[str]:
         """Get list of tracked files in the project."""
@@ -420,23 +436,37 @@ class AutoRollback:
         if self._is_git_repo:
             try:
                 import subprocess
+
                 result = subprocess.run(
-                    ["git", "ls-files"],
-                    capture_output=True,
-                    text=True
+                    ["git", "ls-files"], capture_output=True, text=True
                 )
                 if result.stdout:
-                    files = result.stdout.strip().split('\n')
+                    files = result.stdout.strip().split("\n")
             except Exception:
                 pass
 
         # If not git or error, get common project files
         if not files:
-            patterns = ["*.py", "*.js", "*.ts", "*.jsx", "*.tsx", "*.md", "*.json", "*.yaml", "*.yml"]
+            patterns = [
+                "*.py",
+                "*.js",
+                "*.ts",
+                "*.jsx",
+                "*.tsx",
+                "*.md",
+                "*.json",
+                "*.yaml",
+                "*.yml",
+            ]
             for pattern in patterns:
                 files.extend(str(f) for f in Path.cwd().rglob(pattern))
 
-        return [f for f in files if f and not any(skip in f for skip in [".git", "__pycache__", "node_modules"])]
+        return [
+            f
+            for f in files
+            if f
+            and not any(skip in f for skip in [".git", "__pycache__", "node_modules"])
+        ]
 
     def _get_current_branch(self) -> str:
         """Get current Git branch."""
@@ -445,22 +475,21 @@ class AutoRollback:
 
         try:
             import subprocess
+
             result = subprocess.run(
-                ["git", "branch", "--show-current"],
-                capture_output=True,
-                text=True
+                ["git", "branch", "--show-current"], capture_output=True, text=True
             )
             return result.stdout.strip() if result.returncode == 0 else "unknown"
         except Exception:
             return "unknown"
 
-    async def _get_latest_rollback_point(self, task_id: str, phase_id: str) -> RollbackPoint | None:
+    async def _get_latest_rollback_point(
+        self, task_id: str, phase_id: str
+    ) -> RollbackPoint | None:
         """Get the latest rollback point for a task/phase."""
         # Search memory
         results = await self.memory.search(
-            query=f"{task_id} {phase_id}",
-            category="ROLLBACK",
-            limit=10
+            query=f"{task_id} {phase_id}", category="ROLLBACK", limit=10
         )
 
         if not results:
@@ -487,7 +516,7 @@ class AutoRollback:
                 timestamp=datetime.fromisoformat(latest["timestamp"]),
                 strategy=RollbackStrategy(latest["strategy"]),
                 metadata=latest["metadata"],
-                artifacts=latest["artifacts"]
+                artifacts=latest["artifacts"],
             )
 
         return None
@@ -528,9 +557,7 @@ if __name__ == "__main__":
         # Test creating rollback point
         print("Creating rollback point...")
         rollback_point = await auto_rollback.create_rollback_point(
-            task_id="test_task",
-            phase_id="test_phase",
-            strategy=RollbackStrategy.HYBRID
+            task_id="test_task", phase_id="test_phase", strategy=RollbackStrategy.HYBRID
         )
 
         print(f"Created rollback point: {rollback_point.checkpoint_id}")
@@ -543,7 +570,7 @@ if __name__ == "__main__":
             task_id="test_task",
             phase_id="test_phase",
             failure_reason="Test failure - syntax error",
-            rollback_point=rollback_point
+            rollback_point=rollback_point,
         )
 
         print(f"Status: {result.status.value}")

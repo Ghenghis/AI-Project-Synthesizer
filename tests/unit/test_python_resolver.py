@@ -73,16 +73,17 @@ class TestPythonResolver:
     @pytest.mark.asyncio
     async def test_resolve_with_uv(self, resolver, mock_requirements):
         """Test resolution using uv."""
-        with patch.object(resolver, "_uv_available", True), \
-             patch.object(resolver, "_resolve_with_uv") as mock_resolve:
-
+        with (
+            patch.object(resolver, "_uv_available", True),
+            patch.object(resolver, "_resolve_with_uv") as mock_resolve,
+        ):
             mock_result = ResolutionResult(
                 success=True,
                 packages=[
                     ResolvedPackage(name="fastapi", version="0.104.1"),
                     ResolvedPackage(name="pydantic", version="2.5.0"),
                 ],
-                lockfile_content="fastapi==0.104.1\npydantic==2.5.0\n"
+                lockfile_content="fastapi==0.104.1\npydantic==2.5.0\n",
             )
             mock_resolve.return_value = mock_result
 
@@ -95,10 +96,11 @@ class TestPythonResolver:
     @pytest.mark.asyncio
     async def test_resolve_fallback_to_pip_compile(self, resolver, mock_requirements):
         """Test fallback to pip-compile when uv unavailable."""
-        with patch.object(resolver, "_uv_available", False), \
-             patch.object(resolver, "_pip_compile_available", True), \
-             patch.object(resolver, "_resolve_with_pip_compile") as mock_resolve:
-
+        with (
+            patch.object(resolver, "_uv_available", False),
+            patch.object(resolver, "_pip_compile_available", True),
+            patch.object(resolver, "_resolve_with_pip_compile") as mock_resolve,
+        ):
             mock_result = ResolutionResult(success=True)
             mock_resolve.return_value = mock_result
 
@@ -110,9 +112,10 @@ class TestPythonResolver:
     @pytest.mark.asyncio
     async def test_resolve_simple_fallback(self, resolver, mock_requirements):
         """Test simple resolution when neither uv nor pip-compile available."""
-        with patch.object(resolver, "_uv_available", False), \
-             patch.object(resolver, "_pip_compile_available", False):
-
+        with (
+            patch.object(resolver, "_uv_available", False),
+            patch.object(resolver, "_pip_compile_available", False),
+        ):
             result = await resolver.resolve(mock_requirements)
 
             assert result.success is True
@@ -126,9 +129,10 @@ class TestPythonResolver:
     @pytest.mark.asyncio
     async def test_resolve_with_uv_success(self, resolver):
         """Test successful uv resolution."""
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, \
-             patch("tempfile.TemporaryDirectory") as mock_temp:
-
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("tempfile.TemporaryDirectory") as mock_temp,
+        ):
             # Mock subprocess
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (b"", b"")
@@ -140,13 +144,15 @@ class TestPythonResolver:
             mock_temp.return_value.__enter__.return_value = str(temp_dir)
 
             # Mock file operations
-            with patch.object(Path, "write_text"), \
-                 patch.object(Path, "read_text", return_value="fastapi==0.104.1\npydantic==2.5.0\n"):
-
-                result = await resolver._resolve_with_uv(
-                    ["fastapi>=0.100.0"],
-                    "3.11"
-                )
+            with (
+                patch.object(Path, "write_text"),
+                patch.object(
+                    Path,
+                    "read_text",
+                    return_value="fastapi==0.104.1\npydantic==2.5.0\n",
+                ),
+            ):
+                result = await resolver._resolve_with_uv(["fastapi>=0.100.0"], "3.11")
 
                 assert result.success is True
                 assert len(result.packages) == 2
@@ -154,14 +160,15 @@ class TestPythonResolver:
     @pytest.mark.asyncio
     async def test_resolve_with_uv_conflict(self, resolver):
         """Test uv resolution with conflicts."""
-        with patch("asyncio.create_subprocess_exec") as mock_subprocess, \
-             patch("tempfile.TemporaryDirectory") as mock_temp:
-
+        with (
+            patch("asyncio.create_subprocess_exec") as mock_subprocess,
+            patch("tempfile.TemporaryDirectory") as mock_temp,
+        ):
             # Mock subprocess failure
             mock_process = AsyncMock()
             mock_process.communicate.return_value = (
                 b"",
-                b"error: package fastapi has conflicting requirements"
+                b"error: package fastapi has conflicting requirements",
             )
             mock_process.returncode = 1
             mock_subprocess.return_value = mock_process
@@ -171,13 +178,15 @@ class TestPythonResolver:
             mock_temp.return_value.__enter__.return_value = str(temp_dir)
 
             # Mock Path operations to avoid actual file system
-            with patch.object(Path, "write_text"), \
-                 patch.object(Path, "read_text", return_value="fastapi==0.104.1\npydantic==2.5.0\n"):
-
-                result = await resolver._resolve_with_uv(
-                    ["fastapi>=0.100.0"],
-                    "3.11"
-                )
+            with (
+                patch.object(Path, "write_text"),
+                patch.object(
+                    Path,
+                    "read_text",
+                    return_value="fastapi==0.104.1\npydantic==2.5.0\n",
+                ),
+            ):
+                result = await resolver._resolve_with_uv(["fastapi>=0.100.0"], "3.11")
 
             assert result.success is False
             assert len(result.conflicts) > 0
@@ -317,13 +326,12 @@ pydantic==2.5.0  # Inline comment
             "pydantic>=2.0.0",
         ]
 
-        with patch.object(resolver, "_uv_available", False), \
-             patch.object(resolver, "_pip_compile_available", False):
-
+        with (
+            patch.object(resolver, "_uv_available", False),
+            patch.object(resolver, "_pip_compile_available", False),
+        ):
             result = await resolver.resolve(
-                requirements,
-                python_version="3.11",
-                constraints=["python>=3.11"]
+                requirements, python_version="3.11", constraints=["python>=3.11"]
             )
 
             assert result.success is True

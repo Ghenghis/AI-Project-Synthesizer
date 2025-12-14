@@ -14,7 +14,7 @@ async def test_mcp_search_repositories_tool():
     from src.mcp_server.tools import handle_search_repositories
 
     # Mock dependencies
-    with patch('src.mcp_server.tools.create_unified_search') as mock_search:
+    with patch("src.mcp_server.tools.create_unified_search") as mock_search:
         mock_search_instance = AsyncMock()
         mock_search.return_value = mock_search_instance
 
@@ -30,17 +30,13 @@ async def test_mcp_search_repositories_tool():
         mock_repo.updated_at = "2024-01-01"
 
         mock_search_instance.search.return_value = MagicMock(
-            repositories=[mock_repo],
-            total_count=1,
-            search_time_ms=100
+            repositories=[mock_repo], total_count=1, search_time_ms=100
         )
 
         # Call the handler
-        result = await handle_search_repositories({
-            "query": "test repository",
-            "platforms": ["github"],
-            "max_results": 10
-        })
+        result = await handle_search_repositories(
+            {"query": "test repository", "platforms": ["github"], "max_results": 10}
+        )
 
         # Verify response
         assert "repositories" in result
@@ -55,32 +51,35 @@ async def test_mcp_analyze_repository_tool():
     from src.mcp_server.tools import handle_analyze_repository
 
     # Mock dependencies
-    with patch('src.mcp_server.tools.DependencyAnalyzer') as mock_dep_analyzer, \
-         patch('src.mcp_server.tools.ASTParser') as mock_ast_parser, \
-         patch('src.mcp_server.tools.QualityScorer') as mock_quality_scorer:
-
+    with (
+        patch("src.mcp_server.tools.DependencyAnalyzer") as mock_dep_analyzer,
+        patch("src.mcp_server.tools.ASTParser") as mock_ast_parser,
+        patch("src.mcp_server.tools.QualityScorer") as mock_quality_scorer,
+    ):
         # Setup mocks
         mock_dep_analyzer.return_value.analyze.return_value = {
             "dependencies": {"requests": "2.28.0"},
-            "issues": []
+            "issues": [],
         }
 
         mock_ast_parser.return_value.parse.return_value = {
             "functions": ["test_func"],
-            "classes": ["TestClass"]
+            "classes": ["TestClass"],
         }
 
         mock_quality_scorer.return_value.score.return_value = {
             "score": 85,
-            "metrics": {}
+            "metrics": {},
         }
 
         # Call the handler
-        result = await handle_analyze_repository({
-            "repo_url": "https://github.com/test/test-repo",
-            "include_transitive_deps": True,
-            "extract_components": True
-        })
+        result = await handle_analyze_repository(
+            {
+                "repo_url": "https://github.com/test/test-repo",
+                "include_transitive_deps": True,
+                "extract_components": True,
+            }
+        )
 
         # Verify response
         assert "summary" in result
@@ -95,7 +94,7 @@ async def test_mcp_check_compatibility_tool():
     from src.mcp_server.tools import handle_check_compatibility
 
     # Mock dependencies
-    with patch('src.mcp_server.tools.CompatibilityChecker') as mock_checker:
+    with patch("src.mcp_server.tools.CompatibilityChecker") as mock_checker:
         mock_checker_instance = MagicMock()
         mock_checker.return_value = mock_checker_instance
 
@@ -103,17 +102,19 @@ async def test_mcp_check_compatibility_tool():
         mock_checker_instance.check_compatibility.return_value = {
             "compatible": True,
             "conflicts": [],
-            "warnings": []
+            "warnings": [],
         }
 
         # Call the handler
-        result = await handle_check_compatibility({
-            "repo_urls": [
-                "https://github.com/test/repo1",
-                "https://github.com/test/repo2"
-            ],
-            "target_python_version": "3.11"
-        })
+        result = await handle_check_compatibility(
+            {
+                "repo_urls": [
+                    "https://github.com/test/repo1",
+                    "https://github.com/test/repo2",
+                ],
+                "target_python_version": "3.11",
+            }
+        )
 
         # Verify response
         assert "compatible" in result
@@ -128,9 +129,10 @@ async def test_mcp_server_can_start():
     from unittest.mock import AsyncMock, patch
 
     # Mock the stdio_server to avoid actually starting it
-    with patch('src.mcp_server.server.stdio_server') as mock_stdio, \
-         patch('src.mcp_server.server.server.run') as mock_run:
-
+    with (
+        patch("src.mcp_server.server.stdio_server") as mock_stdio,
+        patch("src.mcp_server.server.server.run") as mock_run,
+    ):
         mock_stdio.return_value.__aenter__.return_value = (None, None)
         mock_run = AsyncMock()
 

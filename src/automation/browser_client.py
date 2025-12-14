@@ -20,8 +20,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from playwright.async_api import Browser, BrowserContext, Page, async_playwright
+from playwright.async_api import Browser, BrowserContext
 from playwright.async_api import Error as PlaywrightError
+from playwright.async_api import Page, async_playwright
 
 from src.core.security import get_secure_logger
 
@@ -30,6 +31,7 @@ secure_logger = get_secure_logger(__name__)
 
 class BrowserType(Enum):
     """Supported browser types."""
+
     CHROMIUM = "chromium"
     FIREFOX = "firefox"
     WEBKIT = "webkit"
@@ -37,6 +39,7 @@ class BrowserType(Enum):
 
 class ViewportSize(Enum):
     """Common viewport sizes."""
+
     DESKTOP = (1920, 1080)
     TABLET = (768, 1024)
     MOBILE = (375, 667)
@@ -45,6 +48,7 @@ class ViewportSize(Enum):
 @dataclass
 class BrowserAction:
     """Browser action representation."""
+
     type: str
     selector: str | None = None
     value: str | None = None
@@ -56,6 +60,7 @@ class BrowserAction:
 @dataclass
 class BrowserSession:
     """Browser session information."""
+
     session_id: str
     browser_type: BrowserType
     url: str
@@ -137,7 +142,10 @@ class BrowserClient:
 
             # Create context
             context_options = {
-                "viewport": {"width": self.viewport.value[0], "height": self.viewport.value[1]},
+                "viewport": {
+                    "width": self.viewport.value[0],
+                    "height": self.viewport.value[1],
+                },
                 "timeout": self.timeout,
             }
 
@@ -187,7 +195,9 @@ class BrowserClient:
     # NAVIGATION METHODS
     # ========================================================================
 
-    async def goto(self, url: str, wait_until: str = "domcontentloaded") -> dict[str, Any]:
+    async def goto(
+        self, url: str, wait_until: str = "domcontentloaded"
+    ) -> dict[str, Any]:
         """
         Navigate to a URL.
 
@@ -344,7 +354,9 @@ class BrowserClient:
                 "selector": selector,
             }
 
-    async def type_text(self, selector: str, text: str, clear: bool = True) -> dict[str, Any]:
+    async def type_text(
+        self, selector: str, text: str, clear: bool = True
+    ) -> dict[str, Any]:
         """
         Type text into an element.
 
@@ -630,6 +642,7 @@ class BrowserClient:
                 # Convert HTML to markdown (simplified)
                 html = await self._page.content()
                 import markdownify
+
                 content = markdownify.markdownify(html, heading_style="ATX")
             else:
                 raise ValueError(f"Unsupported content type: {content_type}")
@@ -780,7 +793,9 @@ class BrowserClient:
             raise RuntimeError("Browser not started")
 
         try:
-            await self._page.wait_for_load_state("networkidle", timeout=timeout or self.timeout)
+            await self._page.wait_for_load_state(
+                "networkidle", timeout=timeout or self.timeout
+            )
 
             return {
                 "success": True,
@@ -914,10 +929,21 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Browser Client Test")
-    parser.add_argument("--browser", default="chromium", help="Browser type (chromium, firefox, webkit)")
-    parser.add_argument("--headless", action="store_true", default=True, help="Run in headless mode")
-    parser.add_argument("--no-headless", dest="headless", action="store_false", help="Run with visible browser")
-    parser.add_argument("--url", default="https://example.com", help="URL to navigate to")
+    parser.add_argument(
+        "--browser", default="chromium", help="Browser type (chromium, firefox, webkit)"
+    )
+    parser.add_argument(
+        "--headless", action="store_true", default=True, help="Run in headless mode"
+    )
+    parser.add_argument(
+        "--no-headless",
+        dest="headless",
+        action="store_false",
+        help="Run with visible browser",
+    )
+    parser.add_argument(
+        "--url", default="https://example.com", help="URL to navigate to"
+    )
     parser.add_argument("--screenshot", help="Take screenshot and save to file")
     parser.add_argument("--selector", help="CSS selector to interact with")
     parser.add_argument("--text", help="Text to type into selector")

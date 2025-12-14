@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class RecoveryStrategy(Enum):
     """Strategy for recovering from errors."""
+
     INSTALL_DEPENDENCY = "install_dependency"
     RETRY = "retry"
     CHANGE_PERMISSIONS = "change_permissions"
@@ -43,6 +44,7 @@ class RecoveryStrategy(Enum):
 @dataclass
 class ErrorPattern:
     """Pattern for matching and recovering from errors."""
+
     name: str
     error_type: ErrorType
     patterns: list[str]  # Regex patterns to match
@@ -56,6 +58,7 @@ class ErrorPattern:
 @dataclass
 class RecoveryResult:
     """Result of a recovery attempt."""
+
     original_error: CommandResult
     recovery_attempted: bool
     recovery_command: str | None = None
@@ -81,7 +84,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="pip install {package}",
         extract_info=r"['\"]?([a-zA-Z0-9_-]+)['\"]?",
     ),
-
     # npm package missing
     ErrorPattern(
         name="npm_package_missing",
@@ -95,7 +97,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="npm install {package}",
         extract_info=r"['\"]([^'\"]+)['\"]",
     ),
-
     # Command not found
     ErrorPattern(
         name="command_not_found",
@@ -109,7 +110,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="# Install {package} manually",
         extract_info=r"([a-zA-Z0-9_-]+)",
     ),
-
     # Permission denied
     ErrorPattern(
         name="permission_denied",
@@ -124,7 +124,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="# Run with elevated permissions or fix file permissions",
         requires_confirmation=True,
     ),
-
     # File not found
     ErrorPattern(
         name="file_not_found",
@@ -138,7 +137,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="# Create missing file: {path}",
         extract_info=r"['\"]?([^\s'\"]+)['\"]?",
     ),
-
     # Directory not found
     ErrorPattern(
         name="directory_not_found",
@@ -152,7 +150,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="mkdir -p {path}",
         extract_info=r"['\"]?([^\s'\"]+)['\"]?",
     ),
-
     # Version conflict
     ErrorPattern(
         name="version_conflict",
@@ -166,7 +163,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="pip install --upgrade {package}",
         extract_info=r"([a-zA-Z0-9_-]+)",
     ),
-
     # Git not configured
     ErrorPattern(
         name="git_not_configured",
@@ -179,7 +175,6 @@ DEFAULT_ERROR_PATTERNS = [
         strategy=RecoveryStrategy.CONFIGURE_GIT,
         fix_template='git config --global user.email "user@example.com" && git config --global user.name "User"',
     ),
-
     # Git not a repository
     ErrorPattern(
         name="git_not_repo",
@@ -191,7 +186,6 @@ DEFAULT_ERROR_PATTERNS = [
         strategy=RecoveryStrategy.MANUAL,
         fix_template="git init",
     ),
-
     # Docker not running
     ErrorPattern(
         name="docker_not_running",
@@ -204,7 +198,6 @@ DEFAULT_ERROR_PATTERNS = [
         strategy=RecoveryStrategy.START_SERVICE,
         fix_template="Start-Service docker",  # Windows
     ),
-
     # Network timeout
     ErrorPattern(
         name="network_timeout",
@@ -218,7 +211,6 @@ DEFAULT_ERROR_PATTERNS = [
         fix_template="# Retry the command",
         max_retries=3,
     ),
-
     # SSL certificate error
     ErrorPattern(
         name="ssl_error",
@@ -337,7 +329,9 @@ class ErrorRecovery:
                 success=False,
             )
 
-        logger.info(f"Matched error pattern: {pattern.name}, strategy: {pattern.strategy}")
+        logger.info(
+            f"Matched error pattern: {pattern.name}, strategy: {pattern.strategy}"
+        )
 
         # Build fix command
         fix_command = self._build_fix_command(pattern, extracted)
@@ -375,7 +369,7 @@ class ErrorRecovery:
                 logger.warning(f"Fix command failed: {fix_result.stderr[:100]}...")
                 if pattern.strategy != RecoveryStrategy.RETRY:
                     break
-                await asyncio.sleep(2 ** attempts)  # Exponential backoff
+                await asyncio.sleep(2**attempts)  # Exponential backoff
                 continue
 
             # Retry original command
@@ -402,7 +396,7 @@ class ErrorRecovery:
 
             # If retry strategy, wait and try again
             if pattern.strategy == RecoveryStrategy.RETRY:
-                await asyncio.sleep(2 ** attempts)
+                await asyncio.sleep(2**attempts)
 
         # Recovery failed
         logger.warning(f"Recovery failed after {attempts} attempts")

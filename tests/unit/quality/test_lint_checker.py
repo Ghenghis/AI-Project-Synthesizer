@@ -15,9 +15,9 @@ os.environ["APP_ENV"] = "testing"
 # Import directly from the module file
 try:
     import importlib.util
+
     spec = importlib.util.spec_from_file_location(
-        "lint_checker",
-        "src/quality/lint_checker.py"
+        "lint_checker", "src/quality/lint_checker.py"
     )
     lint_checker = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(lint_checker)
@@ -54,7 +54,7 @@ class TestLintIssue:
             message="Line too long",
             level=LintLevel.WARNING,
             file_path="test.py",
-            line_number=10
+            line_number=10,
         )
         assert instance is not None
         assert instance.tool == "ruff"
@@ -73,7 +73,7 @@ class TestLintResult:
             check_time=1.5,
             files_checked=10,
             tool_results={},
-            fixable_issues=0
+            fixable_issues=0,
         )
         assert instance is not None
         assert instance.passed == True
@@ -90,7 +90,5 @@ class TestLintChecker:
         assert instance is not None
 
 
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

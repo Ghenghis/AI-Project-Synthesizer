@@ -23,6 +23,7 @@ from src.core.config import get_settings
 
 class SeverityLevel(Enum):
     """Security issue severity levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -33,6 +34,7 @@ class SeverityLevel(Enum):
 @dataclass
 class SecurityIssue:
     """Represents a security vulnerability found."""
+
     tool: str
     rule_id: str
     message: str
@@ -49,6 +51,7 @@ class SecurityIssue:
 @dataclass
 class ScanResult:
     """Result of a security scan."""
+
     passed: bool
     issues: list[SecurityIssue]
     scan_time: float
@@ -82,7 +85,7 @@ class SecurityScanner:
             "p/path-traversal",
             "p/cryptographic-misuse",
             "p/regex",
-            "p/django"
+            "p/django",
         ]
 
         # Custom VIBE MCP rules
@@ -94,23 +97,23 @@ class SecurityScanner:
             "no_hardcoded_secrets": {
                 "pattern": r"(password|secret|key|token)\s*=\s*['\"][^'\"]{8,}['\"]",
                 "severity": "high",
-                "message": "Hardcoded secret detected - use environment variables"
+                "message": "Hardcoded secret detected - use environment variables",
             },
             "no_eval_exec": {
                 "pattern": r"\b(eval|exec)\s*\(",
                 "severity": "critical",
-                "message": "Use of eval/exec is dangerous - avoid dynamic code execution"
+                "message": "Use of eval/exec is dangerous - avoid dynamic code execution",
             },
             "no_shell_true": {
                 "pattern": r"shell\s*=\s*True",
                 "severity": "high",
-                "message": "shell=True is dangerous - use proper command handling"
+                "message": "shell=True is dangerous - use proper command handling",
             },
             "validate_user_input": {
                 "pattern": r"(request\.(form|args|json)|input\(|raw_input\()[^)]*[^)]*$",
                 "severity": "medium",
-                "message": "User input should be validated before use"
-            }
+                "message": "User input should be validated before use",
+            },
         }
 
     async def scan_code(self, code: str, file_path: str = "generated.py") -> ScanResult:
@@ -125,12 +128,13 @@ class SecurityScanner:
             ScanResult with all found issues
         """
         import time
+
         start_time = time.time()
 
         # Create temporary file for scanning
         temp_file = self.temp_dir / Path(file_path).name
         try:
-            with open(temp_file, 'w', encoding='utf-8') as f:
+            with open(temp_file, "w", encoding="utf-8") as f:
                 f.write(code)
 
             # Run all scans in parallel
@@ -138,7 +142,7 @@ class SecurityScanner:
                 self._scan_with_semgrep(temp_file),
                 self._scan_with_bandit(temp_file),
                 self._scan_with_custom_rules(code, file_path),
-                return_exceptions=True
+                return_exceptions=True,
             )
 
             # Collect all issues
@@ -154,10 +158,14 @@ class SecurityScanner:
                 all_issues.extend(issues)
                 tool_results[tool_name] = {
                     "issues_found": len(issues),
-                    "critical": sum(1 for i in issues if i.severity == SeverityLevel.CRITICAL),
+                    "critical": sum(
+                        1 for i in issues if i.severity == SeverityLevel.CRITICAL
+                    ),
                     "high": sum(1 for i in issues if i.severity == SeverityLevel.HIGH),
-                    "medium": sum(1 for i in issues if i.severity == SeverityLevel.MEDIUM),
-                    "low": sum(1 for i in issues if i.severity == SeverityLevel.LOW)
+                    "medium": sum(
+                        1 for i in issues if i.severity == SeverityLevel.MEDIUM
+                    ),
+                    "low": sum(1 for i in issues if i.severity == SeverityLevel.LOW),
                 }
 
             # Determine if scan passed (no critical/high issues)
@@ -173,7 +181,7 @@ class SecurityScanner:
                 issues=all_issues,
                 scan_time=scan_time,
                 files_scanned=1,
-                tool_results=tool_results
+                tool_results=tool_results,
             )
 
         finally:
@@ -181,7 +189,9 @@ class SecurityScanner:
             if temp_file.exists():
                 temp_file.unlink()
 
-    async def _scan_with_semgrep(self, file_path: Path) -> tuple[list[SecurityIssue], str]:
+    async def _scan_with_semgrep(
+        self, file_path: Path
+    ) -> tuple[list[SecurityIssue], str]:
         """Run Semgrep security scan."""
         issues = []
 
@@ -189,37 +199,37 @@ class SecurityScanner:
             # Build semgrep command
             cmd = [
                 "semgrep",
-                "--config", ",".join(self.semgrep_rules),
+                "--config",
+                ",".join(self.semgrep_rules),
                 "--json",
                 "--quiet",
-                str(file_path)
+                str(file_path),
             ]
 
             # Run semgrep
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 # Parse results
                 data = json.loads(result.stdout)
 
-                for finding in data.get('results', []):
+                for finding in data.get("results", []):
                     issue = SecurityIssue(
                         tool="semgrep",
-                        rule_id=finding.get('check_id', ''),
-                        message=finding.get('message', ''),
-                        severity=self._map_semgrep_severity(finding.get('metadata', {}).get('severity', 'INFO')),
-                        file_path=finding.get('path', ''),
-                        line_number=finding.get('start', {}).get('line', 0),
-                        column_number=finding.get('start', {}).get('col'),
-                        cwe_id=finding.get('metadata', {}).get('cwe'),
-                        owasp_category=finding.get('metadata', {}).get('owasp'),
-                        fix_suggestion=finding.get('metadata', {}).get('fix', {}).get('regex'),
-                        metadata=finding.get('metadata', {})
+                        rule_id=finding.get("check_id", ""),
+                        message=finding.get("message", ""),
+                        severity=self._map_semgrep_severity(
+                            finding.get("metadata", {}).get("severity", "INFO")
+                        ),
+                        file_path=finding.get("path", ""),
+                        line_number=finding.get("start", {}).get("line", 0),
+                        column_number=finding.get("start", {}).get("col"),
+                        cwe_id=finding.get("metadata", {}).get("cwe"),
+                        owasp_category=finding.get("metadata", {}).get("owasp"),
+                        fix_suggestion=finding.get("metadata", {})
+                        .get("fix", {})
+                        .get("regex"),
+                        metadata=finding.get("metadata", {}),
                     )
                     issues.append(issue)
 
@@ -234,45 +244,39 @@ class SecurityScanner:
 
         return issues, "semgrep"
 
-    async def _scan_with_bandit(self, file_path: Path) -> tuple[list[SecurityIssue], str]:
+    async def _scan_with_bandit(
+        self, file_path: Path
+    ) -> tuple[list[SecurityIssue], str]:
         """Run Bandit Python security scan."""
         issues = []
 
         try:
             # Build bandit command
-            cmd = [
-                "bandit",
-                "-f", "json",
-                "-q",
-                str(file_path)
-            ]
+            cmd = ["bandit", "-f", "json", "-q", str(file_path)]
 
             # Run bandit
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode in [0, 1]:  # 0 = no issues, 1 = issues found
                 # Parse results
                 data = json.loads(result.stdout)
 
-                for finding in data.get('results', []):
+                for finding in data.get("results", []):
                     issue = SecurityIssue(
                         tool="bandit",
-                        rule_id=finding.get('test_name', ''),
-                        message=finding.get('issue_text', ''),
-                        severity=self._map_bandit_severity(finding.get('issue_severity', 'LOW')),
-                        file_path=finding.get('filename', ''),
-                        line_number=finding.get('line_number', 0),
-                        cwe_id=finding.get('cwe_id'),
-                        fix_suggestion=finding.get('issue_cwe', {}).get('link'),
+                        rule_id=finding.get("test_name", ""),
+                        message=finding.get("issue_text", ""),
+                        severity=self._map_bandit_severity(
+                            finding.get("issue_severity", "LOW")
+                        ),
+                        file_path=finding.get("filename", ""),
+                        line_number=finding.get("line_number", 0),
+                        cwe_id=finding.get("cwe_id"),
+                        fix_suggestion=finding.get("issue_cwe", {}).get("link"),
                         metadata={
-                            "test_id": finding.get('test_id'),
-                            "confidence": finding.get('issue_confidence')
-                        }
+                            "test_id": finding.get("test_id"),
+                            "confidence": finding.get("issue_confidence"),
+                        },
                     )
                     issues.append(issue)
 
@@ -287,27 +291,29 @@ class SecurityScanner:
 
         return issues, "bandit"
 
-    async def _scan_with_custom_rules(self, code: str, file_path: str) -> tuple[list[SecurityIssue], str]:
+    async def _scan_with_custom_rules(
+        self, code: str, file_path: str
+    ) -> tuple[list[SecurityIssue], str]:
         """Scan with VIBE MCP custom rules."""
         import re
 
         issues = []
-        lines = code.split('\n')
+        lines = code.split("\n")
 
         for rule_name, rule_config in self.custom_rules.items():
-            pattern = re.compile(rule_config['pattern'], re.IGNORECASE)
+            pattern = re.compile(rule_config["pattern"], re.IGNORECASE)
 
             for line_num, line in enumerate(lines, 1):
                 if pattern.search(line):
                     issue = SecurityIssue(
                         tool="vibe_mcp",
                         rule_id=rule_name,
-                        message=rule_config['message'],
-                        severity=SeverityLevel(rule_config['severity']),
+                        message=rule_config["message"],
+                        severity=SeverityLevel(rule_config["severity"]),
                         file_path=file_path,
                         line_number=line_num,
                         fix_suggestion=self._get_fix_suggestion(rule_name),
-                        metadata={"rule_type": "custom"}
+                        metadata={"rule_type": "custom"},
                     )
                     issues.append(issue)
 
@@ -316,18 +322,18 @@ class SecurityScanner:
     def _map_semgrep_severity(self, severity: str) -> SeverityLevel:
         """Map Semgrep severity to our enum."""
         mapping = {
-            'ERROR': SeverityLevel.HIGH,
-            'WARNING': SeverityLevel.MEDIUM,
-            'INFO': SeverityLevel.INFO
+            "ERROR": SeverityLevel.HIGH,
+            "WARNING": SeverityLevel.MEDIUM,
+            "INFO": SeverityLevel.INFO,
         }
         return mapping.get(severity.upper(), SeverityLevel.LOW)
 
     def _map_bandit_severity(self, severity: str) -> SeverityLevel:
         """Map Bandit severity to our enum."""
         mapping = {
-            'HIGH': SeverityLevel.HIGH,
-            'MEDIUM': SeverityLevel.MEDIUM,
-            'LOW': SeverityLevel.LOW
+            "HIGH": SeverityLevel.HIGH,
+            "MEDIUM": SeverityLevel.MEDIUM,
+            "LOW": SeverityLevel.LOW,
         }
         return mapping.get(severity.upper(), SeverityLevel.LOW)
 
@@ -337,7 +343,7 @@ class SecurityScanner:
             "no_hardcoded_secrets": "Use environment variables: os.getenv('SECRET_NAME')",
             "no_eval_exec": "Use safer alternatives like ast.literal_eval() or avoid dynamic execution",
             "no_shell_true": "Use subprocess.run without shell=True or properly escape arguments",
-            "validate_user_input": "Add validation: if not input.is_valid(): raise ValueError()"
+            "validate_user_input": "Add validation: if not input.is_valid(): raise ValueError()",
         }
         return suggestions.get(rule_name, "Review and fix the security issue")
 
@@ -352,6 +358,7 @@ class SecurityScanner:
             ScanResult with aggregated findings
         """
         import time
+
         start_time = time.time()
 
         all_issues = []
@@ -359,26 +366,38 @@ class SecurityScanner:
         files_scanned = 0
 
         # Get all code files
-        code_extensions = {'.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.go', '.rb', '.php'}
+        code_extensions = {
+            ".py",
+            ".js",
+            ".ts",
+            ".jsx",
+            ".tsx",
+            ".java",
+            ".go",
+            ".rb",
+            ".php",
+        }
         code_files = []
 
         for ext in code_extensions:
-            code_files.extend(directory.rglob(f'*{ext}'))
+            code_files.extend(directory.rglob(f"*{ext}"))
 
         # Limit to reasonable number of files
         if len(code_files) > 100:
-            print(f"Warning: Limiting scan to first 100 files (found {len(code_files)})")
+            print(
+                f"Warning: Limiting scan to first 100 files (found {len(code_files)})"
+            )
             code_files = code_files[:100]
 
         # Scan files in batches
         batch_size = 10
         for i in range(0, len(code_files), batch_size):
-            batch = code_files[i:i + batch_size]
+            batch = code_files[i : i + batch_size]
 
             tasks = []
             for file_path in batch:
                 try:
-                    with open(file_path, encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         code = f.read()
                     tasks.append(self.scan_code(code, str(file_path)))
                 except Exception as e:
@@ -392,7 +411,13 @@ class SecurityScanner:
                     all_issues.extend(result.issues)
                     for tool, data in result.tool_results.items():
                         if tool not in tool_results:
-                            tool_results[tool] = {"issues_found": 0, "critical": 0, "high": 0, "medium": 0, "low": 0}
+                            tool_results[tool] = {
+                                "issues_found": 0,
+                                "critical": 0,
+                                "high": 0,
+                                "medium": 0,
+                                "low": 0,
+                            }
                         for key in data:
                             tool_results[tool][key] += data[key]
                     files_scanned += 1
@@ -408,7 +433,7 @@ class SecurityScanner:
             issues=all_issues,
             scan_time=scan_time,
             files_scanned=files_scanned,
-            tool_results=tool_results
+            tool_results=tool_results,
         )
 
     def generate_report(self, result: ScanResult) -> str:
@@ -435,7 +460,12 @@ class SecurityScanner:
         # Issues by severity
         if result.issues:
             report.append("ISSUES BY SEVERITY:")
-            for severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH, SeverityLevel.MEDIUM, SeverityLevel.LOW]:
+            for severity in [
+                SeverityLevel.CRITICAL,
+                SeverityLevel.HIGH,
+                SeverityLevel.MEDIUM,
+                SeverityLevel.LOW,
+            ]:
                 issues = [i for i in result.issues if i.severity == severity]
                 if issues:
                     report.append(f"\n{severity.value.upper()} ({len(issues)}):")
@@ -455,10 +485,7 @@ class SecurityScanner:
 
     async def install_tools(self) -> bool:
         """Install required security scanning tools."""
-        tools = [
-            ("semgrep", "pip install semgrep"),
-            ("bandit", "pip install bandit")
-        ]
+        tools = [("semgrep", "pip install semgrep"), ("bandit", "pip install bandit")]
 
         installed = True
 

@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class EventType(str, Enum):
     """System event types."""
+
     SEARCH_STARTED = "search_started"
     SEARCH_COMPLETED = "search_completed"
     SYNTHESIS_STARTED = "synthesis_started"
@@ -40,6 +41,7 @@ class EventType(str, Enum):
 @dataclass
 class SystemEvent:
     """A system event."""
+
     event_type: EventType
     timestamp: datetime = field(default_factory=datetime.now)
     data: dict[str, Any] = field(default_factory=dict)
@@ -49,6 +51,7 @@ class SystemEvent:
 @dataclass
 class ScheduledTask:
     """A scheduled task."""
+
     name: str
     task_func: Callable[[], Awaitable[Any]]
     interval_seconds: int
@@ -60,6 +63,7 @@ class ScheduledTask:
 @dataclass
 class AutomationConfig:
     """Automation configuration."""
+
     # n8n settings
     n8n_url: str = "http://localhost:5678"
     n8n_enabled: bool = True
@@ -132,28 +136,34 @@ class AutomationCoordinator:
     def _register_default_tasks(self):
         """Register default scheduled tasks."""
         # Health check
-        self.schedule(ScheduledTask(
-            name="health_check",
-            task_func=self._run_health_check,
-            interval_seconds=self.config.health_check_interval,
-            run_immediately=True,
-        ))
+        self.schedule(
+            ScheduledTask(
+                name="health_check",
+                task_func=self._run_health_check,
+                interval_seconds=self.config.health_check_interval,
+                run_immediately=True,
+            )
+        )
 
         # Metrics cleanup
-        self.schedule(ScheduledTask(
-            name="metrics_cleanup",
-            task_func=self._cleanup_metrics,
-            interval_seconds=3600,  # Every hour
-        ))
+        self.schedule(
+            ScheduledTask(
+                name="metrics_cleanup",
+                task_func=self._cleanup_metrics,
+                interval_seconds=3600,  # Every hour
+            )
+        )
 
         # Integration tests
         if self.config.run_tests_on_startup:
-            self.schedule(ScheduledTask(
-                name="integration_tests",
-                task_func=self._run_integration_tests,
-                interval_seconds=self.config.test_interval_hours * 3600,
-                run_immediately=True,
-            ))
+            self.schedule(
+                ScheduledTask(
+                    name="integration_tests",
+                    task_func=self._run_integration_tests,
+                    interval_seconds=self.config.test_interval_hours * 3600,
+                    run_immediately=True,
+                )
+            )
 
     async def start(self):
         """Start the automation coordinator."""
@@ -166,6 +176,7 @@ class AutomationCoordinator:
         # Initialize n8n client
         if self.config.n8n_enabled:
             from src.workflows.n8n_integration import N8NClient
+
             self._n8n = N8NClient()
 
             if await self._n8n.health_check():
@@ -203,7 +214,9 @@ class AutomationCoordinator:
     # Event System
     # ============================================
 
-    def emit(self, event_type: EventType, data: dict[str, Any] = None, source: str = "system"):
+    def emit(
+        self, event_type: EventType, data: dict[str, Any] = None, source: str = "system"
+    ):
         """Emit a system event."""
         event = SystemEvent(
             event_type=event_type,
@@ -303,7 +316,13 @@ class AutomationCoordinator:
 
                     should_run = False
 
-                    if task.run_immediately and task.last_run is None or task.last_run is None or (now - task.last_run).total_seconds() >= task.interval_seconds:
+                    if (
+                        task.run_immediately
+                        and task.last_run is None
+                        or task.last_run is None
+                        or (now - task.last_run).total_seconds()
+                        >= task.interval_seconds
+                    ):
                         should_run = True
 
                     if should_run:
@@ -324,10 +343,14 @@ class AutomationCoordinator:
                 await task.task_func()
             except Exception as e:
                 secure_logger.error(f"Scheduled task {task.name} failed: {e}")
-                self.emit(EventType.ERROR_OCCURRED, {
-                    "error": str(e),
-                    "task": task.name,
-                }, source="scheduler")
+                self.emit(
+                    EventType.ERROR_OCCURRED,
+                    {
+                        "error": str(e),
+                        "task": task.name,
+                    },
+                    source="scheduler",
+                )
 
     # ============================================
     # Built-in Tasks
@@ -339,10 +362,15 @@ class AutomationCoordinator:
 
         health = await check_health()
 
-        self.emit(EventType.HEALTH_CHECK, {
-            "status": health.status.value,
-            "components": [c.name for c in health.components if c.status.value == "healthy"],
-        })
+        self.emit(
+            EventType.HEALTH_CHECK,
+            {
+                "status": health.status.value,
+                "components": [
+                    c.name for c in health.components if c.status.value == "healthy"
+                ],
+            },
+        )
 
     async def _cleanup_metrics(self):
         """Cleanup old metrics."""
@@ -353,12 +381,15 @@ class AutomationCoordinator:
         """Run integration tests."""
         result = await self._tester.run_all()
 
-        self.emit(EventType.TEST_COMPLETED, {
-            "total": result.total,
-            "passed": result.passed,
-            "failed": result.failed,
-            "success_rate": result.success_rate,
-        })
+        self.emit(
+            EventType.TEST_COMPLETED,
+            {
+                "total": result.total,
+                "passed": result.passed,
+                "failed": result.failed,
+                "success_rate": result.success_rate,
+            },
+        )
 
         return result
 
@@ -388,10 +419,13 @@ class AutomationCoordinator:
         async with ActionTimer("n8n_workflow", self._metrics):
             result = await self._n8n.execute_workflow(workflow_id, data)
 
-            self.emit(EventType.WORKFLOW_TRIGGERED, {
-                "workflow_id": workflow_id,
-                "success": result is not None,
-            })
+            self.emit(
+                EventType.WORKFLOW_TRIGGERED,
+                {
+                    "workflow_id": workflow_id,
+                    "success": result is not None,
+                },
+            )
 
             return result.data if result else None
 
@@ -401,6 +435,7 @@ class AutomationCoordinator:
             return {}
 
         from src.workflows.n8n_integration import setup_n8n_workflows
+
         return await setup_n8n_workflows(self._n8n)
 
     # ============================================

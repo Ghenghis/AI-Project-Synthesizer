@@ -91,16 +91,18 @@ class OllamaProvider(LLMProvider):
                     extra={
                         "correlation_id": correlation_id,
                         "model_count": model_count,
-                    }
+                    },
                 )
-                metrics.increment("llm_health_check_success", tags={"provider": "ollama"})
+                metrics.increment(
+                    "llm_health_check_success", tags={"provider": "ollama"}
+                )
 
             return is_healthy
 
         except Exception as e:
             secure_logger.warning(
                 f"Ollama server unavailable: {str(e)[:100]}",
-                extra={"correlation_id": correlation_id}
+                extra={"correlation_id": correlation_id},
             )
             metrics.increment("llm_health_check_failure", tags={"provider": "ollama"})
             return False
@@ -122,10 +124,7 @@ class OllamaProvider(LLMProvider):
     async def get_model_info(self, model: str) -> dict[str, Any] | None:
         """Get detailed information about a model."""
         try:
-            response = await self.client.post(
-                "/api/show",
-                json={"name": model}
-            )
+            response = await self.client.post("/api/show", json={"name": model})
             if response.status_code == 200:
                 return response.json()
             return None
@@ -154,7 +153,7 @@ class OllamaProvider(LLMProvider):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> CompletionResult:
         """Generate completion using Ollama API."""
         correlation_id = correlation_manager.get_correlation_id()
@@ -170,7 +169,7 @@ class OllamaProvider(LLMProvider):
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-            }
+            },
         }
 
         if system_prompt:
@@ -182,7 +181,7 @@ class OllamaProvider(LLMProvider):
                 "correlation_id": correlation_id,
                 "model": model,
                 "prompt_length": len(prompt),
-            }
+            },
         )
 
         try:
@@ -210,12 +209,18 @@ class OllamaProvider(LLMProvider):
                     "model": model,
                     "tokens_used": tokens_used,
                     "duration_ms": duration_ms,
-                }
+                },
             )
 
             metrics.increment("llm_completions_success", tags={"provider": "ollama"})
-            metrics.record_histogram("llm_completion_tokens", tokens_used, tags={"provider": "ollama"})
-            metrics.record_timer("llm_completion_duration", duration_ms / 1000, tags={"provider": "ollama"})
+            metrics.record_histogram(
+                "llm_completion_tokens", tokens_used, tags={"provider": "ollama"}
+            )
+            metrics.record_timer(
+                "llm_completion_duration",
+                duration_ms / 1000,
+                tags={"provider": "ollama"},
+            )
 
             return CompletionResult(
                 content=content,
@@ -230,7 +235,7 @@ class OllamaProvider(LLMProvider):
                     "total_duration": data.get("total_duration"),
                     "load_duration": data.get("load_duration"),
                     "eval_duration": data.get("eval_duration"),
-                }
+                },
             )
 
         except Exception as e:
@@ -241,7 +246,7 @@ class OllamaProvider(LLMProvider):
                     "correlation_id": correlation_id,
                     "model": model,
                     "duration_ms": duration_ms,
-                }
+                },
             )
             metrics.increment("llm_completions_error", tags={"provider": "ollama"})
             raise
@@ -253,7 +258,7 @@ class OllamaProvider(LLMProvider):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> AsyncIterator[StreamChunk]:
         """Stream completion using Ollama API."""
         model = model or self.config.default_model or "qwen2.5-coder:7b-instruct-q8_0"
@@ -265,7 +270,7 @@ class OllamaProvider(LLMProvider):
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-            }
+            },
         }
 
         if system_prompt:
@@ -281,6 +286,7 @@ class OllamaProvider(LLMProvider):
                 async for line in response.aiter_lines():
                     if line:
                         import json
+
                         data = json.loads(line)
 
                         content = data.get("response", "")

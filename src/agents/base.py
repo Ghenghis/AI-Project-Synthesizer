@@ -27,6 +27,7 @@ T = TypeVar("T")
 
 class AgentStatus(str, Enum):
     """Agent execution status."""
+
     IDLE = "idle"
     RUNNING = "running"
     WAITING = "waiting"
@@ -38,6 +39,7 @@ class AgentStatus(str, Enum):
 @dataclass
 class AgentConfig:
     """Agent configuration."""
+
     name: str
     description: str = ""
 
@@ -66,6 +68,7 @@ class AgentConfig:
 @dataclass
 class AgentResult:
     """Result from agent execution."""
+
     success: bool
     output: Any
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -155,12 +158,14 @@ class BaseAgent(ABC):
 
     def add_memory(self, role: str, content: str, metadata: dict | None = None):
         """Add to agent memory."""
-        self._memory.append({
-            "role": role,
-            "content": content,
-            "timestamp": datetime.now().isoformat(),
-            "metadata": metadata or {},
-        })
+        self._memory.append(
+            {
+                "role": role,
+                "content": content,
+                "timestamp": datetime.now().isoformat(),
+                "metadata": metadata or {},
+            }
+        )
 
     def clear_memory(self):
         """Clear agent memory."""
@@ -176,7 +181,9 @@ class BaseAgent(ABC):
         """Determine if agent should continue. Override in subclasses."""
         pass
 
-    async def run(self, task: str, context: dict[str, Any] | None = None) -> AgentResult:
+    async def run(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> AgentResult:
         """
         Run the agent on a task.
 
@@ -213,7 +220,9 @@ class BaseAgent(ABC):
                             self.config.on_step(step_result)
 
                     # Check if should continue
-                    if not self.config.auto_continue or not self._should_continue(step_result):
+                    if not self.config.auto_continue or not self._should_continue(
+                        step_result
+                    ):
                         break
 
                     # Update context with step result

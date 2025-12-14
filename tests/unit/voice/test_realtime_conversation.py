@@ -21,6 +21,7 @@ try:
         TranscriptionResult,
         VoiceActivityDetector,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for voice.realtime_conversation: {e}")
@@ -74,7 +75,7 @@ class TestConversationConfig:
             min_speech_duration=0.3,
             max_silence_duration=1.5,
             sample_rate=22050,
-            channels=2
+            channels=2,
         )
         assert config.pause_threshold == 2.0
         assert config.min_speech_duration == 0.3
@@ -90,10 +91,7 @@ class TestTranscriptionResult:
     def test_create_transcription_result(self):
         """Should create transcription result."""
         result = TranscriptionResult(
-            text="Hello world",
-            confidence=0.95,
-            language="en",
-            timestamp=1234567890.0
+            text="Hello world", confidence=0.95, language="en", timestamp=1234567890.0
         )
         assert result.text == "Hello world"
         assert result.confidence == 0.95
@@ -108,12 +106,7 @@ class TestAudioSegment:
     def test_create_audio_segment(self):
         """Should create audio segment."""
         data = b"fake_audio_data"
-        segment = AudioSegment(
-            data=data,
-            sample_rate=16000,
-            channels=1,
-            duration=1.0
-        )
+        segment = AudioSegment(data=data, sample_rate=16000, channels=1, duration=1.0)
         assert segment.data == data
         assert segment.sample_rate == 16000
         assert segment.channels == 1
@@ -186,7 +179,7 @@ class TestSpeechRecognizer:
         assert recognizer.model == "whisper-1"
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.realtime_conversation.openai.AsyncOpenAI')
+    @patch("src.voice.realtime_conversation.openai.AsyncOpenAI")
     async def test_transcribe_audio(self, mock_openai):
         """Should transcribe audio to text."""
         # Mock OpenAI response
@@ -208,7 +201,7 @@ class TestSpeechRecognizer:
         assert result.language == "en"
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.realtime_conversation.openai.AsyncOpenAI')
+    @patch("src.voice.realtime_conversation.openai.AsyncOpenAI")
     async def test_transcribe_with_language(self, mock_openai):
         """Should transcribe audio with specified language."""
         # Mock OpenAI response
@@ -231,7 +224,7 @@ class TestSpeechRecognizer:
         # Check API was called with language parameter
         mock_client.audio.transcriptions.create.assert_called_once()
         call_args = mock_client.audio.transcriptions.create.call_args
-        assert call_args[1]['language'] == "fr"
+        assert call_args[1]["language"] == "fr"
 
 
 class TestAudioProcessor:
@@ -301,11 +294,13 @@ class TestRealtimeConversation:
         assert conv.state == ConversationState.IDLE
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.realtime_conversation.ElevenLabsClient')
-    @patch('src.voice.realtime_conversation.SpeechRecognizer')
-    @patch('src.voice.realtime_conversation.AudioProcessor')
-    @patch('src.voice.realtime_conversation.VoiceActivityDetector')
-    async def test_start_conversation(self, mock_vad, mock_processor, mock_recognizer, mock_tts):
+    @patch("src.voice.realtime_conversation.ElevenLabsClient")
+    @patch("src.voice.realtime_conversation.SpeechRecognizer")
+    @patch("src.voice.realtime_conversation.AudioProcessor")
+    @patch("src.voice.realtime_conversation.VoiceActivityDetector")
+    async def test_start_conversation(
+        self, mock_vad, mock_processor, mock_recognizer, mock_tts
+    ):
         """Should start conversation."""
         conv = RealtimeConversation()
 
@@ -327,7 +322,7 @@ class TestRealtimeConversation:
         conv._listening_task.cancel.assert_called_once()
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.realtime_conversation.ElevenLabsClient')
+    @patch("src.voice.realtime_conversation.ElevenLabsClient")
     async def test_process_transcription(self, mock_tts):
         """Should process transcription and generate response."""
         conv = RealtimeConversation()
@@ -337,10 +332,7 @@ class TestRealtimeConversation:
         conv._speak_response = AsyncMock()
 
         transcription = TranscriptionResult(
-            text="Hello",
-            confidence=0.9,
-            language="en",
-            timestamp=0.0
+            text="Hello", confidence=0.9, language="en", timestamp=0.0
         )
 
         await conv._process_transcription(transcription)
@@ -360,7 +352,7 @@ class TestRealtimeConversation:
         assert len(response) > 0
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.realtime_conversation.ElevenLabsClient')
+    @patch("src.voice.realtime_conversation.ElevenLabsClient")
     async def test_speak_response(self, mock_tts):
         """Should speak response using TTS."""
         mock_client = AsyncMock()
@@ -394,7 +386,9 @@ class TestRealtimeConversation:
         conv.add_event_handler(ConversationEvent.SPEECH_STARTED, handler)
         conv.remove_event_handler(ConversationEvent.SPEECH_STARTED, handler)
 
-        assert handler not in conv._event_handlers.get(ConversationEvent.SPEECH_STARTED, [])
+        assert handler not in conv._event_handlers.get(
+            ConversationEvent.SPEECH_STARTED, []
+        )
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_emit_event(self):
@@ -406,7 +400,9 @@ class TestRealtimeConversation:
         conv.add_event_handler(ConversationEvent.TRANSCRIPTION_READY, handler1)
         conv.add_event_handler(ConversationEvent.TRANSCRIPTION_READY, handler2)
 
-        transcription = TranscriptionResult(text="Test", confidence=1.0, language="en", timestamp=0.0)
+        transcription = TranscriptionResult(
+            text="Test", confidence=1.0, language="en", timestamp=0.0
+        )
         conv._emit_event(ConversationEvent.TRANSCRIPTION_READY, transcription)
 
         handler1.assert_called_once_with(transcription)
@@ -435,11 +431,11 @@ class TestRealtimeConversation:
 
         stats = conv.get_stats()
 
-        assert stats['start_time'] == 1234567890.0
-        assert stats['transcription_count'] == 5
-        assert stats['response_count'] == 5
-        assert 'duration' in stats
+        assert stats["start_time"] == 1234567890.0
+        assert stats["transcription_count"] == 5
+        assert stats["response_count"] == 5
+        assert "duration" in stats
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

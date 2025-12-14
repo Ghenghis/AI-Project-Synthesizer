@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class TestStatus(str, Enum):
     """Test execution status."""
+
     __test__ = False  # Prevent pytest from collecting as test class
     PENDING = "pending"
     RUNNING = "running"
@@ -37,6 +38,7 @@ class TestStatus(str, Enum):
 @dataclass
 class TestCase:
     """A single test case."""
+
     __test__ = False  # Prevent pytest from collecting as test class
     name: str
     description: str
@@ -50,6 +52,7 @@ class TestCase:
 @dataclass
 class TestResult:
     """Result of a test execution."""
+
     __test__ = False  # Prevent pytest from collecting as test class
     name: str
     status: TestStatus
@@ -63,6 +66,7 @@ class TestResult:
 @dataclass
 class TestSuiteResult:
     """Result of a test suite execution."""
+
     suite_name: str
     total: int
     passed: int
@@ -208,15 +212,15 @@ class IntegrationTester:
     async def run_category(self, category: str) -> TestSuiteResult:
         """Run tests in a specific category."""
         tests = [
-            name for name, test in self._tests.items()
-            if test.category == category
+            name for name, test in self._tests.items() if test.category == category
         ]
         return await self._run_tests(tests, category)
 
     async def run_tags(self, tags: list[str]) -> TestSuiteResult:
         """Run tests with specific tags."""
         tests = [
-            name for name, test in self._tests.items()
+            name
+            for name, test in self._tests.items()
             if any(tag in test.tags for tag in tags)
         ]
         return await self._run_tests(tests, f"tags:{','.join(tags)}")
@@ -245,12 +249,14 @@ class IntegrationTester:
             if not ready:
                 # Skip remaining tests with unsatisfied dependencies
                 for name in pending:
-                    results.append(TestResult(
-                        name=name,
-                        status=TestStatus.SKIPPED,
-                        duration_ms=0,
-                        message="Dependencies not satisfied",
-                    ))
+                    results.append(
+                        TestResult(
+                            name=name,
+                            status=TestStatus.SKIPPED,
+                            duration_ms=0,
+                            message="Dependencies not satisfied",
+                        )
+                    )
                 break
 
             # Run ready tests
@@ -280,9 +286,11 @@ class IntegrationTester:
 # Built-in Test Cases
 # ============================================
 
+
 async def test_lm_studio_connection() -> bool:
     """Test LM Studio is running."""
     import httpx
+
     async with httpx.AsyncClient(timeout=5) as client:
         response = await client.get("http://localhost:1234/v1/models")
         return response.status_code == 200
@@ -291,6 +299,7 @@ async def test_lm_studio_connection() -> bool:
 async def test_ollama_connection() -> bool:
     """Test Ollama is running."""
     import httpx
+
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             response = await client.get("http://localhost:11434/api/tags")
@@ -310,8 +319,7 @@ async def test_github_api() -> bool:
 
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.get(
-            "https://api.github.com/user",
-            headers={"Authorization": f"token {token}"}
+            "https://api.github.com/user", headers={"Authorization": f"token {token}"}
         )
         return response.status_code == 200
 
@@ -319,6 +327,7 @@ async def test_github_api() -> bool:
 async def test_huggingface_api() -> bool:
     """Test HuggingFace API access."""
     import httpx
+
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.get("https://huggingface.co/api/models?limit=1")
         return response.status_code == 200
@@ -338,8 +347,7 @@ async def test_elevenlabs_api() -> bool:
 
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.get(
-            "https://api.elevenlabs.io/v1/voices",
-            headers={"xi-api-key": api_key}
+            "https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": api_key}
         )
         return response.status_code == 200
 

@@ -58,16 +58,33 @@ class AutomationRequest(BaseModel):
 # Agent Status
 # ============================================
 
+
 @router.get("/status")
 async def get_agents_status() -> dict[str, Any]:
     """Get status of all agents."""
 
     return {
         "agents": [
-            {"name": "research", "status": "available", "description": "Discovers resources"},
-            {"name": "synthesis", "status": "available", "description": "Assembles projects"},
-            {"name": "voice", "status": "available", "description": "Voice interactions"},
-            {"name": "automation", "status": "available", "description": "Workflow automation"},
+            {
+                "name": "research",
+                "status": "available",
+                "description": "Discovers resources",
+            },
+            {
+                "name": "synthesis",
+                "status": "available",
+                "description": "Assembles projects",
+            },
+            {
+                "name": "voice",
+                "status": "available",
+                "description": "Voice interactions",
+            },
+            {
+                "name": "automation",
+                "status": "available",
+                "description": "Workflow automation",
+            },
             {"name": "code", "status": "available", "description": "Code generation"},
         ]
     }
@@ -76,6 +93,7 @@ async def get_agents_status() -> dict[str, Any]:
 # ============================================
 # Research Agent
 # ============================================
+
 
 @router.post("/research")
 async def run_research(request: ResearchRequest) -> dict[str, Any]:
@@ -101,6 +119,7 @@ async def run_research(request: ResearchRequest) -> dict[str, Any]:
 # Synthesis Agent
 # ============================================
 
+
 @router.post("/synthesis")
 async def run_synthesis(request: SynthesisRequest) -> dict[str, Any]:
     """Run synthesis agent."""
@@ -124,6 +143,7 @@ async def run_synthesis(request: SynthesisRequest) -> dict[str, Any]:
 # ============================================
 # Voice Agent
 # ============================================
+
 
 @router.post("/voice/speak")
 async def voice_speak(request: VoiceRequest) -> dict[str, Any]:
@@ -209,6 +229,7 @@ async def voice_stop() -> dict[str, Any]:
 # Automation Agent
 # ============================================
 
+
 @router.post("/automation")
 async def run_automation(request: AutomationRequest) -> dict[str, Any]:
     """Run automation agent."""
@@ -246,6 +267,7 @@ async def automation_health_check() -> dict[str, Any]:
 # ============================================
 # Code Agent
 # ============================================
+
 
 @router.post("/code/generate")
 async def code_generate(request: CodeRequest) -> dict[str, Any]:

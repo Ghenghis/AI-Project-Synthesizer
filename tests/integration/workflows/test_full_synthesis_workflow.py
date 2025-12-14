@@ -20,7 +20,9 @@ class TestFullSynthesisWorkflow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_github_to_documentation_workflow(self, sample_repository, mock_github_responses, mock_llm_response):
+    async def test_github_to_documentation_workflow(
+        self, sample_repository, mock_github_responses, mock_llm_response
+    ):
         """Test discovering a GitHub repo and generating full documentation."""
 
         # 1. Discovery Phase
@@ -42,6 +44,7 @@ class TestFullSynthesisWorkflow:
 
         # 3. Quality Assessment
         from src.analysis.quality_scorer import QualityScorer
+
         scorer = QualityScorer()
         quality_score = await scorer.score_repository(str(sample_repository))
 
@@ -52,9 +55,7 @@ class TestFullSynthesisWorkflow:
         # 4. Synthesis Phase
         assembler = ProjectAssembler()
         synthesis_result = await assembler.assemble_project(
-            repo_info=repo_info,
-            analysis=dependencies,
-            quality_score=quality_score
+            repo_info=repo_info, analysis=dependencies, quality_score=quality_score
         )
 
         assert synthesis_result is not None
@@ -77,14 +78,16 @@ class TestFullSynthesisWorkflow:
         assert Path(diagram_path).exists()
 
         # Verify workflow completion
-        assert all([
-            repo_info,
-            dependencies,
-            quality_score,
-            synthesis_result,
-            readme_content,
-            diagram_path
-        ])
+        assert all(
+            [
+                repo_info,
+                dependencies,
+                quality_score,
+                synthesis_result,
+                readme_content,
+                diagram_path,
+            ]
+        )
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -113,20 +116,20 @@ class TestFullSynthesisWorkflow:
         repo_info = RepositoryInfo(
             name="minimal",
             url="https://github.com/test/minimal",
-            description="Minimal test repo"
+            description="Minimal test repo",
         )
 
         synthesis_result = assembler.assemble_project(
-            repo_info=repo_info,
-            analysis=[],
-            quality_score=MagicMock(overall_score=50)
+            repo_info=repo_info, analysis=[], quality_score=MagicMock(overall_score=50)
         )
 
         assert synthesis_result is not None
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_workflow_with_memory_system(self, sample_repository, mock_memory_system):
+    async def test_workflow_with_memory_system(
+        self, sample_repository, mock_memory_system
+    ):
         """Test workflow integrates with memory system."""
 
         from src.memory.mem0_integration import MemoryCategory, MemorySystem
@@ -138,14 +141,14 @@ class TestFullSynthesisWorkflow:
         await memory.add(
             content="User prefers detailed documentation with examples",
             category=MemoryCategory.PREFERENCE,
-            tags=["documentation", "examples"]
+            tags=["documentation", "examples"],
         )
 
         # Remember analysis results
         await memory.add(
             content="Analyzed repository with 3 Python files",
             category=MemoryCategory.ANALYSIS,
-            metadata={"repo": "test-repo", "files": 3}
+            metadata={"repo": "test-repo", "files": 3},
         )
 
         # Retrieve relevant context for synthesis
@@ -153,9 +156,9 @@ class TestFullSynthesisWorkflow:
         assert len(context) >= 0
 
         # Verify memory integration
-        assert hasattr(memory, 'add')
-        assert hasattr(memory, 'search')
-        assert hasattr(memory, 'get')
+        assert hasattr(memory, "add")
+        assert hasattr(memory, "search")
+        assert hasattr(memory, "get")
 
     @pytest.mark.integration
     def test_multi_language_workflow(self):
@@ -199,6 +202,7 @@ app.listen(3000);
 
             # Generate documentation
             from src.generation.readme_generator import ReadmeGenerator
+
             readme_gen = ReadmeGenerator()
 
             # Mock synthesis result
@@ -256,9 +260,9 @@ app.listen(3000);
 
         # Check if project passes quality gate
         summary = quality_gate.get_summary()
-        assert hasattr(summary, 'passed')
-        assert hasattr(summary, 'failed')
-        assert hasattr(summary, 'total')
+        assert hasattr(summary, "passed")
+        assert hasattr(summary, "failed")
+        assert hasattr(summary, "total")
 
 
 if __name__ == "__main__":

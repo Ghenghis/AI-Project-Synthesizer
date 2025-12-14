@@ -27,15 +27,12 @@ class TestShutdownTask:
 
     def test_shutdown_task_creation(self):
         """Test creating a shutdown task."""
+
         def cleanup():
             pass
 
         task = ShutdownTask(
-            name="cleanup_task",
-            func=cleanup,
-            priority=10,
-            timeout=30.0,
-            required=True
+            name="cleanup_task", func=cleanup, priority=10, timeout=30.0, required=True
         )
 
         assert task.name == "cleanup_task"
@@ -65,11 +62,7 @@ class TestLifecycleManager:
         def cleanup():
             pass
 
-        manager.add_shutdown_task(
-            name="test_cleanup",
-            func=cleanup,
-            priority=5
-        )
+        manager.add_shutdown_task(name="test_cleanup", func=cleanup, priority=5)
 
         assert len(manager._shutdown_tasks) >= 1
 

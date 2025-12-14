@@ -38,6 +38,7 @@ secure_logger = get_secure_logger(__name__)
 
 class ConversationState(str, Enum):
     """Current state of the conversation."""
+
     IDLE = "idle"
     LISTENING = "listening"
     PROCESSING = "processing"
@@ -48,6 +49,7 @@ class ConversationState(str, Enum):
 @dataclass
 class ConversationConfig:
     """Configuration for real-time conversation."""
+
     # Pause detection
     pause_threshold: float = 3.5  # Seconds of silence to trigger response
     min_speech_duration: float = 0.5  # Minimum speech to process
@@ -143,12 +145,16 @@ class RealtimeConversation:
         """Initialize AI and voice components."""
         # Assistant
         from src.assistant.core import AssistantConfig, ConversationalAssistant
-        self._assistant = ConversationalAssistant(AssistantConfig(
-            voice_enabled=False,  # We handle voice separately
-        ))
+
+        self._assistant = ConversationalAssistant(
+            AssistantConfig(
+                voice_enabled=False,  # We handle voice separately
+            )
+        )
 
         # Voice player
         from src.voice.streaming_player import get_streaming_player
+
         self._voice_player = get_streaming_player()
 
         # Proactive research engine
@@ -162,12 +168,14 @@ class RealtimeConversation:
                 secure_logger.info(f"Research ready: {result.summary()}")
                 self._research_presented = False  # New research available
 
-            self._research_engine = ProactiveResearchEngine(ResearchConfig(
-                light_research_after=self.config.research_after_idle,
-                medium_research_after=self.config.research_after_idle * 2,
-                deep_research_after=self.config.research_after_idle * 4,
-                on_research_complete=on_research_complete,
-            ))
+            self._research_engine = ProactiveResearchEngine(
+                ResearchConfig(
+                    light_research_after=self.config.research_after_idle,
+                    medium_research_after=self.config.research_after_idle * 2,
+                    deep_research_after=self.config.research_after_idle * 4,
+                    on_research_complete=on_research_complete,
+                )
+            )
 
         secure_logger.info("Real-time conversation initialized")
 
@@ -182,7 +190,9 @@ class RealtimeConversation:
         try:
             import pyaudio
         except ImportError:
-            secure_logger.error("PyAudio required for voice input. Install with: pip install pyaudio")
+            secure_logger.error(
+                "PyAudio required for voice input. Install with: pip install pyaudio"
+            )
             return
 
         p = pyaudio.PyAudio()
@@ -227,7 +237,7 @@ class RealtimeConversation:
                         elif time.time() - silence_start >= self.config.pause_threshold:
                             # Pause threshold reached - process speech
                             if len(audio_buffer) > 0:
-                                audio_data = b''.join(audio_buffer)
+                                audio_data = b"".join(audio_buffer)
                                 self._audio_queue.put(audio_data)
 
                             # Reset
@@ -246,7 +256,7 @@ class RealtimeConversation:
 
         # Convert bytes to samples
         count = len(data) // 2
-        samples = struct.unpack(f'{count}h', data)
+        samples = struct.unpack(f"{count}h", data)
 
         # Return max absolute value
         return max(abs(s) for s in samples) if samples else 0
@@ -299,7 +309,9 @@ class RealtimeConversation:
                     if self._research_engine and not self._research_presented:
                         result = self._research_engine.get_latest_research()
                         if result and result.recommendations:
-                            response_text += " Would you like me to share my research findings?"
+                            response_text += (
+                                " Would you like me to share my research findings?"
+                            )
 
                     secure_logger.info(f"Assistant: {response_text[:100]}...")
 
@@ -322,7 +334,7 @@ class RealtimeConversation:
         # Save audio to temp file
         temp_file = Path(tempfile.gettempdir()) / "speech_input.wav"
 
-        with wave.open(str(temp_file), 'wb') as wav:
+        with wave.open(str(temp_file), "wb") as wav:
             wav.setnchannels(self.config.channels)
             wav.setsampwidth(2)  # 16-bit
             wav.setframerate(self.config.sample_rate)
@@ -331,6 +343,7 @@ class RealtimeConversation:
         # Try OpenAI Whisper API
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
             api_key = settings.llm.openai_api_key.get_secret_value()
 
@@ -338,7 +351,7 @@ class RealtimeConversation:
                 import httpx
 
                 async with httpx.AsyncClient() as client:
-                    with open(temp_file, 'rb') as f:
+                    with open(temp_file, "rb") as f:
                         response = await client.post(
                             "https://api.openai.com/v1/audio/transcriptions",
                             headers={"Authorization": f"Bearer {api_key}"},
@@ -355,6 +368,7 @@ class RealtimeConversation:
         # Fallback: try local whisper
         try:
             import whisper
+
             model = whisper.load_model("base")
             result = model.transcribe(str(temp_file))
             return result.get("text", "")
@@ -368,6 +382,7 @@ class RealtimeConversation:
     async def _speak(self, text: str):
         """Speak text using streaming voice."""
         from src.voice.streaming_player import speak_fast
+
         await speak_fast(text, voice=self.config.voice)
 
 

@@ -15,6 +15,7 @@ try:
         get_dashboard_html,
         run_dashboard,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for dashboard.app: {e}")
@@ -30,6 +31,7 @@ class TestSearchRequest:
         instance = SearchRequest(query="test search")
         assert instance is not None
         assert instance.query == "test search"
+
 
 class TestAssembleRequest:
     """Test AssembleRequest."""
@@ -60,6 +62,5 @@ def test_run_dashboard_exists():
     assert callable(run_dashboard)
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

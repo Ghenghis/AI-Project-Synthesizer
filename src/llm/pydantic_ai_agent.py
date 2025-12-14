@@ -26,8 +26,10 @@ secure_logger = get_secure_logger(__name__)
 # Structured Output Models
 # ============================================
 
+
 class SearchQuery(BaseModel):
     """Structured search query."""
+
     query: str = Field(description="Main search query")
     platforms: list[str] = Field(default=["github"], description="Platforms to search")
     filters: dict[str, Any] = Field(default_factory=dict, description="Search filters")
@@ -35,6 +37,7 @@ class SearchQuery(BaseModel):
 
 class ProjectIdea(BaseModel):
     """Structured project idea."""
+
     name: str = Field(description="Project name")
     description: str = Field(description="Project description")
     technologies: list[str] = Field(description="Required technologies")
@@ -44,6 +47,7 @@ class ProjectIdea(BaseModel):
 
 class ResourceRecommendation(BaseModel):
     """Recommended resource."""
+
     name: str
     url: str
     platform: str
@@ -53,6 +57,7 @@ class ResourceRecommendation(BaseModel):
 
 class SynthesisResult(BaseModel):
     """Project synthesis result."""
+
     project_name: str
     resources: list[ResourceRecommendation]
     integration_plan: str
@@ -62,6 +67,7 @@ class SynthesisResult(BaseModel):
 
 class ConversationResponse(BaseModel):
     """Structured conversation response."""
+
     message: str = Field(description="Response message to user")
     intent: str = Field(description="Detected user intent")
     action: str | None = Field(default=None, description="Action to take")
@@ -73,9 +79,11 @@ class ConversationResponse(BaseModel):
 # Agent Dependencies
 # ============================================
 
+
 @dataclass
 class AgentDeps:
     """Dependencies injected into agents."""
+
     user_id: str = "default"
     session_id: str = ""
     context: dict[str, Any] = None
@@ -88,6 +96,7 @@ class AgentDeps:
 # ============================================
 # Pydantic AI Agents
 # ============================================
+
 
 def create_lmstudio_model() -> OpenAIModel:
     """Create LM Studio model (OpenAI-compatible)."""
@@ -178,19 +187,26 @@ Be concise and helpful. Ask clarifying questions when needed.""",
 # Agent Tools
 # ============================================
 
+
 @research_agent.tool
 async def search_github(ctx: RunContext[AgentDeps], query: str) -> str:
     """Search GitHub for repositories."""
     try:
         from src.discovery.github_client import GitHubClient
+
         client = GitHubClient()
         results = await client.search_repositories(query, max_results=5)
-        return str([{
-            "name": r.name,
-            "url": r.url,
-            "stars": r.stars,
-            "description": r.description,
-        } for r in results])
+        return str(
+            [
+                {
+                    "name": r.name,
+                    "url": r.url,
+                    "stars": r.stars,
+                    "description": r.description,
+                }
+                for r in results
+            ]
+        )
     except Exception as e:
         return f"Error searching GitHub: {e}"
 
@@ -200,6 +216,7 @@ async def search_huggingface(ctx: RunContext[AgentDeps], query: str) -> str:
     """Search HuggingFace for models and datasets."""
     try:
         from src.discovery.huggingface_client import HuggingFaceClient
+
         client = HuggingFaceClient()
         models = await client.search_models(query, limit=3)
         datasets = await client.search_datasets(query, limit=2)
@@ -230,6 +247,7 @@ async def get_project_status(ctx: RunContext[AgentDeps]) -> str:
 # ============================================
 # High-Level Functions
 # ============================================
+
 
 async def research_project(query: str) -> list[ResourceRecommendation]:
     """Research resources for a project idea."""
@@ -264,6 +282,7 @@ async def chat(message: str, context: dict[str, Any] = None) -> ConversationResp
 # ============================================
 # Agent Factory
 # ============================================
+
 
 class AgentFactory:
     """Factory for creating configured agents."""

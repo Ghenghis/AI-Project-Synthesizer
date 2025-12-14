@@ -18,10 +18,7 @@ class TestDependency:
 
     def test_create_dependency(self):
         """Should create dependency."""
-        dep = Dependency(
-            name="requests",
-            version_spec=">=2.0.0"
-        )
+        dep = Dependency(name="requests", version_spec=">=2.0.0")
         assert dep.name == "requests"
         assert dep.version_spec == ">=2.0.0"
 
@@ -37,8 +34,8 @@ class TestDependencyGraph:
     def test_graph_has_attributes(self):
         """Should have dependency lists."""
         graph = DependencyGraph()
-        assert hasattr(graph, 'direct')
-        assert hasattr(graph, 'transitive')
+        assert hasattr(graph, "direct")
+        assert hasattr(graph, "transitive")
 
 
 class TestDependencyAnalyzer:
@@ -52,7 +49,7 @@ class TestDependencyAnalyzer:
     def test_analyzer_has_analyze_method(self):
         """Should have analyze method."""
         analyzer = DependencyAnalyzer()
-        assert hasattr(analyzer, 'analyze')
+        assert hasattr(analyzer, "analyze")
 
 
 if __name__ == "__main__":

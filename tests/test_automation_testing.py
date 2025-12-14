@@ -169,12 +169,14 @@ class TestIntegrationTester:
             return True
 
         for i in range(3):
-            tester.register(TestCase(
-                name=f"list_test_{i}",
-                description=f"List Test {i}",
-                test_func=test_func,
-                category="unit",
-            ))
+            tester.register(
+                TestCase(
+                    name=f"list_test_{i}",
+                    description=f"List Test {i}",
+                    test_func=test_func,
+                    category="unit",
+                )
+            )
 
         tests = tester.list_tests()
         assert len(tests) == 3
@@ -183,18 +185,22 @@ class TestIntegrationTester:
         async def test_func():
             return True
 
-        tester.register(TestCase(
-            name="unit_1",
-            description="Unit 1",
-            test_func=test_func,
-            category="unit",
-        ))
-        tester.register(TestCase(
-            name="integration_1",
-            description="Integration 1",
-            test_func=test_func,
-            category="integration",
-        ))
+        tester.register(
+            TestCase(
+                name="unit_1",
+                description="Unit 1",
+                test_func=test_func,
+                category="unit",
+            )
+        )
+        tester.register(
+            TestCase(
+                name="integration_1",
+                description="Integration 1",
+                test_func=test_func,
+                category="integration",
+            )
+        )
 
         unit_tests = tester.list_tests(category="unit")
         assert len(unit_tests) == 1
@@ -205,12 +211,14 @@ class TestIntegrationTester:
         async def passing_test():
             return True
 
-        tester.register(TestCase(
-            name="pass_test",
-            description="Passing Test",
-            test_func=passing_test,
-            category="unit",
-        ))
+        tester.register(
+            TestCase(
+                name="pass_test",
+                description="Passing Test",
+                test_func=passing_test,
+                category="unit",
+            )
+        )
 
         result = await tester.run_test("pass_test")
         assert result.status == TestStatus.PASSED
@@ -220,12 +228,14 @@ class TestIntegrationTester:
         async def failing_test():
             raise AssertionError("Test failed")
 
-        tester.register(TestCase(
-            name="fail_test",
-            description="Failing Test",
-            test_func=failing_test,
-            category="unit",
-        ))
+        tester.register(
+            TestCase(
+                name="fail_test",
+                description="Failing Test",
+                test_func=failing_test,
+                category="unit",
+            )
+        )
 
         result = await tester.run_test("fail_test")
         assert result.status == TestStatus.ERROR
@@ -242,13 +252,15 @@ class TestIntegrationTester:
             await asyncio.sleep(10)
             return True
 
-        tester.register(TestCase(
-            name="slow_test",
-            description="Slow Test",
-            test_func=slow_test,
-            category="unit",
-            timeout_seconds=1,  # Short timeout
-        ))
+        tester.register(
+            TestCase(
+                name="slow_test",
+                description="Slow Test",
+                test_func=slow_test,
+                category="unit",
+                timeout_seconds=1,  # Short timeout
+            )
+        )
 
         result = await tester.run_test("slow_test")
         assert result.status == TestStatus.ERROR
@@ -262,18 +274,22 @@ class TestIntegrationTester:
         async def test2():
             return True
 
-        tester.register(TestCase(
-            name="all_1",
-            description="All 1",
-            test_func=test1,
-            category="unit",
-        ))
-        tester.register(TestCase(
-            name="all_2",
-            description="All 2",
-            test_func=test2,
-            category="unit",
-        ))
+        tester.register(
+            TestCase(
+                name="all_1",
+                description="All 1",
+                test_func=test1,
+                category="unit",
+            )
+        )
+        tester.register(
+            TestCase(
+                name="all_2",
+                description="All 2",
+                test_func=test2,
+                category="unit",
+            )
+        )
 
         summary = await tester.run_all()
         assert summary.total == 2
@@ -285,18 +301,22 @@ class TestIntegrationTester:
         async def test_func():
             return True
 
-        tester.register(TestCase(
-            name="cat_unit",
-            description="Unit",
-            test_func=test_func,
-            category="unit",
-        ))
-        tester.register(TestCase(
-            name="cat_int",
-            description="Integration",
-            test_func=test_func,
-            category="integration",
-        ))
+        tester.register(
+            TestCase(
+                name="cat_unit",
+                description="Unit",
+                test_func=test_func,
+                category="unit",
+            )
+        )
+        tester.register(
+            TestCase(
+                name="cat_int",
+                description="Integration",
+                test_func=test_func,
+                category="integration",
+            )
+        )
 
         summary = await tester.run_category("unit")
         assert summary.total == 1
@@ -313,19 +333,23 @@ class TestIntegrationTester:
             results.append("main")
             return True
 
-        tester.register(TestCase(
-            name="dep_test",
-            description="Dependency",
-            test_func=dep_test,
-            category="unit",
-        ))
-        tester.register(TestCase(
-            name="main_test",
-            description="Main",
-            test_func=main_test,
-            category="unit",
-            dependencies=["dep_test"],
-        ))
+        tester.register(
+            TestCase(
+                name="dep_test",
+                description="Dependency",
+                test_func=dep_test,
+                category="unit",
+            )
+        )
+        tester.register(
+            TestCase(
+                name="main_test",
+                description="Main",
+                test_func=main_test,
+                category="unit",
+                dependencies=["dep_test"],
+            )
+        )
 
         await tester.run_all()
 

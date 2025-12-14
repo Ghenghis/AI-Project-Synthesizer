@@ -24,6 +24,7 @@ from src.vibe.rules_engine import RulesEngine
 
 class PromptComplexity(Enum):
     """Complexity levels of prompts."""
+
     SIMPLE = "simple"
     MODERATE = "moderate"
     COMPLEX = "complex"
@@ -32,6 +33,7 @@ class PromptComplexity(Enum):
 @dataclass
 class PromptLayer:
     """Represents a layer in the enhanced prompt."""
+
     name: str
     content: str
     priority: int  # 1 = highest priority
@@ -40,6 +42,7 @@ class PromptLayer:
 @dataclass
 class EnhancedPrompt:
     """Complete enhanced prompt with all layers."""
+
     original: str
     layers: list[PromptLayer]
     complexity: PromptComplexity
@@ -66,7 +69,9 @@ class PromptEnhancer:
         self.memory = MemorySystem()
 
         # Enhancement configuration
-        self.enable_enhancement = self.config.get("prompt_enhancement", {}).get("enabled", True)
+        self.enable_enhancement = self.config.get("prompt_enhancement", {}).get(
+            "enabled", True
+        )
         self.min_complexity_for_enhancement = PromptComplexity.SIMPLE
 
         # Layer templates
@@ -99,11 +104,15 @@ Code Patterns:
 
 Additional Constraints:
 {additional_constraints}
-"""
+""",
         }
 
-    async def enhance(self, user_prompt: str, project_context: dict[str, Any] | None = None,
-                     force_enhance: bool = False) -> EnhancedPrompt:
+    async def enhance(
+        self,
+        user_prompt: str,
+        project_context: dict[str, Any] | None = None,
+        force_enhance: bool = False,
+    ) -> EnhancedPrompt:
         """
         Enhance a user prompt with context and constraints.
 
@@ -119,13 +128,17 @@ Additional Constraints:
         complexity = self._detect_complexity(user_prompt)
 
         # Skip enhancement for simple prompts unless forced
-        if not self.enable_enhancement and not force_enhance and complexity == self.min_complexity_for_enhancement:
-                return EnhancedPrompt(
-                    original=user_prompt,
-                    layers=[PromptLayer("task", user_prompt, 1)],
-                    complexity=complexity,
-                    metadata={"enhanced": False}
-                )
+        if (
+            not self.enable_enhancement
+            and not force_enhance
+            and complexity == self.min_complexity_for_enhancement
+        ):
+            return EnhancedPrompt(
+                original=user_prompt,
+                layers=[PromptLayer("task", user_prompt, 1)],
+                complexity=complexity,
+                metadata={"enhanced": False},
+            )
 
         # Build layers
         layers = []
@@ -140,7 +153,9 @@ Additional Constraints:
         layers.append(task_layer)
 
         # Layer 3: Constraints (priority 2)
-        constraints_layer = await self._build_constraints_layer(user_prompt, project_context)
+        constraints_layer = await self._build_constraints_layer(
+            user_prompt, project_context
+        )
         if constraints_layer.content.strip():
             layers.append(constraints_layer)
 
@@ -156,8 +171,8 @@ Additional Constraints:
                 "enhanced": True,
                 "layer_count": len(layers),
                 "project_context": bool(project_context),
-                "timestamp": self._get_timestamp()
-            }
+                "timestamp": self._get_timestamp(),
+            },
         )
 
         return enhanced
@@ -169,7 +184,7 @@ Additional Constraints:
             r"^(what|how|why|when|where)\b",
             r"^(show|tell|list|get)\b",
             r"\b(explain|describe)\b",
-            r"^.+$"  # Very short prompts
+            r"^.+$",  # Very short prompts
         ]
 
         # Complex indicators
@@ -179,7 +194,7 @@ Additional Constraints:
             r"\b(system|application|api|service)\b",
             r"\b(multiple|several|various)\b",
             r"\b(requirements|specifications|constraints)\b",
-            r"\b(test|deploy|optimize|refactor)\b"
+            r"\b(test|deploy|optimize|refactor)\b",
         ]
 
         prompt_lower = prompt.lower()
@@ -197,7 +212,9 @@ Additional Constraints:
         # Default to moderate
         return PromptComplexity.MODERATE
 
-    async def _build_context_layer(self, prompt: str, _project_context: dict[str, Any] | None) -> PromptLayer:
+    async def _build_context_layer(
+        self, prompt: str, _project_context: dict[str, Any] | None
+    ) -> PromptLayer:
         """Build the context layer of the enhanced prompt."""
         # Get context from injector
         context_data = await self.context_injector.get_context(prompt, _project_context)
@@ -208,14 +225,12 @@ Additional Constraints:
             tech_stack=", ".join(context_data.get("tech_stack", [])),
             current_state=context_data.get("current_state", "Not specified"),
             components="\n".join(f"- {c}" for c in context_data.get("components", [])),
-            decisions="\n".join(f"- {d}" for d in context_data.get("past_decisions", [])[:3])
+            decisions="\n".join(
+                f"- {d}" for d in context_data.get("past_decisions", [])[:3]
+            ),
         )
 
-        return PromptLayer(
-            name="context",
-            content=content.strip(),
-            priority=3
-        )
+        return PromptLayer(name="context", content=content.strip(), priority=3)
 
     def _build_task_layer(self, prompt: str) -> PromptLayer:
         """Build the task layer from user prompt."""
@@ -226,17 +241,18 @@ Additional Constraints:
         # Format using template
         content = self.layer_templates["task"].format(
             task_description=prompt.strip(),
-            requirements="\n".join(f"- {r}" for r in requirements) if requirements else "- Complete the requested task",
-            expected_output=expected_output or "Functional code that meets the requirements"
+            requirements="\n".join(f"- {r}" for r in requirements)
+            if requirements
+            else "- Complete the requested task",
+            expected_output=expected_output
+            or "Functional code that meets the requirements",
         )
 
-        return PromptLayer(
-            name="task",
-            content=content.strip(),
-            priority=1
-        )
+        return PromptLayer(name="task", content=content.strip(), priority=1)
 
-    async def _build_constraints_layer(self, prompt: str, _project_context: dict[str, Any] | None) -> PromptLayer:
+    async def _build_constraints_layer(
+        self, prompt: str, _project_context: dict[str, Any] | None
+    ) -> PromptLayer:
         """Build the constraints layer using rules engine."""
         # Get applicable rules
         rules = await self.rules_engine.get_applicable_rules(prompt, _project_context)
@@ -245,21 +261,21 @@ Additional Constraints:
         security_rules = [r for r in rules if r.category == "security"]
         style_rules = [r for r in rules if r.category == "style"]
         code_patterns = [r for r in rules if r.category == "pattern"]
-        other_rules = [r for r in rules if r.category not in ["security", "style", "pattern"]]
+        other_rules = [
+            r for r in rules if r.category not in ["security", "style", "pattern"]
+        ]
 
         # Format using template
         content = self.layer_templates["constraints"].format(
             security_rules="\n".join(f"- {r.description}" for r in security_rules[:5]),
             style_rules="\n".join(f"- {r.description}" for r in style_rules[:5]),
             code_patterns="\n".join(f"- {r.description}" for r in code_patterns[:5]),
-            additional_constraints="\n".join(f"- {r.description}" for r in other_rules[:3])
+            additional_constraints="\n".join(
+                f"- {r.description}" for r in other_rules[:3]
+            ),
         )
 
-        return PromptLayer(
-            name="constraints",
-            content=content.strip(),
-            priority=2
-        )
+        return PromptLayer(name="constraints", content=content.strip(), priority=2)
 
     def _extract_requirements(self, prompt: str) -> list[str]:
         """Extract explicit requirements from prompt."""
@@ -269,7 +285,7 @@ Additional Constraints:
         patterns = [
             r"(?:require|must|should|need to|needs to)\s+([^,.!?]+)",
             r"(?:with|including|that has|which has)\s+([^,.!?]+)",
-            r"(?:support|handle|process|manage)\s+([^,.!?]+)"
+            r"(?:support|handle|process|manage)\s+([^,.!?]+)",
         ]
 
         for pattern in patterns:
@@ -286,7 +302,7 @@ Additional Constraints:
         patterns = [
             r"(?:output|result|return|produce|generate)\s+(?:should|must|will)\s+([^,.!?]+)",
             r"(?:I want|I need|create)\s+(?:a|an)\s+([^,.!?]+)",
-            r"(?:build|create|make)\s+(?:a|an)\s+([^,.!?]+)"
+            r"(?:build|create|make)\s+(?:a|an)\s+([^,.!?]+)",
         ]
 
         for pattern in patterns:
@@ -299,6 +315,7 @@ Additional Constraints:
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
         from datetime import datetime
+
         return datetime.now().isoformat()
 
     def format_prompt(self, enhanced: EnhancedPrompt) -> str:
@@ -319,7 +336,9 @@ Additional Constraints:
 
         return "\n\n".join(sections)
 
-    async def learn_from_outcome(self, enhanced: EnhancedPrompt, outcome: dict[str, Any]) -> None:
+    async def learn_from_outcome(
+        self, enhanced: EnhancedPrompt, outcome: dict[str, Any]
+    ) -> None:
         """
         Learn from the outcome of using an enhanced prompt.
 
@@ -340,17 +359,19 @@ Additional Constraints:
                 "enhanced": self.format_prompt(enhanced),
                 "complexity": enhanced.complexity.value,
                 "quality": quality_score,
-                "outcome": outcome
+                "outcome": outcome,
             }
 
             await self.memory.add(
                 content=json.dumps(memory_entry),
                 category="PATTERN",
                 tags=["prompt", "enhanced", enhanced.complexity.value],
-                importance=0.7
+                importance=0.7,
             )
 
-    async def get_similar_prompts(self, prompt: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def get_similar_prompts(
+        self, prompt: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """
         Get similar successful prompts from memory.
 
@@ -363,10 +384,7 @@ Additional Constraints:
         """
         # Search memory for similar prompts
         results = await self.memory.search(
-            query=prompt,
-            category="PATTERN",
-            tags=["prompt", "enhanced"],
-            limit=limit
+            query=prompt, category="PATTERN", tags=["prompt", "enhanced"], limit=limit
         )
 
         # Parse and return
@@ -380,7 +398,9 @@ Additional Constraints:
 
         return similar
 
-    def create_config_file(self, config_path: str = "config/prompt_enhancement.yaml") -> None:
+    def create_config_file(
+        self, config_path: str = "config/prompt_enhancement.yaml"
+    ) -> None:
         """Create default configuration file."""
         config = {
             "enabled": True,
@@ -390,26 +410,26 @@ Additional Constraints:
                     "enabled": True,
                     "priority": 3,
                     "max_decisions": 3,
-                    "max_components": 10
+                    "max_components": 10,
                 },
                 "task": {
                     "enabled": True,
                     "priority": 1,
                     "extract_requirements": True,
-                    "extract_output": True
+                    "extract_output": True,
                 },
                 "constraints": {
                     "enabled": True,
                     "priority": 2,
                     "max_rules_per_category": 5,
-                    "security_first": True
-                }
+                    "security_first": True,
+                },
             },
             "learning": {
                 "store_successful": True,
                 "quality_threshold": 7.0,
-                "max_memory_entries": 1000
-            }
+                "max_memory_entries": 1000,
+            },
         }
 
         # Ensure directory exists
@@ -417,7 +437,8 @@ Additional Constraints:
 
         # Write config
         import yaml
-        with open(config_path, 'w') as f:
+
+        with open(config_path, "w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
 
@@ -455,7 +476,7 @@ if __name__ == "__main__":
             demo_prompts = [
                 "Create a login API with OAuth",
                 "What is Python?",
-                "Build a complete e-commerce system with user auth, payment processing, inventory management, and admin dashboard"
+                "Build a complete e-commerce system with user auth, payment processing, inventory management, and admin dashboard",
             ]
 
             for prompt in demo_prompts:

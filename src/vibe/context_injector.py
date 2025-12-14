@@ -25,6 +25,7 @@ from src.memory.mem0_integration import MemorySystem
 @dataclass
 class ProjectContext:
     """Complete project context for prompt enhancement."""
+
     project_name: str
     project_type: str
     tech_stack: list[str]
@@ -60,23 +61,25 @@ class ContextInjector:
         self.project_patterns = {
             "python": {
                 "files": ["requirements.txt", "pyproject.toml", "setup.py", "Pipfile"],
-                "dirs": ["src", "tests"]
+                "dirs": ["src", "tests"],
             },
             "javascript": {
                 "files": ["package.json", "yarn.lock", "pnpm-lock.yaml"],
-                "dirs": ["src", "lib", "components"]
+                "dirs": ["src", "lib", "components"],
             },
             "typescript": {
                 "files": ["tsconfig.json", "package.json"],
-                "dirs": ["src", "types"]
+                "dirs": ["src", "types"],
             },
             "web": {
                 "files": ["index.html", "webpack.config.js", "vite.config.js"],
-                "dirs": ["public", "assets"]
-            }
+                "dirs": ["public", "assets"],
+            },
         }
 
-    async def get_context(self, prompt: str, project_context: dict[str, Any] | None = None) -> ProjectContext:
+    async def get_context(
+        self, prompt: str, project_context: dict[str, Any] | None = None
+    ) -> ProjectContext:
         """
         Get comprehensive project context.
 
@@ -98,14 +101,13 @@ class ContextInjector:
         context = await self._build_context(prompt, project_context)
 
         # Cache result
-        self._cache[cache_key] = {
-            "context": context,
-            "timestamp": datetime.now()
-        }
+        self._cache[cache_key] = {"context": context, "timestamp": datetime.now()}
 
         return context
 
-    async def _build_context(self, prompt: str, project_context: dict[str, Any] | None) -> ProjectContext:
+    async def _build_context(
+        self, prompt: str, project_context: dict[str, Any] | None
+    ) -> ProjectContext:
         """Build project context from various sources."""
         # Get current directory
         cwd = Path.cwd()
@@ -143,7 +145,7 @@ class ContextInjector:
             past_decisions=past_decisions,
             recent_changes=recent_changes,
             environment=environment,
-            git_status=git_status
+            git_status=git_status,
         )
 
     def _detect_project_type(self, directory: Path) -> tuple[str, list[str]]:
@@ -165,7 +167,9 @@ class ContextInjector:
                 if (directory / dir_name).exists():
                     score += 1
 
-            if score > 0 and score > (tech_stack.count(detected_type) if detected_type == proj_type else 0):
+            if score > 0 and score > (
+                tech_stack.count(detected_type) if detected_type == proj_type else 0
+            ):
                 detected_type = proj_type
 
         # Build tech stack from files
@@ -181,7 +185,9 @@ class ContextInjector:
                 tech_stack.append("Docker Compose")
 
         elif detected_type in ["javascript", "typescript"]:
-            tech_stack = ["JavaScript" if detected_type == "javascript" else "TypeScript"]
+            tech_stack = [
+                "JavaScript" if detected_type == "javascript" else "TypeScript"
+            ]
             if (directory / "package.json").exists():
                 tech_stack.append("npm")
             if (directory / "yarn.lock").exists():
@@ -212,6 +218,7 @@ class ContextInjector:
         if (directory / "pyproject.toml").exists():
             try:
                 import toml
+
                 with open(directory / "pyproject.toml") as f:
                     data = toml.load(f)
                 return data.get("project", {}).get("name", directory.name)
@@ -252,31 +259,44 @@ class ContextInjector:
 
         return "; ".join(states) if states else "Active development"
 
-    async def _discover_components(self, directory: Path, project_type: str) -> list[str]:
+    async def _discover_components(
+        self, directory: Path, project_type: str
+    ) -> list[str]:
         """Discover project components."""
         components = []
 
         if project_type == "python":
             # Find Python modules
             for py_file in directory.rglob("*.py"):
-                if py_file.is_file() and not any(skip in str(py_file) for skip in [".venv", "__pycache__", "node_modules"]):
+                if py_file.is_file() and not any(
+                    skip in str(py_file)
+                    for skip in [".venv", "__pycache__", "node_modules"]
+                ):
                     # Get module path relative to src if exists
                     try:
                         rel_path = py_file.relative_to(directory / "src")
-                        components.append(f"src.{str(rel_path.with_suffix('')).replace(os.sep, '.')}")
+                        components.append(
+                            f"src.{str(rel_path.with_suffix('')).replace(os.sep, '.')}"
+                        )
                     except ValueError:
                         # Not in src, use relative path
                         rel_path = py_file.relative_to(directory)
-                        components.append(str(rel_path.with_suffix('')).replace(os.sep, '.'))
+                        components.append(
+                            str(rel_path.with_suffix("")).replace(os.sep, ".")
+                        )
 
             # Limit to main components
-            components = [c for c in components if not c.endswith((".test", ".tests", "__init__"))]
+            components = [
+                c for c in components if not c.endswith((".test", ".tests", "__init__"))
+            ]
 
         elif project_type in ["javascript", "typescript"]:
             # Find components
             for ext in ["*.js", "*.jsx", "*.ts", "*.tsx"]:
                 for file in directory.rglob(ext):
-                    if file.is_file() and not any(skip in str(file) for skip in ["node_modules", ".git"]):
+                    if file.is_file() and not any(
+                        skip in str(file) for skip in ["node_modules", ".git"]
+                    ):
                         try:
                             rel_path = file.relative_to(directory)
                             components.append(str(rel_path))
@@ -286,12 +306,15 @@ class ContextInjector:
         # Limit number and prioritize
         if len(components) > 20:
             # Prioritize based on location and name
-            components = sorted(components, key=lambda x: (
-                0 if "src" in x else 1,
-                0 if "main" in x or "index" in x else 1,
-                0 if "app" in x else 1,
-                x
-            ))[:20]
+            components = sorted(
+                components,
+                key=lambda x: (
+                    0 if "src" in x else 1,
+                    0 if "main" in x or "index" in x else 1,
+                    0 if "app" in x else 1,
+                    x,
+                ),
+            )[:20]
 
         return components
 
@@ -302,9 +325,7 @@ class ContextInjector:
 
         try:
             results = await self.memory.search(
-                query=query,
-                category="DECISION",
-                limit=5
+                query=query, category="DECISION", limit=5
             )
 
             decisions = []
@@ -344,7 +365,10 @@ class ContextInjector:
                     mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
                     if mtime > cutoff:
                         # Skip certain directories
-                        if not any(skip in str(file_path) for skip in [".git", ".venv", "node_modules", "__pycache__"]):
+                        if not any(
+                            skip in str(file_path)
+                            for skip in [".git", ".venv", "node_modules", "__pycache__"]
+                        ):
                             recent.append(file_path)
                 except:
                     continue
@@ -360,8 +384,8 @@ class ContextInjector:
             "env_vars": {
                 "VIRTUAL_ENV": os.environ.get("VIRTUAL_ENV"),
                 "CONDA_DEFAULT_ENV": os.environ.get("CONDA_DEFAULT_ENV"),
-                "NODE_ENV": os.environ.get("NODE_ENV")
-            }
+                "NODE_ENV": os.environ.get("NODE_ENV"),
+            },
         }
 
     def _get_git_status(self, directory: Path) -> dict[str, Any] | None:
@@ -374,7 +398,7 @@ class ContextInjector:
                 ["git", "rev-parse", "--git-dir"],
                 cwd=directory,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode != 0:
@@ -385,7 +409,7 @@ class ContextInjector:
                 ["git", "branch", "--show-current"],
                 cwd=directory,
                 capture_output=True,
-                text=True
+                text=True,
             )
             branch = result.stdout.strip() if result.returncode == 0 else "unknown"
 
@@ -394,15 +418,17 @@ class ContextInjector:
                 ["git", "status", "--porcelain"],
                 cwd=directory,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
-                changed_files = len([line for line in result.stdout.strip().split('\n') if line])
+                changed_files = len(
+                    [line for line in result.stdout.strip().split("\n") if line]
+                )
                 return {
                     "branch": branch,
                     "changed_files": changed_files,
-                    "has_uncommitted": changed_files > 0
+                    "has_uncommitted": changed_files > 0,
                 }
 
         except FileNotFoundError:
@@ -416,12 +442,20 @@ class ContextInjector:
     def _is_new_project(self, directory: Path) -> bool:
         """Check if this appears to be a new project."""
         # Very few files in root
-        root_files = [f for f in directory.iterdir() if f.is_file() and not f.name.startswith('.')]
+        root_files = [
+            f for f in directory.iterdir() if f.is_file() and not f.name.startswith(".")
+        ]
 
         # Check for common project files
         has_config = any(
             (directory / f).exists()
-            for f in ["package.json", "pyproject.toml", "requirements.txt", "Cargo.toml", "go.mod"]
+            for f in [
+                "package.json",
+                "pyproject.toml",
+                "requirements.txt",
+                "Cargo.toml",
+                "go.mod",
+            ]
         )
 
         return len(root_files) < 5 and not has_config
@@ -442,14 +476,14 @@ class ContextInjector:
             "type": "project_decision",
             "decision": decision,
             "context": context,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         await self.memory.add(
             content=json.dumps(memory_entry),
             category="DECISION",
             tags=["decision", "project"],
-            importance=0.8
+            importance=0.8,
         )
 
     def clear_cache(self) -> None:

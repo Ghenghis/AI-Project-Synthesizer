@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "testing"
 
 try:
     from src.memory.mem0_integration import MemoryCategory
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for memory.mem0_integration: {e}")
@@ -29,7 +30,5 @@ class TestMemoryCategory:
         assert MemoryCategory.PATTERN.value == "pattern"
 
 
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

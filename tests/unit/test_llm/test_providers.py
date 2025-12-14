@@ -36,7 +36,7 @@ class TestProviderConfig:
         config = ProviderConfig(
             provider_type=ProviderType.OLLAMA,
             name="test_provider",
-            host="http://localhost:11434"
+            host="http://localhost:11434",
         )
         assert config.name == "test_provider"
         assert config.host == "http://localhost:11434"
@@ -44,9 +44,7 @@ class TestProviderConfig:
     def test_config_defaults(self):
         """Should have correct defaults."""
         config = ProviderConfig(
-            provider_type=ProviderType.OLLAMA,
-            name="test",
-            host="localhost"
+            provider_type=ProviderType.OLLAMA, name="test", host="localhost"
         )
         assert config.enabled is True
         assert config.timeout == 120.0
@@ -68,9 +66,7 @@ class TestProviderCapabilities:
     def test_create_capabilities(self):
         """Should create capabilities."""
         caps = ProviderCapabilities(
-            streaming=True,
-            function_calling=False,
-            vision=False
+            streaming=True, function_calling=False, vision=False
         )
         assert caps.streaming is True
         assert caps.function_calling is False

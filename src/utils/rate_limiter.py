@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RateLimitState:
     """State of a rate limiter."""
+
     tokens: float
     last_update: float
     requests_made: int = 0
@@ -71,8 +72,7 @@ class RateLimiter:
         self._wait_time_total = 0.0
 
         logger.debug(
-            f"RateLimiter initialized: {requests_per_hour}/hr, "
-            f"burst={burst_size}"
+            f"RateLimiter initialized: {requests_per_hour}/hr, burst={burst_size}"
         )
 
     @property

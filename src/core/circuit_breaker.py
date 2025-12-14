@@ -19,18 +19,20 @@ logger = logging.getLogger(__name__)
 
 class CircuitState(Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, reject calls
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject calls
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
-    failure_threshold: int = 5          # Failures before opening
-    recovery_timeout: float = 60.0      # Seconds to wait before trying again
-    success_threshold: int = 2          # Successes needed to close circuit
-    timeout: float = 30.0               # Call timeout in seconds
+
+    failure_threshold: int = 5  # Failures before opening
+    recovery_timeout: float = 60.0  # Seconds to wait before trying again
+    success_threshold: int = 2  # Successes needed to close circuit
+    timeout: float = 30.0  # Call timeout in seconds
     expected_exception: type = Exception  # Exception type that counts as failure
 
     def __post_init__(self):
@@ -48,6 +50,7 @@ class CircuitBreakerConfig:
 @dataclass
 class CircuitBreakerStats:
     """Statistics for circuit breaker."""
+
     failures: int = 0
     successes: int = 0
     total_calls: int = 0
@@ -65,16 +68,19 @@ class CircuitBreakerStats:
 
 class CircuitBreakerError(Exception):
     """Base exception for circuit breaker errors."""
+
     pass
 
 
 class CircuitOpenError(CircuitBreakerError):
     """Raised when circuit is open."""
+
     pass
 
 
 class CircuitTimeoutError(CircuitBreakerError):
     """Raised when call times out."""
+
     pass
 
 
@@ -86,7 +92,9 @@ class CircuitBreaker:
     Automatically opens when failures exceed threshold, closes when service recovers.
     """
 
-    def __init__(self, config: CircuitBreakerConfig | None = None, name: str = "default"):
+    def __init__(
+        self, config: CircuitBreakerConfig | None = None, name: str = "default"
+    ):
         """
         Initialize circuit breaker.
 
@@ -198,8 +206,7 @@ class CircuitBreaker:
             self._stats.total_calls += 1
 
             result = await asyncio.wait_for(
-                func(*args, **kwargs),
-                timeout=self.config.timeout
+                func(*args, **kwargs), timeout=self.config.timeout
             )
 
             self._record_success()
@@ -207,15 +214,21 @@ class CircuitBreaker:
 
         except TimeoutError as e:
             self._record_failure()
-            raise CircuitTimeoutError(f"Call timed out after {self.config.timeout}s") from e
+            raise CircuitTimeoutError(
+                f"Call timed out after {self.config.timeout}s"
+            ) from e
         except self.config.expected_exception as e:
             self._record_failure()
-            logger.warning(f"Circuit '{self.name}' recorded failure: {type(e).__name__}")
+            logger.warning(
+                f"Circuit '{self.name}' recorded failure: {type(e).__name__}"
+            )
             raise
         except Exception as e:
             # Unexpected exceptions also count as failures
             self._record_failure()
-            logger.error(f"Circuit '{self.name}' unexpected error: {type(e).__name__}: {e}")
+            logger.error(
+                f"Circuit '{self.name}' unexpected error: {type(e).__name__}: {e}"
+            )
             raise
 
     def reset(self):
@@ -248,7 +261,7 @@ class CircuitBreaker:
                 "total_calls": self._stats.total_calls,
                 "failure_rate": self._stats.failure_rate,
                 "state_changes": self._stats.state_changes,
-            }
+            },
         }
 
 
@@ -260,7 +273,9 @@ class CircuitBreakerRegistry:
     def __init__(self):
         self._breakers: dict[str, CircuitBreaker] = {}
 
-    def get_breaker(self, name: str, config: CircuitBreakerConfig | None = None) -> CircuitBreaker:
+    def get_breaker(
+        self, name: str, config: CircuitBreakerConfig | None = None
+    ) -> CircuitBreaker:
         """
         Get or create circuit breaker by name.
 
@@ -295,7 +310,7 @@ def circuit_breaker(
     recovery_timeout: float = 60.0,
     success_threshold: int = 2,
     timeout: float = 30.0,
-    expected_exception: type = Exception
+    expected_exception: type = Exception,
 ):
     """
     Decorator for applying circuit breaker to async functions.
@@ -311,13 +326,14 @@ def circuit_breaker(
     Returns:
         Decorated function
     """
+
     def decorator(func: Callable) -> Callable:
         config = CircuitBreakerConfig(
             failure_threshold=failure_threshold,
             recovery_timeout=recovery_timeout,
             success_threshold=success_threshold,
             timeout=timeout,
-            expected_exception=expected_exception
+            expected_exception=expected_exception,
         )
 
         breaker = _registry.get_breaker(name, config)
@@ -365,7 +381,7 @@ GITHUB_BREAKER_CONFIG = CircuitBreakerConfig(
     recovery_timeout=300.0,  # 5 minutes
     success_threshold=3,
     timeout=30.0,
-    expected_exception=Exception
+    expected_exception=Exception,
 )
 
 HUGGINGFACE_BREAKER_CONFIG = CircuitBreakerConfig(
@@ -373,13 +389,13 @@ HUGGINGFACE_BREAKER_CONFIG = CircuitBreakerConfig(
     recovery_timeout=180.0,  # 3 minutes
     success_threshold=2,
     timeout=45.0,
-    expected_exception=Exception
+    expected_exception=Exception,
 )
 
 OLLAMA_BREAKER_CONFIG = CircuitBreakerConfig(
     failure_threshold=3,
-    recovery_timeout=60.0,   # 1 minute
+    recovery_timeout=60.0,  # 1 minute
     success_threshold=2,
     timeout=120.0,  # 2 minutes for LLM calls
-    expected_exception=Exception
+    expected_exception=Exception,
 )

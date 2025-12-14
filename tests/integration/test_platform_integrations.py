@@ -31,10 +31,7 @@ class TestGitLabClient:
     @pytest.fixture
     async def client(self):
         """Create GitLab client for testing."""
-        client = GitLabClient(
-            token=os.getenv("GITLAB_TOKEN"),
-            url="https://gitlab.com"
-        )
+        client = GitLabClient(token=os.getenv("GITLAB_TOKEN"), url="https://gitlab.com")
         yield client
         if client._session:
             await client._session.close()
@@ -51,17 +48,16 @@ class TestGitLabClient:
     @pytest.mark.asyncio
     async def test_search_projects(self, client):
         """Test project search functionality."""
-        projects = await client.search_projects(
-            query="python",
-            limit=5,
-            min_stars=10
-        )
+        projects = await client.search_projects(query="python", limit=5, min_stars=10)
 
         assert len(projects) <= 5
         for project in projects:
             assert isinstance(project, GitLabProject)
             assert project.star_count >= 10
-            assert "python" in project.name.lower() or "python" in project.description.lower()
+            assert (
+                "python" in project.name.lower()
+                or "python" in project.description.lower()
+            )
 
     @pytest.mark.asyncio
     async def test_get_project(self, client):
@@ -108,9 +104,7 @@ class TestFirecrawlClient:
     @pytest.fixture
     async def client(self):
         """Create Firecrawl client for testing."""
-        client = FirecrawlClient(
-            api_key=os.getenv("FIRECRAWL_API_KEY")
-        )
+        client = FirecrawlClient(api_key=os.getenv("FIRECRAWL_API_KEY"))
         yield client
         if client._session:
             await client._session.close()
@@ -125,8 +119,7 @@ class TestFirecrawlClient:
     async def test_scrape_url(self, client):
         """Test URL scraping."""
         content = await client.scrape_url(
-            "https://example.com",
-            formats=[FirecrawlFormat.MARKDOWN]
+            "https://example.com", formats=[FirecrawlFormat.MARKDOWN]
         )
 
         assert isinstance(content, ScrapedContent)
@@ -141,13 +134,11 @@ class TestFirecrawlClient:
     async def test_scrape_with_format(self, client):
         """Test scraping with different formats."""
         content_html = await client.scrape_url(
-            "https://example.com",
-            formats=[FirecrawlFormat.HTML]
+            "https://example.com", formats=[FirecrawlFormat.HTML]
         )
 
         content_text = await client.scrape_url(
-            "https://example.com",
-            formats=[FirecrawlFormat.TEXT]
+            "https://example.com", formats=[FirecrawlFormat.TEXT]
         )
 
         assert content_html.format == FirecrawlFormat.HTML
@@ -158,10 +149,7 @@ class TestFirecrawlClient:
     @pytest.mark.asyncio
     async def test_map_site(self, client):
         """Test site mapping."""
-        site_map = await client.map_site(
-            "https://example.com",
-            limit=10
-        )
+        site_map = await client.map_site("https://example.com", limit=10)
 
         assert site_map.base_url == "https://example.com"
         assert site_map.total_pages >= 1
@@ -177,9 +165,7 @@ class TestFirecrawlClient:
         ]
 
         contents = await client.batch_scrape(
-            urls,
-            formats=[FirecrawlFormat.MARKDOWN],
-            concurrency=2
+            urls, formats=[FirecrawlFormat.MARKDOWN], concurrency=2
         )
 
         assert len(contents) == len(urls)
@@ -224,7 +210,7 @@ class TestBrowserClient:
         client = BrowserClient(
             browser_type=BrowserType.CHROMIUM,
             headless=True,
-            viewport=ViewportSize.DESKTOP
+            viewport=ViewportSize.DESKTOP,
         )
         await client.start()
         yield client
@@ -338,7 +324,7 @@ class TestMemorySystem:
             content="Test memory content",
             category=MemoryCategory.CONTEXT,
             tags=["test", "integration"],
-            importance=0.8
+            importance=0.8,
         )
 
         assert memory_id is not None
@@ -351,14 +337,11 @@ class TestMemorySystem:
         await memory_system.add(
             content="Python is a programming language",
             category=MemoryCategory.LEARNING,
-            tags=["python", "programming"]
+            tags=["python", "programming"],
         )
 
         # Search for it
-        results = await memory_system.search(
-            query="python programming",
-            limit=5
-        )
+        results = await memory_system.search(query="python programming", limit=5)
 
         assert len(results) >= 1
         assert any("python" in r.get("memory", "").lower() for r in results)
@@ -368,8 +351,7 @@ class TestMemorySystem:
         """Test getting a specific memory."""
         # Add a memory
         memory_id = await memory_system.add(
-            content="Specific test memory",
-            category=MemoryCategory.PREFERENCE
+            content="Specific test memory", category=MemoryCategory.PREFERENCE
         )
 
         # Get it back
@@ -384,15 +366,11 @@ class TestMemorySystem:
         """Test updating a memory."""
         # Add a memory
         memory_id = await memory_system.add(
-            content="Original content",
-            category=MemoryCategory.CONTEXT
+            content="Original content", category=MemoryCategory.CONTEXT
         )
 
         # Update it
-        success = await memory_system.update(
-            memory_id,
-            "Updated content"
-        )
+        success = await memory_system.update(memory_id, "Updated content")
 
         assert success is True
 
@@ -405,8 +383,7 @@ class TestMemorySystem:
         """Test deleting a memory."""
         # Add a memory
         memory_id = await memory_system.add(
-            content="To be deleted",
-            category=MemoryCategory.CONTEXT
+            content="To be deleted", category=MemoryCategory.CONTEXT
         )
 
         # Delete it
@@ -424,19 +401,18 @@ class TestMemorySystem:
         await memory_system.add(
             content="User prefers dark mode",
             category=MemoryCategory.PREFERENCE,
-            tags=["ui", "theme"]
+            tags=["ui", "theme"],
         )
 
         await memory_system.add(
             content="Decision: Use React for frontend",
             category=MemoryCategory.DECISION,
-            tags=["frontend", "react"]
+            tags=["frontend", "react"],
         )
 
         # Get context
         context = await memory_system.get_context_for_task(
-            "Build a React application with dark mode",
-            limit=5
+            "Build a React application with dark mode", limit=5
         )
 
         assert context["task"] == "Build a React application with dark mode"
@@ -466,13 +442,12 @@ class TestMemorySystem:
         await memory_system.add(
             content="Export test memory",
             category=MemoryCategory.CONTEXT,
-            tags=["export", "test"]
+            tags=["export", "test"],
         )
 
         # Export to JSON
         file_path = await memory_system.export_memories(
-            format="json",
-            category=MemoryCategory.CONTEXT
+            format="json", category=MemoryCategory.CONTEXT
         )
 
         assert file_path is not None
@@ -522,9 +497,7 @@ class TestLiteLLMRouter:
             pytest.skip("No API key provided")
 
         result = await router.complete(
-            prompt="What is 2+2?",
-            task_type=TaskType.SIMPLE,
-            max_tokens=10
+            prompt="What is 2+2?", task_type=TaskType.SIMPLE, max_tokens=10
         )
 
         assert result.content is not None
@@ -538,14 +511,10 @@ class TestLiteLLMRouter:
         if not os.getenv("OPENAI_API_KEY"):
             pytest.skip("No API key provided")
 
-        messages = [
-            {"role": "user", "content": "Say 'Hello World'"}
-        ]
+        messages = [{"role": "user", "content": "Say 'Hello World'"}]
 
         result = await router.chat(
-            messages=messages,
-            task_type=TaskType.SIMPLE,
-            max_tokens=10
+            messages=messages, task_type=TaskType.SIMPLE, max_tokens=10
         )
 
         assert result.content is not None

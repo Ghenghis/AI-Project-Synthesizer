@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "testing"
 
 try:
     from src.agents.framework_router import FrameworkType, TaskComplexity, TaskType
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for agents.framework_router: {e}")
@@ -57,6 +58,5 @@ class TestFrameworkType:
         assert FrameworkType.LANGGRAPH.value == "langgraph"
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

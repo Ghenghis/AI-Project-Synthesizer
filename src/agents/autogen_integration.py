@@ -19,6 +19,7 @@ from typing import Any
 try:
     from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
     from autogen_agentchat.teams import GroupChatManager, RoundRobinGroupChat
+
     AUTOGEN_AVAILABLE = True
 except ImportError:
     AUTOGEN_AVAILABLE = False
@@ -37,6 +38,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class CodeReviewResult:
     """Result of a multi-agent code review."""
+
     code_quality_score: float
     security_issues: list[str]
     suggestions: list[str]
@@ -56,7 +58,7 @@ class AutoGenIntegration:
         self,
         voice_manager: VoiceManager | None = None,
         enable_voice_output: bool = False,
-        llm_router: LiteLLMRouter | None = None
+        llm_router: LiteLLMRouter | None = None,
     ):
         """
         Initialize AutoGen integration.
@@ -84,7 +86,9 @@ class AutoGenIntegration:
 
         secure_logger.info("AutoGen integration initialized")
         secure_logger.info(f"  Voice output: {self.enable_voice_output}")
-        secure_logger.info(f"  LLM Router: {'configured' if self.llm_router else 'not configured'}")
+        secure_logger.info(
+            f"  LLM Router: {'configured' if self.llm_router else 'not configured'}"
+        )
 
     def _get_llm_config(self) -> dict[str, Any]:
         """Get LLM configuration from environment or LiteLLM router."""
@@ -97,28 +101,24 @@ class AutoGenIntegration:
         config_list = []
 
         if api_key:
-            config_list.append({
-                "model": model,
-                "api_key": api_key,
-                "api_base": api_base
-            })
+            config_list.append(
+                {"model": model, "api_key": api_key, "api_base": api_base}
+            )
 
         # Add LiteLLM fallback if available
         if self.llm_router:
-            config_list.append({
-                "model": "litellm",
-                "api_key": "litellm",  # LiteLLM handles this
-                "api_base": None
-            })
+            config_list.append(
+                {
+                    "model": "litellm",
+                    "api_key": "litellm",  # LiteLLM handles this
+                    "api_base": None,
+                }
+            )
 
         # If no config available, use mock mode for testing
         if not config_list:
             secure_logger.warning("No LLM configuration found, using mock mode")
-            config_list = [{
-                "model": "mock",
-                "api_key": "mock_key",
-                "api_base": None
-            }]
+            config_list = [{"model": "mock", "api_key": "mock_key", "api_base": None}]
 
         return {"config_list": config_list}
 
@@ -152,7 +152,7 @@ When reviewing code, always:
 4. Rate overall code quality (1-10)""",
             llm_config=self.llm_config,
             human_input_mode="NEVER",
-            max_consecutive_auto_reply=3
+            max_consecutive_auto_reply=3,
         )
 
         # Security Analyst - focuses on security vulnerabilities
@@ -180,16 +180,13 @@ When analyzing code, always:
 4. Suggest security testing approaches""",
             llm_config=self.llm_config,
             human_input_mode="NEVER",
-            max_consecutive_auto_reply=3
+            max_consecutive_auto_reply=3,
         )
 
         secure_logger.info("AutoGen agents initialized: CodeReviewer, SecurityAnalyst")
 
     async def review_code(
-        self,
-        code: str,
-        file_path: str,
-        context: str | None = None
+        self, code: str, file_path: str, context: str | None = None
     ) -> CodeReviewResult:
         """
         Perform multi-agent code review.
@@ -209,9 +206,12 @@ When analyzing code, always:
             return CodeReviewResult(
                 code_quality_score=8,
                 security_issues=[],
-                suggestions=["Consider adding type hints", "Add docstring documentation"],
+                suggestions=[
+                    "Consider adding type hints",
+                    "Add docstring documentation",
+                ],
                 approved=True,
-                agent_consensus="AutoGen not available - mock review completed"
+                agent_consensus="AutoGen not available - mock review completed",
             )
 
         # Prepare review prompt
@@ -224,8 +224,7 @@ When analyzing code, always:
             )
 
             manager = GroupChatManager(
-                group_chat=group_chat,
-                termination_condition=None
+                group_chat=group_chat, termination_condition=None
             )
 
             # Start the conversation
@@ -235,9 +234,7 @@ When analyzing code, always:
             await self._speak_if_enabled("Code reviewer is analyzing the code...")
 
             result = await self.code_reviewer.a_initiate_chat(
-                manager,
-                message=review_prompt,
-                max_turns=2
+                manager, message=review_prompt, max_turns=2
             )
 
             # Extract results from conversation
@@ -247,7 +244,9 @@ When analyzing code, always:
             if self.enable_voice_output:
                 await self._announce_results(review_result)
 
-            secure_logger.info(f"Code review completed: Quality {review_result.code_quality_score}/10")
+            secure_logger.info(
+                f"Code review completed: Quality {review_result.code_quality_score}/10"
+            )
 
             return review_result
 
@@ -259,21 +258,18 @@ When analyzing code, always:
                 security_issues=[f"Review failed: {str(e)}"],
                 suggestions=["Manual review required due to system error"],
                 approved=False,
-                agent_consensus="Review failed - system error"
+                agent_consensus="Review failed - system error",
             )
 
     def _create_review_prompt(
-        self,
-        code: str,
-        file_path: str,
-        context: str | None
+        self, code: str, file_path: str, context: str | None
     ) -> str:
         """Create a comprehensive review prompt for the agents."""
         prompt = f"""Please review this code for quality and security:
 
 File: {file_path}
 
-Context: {context or 'No additional context provided'}
+Context: {context or "No additional context provided"}
 
 Code:
 ```python
@@ -303,7 +299,7 @@ End your review with:
                 security_issues=["No conversation history"],
                 suggestions=["Manual review required"],
                 approved=False,
-                agent_consensus="No consensus reached"
+                agent_consensus="No consensus reached",
             )
 
         # Get the last substantive message
@@ -330,7 +326,9 @@ End your review with:
                     break
 
         # Extract security issues
-        if "security" in content_lower and ("vulnerability" in content_lower or "issue" in content_lower):
+        if "security" in content_lower and (
+            "vulnerability" in content_lower or "issue" in content_lower
+        ):
             security_issues.append("Security concerns identified in code")
 
         # Extract suggestions
@@ -346,7 +344,9 @@ End your review with:
             security_issues=security_issues,
             suggestions=suggestions,
             approved=approved,
-            agent_consensus=last_message[:200] + "..." if len(last_message) > 200 else last_message
+            agent_consensus=last_message[:200] + "..."
+            if len(last_message) > 200
+            else last_message,
         )
 
     async def _speak_if_enabled(self, message: str):
@@ -386,7 +386,7 @@ End your review with:
             await self.code_reviewer.a_initiate_chat(
                 self.security_analyst,
                 message="Hello! I'm the code reviewer. Let's test our conversation.",
-                max_turns=2
+                max_turns=2,
             )
 
             secure_logger.info("Basic conversation test successful")
@@ -399,8 +399,7 @@ End your review with:
 
 # Factory function
 async def create_autogen_integration(
-    voice_manager: VoiceManager | None = None,
-    enable_voice_output: bool = False
+    voice_manager: VoiceManager | None = None, enable_voice_output: bool = False
 ) -> AutoGenIntegration | None:
     """
     Create and initialize AutoGen integration.
@@ -414,8 +413,7 @@ async def create_autogen_integration(
     """
     try:
         integration = AutoGenIntegration(
-            voice_manager=voice_manager,
-            enable_voice_output=enable_voice_output
+            voice_manager=voice_manager, enable_voice_output=enable_voice_output
         )
 
         # Test basic functionality
@@ -439,7 +437,9 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="AutoGen Integration Test")
-    parser.add_argument("--test-conversation", action="store_true", help="Test basic conversation")
+    parser.add_argument(
+        "--test-conversation", action="store_true", help="Test basic conversation"
+    )
     parser.add_argument("--review-code", help="Python file to review")
     parser.add_argument("--voice", action="store_true", help="Enable voice output")
 

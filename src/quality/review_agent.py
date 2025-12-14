@@ -25,6 +25,7 @@ from src.llm.litellm_router import LiteLLMRouter
 
 class ReviewSeverity(Enum):
     """Severity levels for review issues."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -34,6 +35,7 @@ class ReviewSeverity(Enum):
 
 class ReviewStatus(Enum):
     """Review status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     APPROVED = "approved"
@@ -44,6 +46,7 @@ class ReviewStatus(Enum):
 @dataclass
 class ReviewIssue:
     """Represents an issue found during code review."""
+
     agent: str
     category: str
     severity: ReviewSeverity
@@ -58,6 +61,7 @@ class ReviewIssue:
 @dataclass
 class ReviewReport:
     """Complete code review report."""
+
     status: ReviewStatus
     overall_score: float  # 0.0 to 10.0
     issues: list[ReviewIssue]
@@ -100,7 +104,7 @@ class ReviewAgent:
 
 Always provide specific, actionable security recommendations.
 Rate issues as: CRITICAL, HIGH, MEDIUM, or LOW severity.""",
-                "description": "Reviews code for security vulnerabilities and best practices"
+                "description": "Reviews code for security vulnerabilities and best practices",
             },
             "quality_checker": {
                 "name": "QualityChecker",
@@ -114,7 +118,7 @@ Rate issues as: CRITICAL, HIGH, MEDIUM, or LOW severity.""",
 
 Provide constructive feedback on improving code quality.
 Rate issues as: CRITICAL, HIGH, MEDIUM, or LOW severity.""",
-                "description": "Reviews code for quality, maintainability, and best practices"
+                "description": "Reviews code for quality, maintainability, and best practices",
             },
             "performance_analyst": {
                 "name": "PerformanceAnalyst",
@@ -128,7 +132,7 @@ Rate issues as: CRITICAL, HIGH, MEDIUM, or LOW severity.""",
 
 Identify performance bottlenecks and suggest optimizations.
 Rate issues as: CRITICAL, HIGH, MEDIUM, or LOW severity.""",
-                "description": "Reviews code for performance and scalability issues"
+                "description": "Reviews code for performance and scalability issues",
             },
             "lead_reviewer": {
                 "name": "LeadReviewer",
@@ -146,11 +150,13 @@ Consider all agent feedback and make a final decision:
 - REJECTED: Critical issues must be fixed first
 
 Be fair but thorough in your assessment.""",
-                "description": "Moderates review and makes final decisions"
-            }
+                "description": "Moderates review and makes final decisions",
+            },
         }
 
-    async def review_code(self, code: str, file_path: str, context: dict[str, Any] | None = None) -> ReviewReport:
+    async def review_code(
+        self, code: str, file_path: str, context: dict[str, Any] | None = None
+    ) -> ReviewReport:
         """
         Conduct multi-agent code review.
 
@@ -169,17 +175,21 @@ Be fair but thorough in your assessment.""",
             "file_path": file_path,
             "code": code,
             "context": context or {},
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Initialize agents
         agents = await self._initialize_agents()
 
         # Conduct individual reviews
-        individual_reviews = await self._conduct_individual_reviews(agents[:-1], review_context)
+        individual_reviews = await self._conduct_individual_reviews(
+            agents[:-1], review_context
+        )
 
         # Conduct debate and synthesis
-        final_review = await self._conduct_debate_and_synthesis(agents, individual_reviews, review_context)
+        final_review = await self._conduct_debate_and_synthesis(
+            agents, individual_reviews, review_context
+        )
 
         # Parse and structure the final report
         report = await self._parse_review_report(final_review, time.time() - start_time)
@@ -194,26 +204,28 @@ Be fair but thorough in your assessment.""",
             agent = await self.autogen.create_agent(
                 name=config["name"],
                 system_message=config["system_message"],
-                description=config["description"]
+                description=config["description"],
             )
             agents.append(agent)
 
         return agents
 
-    async def _conduct_individual_reviews(self, reviewers: list[Any], context: dict[str, Any]) -> list[dict[str, Any]]:
+    async def _conduct_individual_reviews(
+        self, reviewers: list[Any], context: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Get initial reviews from each specialist agent."""
         reviews = []
 
         # Build review prompt
         prompt = f"""Please review the following code:
 
-File: {context['file_path']}
+File: {context["file_path"]}
 
 ```python
-{context['code']}
+{context["code"]}
 ```
 
-Context: {json.dumps(context.get('context', {}), indent=2)}
+Context: {json.dumps(context.get("context", {}), indent=2)}
 
 Provide your review in JSON format:
 {{
@@ -252,33 +264,36 @@ Provide your review in JSON format:
                 reviews.append(review_data)
             except json.JSONDecodeError:
                 # Fallback: extract key points from text
-                reviews.append({
-                    "agent": "unknown",
-                    "issues": [],
-                    "summary": response[:200],
-                    "score": 5.0
-                })
+                reviews.append(
+                    {
+                        "agent": "unknown",
+                        "issues": [],
+                        "summary": response[:200],
+                        "score": 5.0,
+                    }
+                )
 
         return reviews
 
-    async def _conduct_debate_and_synthesis(self, agents: list[Any], reviews: list[dict[str, Any]], context: dict[str, Any]) -> str:
+    async def _conduct_debate_and_synthesis(
+        self, agents: list[Any], reviews: list[dict[str, Any]], context: dict[str, Any]
+    ) -> str:
         """Conduct moderated debate to reach consensus."""
         lead_reviewer = agents[-1]  # Last agent is the lead reviewer
 
         # Compile all reviews for the lead reviewer
-        reviews_summary = "\n\n".join([
-            f"Review from {r['agent']}:\n{json.dumps(r, indent=2)}"
-            for r in reviews
-        ])
+        reviews_summary = "\n\n".join(
+            [f"Review from {r['agent']}:\n{json.dumps(r, indent=2)}" for r in reviews]
+        )
 
         debate_prompt = f"""You are the Lead Reviewer. Please review the following feedback from your team:
 
 {reviews_summary}
 
 Original code:
-File: {context['file_path']}
+File: {context["file_path"]}
 ```python
-{context['code']}
+{context["code"]}
 ```
 
 Please:
@@ -305,7 +320,9 @@ Output your final review in this JSON format:
 
         return final_response
 
-    async def _parse_review_report(self, final_review: str, review_time: float) -> ReviewReport:
+    async def _parse_review_report(
+        self, final_review: str, review_time: float
+    ) -> ReviewReport:
         """Parse the final review into a structured report."""
         try:
             data = json.loads(final_review)
@@ -322,7 +339,7 @@ Output your final review in this JSON format:
                 debate_summary=data.get("debate_summary", ""),
                 review_time=review_time,
                 agents_participated=list(self.agent_configs.keys()),
-                consensus_score=data.get("consensus_score", 0.0)
+                consensus_score=data.get("consensus_score", 0.0),
             )
 
         except json.JSONDecodeError:
@@ -336,7 +353,7 @@ Output your final review in this JSON format:
                 debate_summary=final_review[:500],
                 review_time=review_time,
                 agents_participated=list(self.agent_configs.keys()),
-                consensus_score=0.0
+                consensus_score=0.0,
             )
 
     async def review_pull_request(self, pr_data: dict[str, Any]) -> ReviewReport:
@@ -358,14 +375,16 @@ Output your final review in this JSON format:
                 report = await self.review_code(
                     code=file_info["patch"],
                     file_path=file_info["filename"],
-                    context={"pr_description": pr_data.get("description")}
+                    context={"pr_description": pr_data.get("description")},
                 )
                 all_issues.extend(report.issues)
                 file_summaries.append(f"{file_info['filename']}: {report.status.value}")
 
         # Generate PR-level summary
         if all_issues:
-            critical_count = sum(1 for i in all_issues if i.severity == ReviewSeverity.CRITICAL)
+            critical_count = sum(
+                1 for i in all_issues if i.severity == ReviewSeverity.CRITICAL
+            )
             high_count = sum(1 for i in all_issues if i.severity == ReviewSeverity.HIGH)
 
             if critical_count > 0:
@@ -386,7 +405,7 @@ Output your final review in this JSON format:
             debate_summary=f"Files reviewed: {', '.join(file_summaries)}",
             review_time=0,
             agents_participated=list(self.agent_configs.keys()),
-            consensus_score=0.8
+            consensus_score=0.8,
         )
 
     def generate_report(self, report: ReviewReport) -> str:
@@ -397,7 +416,7 @@ Output your final review in this JSON format:
         output.append("=" * 60)
         output.append(f"Status: {report.status.value.upper()}")
         output.append(f"Overall Score: {report.overall_score}/10.0")
-        output.append(f"Consensus: {report.consensus_score*100:.0f}% agreement")
+        output.append(f"Consensus: {report.consensus_score * 100:.0f}% agreement")
         output.append(f"Review Time: {report.review_time:.2f}s")
         output.append(f"Agents: {', '.join(report.agents_participated)}")
         output.append("")
@@ -410,14 +429,21 @@ Output your final review in this JSON format:
         # Issues by severity
         if report.issues:
             output.append("ISSUES FOUND:")
-            for severity in [ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.MEDIUM, ReviewSeverity.LOW]:
+            for severity in [
+                ReviewSeverity.CRITICAL,
+                ReviewSeverity.HIGH,
+                ReviewSeverity.MEDIUM,
+                ReviewSeverity.LOW,
+            ]:
                 issues = [i for i in report.issues if i.severity == severity]
                 if issues:
                     output.append(f"\n{severity.value.upper()} ({len(issues)}):")
                     for issue in issues[:5]:  # Limit to 5 per severity
                         output.append(f"  • [{issue.agent}] {issue.message}")
                         if issue.line_number:
-                            output.append(f"    Line {issue.line_number} in {issue.file_path}")
+                            output.append(
+                                f"    Line {issue.line_number} in {issue.file_path}"
+                            )
                         if issue.suggestion:
                             output.append(f"    Suggestion: {issue.suggestion}")
                     if len(issues) > 5:
@@ -442,7 +468,9 @@ Output your final review in this JSON format:
 
         return "\n".join(output)
 
-    async def apply_fixes(self, code: str, issues: list[ReviewIssue]) -> tuple[str, list[str]]:
+    async def apply_fixes(
+        self, code: str, issues: list[ReviewIssue]
+    ) -> tuple[str, list[str]]:
         """
         Attempt to automatically fix some issues.
 
@@ -458,17 +486,22 @@ Output your final review in this JSON format:
 
         # Sort issues by line number (reverse order to avoid offset issues)
         fixable_issues = [
-            i for i in issues
-            if i.suggestion and i.severity in [ReviewSeverity.LOW, ReviewSeverity.MEDIUM]
+            i
+            for i in issues
+            if i.suggestion
+            and i.severity in [ReviewSeverity.LOW, ReviewSeverity.MEDIUM]
         ]
         fixable_issues.sort(key=lambda x: x.line_number or 0, reverse=True)
 
         for issue in fixable_issues:
             # Simple fix application (would be more sophisticated in production)
-            if "add" in issue.suggestion.lower() and "import" in issue.suggestion.lower():
+            if (
+                "add" in issue.suggestion.lower()
+                and "import" in issue.suggestion.lower()
+            ):
                 # Add missing import
-                if "import" not in fixed_code.split('\n')[0]:
-                    fixed_code = issue.suggestion + '\n\n' + fixed_code
+                if "import" not in fixed_code.split("\n")[0]:
+                    fixed_code = issue.suggestion + "\n\n" + fixed_code
                     applied_fixes.append(f"Added import for {issue.category}")
 
         return fixed_code, applied_fixes
@@ -495,7 +528,7 @@ if __name__ == "__main__":
                 print(f"File not found: {file_path}")
         else:
             # Demo review
-            demo_code = '''
+            demo_code = """
 def login(username, password):
     # SQL injection vulnerability
     query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
@@ -517,7 +550,7 @@ def process_data(data):
             results.append(data[i] * data[j])
 
     return results
-'''
+"""
             report = await reviewer.review_code(demo_code, "demo.py")
             print(reviewer.generate_report(report))
 

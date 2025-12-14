@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class AssistantState(str, Enum):
     """Current state of the assistant."""
+
     IDLE = "idle"
     LISTENING = "listening"
     THINKING = "thinking"
@@ -35,18 +36,20 @@ class AssistantState(str, Enum):
 
 class TaskType(str, Enum):
     """Types of tasks the assistant can help with."""
-    SEARCH = "search"           # Find projects/code/datasets
-    ANALYZE = "analyze"         # Analyze a repository
-    SYNTHESIZE = "synthesize"   # Combine multiple projects
-    GENERATE = "generate"       # Generate new code
-    EXPLAIN = "explain"         # Explain code/concepts
-    DEBUG = "debug"             # Help debug issues
-    CHAT = "chat"               # General conversation
+
+    SEARCH = "search"  # Find projects/code/datasets
+    ANALYZE = "analyze"  # Analyze a repository
+    SYNTHESIZE = "synthesize"  # Combine multiple projects
+    GENERATE = "generate"  # Generate new code
+    EXPLAIN = "explain"  # Explain code/concepts
+    DEBUG = "debug"  # Help debug issues
+    CHAT = "chat"  # General conversation
 
 
 @dataclass
 class Message:
     """A message in the conversation."""
+
     role: str  # "user", "assistant", "system"
     content: str
     timestamp: float = 0.0
@@ -57,6 +60,7 @@ class Message:
 @dataclass
 class TaskContext:
     """Context for the current task."""
+
     task_type: TaskType
     description: str
     parameters: dict[str, Any] = field(default_factory=dict)
@@ -69,6 +73,7 @@ class TaskContext:
 @dataclass
 class AssistantConfig:
     """Configuration for the assistant."""
+
     voice_enabled: bool = True
     voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel
     auto_speak: bool = True  # Automatically speak responses
@@ -155,6 +160,7 @@ When responding:
             # Try LM Studio first (local)
             try:
                 from src.llm.lmstudio_client import LMStudioClient
+
                 self._llm = LMStudioClient()
                 self._llm_provider = "lmstudio"
                 secure_logger.info("Using LM Studio for assistant")
@@ -165,6 +171,7 @@ When responding:
             if self._llm is None:
                 try:
                     from src.llm.ollama_client import OllamaClient
+
                     self._llm = OllamaClient()
                     self._llm_provider = "ollama"
                     secure_logger.info("Using Ollama for assistant")
@@ -182,6 +189,7 @@ When responding:
         if self._voice is None and self.config.voice_enabled:
             try:
                 from src.voice.elevenlabs_client import ElevenLabsClient
+
                 self._voice = ElevenLabsClient()
                 secure_logger.info("Voice enabled with ElevenLabs")
             except Exception as e:
@@ -192,6 +200,7 @@ When responding:
         """Get or initialize search client."""
         if self._search is None:
             from src.discovery.unified_search import create_unified_search
+
             self._search = create_unified_search()
         return self._search
 
@@ -284,7 +293,7 @@ When responding:
             prompt += "ASSISTANT: "
 
             result = await llm.complete(prompt)
-            return result.content if hasattr(result, 'content') else str(result)
+            return result.content if hasattr(result, "content") else str(result)
 
         except Exception as e:
             secure_logger.error(f"LLM error: {e}")
@@ -295,12 +304,16 @@ When responding:
         input_lower = user_input.lower()
 
         # Search intent
-        if any(word in input_lower for word in ["find", "search", "look for", "discover"]):
+        if any(
+            word in input_lower for word in ["find", "search", "look for", "discover"]
+        ):
             # Check if we have enough info
             if len(user_input.split()) < 5:
                 return {
                     "needs_clarification": True,
-                    "clarification_question": self._get_search_clarification(user_input),
+                    "clarification_question": self._get_search_clarification(
+                        user_input
+                    ),
                     "action": None,
                 }
             return {
@@ -319,7 +332,9 @@ When responding:
                 }
 
         # Analyze intent
-        if any(word in input_lower for word in ["analyze", "review", "check", "evaluate"]):
+        if any(
+            word in input_lower for word in ["analyze", "review", "check", "evaluate"]
+        ):
             if "http" not in input_lower and "github.com" not in input_lower:
                 return {
                     "needs_clarification": True,
@@ -348,9 +363,15 @@ When responding:
         ]
 
         # Pick most relevant question based on what's missing
-        if "python" not in user_input.lower() and "javascript" not in user_input.lower():
+        if (
+            "python" not in user_input.lower()
+            and "javascript" not in user_input.lower()
+        ):
             return questions[2]
-        if "github" not in user_input.lower() and "huggingface" not in user_input.lower():
+        if (
+            "github" not in user_input.lower()
+            and "huggingface" not in user_input.lower()
+        ):
             return questions[1]
         return questions[0]
 
@@ -361,7 +382,9 @@ When responding:
         if "chatbot" in input_lower or "chat" in input_lower:
             return "What platform should the chatbot work on? (Discord, Telegram, Web, CLI)"
         if "api" in input_lower:
-            return "What should the API do? What data or functionality should it expose?"
+            return (
+                "What should the API do? What data or functionality should it expose?"
+            )
         if "ml" in input_lower or "machine learning" in input_lower:
             return "What kind of ML task? (classification, generation, analysis, etc.)"
 
@@ -413,13 +436,19 @@ When responding:
             return f"I couldn't find any projects matching '{search_terms}'. Would you like me to try a different search?"
 
         # Format results
-        response = f"I found {len(result.repositories)} projects for '{search_terms}':\n\n"
+        response = (
+            f"I found {len(result.repositories)} projects for '{search_terms}':\n\n"
+        )
 
         for i, repo in enumerate(result.repositories[:5], 1):
             response += f"**{i}. {repo.full_name}** ({repo.platform})\n"
             response += f"   ⭐ {repo.stars:,} stars\n"
             if repo.description:
-                desc = repo.description[:100] + "..." if len(repo.description) > 100 else repo.description
+                desc = (
+                    repo.description[:100] + "..."
+                    if len(repo.description) > 100
+                    else repo.description
+                )
                 response += f"   {desc}\n"
             response += f"   🔗 {repo.url}\n\n"
 
@@ -434,7 +463,8 @@ When responding:
         """Analyze a repository."""
         # Extract URL from query
         import re
-        url_match = re.search(r'https?://[^\s]+', query)
+
+        url_match = re.search(r"https?://[^\s]+", query)
 
         if not url_match:
             return "Please provide a repository URL to analyze."
@@ -495,16 +525,16 @@ What would you like to do?"""
         import re
 
         # Remove markdown formatting
-        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)  # Bold
-        text = re.sub(r'\*([^*]+)\*', r'\1', text)      # Italic
-        text = re.sub(r'`([^`]+)`', r'\1', text)        # Code
-        text = re.sub(r'#{1,6}\s*', '', text)           # Headers
-        text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)  # Links
-        text = re.sub(r'[•\-]\s*', '', text)            # Bullets
-        text = re.sub(r'🔗|⭐|📊', '', text)            # Emojis
+        text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)  # Bold
+        text = re.sub(r"\*([^*]+)\*", r"\1", text)  # Italic
+        text = re.sub(r"`([^`]+)`", r"\1", text)  # Code
+        text = re.sub(r"#{1,6}\s*", "", text)  # Headers
+        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)  # Links
+        text = re.sub(r"[•\-]\s*", "", text)  # Bullets
+        text = re.sub(r"🔗|⭐|📊", "", text)  # Emojis
 
         # Clean up whitespace
-        text = re.sub(r'\n{3,}', '\n\n', text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
         text = text.strip()
 
         return text
@@ -524,15 +554,27 @@ What would you like to do?"""
     def _get_suggested_actions(self) -> list[str]:
         """Get suggested next actions."""
         if not self.conversation:
-            return ["Search for projects", "Analyze a repository", "Help me build something"]
+            return [
+                "Search for projects",
+                "Analyze a repository",
+                "Help me build something",
+            ]
 
         last_msg = self.conversation[-1].content.lower()
 
         if "search" in last_msg or "found" in last_msg:
-            return ["Analyze top result", "Search more specifically", "Find complementary projects"]
+            return [
+                "Analyze top result",
+                "Search more specifically",
+                "Find complementary projects",
+            ]
 
         if "analyze" in last_msg:
-            return ["Search for similar projects", "Generate documentation", "Find alternatives"]
+            return [
+                "Search for similar projects",
+                "Generate documentation",
+                "Find alternatives",
+            ]
 
         return ["Search", "Analyze", "Build"]
 

@@ -6,7 +6,6 @@ Full coverage tests for:
 - WorkflowOrchestrator
 """
 
-
 import contextlib
 
 import pytest
@@ -30,7 +29,7 @@ class TestN8NClient:
 
     def test_has_base_url(self, client):
         # Check client has URL configured
-        assert hasattr(client, 'base_url') or hasattr(client, '_url') or True
+        assert hasattr(client, "base_url") or hasattr(client, "_url") or True
 
     @pytest.mark.asyncio
     async def test_health_check(self, client):
@@ -72,7 +71,11 @@ class TestWorkflowOrchestrator:
 
     def test_has_n8n_client(self, orchestrator):
         # Orchestrator should have n8n client
-        assert hasattr(orchestrator, '_n8n_client') or hasattr(orchestrator, 'n8n_client') or True
+        assert (
+            hasattr(orchestrator, "_n8n_client")
+            or hasattr(orchestrator, "n8n_client")
+            or True
+        )
 
 
 class TestGetOrchestrator:

@@ -28,7 +28,7 @@ class TestMCPAgentWorkflow:
         assert server_instance is not None
 
         # Check available tools
-        available_tools = [name for name in dir(tools) if not name.startswith('_')]
+        available_tools = [name for name in dir(tools) if not name.startswith("_")]
         assert len(available_tools) > 0
 
         # Check for essential tools
@@ -37,7 +37,7 @@ class TestMCPAgentWorkflow:
             "analyze_repository",
             "synthesize_project",
             "get_synthesis_status",
-            "get_platforms"
+            "get_platforms",
         ]
 
         for tool in essential_tools:
@@ -49,15 +49,13 @@ class TestMCPAgentWorkflow:
         """Test complete tool execution through MCP server."""
 
         # Test search repositories tool directly
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             result = await tools.search_repositories(
-                query="test",
-                platforms=["github"],
-                max_results=5
+                query="test", platforms=["github"], max_results=5
             )
 
             assert result is not None
@@ -69,16 +67,14 @@ class TestMCPAgentWorkflow:
         """Test agents can interact with MCP tools effectively."""
 
         # Test that tools can be called directly
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             # Call search tool
             result = await tools.search_repositories(
-                query="python web framework",
-                platforms=["github"],
-                max_results=5
+                query="python web framework", platforms=["github"], max_results=5
             )
 
             assert result is not None
@@ -93,7 +89,7 @@ class TestMCPAgentWorkflow:
         result = await tools.search_repositories(
             query="",  # Empty query should error
             platforms=["github"],
-            max_results=5
+            max_results=5,
         )
 
         assert result is not None
@@ -105,16 +101,14 @@ class TestMCPAgentWorkflow:
         """Test MCP server integrates with memory system."""
 
         # Test that tools can handle memory-related parameters
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             # Call tool with context that might include memory
             result = await tools.search_repositories(
-                query="python web framework",
-                platforms=["github"],
-                max_results=5
+                query="python web framework", platforms=["github"], max_results=5
             )
 
             assert result is not None
@@ -128,7 +122,7 @@ class TestMCPAgentWorkflow:
         import asyncio
 
         # Test concurrent tool calls
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
@@ -137,9 +131,7 @@ class TestMCPAgentWorkflow:
             tasks = []
             for i in range(5):
                 task = tools.search_repositories(
-                    query=f"test-{i}",
-                    platforms=["github"],
-                    max_results=5
+                    query=f"test-{i}", platforms=["github"], max_results=5
                 )
                 tasks.append(task)
 
@@ -162,15 +154,13 @@ class TestMCPAgentWorkflow:
         assert server_instance is not None
 
         # Test basic server functionality
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             result = await tools.search_repositories(
-                query="test",
-                platforms=["github"],
-                max_results=5
+                query="test", platforms=["github"], max_results=5
             )
 
             assert result is not None
@@ -181,16 +171,14 @@ class TestMCPAgentWorkflow:
         """Test workflow includes quality checks via MCP tools."""
 
         # Test that tools can handle quality-related parameters
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             # Call tool that might involve quality checks
             result = await tools.search_repositories(
-                query="python web framework",
-                platforms=["github"],
-                max_results=5
+                query="python web framework", platforms=["github"], max_results=5
             )
 
             assert result is not None

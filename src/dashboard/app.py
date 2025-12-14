@@ -57,18 +57,22 @@ def create_app() -> FastAPI:
 
     # Include settings routes
     from src.dashboard.settings_routes import router as settings_router
+
     app.include_router(settings_router)
 
     # Include agent routes
     from src.dashboard.agent_routes import router as agent_router
+
     app.include_router(agent_router)
 
     # Include memory routes
     from src.dashboard.memory_routes import router as memory_router
+
     app.include_router(memory_router)
 
     # Include webhook routes
     from src.dashboard.webhook_routes import router as webhook_router
+
     app.include_router(webhook_router)
 
     # API Routes
@@ -133,7 +137,7 @@ def create_app() -> FastAPI:
                         "stars": r.stars,
                     }
                     for r in results.repositories
-                ]
+                ],
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -167,7 +171,7 @@ def create_app() -> FastAPI:
                     "models": len(project.models),
                     "datasets": len(project.datasets),
                     "papers": len(project.papers),
-                }
+                },
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -184,12 +188,14 @@ def create_app() -> FastAPI:
                 if manifest.exists():
                     try:
                         data = json.loads(manifest.read_text())
-                        projects.append({
-                            "name": data.get("name"),
-                            "path": str(item),
-                            "created_at": data.get("created_at"),
-                            "github_url": data.get("github_repo_url"),
-                        })
+                        projects.append(
+                            {
+                                "name": data.get("name"),
+                                "path": str(item),
+                                "created_at": data.get("created_at"),
+                                "github_url": data.get("github_repo_url"),
+                            }
+                        )
                     except Exception:
                         pass
 
@@ -204,10 +210,12 @@ def create_app() -> FastAPI:
             while True:
                 # Send health updates every 10 seconds
                 health_status = await check_health()
-                await websocket.send_json({
-                    "type": "health",
-                    "data": health_status.to_dict(),
-                })
+                await websocket.send_json(
+                    {
+                        "type": "health",
+                        "data": health_status.to_dict(),
+                    }
+                )
                 await asyncio.sleep(10)
         except WebSocketDisconnect:
             pass
@@ -220,6 +228,7 @@ def create_app() -> FastAPI:
     async def get_metrics():
         """Get system metrics."""
         from src.automation.metrics import get_metrics_collector
+
         collector = get_metrics_collector()
         return collector.get_summary()
 
@@ -304,8 +313,7 @@ def create_app() -> FastAPI:
         alert_type = data.get("type", "unknown")
 
         secure_logger.warning(
-            f"Alert received: {alert_type}",
-            extra={"alert_data": data}
+            f"Alert received: {alert_type}", extra={"alert_data": data}
         )
 
         # Could integrate with notification systems here
@@ -347,6 +355,7 @@ def create_app() -> FastAPI:
 
         try:
             from src.voice.elevenlabs_client import ElevenLabsClient
+
             client = ElevenLabsClient()
             audio_path = await client.generate_speech(text, voice=voice)
 
@@ -385,7 +394,10 @@ def create_app() -> FastAPI:
         cache = get_cache()
         await cache.set(f"research_{timestamp}", results, ttl_seconds=86400)
 
-        return {"status": "saved", "count": len(results) if isinstance(results, list) else 0}
+        return {
+            "status": "saved",
+            "count": len(results) if isinstance(results, list) else 0,
+        }
 
     # ============================================
     # Test Endpoints (for n8n)
@@ -396,6 +408,7 @@ def create_app() -> FastAPI:
         """Test search functionality."""
         try:
             from src.discovery.unified_search import create_unified_search
+
             search = create_unified_search()
             results = await search.search("test", platforms=["github"], max_results=1)
             return {"status": "pass", "results": len(results.repositories)}
@@ -439,6 +452,7 @@ def create_app() -> FastAPI:
         """Get automation coordinator status."""
         try:
             from src.automation.coordinator import get_coordinator
+
             coordinator = get_coordinator()
             return coordinator.get_status()
         except Exception as e:
@@ -449,6 +463,7 @@ def create_app() -> FastAPI:
         """Run integration tests."""
         try:
             from src.automation.coordinator import get_coordinator
+
             coordinator = get_coordinator()
 
             category = data.get("category") if data else None

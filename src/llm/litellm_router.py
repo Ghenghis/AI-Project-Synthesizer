@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 try:
     import litellm
     from litellm import acompletion, completion
+
     LITELLM_AVAILABLE = True
 except ImportError:
     LITELLM_AVAILABLE = False
@@ -51,17 +52,19 @@ except ImportError:
 
 class TaskType(Enum):
     """Task types for routing decisions."""
-    SIMPLE = "simple"           # Simple questions, formatting
-    CODING = "coding"           # Code generation, review
-    REASONING = "reasoning"     # Complex analysis, planning
-    FAST = "fast"               # Low-latency requirements
+
+    SIMPLE = "simple"  # Simple questions, formatting
+    CODING = "coding"  # Code generation, review
+    REASONING = "reasoning"  # Complex analysis, planning
+    FAST = "fast"  # Low-latency requirements
     LONG_CONTEXT = "long_context"  # Large documents
-    CREATIVE = "creative"       # Creative writing
-    CHAT = "chat"               # Conversational
+    CREATIVE = "creative"  # Creative writing
+    CHAT = "chat"  # Conversational
 
 
 class Provider(Enum):
     """Supported LLM providers."""
+
     OLLAMA = "ollama"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -75,6 +78,7 @@ class Provider(Enum):
 @dataclass
 class ModelConfig:
     """Configuration for a model."""
+
     provider: Provider
     model_id: str
     display_name: str
@@ -91,6 +95,7 @@ class ModelConfig:
 @dataclass
 class CompletionResult:
     """Result from LLM completion."""
+
     content: str
     model: str
     provider: str
@@ -104,24 +109,40 @@ class CompletionResult:
 @dataclass
 class RouterConfig:
     """Configuration for LiteLLM router."""
+
     # Default models by task type
-    default_models: dict = field(default_factory=lambda: {
-        TaskType.SIMPLE: "ollama/llama3.1",
-        TaskType.CODING: "anthropic/claude-sonnet-4-20250514",
-        TaskType.REASONING: "anthropic/claude-sonnet-4-20250514",
-        TaskType.FAST: "groq/llama-3.1-70b-versatile",
-        TaskType.LONG_CONTEXT: "anthropic/claude-sonnet-4-20250514",
-        TaskType.CREATIVE: "anthropic/claude-sonnet-4-20250514",
-        TaskType.CHAT: "ollama/llama3.1",
-    })
+    default_models: dict = field(
+        default_factory=lambda: {
+            TaskType.SIMPLE: "ollama/llama3.1",
+            TaskType.CODING: "anthropic/claude-sonnet-4-20250514",
+            TaskType.REASONING: "anthropic/claude-sonnet-4-20250514",
+            TaskType.FAST: "groq/llama-3.1-70b-versatile",
+            TaskType.LONG_CONTEXT: "anthropic/claude-sonnet-4-20250514",
+            TaskType.CREATIVE: "anthropic/claude-sonnet-4-20250514",
+            TaskType.CHAT: "ollama/llama3.1",
+        }
+    )
 
     # Fallback chains
-    fallback_chains: dict = field(default_factory=lambda: {
-        "anthropic": ["openai/gpt-4o", "groq/llama-3.1-70b-versatile", "ollama/llama3.1"],
-        "openai": ["anthropic/claude-sonnet-4-20250514", "groq/llama-3.1-70b-versatile", "ollama/llama3.1"],
-        "groq": ["ollama/llama3.1", "anthropic/claude-sonnet-4-20250514"],
-        "ollama": ["groq/llama-3.1-70b-versatile", "anthropic/claude-sonnet-4-20250514"],
-    })
+    fallback_chains: dict = field(
+        default_factory=lambda: {
+            "anthropic": [
+                "openai/gpt-4o",
+                "groq/llama-3.1-70b-versatile",
+                "ollama/llama3.1",
+            ],
+            "openai": [
+                "anthropic/claude-sonnet-4-20250514",
+                "groq/llama-3.1-70b-versatile",
+                "ollama/llama3.1",
+            ],
+            "groq": ["ollama/llama3.1", "anthropic/claude-sonnet-4-20250514"],
+            "ollama": [
+                "groq/llama-3.1-70b-versatile",
+                "anthropic/claude-sonnet-4-20250514",
+            ],
+        }
+    )
 
     # Rate limiting
     max_retries: int = 3
@@ -166,7 +187,6 @@ MODELS = {
         is_local=True,
         priority=1,
     ),
-
     # Anthropic (Cloud)
     "anthropic/claude-sonnet-4-20250514": ModelConfig(
         provider=Provider.ANTHROPIC,
@@ -188,7 +208,6 @@ MODELS = {
         supports_functions=True,
         priority=2,
     ),
-
     # OpenAI (Cloud)
     "openai/gpt-4o": ModelConfig(
         provider=Provider.OPENAI,
@@ -210,7 +229,6 @@ MODELS = {
         supports_functions=True,
         priority=2,
     ),
-
     # Groq (Fast Cloud)
     "groq/llama-3.1-70b-versatile": ModelConfig(
         provider=Provider.GROQ,
@@ -230,7 +248,6 @@ MODELS = {
         cost_per_1k_output=0.00008,
         priority=1,
     ),
-
     # DeepSeek (Coding)
     "deepseek/deepseek-coder": ModelConfig(
         provider=Provider.DEEPSEEK,
@@ -275,8 +292,12 @@ class LiteLLMRouter:
             # Calculate cost
             model_config = MODELS.get(model)
             if model_config:
-                input_cost = (usage.get("prompt_tokens", 0) / 1000) * model_config.cost_per_1k_input
-                output_cost = (usage.get("completion_tokens", 0) / 1000) * model_config.cost_per_1k_output
+                input_cost = (
+                    usage.get("prompt_tokens", 0) / 1000
+                ) * model_config.cost_per_1k_input
+                output_cost = (
+                    usage.get("completion_tokens", 0) / 1000
+                ) * model_config.cost_per_1k_output
                 total_cost = input_cost + output_cost
 
                 self._cost_tracker["total"] += total_cost
@@ -437,12 +458,20 @@ class LiteLLMRouter:
                 content = response.choices[0].message.content
 
             # Calculate cost
-            usage = response.usage.model_dump() if hasattr(response, "usage") and response.usage else {}
+            usage = (
+                response.usage.model_dump()
+                if hasattr(response, "usage") and response.usage
+                else {}
+            )
             model_config = MODELS.get(model)
             cost = 0.0
             if model_config and usage:
-                input_cost = (usage.get("prompt_tokens", 0) / 1000) * model_config.cost_per_1k_input
-                output_cost = (usage.get("completion_tokens", 0) / 1000) * model_config.cost_per_1k_output
+                input_cost = (
+                    usage.get("prompt_tokens", 0) / 1000
+                ) * model_config.cost_per_1k_input
+                output_cost = (
+                    usage.get("completion_tokens", 0) / 1000
+                ) * model_config.cost_per_1k_output
                 cost = input_cost + output_cost
 
             return CompletionResult(
@@ -452,7 +481,9 @@ class LiteLLMRouter:
                 usage=usage,
                 latency_ms=latency_ms,
                 cost=cost,
-                finish_reason=response.choices[0].finish_reason if response.choices else "stop",
+                finish_reason=response.choices[0].finish_reason
+                if response.choices
+                else "stop",
                 raw_response=response,
             )
 
@@ -473,9 +504,7 @@ class LiteLLMRouter:
         client = OllamaClient()
 
         # Convert messages to prompt
-        prompt = "\n".join([
-            f"{m['role']}: {m['content']}" for m in messages
-        ])
+        prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
 
         result = await client.complete(
             prompt=prompt,
@@ -489,7 +518,10 @@ class LiteLLMRouter:
             content=result.content,
             model="ollama/llama3.1",
             provider="ollama",
-            usage={"prompt_tokens": result.prompt_tokens, "completion_tokens": result.completion_tokens},
+            usage={
+                "prompt_tokens": result.prompt_tokens,
+                "completion_tokens": result.completion_tokens,
+            },
             latency_ms=latency_ms,
             cost=0.0,  # Local is free
         )

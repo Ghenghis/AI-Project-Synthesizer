@@ -115,6 +115,7 @@ class MCPServer:
         # Initialize LLM router
         try:
             from src.llm.litellm_router import LiteLLMRouter
+
             llm_router = LiteLLMRouter()
         except Exception:
             # Fallback for testing
@@ -123,6 +124,7 @@ class MCPServer:
         # Initialize memory system
         try:
             from src.memory.mem0_integration import MemorySystem
+
             memory_system = MemorySystem()
         except Exception:
             # Fallback for testing
@@ -141,7 +143,11 @@ class MCPServer:
         return {
             "name": "AI Project Synthesizer",
             "version": "1.0.0",
-            "tools": ["search_repositories", "analyze_repository", "check_compatibility"]
+            "tools": [
+                "search_repositories",
+                "analyze_repository",
+                "check_compatibility",
+            ],
         }
 
 
@@ -166,33 +172,33 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Natural language search query describing what you're looking for"
+                        "description": "Natural language search query describing what you're looking for",
                     },
                     "platforms": {
                         "type": "array",
                         "items": {"type": "string"},
                         "default": ["github", "huggingface"],
-                        "description": "Platforms to search (github, huggingface, kaggle, arxiv)"
+                        "description": "Platforms to search (github, huggingface, kaggle, arxiv)",
                     },
                     "max_results": {
                         "type": "integer",
                         "default": 20,
                         "minimum": 1,
                         "maximum": 100,
-                        "description": "Maximum number of results to return"
+                        "description": "Maximum number of results to return",
                     },
                     "language_filter": {
                         "type": "string",
-                        "description": "Filter by programming language"
+                        "description": "Filter by programming language",
                     },
                     "min_stars": {
                         "type": "integer",
                         "default": 10,
-                        "description": "Minimum star count for repositories"
-                    }
+                        "description": "Minimum star count for repositories",
+                    },
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         ),
         Tool(
             name="analyze_repository",
@@ -202,21 +208,21 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "repo_url": {
                         "type": "string",
-                        "description": "Repository URL to analyze (GitHub, HuggingFace, etc.)"
+                        "description": "Repository URL to analyze (GitHub, HuggingFace, etc.)",
                     },
                     "include_transitive_deps": {
                         "type": "boolean",
                         "default": True,
-                        "description": "Include transitive dependency analysis"
+                        "description": "Include transitive dependency analysis",
                     },
                     "extract_components": {
                         "type": "boolean",
                         "default": True,
-                        "description": "Identify extractable code components"
-                    }
+                        "description": "Identify extractable code components",
+                    },
                 },
-                "required": ["repo_url"]
-            }
+                "required": ["repo_url"],
+            },
         ),
         Tool(
             name="check_compatibility",
@@ -227,16 +233,16 @@ async def list_tools() -> list[Tool]:
                     "repo_urls": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "List of repository URLs to check for compatibility"
+                        "description": "List of repository URLs to check for compatibility",
                     },
                     "target_python_version": {
                         "type": "string",
                         "default": "3.11",
-                        "description": "Target Python version for compatibility check"
-                    }
+                        "description": "Target Python version for compatibility check",
+                    },
                 },
-                "required": ["repo_urls"]
-            }
+                "required": ["repo_urls"],
+            },
         ),
         Tool(
             name="resolve_dependencies",
@@ -247,21 +253,21 @@ async def list_tools() -> list[Tool]:
                     "repositories": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Repository URLs to merge dependencies from"
+                        "description": "Repository URLs to merge dependencies from",
                     },
                     "constraints": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Additional version constraints (e.g., 'numpy>=1.20')"
+                        "description": "Additional version constraints (e.g., 'numpy>=1.20')",
                     },
                     "python_version": {
                         "type": "string",
                         "default": "3.11",
-                        "description": "Target Python version"
-                    }
+                        "description": "Target Python version",
+                    },
                 },
-                "required": ["repositories"]
-            }
+                "required": ["repositories"],
+            },
         ),
         Tool(
             name="synthesize_project",
@@ -274,34 +280,40 @@ async def list_tools() -> list[Tool]:
                         "items": {
                             "type": "object",
                             "properties": {
-                                "repo_url": {"type": "string", "description": "Repository URL"},
+                                "repo_url": {
+                                    "type": "string",
+                                    "description": "Repository URL",
+                                },
                                 "components": {
                                     "type": "array",
                                     "items": {"type": "string"},
-                                    "description": "Component names to extract"
+                                    "description": "Component names to extract",
                                 },
-                                "destination": {"type": "string", "description": "Target directory"}
+                                "destination": {
+                                    "type": "string",
+                                    "description": "Target directory",
+                                },
                             },
-                            "required": ["repo_url"]
+                            "required": ["repo_url"],
                         },
-                        "description": "Repositories and components to extract"
+                        "description": "Repositories and components to extract",
                     },
                     "project_name": {
                         "type": "string",
-                        "description": "Name for the synthesized project"
+                        "description": "Name for the synthesized project",
                     },
                     "output_path": {
                         "type": "string",
-                        "description": "Output directory path"
+                        "description": "Output directory path",
                     },
                     "template": {
                         "type": "string",
                         "default": "python-default",
-                        "description": "Project template (python-default, python-ml, python-web, minimal)"
-                    }
+                        "description": "Project template (python-default, python-ml, python-web, minimal)",
+                    },
                 },
-                "required": ["repositories", "project_name", "output_path"]
-            }
+                "required": ["repositories", "project_name", "output_path"],
+            },
         ),
         Tool(
             name="generate_documentation",
@@ -311,22 +323,22 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "project_path": {
                         "type": "string",
-                        "description": "Path to the project to document"
+                        "description": "Path to the project to document",
                     },
                     "doc_types": {
                         "type": "array",
                         "items": {"type": "string"},
                         "default": ["readme", "architecture", "api"],
-                        "description": "Types of documentation to generate"
+                        "description": "Types of documentation to generate",
                     },
                     "llm_enhanced": {
                         "type": "boolean",
                         "default": True,
-                        "description": "Use LLM for enhanced documentation quality"
-                    }
+                        "description": "Use LLM for enhanced documentation quality",
+                    },
                 },
-                "required": ["project_path"]
-            }
+                "required": ["project_path"],
+            },
         ),
         Tool(
             name="get_synthesis_status",
@@ -336,11 +348,11 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "synthesis_id": {
                         "type": "string",
-                        "description": "Synthesis operation ID returned from synthesize_project"
+                        "description": "Synthesis operation ID returned from synthesize_project",
                     }
                 },
-                "required": ["synthesis_id"]
-            }
+                "required": ["synthesis_id"],
+            },
         ),
         # ==================== ASSISTANT TOOLS ====================
         Tool(
@@ -351,16 +363,16 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "message": {
                         "type": "string",
-                        "description": "Your message to the assistant"
+                        "description": "Your message to the assistant",
                     },
                     "voice_enabled": {
                         "type": "boolean",
                         "default": False,
-                        "description": "Generate voice audio for the response"
-                    }
+                        "description": "Generate voice audio for the response",
+                    },
                 },
-                "required": ["message"]
-            }
+                "required": ["message"],
+            },
         ),
         Tool(
             name="assistant_speak",
@@ -370,16 +382,16 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "text": {
                         "type": "string",
-                        "description": "Text to convert to speech"
+                        "description": "Text to convert to speech",
                     },
                     "voice": {
                         "type": "string",
                         "default": "rachel",
-                        "description": "Voice name: rachel, josh, adam, bella, domi, antoni, sam"
-                    }
+                        "description": "Voice name: rachel, josh, adam, bella, domi, antoni, sam",
+                    },
                 },
-                "required": ["text"]
-            }
+                "required": ["text"],
+            },
         ),
         Tool(
             name="assistant_toggle_voice",
@@ -389,19 +401,16 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "enabled": {
                         "type": "boolean",
-                        "description": "Enable or disable voice"
+                        "description": "Enable or disable voice",
                     }
                 },
-                "required": ["enabled"]
-            }
+                "required": ["enabled"],
+            },
         ),
         Tool(
             name="get_voices",
             description="Get list of available voices for text-to-speech",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="speak_fast",
@@ -409,18 +418,15 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "Text to speak"
-                    },
+                    "text": {"type": "string", "description": "Text to speak"},
                     "voice": {
                         "type": "string",
                         "default": "rachel",
-                        "description": "Voice: rachel, josh, adam, bella, domi, antoni, sam"
-                    }
+                        "description": "Voice: rachel, josh, adam, bella, domi, antoni, sam",
+                    },
                 },
-                "required": ["text"]
-            }
+                "required": ["text"],
+            },
         ),
         Tool(
             name="assemble_project",
@@ -430,25 +436,25 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "idea": {
                         "type": "string",
-                        "description": "Project idea/description (e.g., 'RAG chatbot with local LLM')"
+                        "description": "Project idea/description (e.g., 'RAG chatbot with local LLM')",
                     },
                     "name": {
                         "type": "string",
-                        "description": "Project name (optional, auto-generated if not provided)"
+                        "description": "Project name (optional, auto-generated if not provided)",
                     },
                     "output_dir": {
                         "type": "string",
                         "default": "G:/",
-                        "description": "Output directory for the project"
+                        "description": "Output directory for the project",
                     },
                     "create_github": {
                         "type": "boolean",
                         "default": True,
-                        "description": "Create a GitHub repository for the project"
-                    }
+                        "description": "Create a GitHub repository for the project",
+                    },
                 },
-                "required": ["idea"]
-            }
+                "required": ["idea"],
+            },
         ),
         # ==================== AI AGENT TOOLS ====================
         Tool(
@@ -459,20 +465,20 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "Path to file to fix (optional, fixes all src/ tests/ if not provided)"
+                        "description": "Path to file to fix (optional, fixes all src/ tests/ if not provided)",
                     },
                     "fix_type": {
                         "type": "string",
                         "default": "all",
-                        "description": "Type of fix: lint, format, imports, all"
+                        "description": "Type of fix: lint, format, imports, all",
                     },
                     "dry_run": {
                         "type": "boolean",
                         "default": False,
-                        "description": "If true, only report what would be fixed"
-                    }
-                }
-            }
+                        "description": "If true, only report what would be fixed",
+                    },
+                },
+            },
         ),
         Tool(
             name="generate_tests",
@@ -482,25 +488,25 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "Path to source file to generate tests for"
+                        "description": "Path to source file to generate tests for",
                     },
                     "output_path": {
                         "type": "string",
-                        "description": "Where to save generated tests (optional)"
+                        "description": "Where to save generated tests (optional)",
                     },
                     "save": {
                         "type": "boolean",
                         "default": False,
-                        "description": "Save tests to file"
+                        "description": "Save tests to file",
                     },
                     "coverage_target": {
                         "type": "integer",
                         "default": 80,
-                        "description": "Target coverage percentage"
-                    }
+                        "description": "Target coverage percentage",
+                    },
                 },
-                "required": ["file_path"]
-            }
+                "required": ["file_path"],
+            },
         ),
         Tool(
             name="review_code",
@@ -510,19 +516,19 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "Path to file to review"
+                        "description": "Path to file to review",
                     },
                     "code": {
                         "type": "string",
-                        "description": "Raw code to review (if no file_path)"
+                        "description": "Raw code to review (if no file_path)",
                     },
                     "focus": {
                         "type": "string",
                         "default": "all",
-                        "description": "Review focus: security, performance, style, all"
-                    }
-                }
-            }
+                        "description": "Review focus: security, performance, style, all",
+                    },
+                },
+            },
         ),
         Tool(
             name="project_health",
@@ -533,10 +539,10 @@ async def list_tools() -> list[Tool]:
                     "detailed": {
                         "type": "boolean",
                         "default": False,
-                        "description": "Include detailed breakdown"
-                    }
-                }
-            }
+                        "description": "Include detailed breakdown",
+                    },
+                },
+            },
         ),
         Tool(
             name="ci_repair",
@@ -547,16 +553,16 @@ async def list_tools() -> list[Tool]:
                     "fix": {
                         "type": "boolean",
                         "default": True,
-                        "description": "Apply fixes (default: true)"
+                        "description": "Apply fixes (default: true)",
                     },
                     "report": {
                         "type": "boolean",
                         "default": False,
-                        "description": "Generate detailed report"
-                    }
-                }
-            }
-        )
+                        "description": "Generate detailed report",
+                    },
+                },
+            },
+        ),
     ]
 
 
@@ -579,7 +585,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         f"Tool called: {name}",
         correlation_id=correlation_id,
         tool=name,
-        args_count=len(arguments)
+        args_count=len(arguments),
     )
 
     metrics.increment("tool_calls_total", tags={"tool": name})
@@ -627,7 +633,10 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 result = await handle_run_ci_repair(arguments)
             else:
                 result = {"error": f"Unknown tool: {name}"}
-                metrics.increment("tool_errors_total", tags={"tool": name, "error_type": "unknown_tool"})
+                metrics.increment(
+                    "tool_errors_total",
+                    tags={"tool": name, "error_type": "unknown_tool"},
+                )
 
         # Convert result to JSON string
         result_text = json.dumps(result, indent=2, default=str)
@@ -636,7 +645,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             f"Tool {name} completed successfully",
             correlation_id=correlation_id,
             tool=name,
-            result_size=len(result_text)
+            result_size=len(result_text),
         )
 
         metrics.increment("tool_success_total", tags={"tool": name})
@@ -651,16 +660,18 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             f"Error in tool {name}: {sanitized_error}",
             correlation_id=correlation_id,
             tool=name,
-            error_type=type(e).__name__
+            error_type=type(e).__name__,
         )
 
-        metrics.increment("tool_errors_total", tags={"tool": name, "error_type": type(e).__name__})
+        metrics.increment(
+            "tool_errors_total", tags={"tool": name, "error_type": type(e).__name__}
+        )
 
         error_response = {
             "error": True,
             "message": sanitized_error,
             "tool": name,
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
         return [TextContent(type="text", text=json.dumps(error_response))]
@@ -681,7 +692,9 @@ async def main():
     secure_logger.info("=" * 60)
     secure_logger.info(f"Environment: {settings.app.app_env}")
     secure_logger.info(f"Debug mode: {settings.app.debug}")
-    secure_logger.info(f"Enabled platforms: {settings.platforms.get_enabled_platforms()}")
+    secure_logger.info(
+        f"Enabled platforms: {settings.platforms.get_enabled_platforms()}"
+    )
     secure_logger.info(f"LLM Host: {settings.llm.ollama_host}")
     secure_logger.info("=" * 60)
 
@@ -699,9 +712,7 @@ async def main():
     try:
         async with stdio_server() as (read_stream, write_stream):
             await server.run(
-                read_stream,
-                write_stream,
-                server.create_initialization_options()
+                read_stream, write_stream, server.create_initialization_options()
             )
     except Exception as e:
         secure_logger.error(f"Server error: {SecretManager.mask_secrets(str(e))}")

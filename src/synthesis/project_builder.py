@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class SynthesisStatus(str, Enum):
     """Status of a synthesis operation."""
+
     PENDING = "pending"
     DISCOVERING = "discovering"
     ANALYZING = "analyzing"
@@ -31,6 +32,7 @@ class SynthesisStatus(str, Enum):
 @dataclass
 class ExtractionSpec:
     """Specification for extracting code from a repository."""
+
     repo_url: str
     components: list[str]  # Paths to extract
     rename_map: dict[str, str] = field(default_factory=dict)
@@ -40,6 +42,7 @@ class ExtractionSpec:
 @dataclass
 class SynthesisRequest:
     """Request for project synthesis."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     query: str = ""
     repositories: list[ExtractionSpec] = field(default_factory=list)
@@ -53,6 +56,7 @@ class SynthesisRequest:
 @dataclass
 class SynthesisResult:
     """Result of synthesis operation."""
+
     request_id: str
     status: SynthesisStatus
     output_path: str | None = None
@@ -83,6 +87,7 @@ class SynthesisResult:
 @dataclass
 class BuildResult:
     """Result from the build method (used by MCP tools)."""
+
     project_path: Path
     repos_processed: int = 0
     components_extracted: int = 0
@@ -230,11 +235,13 @@ class ProjectBuilder:
         # Convert to extraction specs
         specs = []
         for repo in results.repositories:
-            specs.append(ExtractionSpec(
-                repo_url=repo.url,
-                components=["src", "lib"],  # Default extraction
-                destination=repo.name,
-            ))
+            specs.append(
+                ExtractionSpec(
+                    repo_url=repo.url,
+                    components=["src", "lib"],  # Default extraction
+                    destination=repo.name,
+                )
+            )
 
         return specs
 
@@ -246,11 +253,13 @@ class ProjectBuilder:
         # # // DONE: Implement with analysis layer
         analyses = []
         for repo in repositories:
-            analyses.append({
-                "repo_url": repo.repo_url,
-                "components": repo.components,
-                "dependencies": [],
-            })
+            analyses.append(
+                {
+                    "repo_url": repo.repo_url,
+                    "components": repo.components,
+                    "dependencies": [],
+                }
+            )
         return analyses
 
     async def _resolve_dependencies(
@@ -329,7 +338,11 @@ class ProjectBuilder:
                         dest_dir.mkdir(parents=True, exist_ok=True)
 
                     # Extract specified components or default paths
-                    components_to_extract = repo_spec.components or ["src", "lib", repo_id.split("/")[-1]]
+                    components_to_extract = repo_spec.components or [
+                        "src",
+                        "lib",
+                        repo_id.split("/")[-1],
+                    ]
 
                     for component in components_to_extract:
                         src_component = temp_path / component
@@ -342,15 +355,23 @@ class ProjectBuilder:
                                     # Merge: copy files that don't exist
                                     for file_path in src_component.rglob("*"):
                                         if file_path.is_file():
-                                            rel_path = file_path.relative_to(src_component)
+                                            rel_path = file_path.relative_to(
+                                                src_component
+                                            )
                                             dest_file = dest_component / rel_path
                                             if not dest_file.exists():
-                                                dest_file.parent.mkdir(parents=True, exist_ok=True)
+                                                dest_file.parent.mkdir(
+                                                    parents=True, exist_ok=True
+                                                )
                                                 shutil.copy2(file_path, dest_file)
                                                 files_created += 1
                                 else:
                                     shutil.copytree(src_component, dest_component)
-                                    files_created += sum(1 for _ in dest_component.rglob("*") if _.is_file())
+                                    files_created += sum(
+                                        1
+                                        for _ in dest_component.rglob("*")
+                                        if _.is_file()
+                                    )
                             else:
                                 # Copy single file
                                 dest_file = dest_dir / src_component.name
@@ -380,14 +401,12 @@ class ProjectBuilder:
         # Write requirements.txt
         if resolved_deps.get("lockfile"):
             (output_path / "requirements.txt").write_text(
-                resolved_deps["lockfile"],
-                encoding='utf-8'
+                resolved_deps["lockfile"], encoding="utf-8"
             )
         else:
             # Write basic requirements
             (output_path / "requirements.txt").write_text(
-                "# Add your dependencies here\n",
-                encoding='utf-8'
+                "# Add your dependencies here\n", encoding="utf-8"
             )
 
     async def _generate_documentation(
@@ -402,7 +421,7 @@ class ProjectBuilder:
 
         # Generate README
         readme_content = self._generate_readme(output_path)
-        (output_path / "README.md").write_text(readme_content, encoding='utf-8')
+        (output_path / "README.md").write_text(readme_content, encoding="utf-8")
         docs_generated.append("README.md")
 
         # Generate basic structure docs
@@ -439,7 +458,7 @@ Dependencies were resolved and merged using the unified resolver, which:
 3. Add comprehensive tests
 4. Configure CI/CD as needed
 """,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         docs_generated.append("docs/ARCHITECTURE.md")
 
@@ -516,7 +535,8 @@ MIT
     def list_active(self) -> list[dict]:
         """List all active synthesis operations."""
         return [
-            r.to_dict() for r in self._active_syntheses.values()
+            r.to_dict()
+            for r in self._active_syntheses.values()
             if r.status not in [SynthesisStatus.COMPLETE, SynthesisStatus.FAILED]
         ]
 
@@ -549,12 +569,16 @@ MIT
         specs = []
         for repo_config in repositories:
             if isinstance(repo_config, dict):
-                specs.append(ExtractionSpec(
-                    repo_url=repo_config.get("repo_url", repo_config.get("url", "")),
-                    components=repo_config.get("components", []),
-                    destination=repo_config.get("destination", ""),
-                    rename_map=repo_config.get("rename_map", {}),
-                ))
+                specs.append(
+                    ExtractionSpec(
+                        repo_url=repo_config.get(
+                            "repo_url", repo_config.get("url", "")
+                        ),
+                        components=repo_config.get("components", []),
+                        destination=repo_config.get("destination", ""),
+                        rename_map=repo_config.get("rename_map", {}),
+                    )
+                )
             elif isinstance(repo_config, ExtractionSpec):
                 specs.append(repo_config)
 

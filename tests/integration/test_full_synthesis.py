@@ -17,8 +17,7 @@ import pytest
 
 # Skip all tests if no GitHub token
 pytestmark = pytest.mark.skipif(
-    not os.getenv("GITHUB_TOKEN"),
-    reason="GITHUB_TOKEN not set"
+    not os.getenv("GITHUB_TOKEN"), reason="GITHUB_TOKEN not set"
 )
 
 

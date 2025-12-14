@@ -17,6 +17,7 @@ try:
         ContentPriority,
         RateLimitStrategy,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for discovery.firecrawl_enhanced: {e}")
@@ -79,14 +80,14 @@ class TestCacheEntry:
             timestamp=datetime.now(),
             links=[],
             images=[],
-            metadata={}
+            metadata={},
         )
 
         entry = CacheEntry(
             key="test_key",
             content=content,
             timestamp=datetime.now(),
-            ttl=timedelta(hours=1)
+            ttl=timedelta(hours=1),
         )
 
         assert entry.key == "test_key"
@@ -112,14 +113,14 @@ class TestCacheEntry:
             timestamp=datetime.now(),
             links=[],
             images=[],
-            metadata={}
+            metadata={},
         )
 
         entry = CacheEntry(
             key="test_key",
             content=content,
             timestamp=datetime.now() - timedelta(hours=2),
-            ttl=timedelta(hours=1)
+            ttl=timedelta(hours=1),
         )
 
         assert entry.is_expired
@@ -152,7 +153,7 @@ class TestRateLimitConfig:
             burst_limit=20,
             strategy=RateLimitStrategy.TOKEN_BUCKET,
             max_retries=5,
-            backoff_factor=1.5
+            backoff_factor=1.5,
         )
 
         assert config.requests_per_second == 5.0
@@ -184,8 +185,12 @@ class TestFirecrawlEnhanced:
     @pytest.fixture(autouse=True)
     def setup_mocks(self):
         """Setup common mocks for all tests."""
-        with patch('src.discovery.firecrawl_enhanced.LiteLLMRouter') as mock_llm, \
-             patch('src.discovery.firecrawl_enhanced.tiktoken.get_encoding') as mock_tokenizer:
+        with (
+            patch("src.discovery.firecrawl_enhanced.LiteLLMRouter") as mock_llm,
+            patch(
+                "src.discovery.firecrawl_enhanced.tiktoken.get_encoding"
+            ) as mock_tokenizer,
+        ):
             mock_llm.return_value = MagicMock()
             mock_tokenizer.return_value = MagicMock()
             self.mock_llm = mock_llm
@@ -221,8 +226,7 @@ class TestFirecrawlEnhanced:
 
         temp_dir = Path("temp_cache")
         rate_config = RateLimitConfig(
-            requests_per_second=5.0,
-            strategy=RateLimitStrategy.TOKEN_BUCKET
+            requests_per_second=5.0, strategy=RateLimitStrategy.TOKEN_BUCKET
         )
 
         try:
@@ -230,7 +234,7 @@ class TestFirecrawlEnhanced:
                 api_key="test_key",
                 cache_strategy=CacheStrategy.MEMORY,
                 cache_dir=temp_dir,
-                rate_limit_config=rate_config
+                rate_limit_config=rate_config,
             )
 
             assert client.cache_strategy == CacheStrategy.MEMORY
@@ -246,7 +250,9 @@ class TestFirecrawlEnhanced:
         """Should return None when cache strategy is NONE."""
         from src.discovery.firecrawl_enhanced import CacheStrategy, FirecrawlEnhanced
 
-        client = FirecrawlEnhanced(api_key="test_key", cache_strategy=CacheStrategy.NONE)
+        client = FirecrawlEnhanced(
+            api_key="test_key", cache_strategy=CacheStrategy.NONE
+        )
 
         result = await client._get_from_cache("test_key")
 
@@ -264,7 +270,9 @@ class TestFirecrawlEnhanced:
             FirecrawlEnhanced,
         )
 
-        client = FirecrawlEnhanced(api_key="test_key", cache_strategy=CacheStrategy.MEMORY)
+        client = FirecrawlEnhanced(
+            api_key="test_key", cache_strategy=CacheStrategy.MEMORY
+        )
 
         content = ScrapedContent(
             url="https://example.com",
@@ -275,14 +283,14 @@ class TestFirecrawlEnhanced:
             timestamp=datetime.now(),
             links=[],
             images=[],
-            metadata={}
+            metadata={},
         )
 
         entry = CacheEntry(
             key="test_key",
             content=content,
             timestamp=datetime.now(),
-            ttl=timedelta(hours=1)
+            ttl=timedelta(hours=1),
         )
 
         client._memory_cache["test_key"] = entry
@@ -304,7 +312,9 @@ class TestFirecrawlEnhanced:
             FirecrawlEnhanced,
         )
 
-        client = FirecrawlEnhanced(api_key="test_key", cache_strategy=CacheStrategy.MEMORY)
+        client = FirecrawlEnhanced(
+            api_key="test_key", cache_strategy=CacheStrategy.MEMORY
+        )
 
         content = ScrapedContent(
             url="https://example.com",
@@ -315,14 +325,14 @@ class TestFirecrawlEnhanced:
             timestamp=datetime.now(),
             links=[],
             images=[],
-            metadata={}
+            metadata={},
         )
 
         entry = CacheEntry(
             key="test_key",
             content=content,
             timestamp=datetime.now() - timedelta(hours=2),
-            ttl=timedelta(hours=1)
+            ttl=timedelta(hours=1),
         )
 
         client._memory_cache["test_key"] = entry
@@ -369,12 +379,17 @@ class TestFirecrawlEnhanced:
         assert key1 != key3
 
         # Test with different only_main_content option
-        key4 = client._get_cache_key("https://example.com", {"only_main_content": False})
+        key4 = client._get_cache_key(
+            "https://example.com", {"only_main_content": False}
+        )
         assert key1 != key4
 
         # Test with formats array
         from src.discovery.firecrawl_client import FirecrawlFormat
-        key5 = client._get_cache_key("https://example.com", {"formats": [FirecrawlFormat.HTML]})
+
+        key5 = client._get_cache_key(
+            "https://example.com", {"formats": [FirecrawlFormat.HTML]}
+        )
         assert key1 != key5
 
 
@@ -409,8 +424,7 @@ class TestRateLimiter:
         )
 
         config = RateLimitConfig(
-            requests_per_second=10.0,
-            strategy=RateLimitStrategy.FIXED
+            requests_per_second=10.0, strategy=RateLimitStrategy.FIXED
         )
         limiter = RateLimiter(config)
 
@@ -434,7 +448,7 @@ class TestRateLimiter:
         config = RateLimitConfig(
             requests_per_second=10.0,
             strategy=RateLimitStrategy.EXPONENTIAL_BACKOFF,
-            backoff_factor=2.0
+            backoff_factor=2.0,
         )
         limiter = RateLimiter(config)
 
@@ -459,8 +473,7 @@ class TestRateLimiter:
         )
 
         config = RateLimitConfig(
-            requests_per_second=10.0,
-            strategy=RateLimitStrategy.ADAPTIVE
+            requests_per_second=10.0, strategy=RateLimitStrategy.ADAPTIVE
         )
         limiter = RateLimiter(config)
 
@@ -486,7 +499,7 @@ class TestRateLimiter:
         config = RateLimitConfig(
             requests_per_second=10.0,
             burst_limit=5,
-            strategy=RateLimitStrategy.TOKEN_BUCKET
+            strategy=RateLimitStrategy.TOKEN_BUCKET,
         )
         limiter = RateLimiter(config)
 
@@ -532,6 +545,5 @@ class TestRateLimiter:
         assert limiter._failures == 3
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

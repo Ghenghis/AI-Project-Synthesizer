@@ -23,7 +23,7 @@ class TestConflictInfo:
             sources={"repo1": ">=2.0", "repo2": "<2.0"},
             description="Version mismatch",
             severity="error",
-            resolvable=False
+            resolvable=False,
         )
         assert conflict.package_name == "requests"
         assert conflict.conflict_type == "version"
@@ -37,7 +37,7 @@ class TestConflictInfo:
             description="Version conflict",
             severity="warning",
             resolvable=True,
-            resolution_suggestion="Use numpy>=1.0,<3.0"
+            resolution_suggestion="Use numpy>=1.0,<3.0",
         )
         assert conflict.resolution_suggestion is not None
 
@@ -48,30 +48,21 @@ class TestConflictReport:
     def test_create_report(self):
         """Should create conflict report."""
         report = ConflictReport(
-            total_packages=10,
-            conflicting_packages=2,
-            conflicts=[],
-            resolvable_count=0
+            total_packages=10, conflicting_packages=2, conflicts=[], resolvable_count=0
         )
         assert report.total_packages == 10
 
     def test_has_blocking_conflicts_empty(self):
         """Should return False when no conflicts."""
         report = ConflictReport(
-            total_packages=5,
-            conflicting_packages=0,
-            conflicts=[],
-            resolvable_count=0
+            total_packages=5, conflicting_packages=0, conflicts=[], resolvable_count=0
         )
         assert report.has_blocking_conflicts is False
 
     def test_to_dict(self):
         """Should convert to dictionary."""
         report = ConflictReport(
-            total_packages=5,
-            conflicting_packages=0,
-            conflicts=[],
-            resolvable_count=0
+            total_packages=5, conflicting_packages=0, conflicts=[], resolvable_count=0
         )
         result = report.to_dict()
         assert "summary" in result

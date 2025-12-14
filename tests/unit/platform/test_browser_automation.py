@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "testing"
 
 try:
     from src.platform.browser_automation import BrowserType, ViewportSize
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for platform.browser_automation: {e}")
@@ -40,6 +41,5 @@ class TestViewportSize:
         assert ViewportSize.MOBILE.value == (375, 667)
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

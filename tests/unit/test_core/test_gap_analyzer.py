@@ -57,7 +57,7 @@ class TestGap:
             category=GapCategory.IMPORT,
             severity=GapSeverity.HIGH,
             description="Missing authentication module",
-            location="src/auth/"
+            location="src/auth/",
         )
 
         assert gap.id == "gap_001"
@@ -80,14 +80,11 @@ class TestAnalysisReport:
                 category=GapCategory.TEST,
                 severity=GapSeverity.MEDIUM,
                 description="No unit tests",
-                location="src/utils/"
+                location="src/utils/",
             )
         ]
 
-        report = AnalysisReport(
-            gaps=gaps,
-            fixed_count=0
-        )
+        report = AnalysisReport(gaps=gaps, fixed_count=0)
 
         assert report.total_gaps == 1
         assert report.fixed_count == 0
@@ -118,8 +115,8 @@ class TestGapAnalyzer:
         """Test analyzer initializes correctly."""
         analyzer = GapAnalyzer()
         assert analyzer is not None
-        assert hasattr(analyzer, 'analyze')
-        assert hasattr(analyzer, 'add_gap')
+        assert hasattr(analyzer, "analyze")
+        assert hasattr(analyzer, "add_gap")
 
     def test_add_gap(self):
         """Test adding a gap."""
@@ -130,7 +127,7 @@ class TestGapAnalyzer:
             category=GapCategory.CONFIG,
             severity=GapSeverity.LOW,
             description="Missing config file",
-            location="config/"
+            location="config/",
         )
 
         analyzer.add_gap(gap)
@@ -147,7 +144,7 @@ class TestGapAnalyzer:
 
         assert isinstance(report, AnalysisReport)
         # Report should have been created
-        assert hasattr(report, 'total_gaps')
+        assert hasattr(report, "total_gaps")
 
 
 if __name__ == "__main__":

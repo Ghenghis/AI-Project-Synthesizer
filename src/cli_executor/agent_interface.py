@@ -193,7 +193,9 @@ class AgentCLI:
     ) -> CommandResult:
         """Checkout a branch."""
         flag = "-b" if create else ""
-        return await self._run(f"git checkout {flag} {branch}".strip(), working_dir=path)
+        return await self._run(
+            f"git checkout {flag} {branch}".strip(), working_dir=path
+        )
 
     async def git_branch(
         self,
@@ -223,7 +225,9 @@ class AgentCLI:
     ) -> CommandResult:
         """Get commit history."""
         format_flag = "--oneline" if oneline else ""
-        return await self._run(f"git log -{count} {format_flag}".strip(), working_dir=path)
+        return await self._run(
+            f"git log -{count} {format_flag}".strip(), working_dir=path
+        )
 
     async def git_diff(
         self,
@@ -274,7 +278,9 @@ class AgentCLI:
         if upgrade:
             flags.append("--upgrade")
         flag_str = " ".join(flags)
-        return await self._run(f"pip install {flag_str} {pkg_str}".strip(), working_dir=path)
+        return await self._run(
+            f"pip install {flag_str} {pkg_str}".strip(), working_dir=path
+        )
 
     async def pip_install_requirements(
         self,
@@ -321,7 +327,9 @@ class AgentCLI:
     ) -> CommandResult:
         """Get activation command (returns command, doesn't activate)."""
         if self.executor.is_windows:
-            return await self._run(f".\\{venv_name}\\Scripts\\activate", working_dir=path)
+            return await self._run(
+                f".\\{venv_name}\\Scripts\\activate", working_dir=path
+            )
         return await self._run(f"source {venv_name}/bin/activate", working_dir=path)
 
     async def pytest_run(
@@ -406,7 +414,9 @@ class AgentCLI:
             if global_install:
                 flags.append("-g")
             flag_str = " ".join(flags)
-            return await self._run(f"npm install {flag_str} {pkg_str}".strip(), working_dir=path)
+            return await self._run(
+                f"npm install {flag_str} {pkg_str}".strip(), working_dir=path
+            )
         return await self._run("npm install", working_dir=path)
 
     async def npm_run(

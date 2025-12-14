@@ -24,6 +24,7 @@ from src.core.config import get_settings
 
 class LintLevel(Enum):
     """Lint issue severity levels."""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -33,6 +34,7 @@ class LintLevel(Enum):
 @dataclass
 class LintIssue:
     """Represents a linting issue found."""
+
     tool: str
     rule_id: str
     message: str
@@ -50,6 +52,7 @@ class LintIssue:
 @dataclass
 class LintResult:
     """Result of a lint check."""
+
     passed: bool
     issues: list[LintIssue]
     check_time: float
@@ -83,29 +86,29 @@ class LintChecker:
                 "F",  # pyflakes
                 "I",  # isort
                 "B",  # flake8-bugbear
-                "C4", # flake8-comprehensions
-                "UP", # pyupgrade
+                "C4",  # flake8-comprehensions
+                "UP",  # pyupgrade
                 "S",  # flake8-bandit (security)
                 "A",  # flake8-builtins
-                "T20", # flake8-print
-                "SIM", # flake8-simplify
-                "ARG", # flake8-unused-arguments
-                "PTH", # flake8-use-pathlib
-                "RUF", # Ruff-specific rules
+                "T20",  # flake8-print
+                "SIM",  # flake8-simplify
+                "ARG",  # flake8-unused-arguments
+                "PTH",  # flake8-use-pathlib
+                "RUF",  # Ruff-specific rules
             ],
             "ignore": [
                 "E501",  # Line too long (handled by formatter)
                 "S603",  # subprocess call (checked by security scanner)
                 "S607",  # Starting process with partial path
             ],
-            "fix": True  # Enable auto-fix
+            "fix": True,  # Enable auto-fix
         }
 
         self.eslint_config = {
             "extends": [
                 "eslint:recommended",
                 "@typescript-eslint/recommended",
-                "prettier"
+                "prettier",
             ],
             "rules": {
                 "no-console": "warn",
@@ -113,8 +116,8 @@ class LintChecker:
                 "prefer-const": "error",
                 "no-var": "error",
                 "eqeqeq": "error",
-                "curly": "error"
-            }
+                "curly": "error",
+            },
         }
 
         self.mypy_config = {
@@ -130,10 +133,12 @@ class LintChecker:
             "warn_unused_ignores": True,
             "warn_no_return": True,
             "warn_unreachable": True,
-            "strict_equality": True
+            "strict_equality": True,
         }
 
-    async def check_code(self, code: str, file_path: str, language: str = "python") -> LintResult:
+    async def check_code(
+        self, code: str, file_path: str, language: str = "python"
+    ) -> LintResult:
         """
         Check code with appropriate linting tools.
 
@@ -146,13 +151,14 @@ class LintChecker:
             LintResult with all found issues
         """
         import time
+
         start_time = time.time()
 
         # Create temporary file for checking
         temp_file = self.temp_dir / Path(file_path).name
 
         try:
-            with open(temp_file, 'w', encoding='utf-8') as f:
+            with open(temp_file, "w", encoding="utf-8") as f:
                 f.write(code)
 
             # Select tools based on language
@@ -160,13 +166,13 @@ class LintChecker:
                 results = await asyncio.gather(
                     self._check_with_ruff(temp_file),
                     self._check_with_mypy(temp_file),
-                    return_exceptions=True
+                    return_exceptions=True,
                 )
             elif language in ["javascript", "typescript"]:
                 results = await asyncio.gather(
                     self._check_with_eslint(temp_file),
                     self._check_with_prettier(temp_file),
-                    return_exceptions=True
+                    return_exceptions=True,
                 )
             else:
                 # Unknown language, just do basic checks
@@ -188,7 +194,7 @@ class LintChecker:
                     "issues_found": len(issues),
                     "errors": sum(1 for i in issues if i.level == LintLevel.ERROR),
                     "warnings": sum(1 for i in issues if i.level == LintLevel.WARNING),
-                    "fixable": sum(1 for i in issues if i.fix_suggestion)
+                    "fixable": sum(1 for i in issues if i.fix_suggestion),
                 }
                 fixable_count += sum(1 for i in issues if i.fix_suggestion)
 
@@ -203,7 +209,7 @@ class LintChecker:
                 check_time=check_time,
                 files_checked=1,
                 tool_results=tool_results,
-                fixable_issues=fixable_count
+                fixable_issues=fixable_count,
             )
 
         finally:
@@ -222,16 +228,11 @@ class LintChecker:
                 "check",
                 "--format=json",
                 f"--config={'.'.join([f'{k}={v}' for k, v in self.ruff_config.items()])}",
-                str(file_path)
+                str(file_path),
             ]
 
             # Run ruff
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             # Parse results
             if result.stdout:
@@ -240,20 +241,26 @@ class LintChecker:
                 for finding in data:
                     issue = LintIssue(
                         tool="ruff",
-                        rule_id=finding.get('code', ''),
-                        message=finding.get('message', ''),
-                        level=self._map_ruff_level(finding.get('fix', {}).get('availability')),
-                        file_path=finding.get('filename', ''),
-                        line_number=finding.get('location', {}).get('row', 0),
-                        column_number=finding.get('location', {}).get('column'),
-                        end_line=finding.get('end_location', {}).get('row'),
-                        end_column=finding.get('end_location', {}).get('column'),
-                        fix_suggestion=finding.get('fix', {}).get('message'),
-                        category=finding.get('tags', [''])[0] if finding.get('tags') else None,
+                        rule_id=finding.get("code", ""),
+                        message=finding.get("message", ""),
+                        level=self._map_ruff_level(
+                            finding.get("fix", {}).get("availability")
+                        ),
+                        file_path=finding.get("filename", ""),
+                        line_number=finding.get("location", {}).get("row", 0),
+                        column_number=finding.get("location", {}).get("column"),
+                        end_line=finding.get("end_location", {}).get("row"),
+                        end_column=finding.get("end_location", {}).get("column"),
+                        fix_suggestion=finding.get("fix", {}).get("message"),
+                        category=finding.get("tags", [""])[0]
+                        if finding.get("tags")
+                        else None,
                         metadata={
-                            "url": finding.get('url'),
-                            "fix_availability": finding.get('fix', {}).get('availability')
-                        }
+                            "url": finding.get("url"),
+                            "fix_availability": finding.get("fix", {}).get(
+                                "availability"
+                            ),
+                        },
                     )
                     issues.append(issue)
 
@@ -280,39 +287,38 @@ class LintChecker:
                 "--no-error-summary",
                 "--json",
                 f"--config-file={'.'.join([f'{k}={v}' for k, v in self.mypy_config.items()])}",
-                str(file_path)
+                str(file_path),
             ]
 
             # Run mypy
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             # Parse results
             if result.stdout:
-                for line in result.stdout.strip().split('\n'):
+                for line in result.stdout.strip().split("\n"):
                     if line:
                         data = json.loads(line)
 
                         issue = LintIssue(
                             tool="mypy",
-                            rule_id=data.get('code', ''),
-                            message=data.get('message', ''),
-                            level=LintLevel.ERROR if data.get('severity') == 'error' else LintLevel.WARNING,
-                            file_path=data.get('file', ''),
-                            line_number=data.get('line', 0),
-                            column_number=data.get('column'),
-                            end_line=data.get('end_line'),
-                            end_column=data.get('end_column'),
-                            fix_suggestion=self._get_mypy_fix_suggestion(data.get('code', '')),
+                            rule_id=data.get("code", ""),
+                            message=data.get("message", ""),
+                            level=LintLevel.ERROR
+                            if data.get("severity") == "error"
+                            else LintLevel.WARNING,
+                            file_path=data.get("file", ""),
+                            line_number=data.get("line", 0),
+                            column_number=data.get("column"),
+                            end_line=data.get("end_line"),
+                            end_column=data.get("end_column"),
+                            fix_suggestion=self._get_mypy_fix_suggestion(
+                                data.get("code", "")
+                            ),
                             category="type-checking",
                             metadata={
-                                "severity": data.get('severity'),
-                                "hint": data.get('hint')
-                            }
+                                "severity": data.get("severity"),
+                                "hint": data.get("hint"),
+                            },
                         )
                         issues.append(issue)
 
@@ -335,47 +341,45 @@ class LintChecker:
         try:
             # Create temporary ESLint config
             eslint_config_path = self.temp_dir / ".eslintrc.json"
-            with open(eslint_config_path, 'w') as f:
+            with open(eslint_config_path, "w") as f:
                 json.dump(self.eslint_config, f, indent=2)
 
             # Build eslint command
             cmd = [
                 "eslint",
                 "--format=json",
-                "--config", str(eslint_config_path),
-                str(file_path)
+                "--config",
+                str(eslint_config_path),
+                str(file_path),
             ]
 
             # Run eslint
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             # Parse results
             if result.stdout:
                 data = json.loads(result.stdout)
 
                 for file_result in data:
-                    for message in file_result.get('messages', []):
+                    for message in file_result.get("messages", []):
                         issue = LintIssue(
                             tool="eslint",
-                            rule_id=message.get('ruleId', ''),
-                            message=message.get('message', ''),
-                            level=self._map_eslint_level(message.get('severity', 1)),
-                            file_path=file_result.get('filePath', ''),
-                            line_number=message.get('line', 0),
-                            column_number=message.get('column'),
-                            end_line=message.get('endLine'),
-                            end_column=message.get('endColumn'),
-                            fix_suggestion=message.get('fix', {}).get('text'),
-                            category=message.get('ruleId', '').split('/')[0] if message.get('ruleId') else None,
+                            rule_id=message.get("ruleId", ""),
+                            message=message.get("message", ""),
+                            level=self._map_eslint_level(message.get("severity", 1)),
+                            file_path=file_result.get("filePath", ""),
+                            line_number=message.get("line", 0),
+                            column_number=message.get("column"),
+                            end_line=message.get("endLine"),
+                            end_column=message.get("endColumn"),
+                            fix_suggestion=message.get("fix", {}).get("text"),
+                            category=message.get("ruleId", "").split("/")[0]
+                            if message.get("ruleId")
+                            else None,
                             metadata={
-                                "nodeType": message.get('nodeType'),
-                                "source": message.get('source')
-                            }
+                                "nodeType": message.get("nodeType"),
+                                "source": message.get("source"),
+                            },
                         )
                         issues.append(issue)
 
@@ -389,12 +393,14 @@ class LintChecker:
             print(f"ESLint check error: {e}")
         finally:
             # Clean up config
-            if 'eslint_config_path' in locals() and eslint_config_path.exists():
+            if "eslint_config_path" in locals() and eslint_config_path.exists():
                 eslint_config_path.unlink()
 
         return issues, "eslint"
 
-    async def _check_with_prettier(self, file_path: Path) -> tuple[list[LintIssue], str]:
+    async def _check_with_prettier(
+        self, file_path: Path
+    ) -> tuple[list[LintIssue], str]:
         """Check code formatting with Prettier."""
         issues = []
 
@@ -403,17 +409,13 @@ class LintChecker:
             cmd = [
                 "prettier",
                 "--check",
-                "--parser", "typescript" if file_path.suffix == ".ts" else "babel",
-                str(file_path)
+                "--parser",
+                "typescript" if file_path.suffix == ".ts" else "babel",
+                str(file_path),
             ]
 
             # Run prettier
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             # If check failed, add formatting issue
             if result.returncode != 0:
@@ -425,7 +427,7 @@ class LintChecker:
                     file_path=str(file_path),
                     line_number=1,
                     fix_suggestion="Run 'prettier --write' to fix formatting",
-                    category="formatting"
+                    category="formatting",
                 )
                 issues.append(issue)
 
@@ -466,11 +468,13 @@ class LintChecker:
             "operator": "Add type annotations for operands",
             "return-value": "Add return type annotation to function",
             "arg-type": "Check argument type matches expected type",
-            "override": "Check method signature matches parent class"
+            "override": "Check method signature matches parent class",
         }
         return suggestions.get(code, "Add appropriate type annotations")
 
-    async def fix_code(self, code: str, file_path: str, language: str = "python") -> tuple[str, list[str]]:
+    async def fix_code(
+        self, code: str, file_path: str, language: str = "python"
+    ) -> tuple[str, list[str]]:
         """
         Auto-fix linting issues in code.
 
@@ -485,7 +489,7 @@ class LintChecker:
         temp_file = self.temp_dir / Path(file_path).name
 
         try:
-            with open(temp_file, 'w', encoding='utf-8') as f:
+            with open(temp_file, "w", encoding="utf-8") as f:
                 f.write(code)
 
             applied_fixes = []
@@ -498,13 +502,15 @@ class LintChecker:
                     subprocess.run(cmd, capture_output=True, timeout=30)
 
                     cmd = ["ruff", "check", "--fix", str(temp_file)]
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                    result = subprocess.run(
+                        cmd, capture_output=True, text=True, timeout=30
+                    )
 
                     if "Fixed" in result.stdout:
                         applied_fixes.append("Ruff auto-fixes applied")
 
                     # Read fixed code
-                    with open(temp_file, encoding='utf-8') as f:
+                    with open(temp_file, encoding="utf-8") as f:
                         fixed_code = f.read()
 
                 except Exception as e:
@@ -520,11 +526,13 @@ class LintChecker:
 
                     # ESLint fix
                     cmd = ["eslint", "--fix", str(temp_file)]
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                    result = subprocess.run(
+                        cmd, capture_output=True, text=True, timeout=30
+                    )
                     applied_fixes.append("ESLint auto-fixes applied")
 
                     # Read fixed code
-                    with open(temp_file, encoding='utf-8') as f:
+                    with open(temp_file, encoding="utf-8") as f:
                         fixed_code = f.read()
 
                 except Exception as e:
@@ -631,12 +639,17 @@ if __name__ == "__main__":
                 # Try to fix if issues found
                 if result.issues:
                     print("\nAttempting auto-fix...")
-                    fixed_code, fixes = await checker.fix_code(code, str(file_path), language)
+                    fixed_code, fixes = await checker.fix_code(
+                        code, str(file_path), language
+                    )
                     if fixes:
                         print(f"Applied fixes: {', '.join(fixes)}")
                         # Save fixed version
-                        fixed_file = file_path.parent / f"{file_path.stem}_fixed{file_path.suffix}"
-                        with open(fixed_file, 'w') as f:
+                        fixed_file = (
+                            file_path.parent
+                            / f"{file_path.stem}_fixed{file_path.suffix}"
+                        )
+                        with open(fixed_file, "w") as f:
                             f.write(fixed_code)
                         print(f"Fixed version saved to: {fixed_file}")
             else:

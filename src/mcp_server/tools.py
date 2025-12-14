@@ -109,28 +109,28 @@ async def handle_search_repositories(args: dict) -> dict:
         return {
             "error": True,
             "message": "Query is required",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     if not InputValidator.validate_search_query(query):
         return {
             "error": True,
             "message": f"Invalid search query: exceeds maximum length of {settings.app.max_query_length} characters",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     if max_results < 1 or max_results > 100:
         return {
             "error": True,
             "message": "max_results must be between 1 and 100",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     if min_stars < 0:
         return {
             "error": True,
             "message": "min_stars must be non-negative",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     secure_logger.info(
@@ -138,7 +138,7 @@ async def handle_search_repositories(args: dict) -> dict:
         correlation_id=correlation_id,
         query=query[:100],  # Limit in logs
         platforms=platforms,
-        max_results=max_results
+        max_results=max_results,
     )
 
     metrics.increment("search_requests_total", tags={"platforms": ",".join(platforms)})
@@ -155,17 +155,19 @@ async def handle_search_repositories(args: dict) -> dict:
                 language_filter=language_filter,
                 min_stars=min_stars,
             ),
-            timeout=TIMEOUT_API_CALL
+            timeout=TIMEOUT_API_CALL,
         )
 
         secure_logger.info(
             "Search completed successfully",
             correlation_id=correlation_id,
             result_count=len(result.repositories),
-            total_results=result.total_count
+            total_results=result.total_count,
         )
 
-        metrics.increment("search_success_total", tags={"platforms": ",".join(platforms)})
+        metrics.increment(
+            "search_success_total", tags={"platforms": ",".join(platforms)}
+        )
         metrics.record_histogram("search_results_count", len(result.repositories))
 
         return {
@@ -182,37 +184,38 @@ async def handle_search_repositories(args: dict) -> dict:
                     "stars": repo.stars,
                     "language": repo.language,
                     "platform": repo.platform,
-                    "updated_at": repo.updated_at.isoformat() if hasattr(repo.updated_at, 'isoformat') else repo.updated_at,
+                    "updated_at": repo.updated_at.isoformat()
+                    if hasattr(repo.updated_at, "isoformat")
+                    else repo.updated_at,
                 }
                 for repo in result.repositories
             ],
             "search_time_ms": result.search_time_ms,
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     except TimeoutError:
         secure_logger.error(
-            f"Search timed out after {TIMEOUT_API_CALL}s",
-            correlation_id=correlation_id
+            f"Search timed out after {TIMEOUT_API_CALL}s", correlation_id=correlation_id
         )
         metrics.increment("search_timeout_total")
         return {
             "error": True,
             "message": f"Search timed out after {TIMEOUT_API_CALL} seconds",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
     except Exception as e:
         secure_logger.error(
             f"Search failed: {str(e)[:200]}",
             correlation_id=correlation_id,
-            error_type=type(e).__name__
+            error_type=type(e).__name__,
         )
         metrics.increment("search_error_total", tags={"error_type": type(e).__name__})
         return {
             "error": True,
             "message": f"Search failed: {str(e)[:200]}",
-            "correlation_id": correlation_id
+            "correlation_id": correlation_id,
         }
 
 
@@ -240,12 +243,14 @@ async def handle_analyze_repository(args: dict) -> dict:
 
     # Validate repository URL
     url_pattern = re.compile(
-        r'^https?://'  # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r"^https?://"  # http:// or https://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
+        r"localhost|"  # localhost...
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
 
     if not url_pattern.match(repo_url):
         return {
@@ -284,8 +289,7 @@ async def handle_analyze_repository(args: dict) -> dict:
             try:
                 repo_id = search._extract_repo_id(repo_url, platform)
                 await asyncio.wait_for(
-                    client.clone(repo_id, temp_path, depth=1),
-                    timeout=TIMEOUT_GIT_CLONE
+                    client.clone(repo_id, temp_path, depth=1), timeout=TIMEOUT_GIT_CLONE
                 )
             except TimeoutError:
                 return {
@@ -514,12 +518,14 @@ async def handle_synthesize_project(args: dict) -> dict:
 
     # Validate repository URLs
     url_pattern = re.compile(
-        r'^https?://'  # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r"^https?://"  # http:// or https://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
+        r"localhost|"  # localhost...
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
 
     for repo in repositories:
         repo_url = repo.get("repo_url", "")
@@ -531,13 +537,16 @@ async def handle_synthesize_project(args: dict) -> dict:
 
     # Create synthesis job (thread-safe)
     job_id = str(uuid.uuid4())
-    set_synthesis_job(job_id, {
-        "id": job_id,
-        "status": "started",
-        "progress": 0,
-        "started_at": datetime.now().isoformat(),
-        "repositories": len(repositories),
-    })
+    set_synthesis_job(
+        job_id,
+        {
+            "id": job_id,
+            "status": "started",
+            "progress": 0,
+            "started_at": datetime.now().isoformat(),
+            "repositories": len(repositories),
+        },
+    )
 
     logger.info(f"Starting synthesis job {job_id}: {project_name}")
 
@@ -556,10 +565,15 @@ async def handle_synthesize_project(args: dict) -> dict:
                 template=template,
                 progress_callback=lambda p, s: _update_job(job_id, p, s),
             ),
-            timeout=TIMEOUT_SYNTHESIS
+            timeout=TIMEOUT_SYNTHESIS,
         )
 
-        update_synthesis_job(job_id, status="complete", progress=100, completed_at=datetime.now().isoformat())
+        update_synthesis_job(
+            job_id,
+            status="complete",
+            progress=100,
+            completed_at=datetime.now().isoformat(),
+        )
 
         return {
             "status": "success",
@@ -575,7 +589,11 @@ async def handle_synthesize_project(args: dict) -> dict:
         }
 
     except TimeoutError:
-        update_synthesis_job(job_id, status="failed", error=f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds")
+        update_synthesis_job(
+            job_id,
+            status="failed",
+            error=f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds",
+        )
         return {
             "error": True,
             "message": f"Synthesis timed out after {TIMEOUT_SYNTHESIS} seconds",
@@ -636,19 +654,23 @@ async def handle_generate_documentation(args: dict) -> dict:
         if "readme" in doc_types:
             readme_gen = ReadmeGenerator(use_llm=llm_enhanced)
             readme_path = await readme_gen.generate(path)
-            generated.append({
-                "type": "readme",
-                "path": str(readme_path),
-            })
+            generated.append(
+                {
+                    "type": "readme",
+                    "path": str(readme_path),
+                }
+            )
 
         # Architecture documentation
         if "architecture" in doc_types:
             diagram_gen = DiagramGenerator()
             arch_path = await diagram_gen.generate_architecture(path)
-            generated.append({
-                "type": "architecture",
-                "path": str(arch_path),
-            })
+            generated.append(
+                {
+                    "type": "architecture",
+                    "path": str(arch_path),
+                }
+            )
 
         # API documentation
         if "api" in doc_types:
@@ -659,20 +681,24 @@ async def handle_generate_documentation(args: dict) -> dict:
             # Placeholder for API doc generation
             api_doc = docs_path / "API_REFERENCE.md"
             api_doc.write_text("# API Reference\n\nGenerated API documentation.\n")
-            generated.append({
-                "type": "api",
-                "path": str(api_doc),
-            })
+            generated.append(
+                {
+                    "type": "api",
+                    "path": str(api_doc),
+                }
+            )
 
         # Diagrams
         if "diagrams" in doc_types:
             diagram_gen = DiagramGenerator()
             diagrams = await diagram_gen.generate_all(path)
             for diagram_type, diagram_path in diagrams.items():
-                generated.append({
-                    "type": f"diagram_{diagram_type}",
-                    "path": str(diagram_path),
-                })
+                generated.append(
+                    {
+                        "type": f"diagram_{diagram_type}",
+                        "path": str(diagram_path),
+                    }
+                )
 
         return {
             "status": "success",
@@ -730,6 +756,7 @@ async def handle_get_synthesis_status(args: dict) -> dict:
 # Direct Tool Functions (for CLI and testing)
 # ============================================
 
+
 async def search_repositories(
     query: str,
     platforms: list[str] = None,
@@ -742,13 +769,15 @@ async def search_repositories(
 
     Direct function wrapper for handle_search_repositories.
     """
-    return await handle_search_repositories({
-        "query": query,
-        "platforms": platforms or ["github", "huggingface"],
-        "max_results": max_results,
-        "language_filter": language_filter,
-        "min_stars": min_stars,
-    })
+    return await handle_search_repositories(
+        {
+            "query": query,
+            "platforms": platforms or ["github", "huggingface"],
+            "max_results": max_results,
+            "language_filter": language_filter,
+            "min_stars": min_stars,
+        }
+    )
 
 
 async def analyze_repository(
@@ -761,11 +790,13 @@ async def analyze_repository(
 
     Direct function wrapper for handle_analyze_repository.
     """
-    return await handle_analyze_repository({
-        "repo_url": repo_url,
-        "include_transitive_deps": include_transitive_deps,
-        "extract_components": extract_components,
-    })
+    return await handle_analyze_repository(
+        {
+            "repo_url": repo_url,
+            "include_transitive_deps": include_transitive_deps,
+            "extract_components": extract_components,
+        }
+    )
 
 
 async def check_compatibility(
@@ -777,10 +808,12 @@ async def check_compatibility(
 
     Direct function wrapper for handle_check_compatibility.
     """
-    return await handle_check_compatibility({
-        "repo_urls": repo_urls,
-        "target_python_version": target_python_version,
-    })
+    return await handle_check_compatibility(
+        {
+            "repo_urls": repo_urls,
+            "target_python_version": target_python_version,
+        }
+    )
 
 
 async def resolve_dependencies(
@@ -793,11 +826,13 @@ async def resolve_dependencies(
 
     Direct function wrapper for handle_resolve_dependencies.
     """
-    return await handle_resolve_dependencies({
-        "repositories": repositories,
-        "constraints": constraints or [],
-        "python_version": python_version,
-    })
+    return await handle_resolve_dependencies(
+        {
+            "repositories": repositories,
+            "constraints": constraints or [],
+            "python_version": python_version,
+        }
+    )
 
 
 async def synthesize_project(
@@ -811,12 +846,14 @@ async def synthesize_project(
 
     Direct function wrapper for handle_synthesize_project.
     """
-    return await handle_synthesize_project({
-        "repositories": repositories,
-        "project_name": project_name,
-        "output_path": output_path,
-        "template": template,
-    })
+    return await handle_synthesize_project(
+        {
+            "repositories": repositories,
+            "project_name": project_name,
+            "output_path": output_path,
+            "template": template,
+        }
+    )
 
 
 async def generate_documentation(
@@ -829,11 +866,13 @@ async def generate_documentation(
 
     Direct function wrapper for handle_generate_documentation.
     """
-    return await handle_generate_documentation({
-        "project_path": project_path,
-        "doc_types": doc_types or ["readme", "architecture", "api"],
-        "llm_enhanced": llm_enhanced,
-    })
+    return await handle_generate_documentation(
+        {
+            "project_path": project_path,
+            "doc_types": doc_types or ["readme", "architecture", "api"],
+            "llm_enhanced": llm_enhanced,
+        }
+    )
 
 
 async def get_synthesis_status(synthesis_id: str) -> dict:
@@ -842,9 +881,11 @@ async def get_synthesis_status(synthesis_id: str) -> dict:
 
     Direct function wrapper for handle_get_synthesis_status.
     """
-    return await handle_get_synthesis_status({
-        "synthesis_id": synthesis_id,
-    })
+    return await handle_get_synthesis_status(
+        {
+            "synthesis_id": synthesis_id,
+        }
+    )
 
 
 async def get_platforms() -> dict:
@@ -884,15 +925,19 @@ async def get_platforms() -> dict:
 
 _assistant = None
 
+
 def get_assistant():
     """Get or create assistant instance."""
     global _assistant
     if _assistant is None:
         from src.assistant.core import AssistantConfig, ConversationalAssistant
-        _assistant = ConversationalAssistant(AssistantConfig(
-            voice_enabled=True,
-            auto_speak=False,  # Don't auto-generate audio for MCP
-        ))
+
+        _assistant = ConversationalAssistant(
+            AssistantConfig(
+                voice_enabled=True,
+                auto_speak=False,  # Don't auto-generate audio for MCP
+            )
+        )
     return _assistant
 
 
@@ -975,6 +1020,7 @@ async def handle_assistant_voice(arguments: dict[str, Any]) -> dict[str, Any]:
 
     try:
         from src.voice.elevenlabs_client import ElevenLabsClient
+
         client = ElevenLabsClient()
 
         audio = await client.text_to_speech(text, voice=voice)
@@ -985,8 +1031,11 @@ async def handle_assistant_voice(arguments: dict[str, Any]) -> dict[str, Any]:
         if auto_play:
             try:
                 from src.voice.player import play_audio
+
                 result = await play_audio(audio_base64, format="mp3", wait=False)
-                playback_status = "playing" if result.success else f"failed: {result.error}"
+                playback_status = (
+                    "playing" if result.success else f"failed: {result.error}"
+                )
             except Exception as e:
                 playback_status = f"error: {e}"
 
@@ -1000,7 +1049,9 @@ async def handle_assistant_voice(arguments: dict[str, Any]) -> dict[str, Any]:
             "text_length": len(text),
             "audio_size_bytes": len(audio),
             "playback_status": playback_status,
-            "note": "Audio is playing through your speakers" if auto_play and playback_status == "playing" else None,
+            "note": "Audio is playing through your speakers"
+            if auto_play and playback_status == "playing"
+            else None,
         }
 
     except Exception as e:
@@ -1040,11 +1091,13 @@ async def handle_get_voices(arguments: dict[str, Any]) -> dict[str, Any]:
 
     voices = []
     for name, voice in PREMADE_VOICES.items():
-        voices.append({
-            "name": name,
-            "voice_id": voice.voice_id,
-            "description": voice.description,
-        })
+        voices.append(
+            {
+                "name": name,
+                "voice_id": voice.voice_id,
+                "description": voice.description,
+            }
+        )
 
     return {
         "success": True,
@@ -1084,7 +1137,9 @@ async def handle_speak_fast(arguments: dict[str, Any]) -> dict[str, Any]:
             "voice": voice,
             "mode": "streaming",
             "model": "eleven_turbo_v2_5",
-            "note": "Audio streamed directly to speakers" if success else "Playback failed",
+            "note": "Audio streamed directly to speakers"
+            if success
+            else "Playback failed",
         }
 
     except Exception as e:
@@ -1094,7 +1149,7 @@ async def handle_speak_fast(arguments: dict[str, Any]) -> dict[str, Any]:
 async def handle_synthesize_from_idea(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Alias for handle_assemble_project for backward compatibility.
-    
+
     This function synthesizes a project from an idea by searching,
     downloading, and assembling compatible resources.
     """

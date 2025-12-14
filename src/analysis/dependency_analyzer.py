@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Dependency:
     """Represents a single dependency."""
+
     name: str
     version_spec: str  # e.g., ">=1.0.0,<2.0.0"
     extras: list[str] = field(default_factory=list)
@@ -35,6 +36,7 @@ class Dependency:
 @dataclass
 class DependencyConflict:
     """Represents a conflict between dependencies."""
+
     package_name: str
     dep_a: Dependency
     dep_b: Dependency
@@ -46,6 +48,7 @@ class DependencyConflict:
 @dataclass
 class DependencyGraph:
     """Complete dependency graph for a project."""
+
     direct: list[Dependency] = field(default_factory=list)
     transitive: list[Dependency] = field(default_factory=list)
     conflicts: list[DependencyConflict] = field(default_factory=list)
@@ -130,10 +133,10 @@ class DependencyAnalyzer:
     def __init__(self):
         """Initialize the dependency analyzer."""
         self._version_pattern = re.compile(
-            r'^([a-zA-Z0-9][-a-zA-Z0-9._]*[a-zA-Z0-9]|[a-zA-Z0-9])'
-            r'(\[[-a-zA-Z0-9._,]+\])?'
-            r'\s*'
-            r'([<>=!~]+\s*[\d.*]+(?:\s*,\s*[<>=!~]+\s*[\d.*]+)*)?'
+            r"^([a-zA-Z0-9][-a-zA-Z0-9._]*[a-zA-Z0-9]|[a-zA-Z0-9])"
+            r"(\[[-a-zA-Z0-9._,]+\])?"
+            r"\s*"
+            r"([<>=!~]+\s*[\d.*]+(?:\s*,\s*[<>=!~]+\s*[\d.*]+)*)?"
         )
 
     async def analyze(self, repo_path: Path) -> DependencyGraph:
@@ -183,15 +186,17 @@ class DependencyAnalyzer:
         )
 
     async def _parse_file(
-        self,
-        file_path: Path,
-        package_manager: str
+        self, file_path: Path, package_manager: str
     ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse a dependency file and return (regular, dev) dependencies."""
         try:
-            if file_path.name == "requirements.txt" or file_path.name.startswith("requirements"):
+            if file_path.name == "requirements.txt" or file_path.name.startswith(
+                "requirements"
+            ):
                 deps = self._parse_requirements_txt(file_path)
-                is_dev = "dev" in file_path.name.lower() or "test" in file_path.name.lower()
+                is_dev = (
+                    "dev" in file_path.name.lower() or "test" in file_path.name.lower()
+                )
                 return ([], deps) if is_dev else (deps, [])
 
             elif file_path.name == "pyproject.toml":
@@ -234,11 +239,7 @@ class DependencyAnalyzer:
 
         return deps
 
-    def _parse_requirement_line(
-        self,
-        line: str,
-        source_file: str
-    ) -> Dependency | None:
+    def _parse_requirement_line(self, line: str, source_file: str) -> Dependency | None:
         """Parse a single requirement line."""
         # Remove inline comments
         if "#" in line:
@@ -270,8 +271,7 @@ class DependencyAnalyzer:
         return None
 
     def _parse_pyproject_toml(
-        self,
-        file_path: Path
+        self, file_path: Path
     ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse pyproject.toml for dependencies."""
         deps = []
@@ -328,10 +328,7 @@ class DependencyAnalyzer:
         return deps, dev_deps
 
     def _poetry_dep_to_dependency(
-        self,
-        name: str,
-        spec: any,
-        source: str
+        self, name: str, spec: any, source: str
     ) -> Dependency:
         """Convert Poetry dependency spec to Dependency."""
         if isinstance(spec, str):
@@ -361,8 +358,7 @@ class DependencyAnalyzer:
         )
 
     def _parse_package_json(
-        self,
-        file_path: Path
+        self, file_path: Path
     ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse package.json for npm dependencies."""
         import json
@@ -376,28 +372,31 @@ class DependencyAnalyzer:
 
         # Regular dependencies
         for name, version in data.get("dependencies", {}).items():
-            deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="npm",
-            ))
+            deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="npm",
+                )
+            )
 
         # Dev dependencies
         for name, version in data.get("devDependencies", {}).items():
-            dev_deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="npm",
-                is_dev=True,
-            ))
+            dev_deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="npm",
+                    is_dev=True,
+                )
+            )
 
         return deps, dev_deps
 
     def _parse_cargo_toml(
-        self,
-        file_path: Path
+        self, file_path: Path
     ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse Cargo.toml for Rust dependencies."""
         deps = []
@@ -416,12 +415,14 @@ class DependencyAnalyzer:
             else:
                 version = ""
 
-            deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="cargo",
-            ))
+            deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="cargo",
+                )
+            )
 
         # Dev dependencies
         for name, spec in data.get("dev-dependencies", {}).items():
@@ -432,19 +433,20 @@ class DependencyAnalyzer:
             else:
                 version = ""
 
-            dev_deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="cargo",
-                is_dev=True,
-            ))
+            dev_deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="cargo",
+                    is_dev=True,
+                )
+            )
 
         return deps, dev_deps
 
     def _parse_pipfile(
-        self,
-        file_path: Path
+        self, file_path: Path
     ) -> tuple[list[Dependency], list[Dependency]]:
         """Parse Pipfile for dependencies."""
         deps = []
@@ -463,12 +465,14 @@ class DependencyAnalyzer:
             else:
                 version = ""
 
-            deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="pip",
-            ))
+            deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="pip",
+                )
+            )
 
         # Dev packages
         for name, spec in data.get("dev-packages", {}).items():
@@ -479,13 +483,15 @@ class DependencyAnalyzer:
             else:
                 version = ""
 
-            dev_deps.append(Dependency(
-                name=name,
-                version_spec=version,
-                source_file=source,
-                package_manager="pip",
-                is_dev=True,
-            ))
+            dev_deps.append(
+                Dependency(
+                    name=name,
+                    version_spec=version,
+                    source_file=source,
+                    package_manager="pip",
+                    is_dev=True,
+                )
+            )
 
         return deps, dev_deps
 
@@ -506,8 +512,7 @@ class DependencyAnalyzer:
         return list(seen.values())
 
     def _detect_conflicts(
-        self,
-        dependencies: list[Dependency]
+        self, dependencies: list[Dependency]
     ) -> list[DependencyConflict]:
         """Detect version conflicts between dependencies."""
         conflicts = []
@@ -525,18 +530,19 @@ class DependencyAnalyzer:
 
             # Compare versions pairwise
             for i, dep_a in enumerate(deps):
-                for dep_b in deps[i + 1:]:
+                for dep_b in deps[i + 1 :]:
                     if not self._versions_compatible(
-                        dep_a.version_spec,
-                        dep_b.version_spec
+                        dep_a.version_spec, dep_b.version_spec
                     ):
-                        conflicts.append(DependencyConflict(
-                            package_name=name,
-                            dep_a=dep_a,
-                            dep_b=dep_b,
-                            reason=f"Version specs may conflict: '{dep_a.version_spec}' vs '{dep_b.version_spec}'",
-                            resolvable=True,
-                        ))
+                        conflicts.append(
+                            DependencyConflict(
+                                package_name=name,
+                                dep_a=dep_a,
+                                dep_b=dep_b,
+                                reason=f"Version specs may conflict: '{dep_a.version_spec}' vs '{dep_b.version_spec}'",
+                                resolvable=True,
+                            )
+                        )
 
         return conflicts
 

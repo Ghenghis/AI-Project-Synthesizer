@@ -26,18 +26,18 @@ class SecretManager:
 
     # Patterns for detecting secrets in logs
     SECRET_PATTERNS = [
-        r'ghp_[a-zA-Z0-9]{36}',  # GitHub tokens
-        r'gho_[a-zA-Z0-9]{36}',  # GitHub OAuth tokens
-        r'ghu_[a-zA-Z0-9]{36}',  # GitHub user tokens
-        r'ghs_[a-zA-Z0-9]{36}',  # GitHub server tokens
-        r'ghr_[a-zA-Z0-9]{36}',  # GitHub refresh tokens
-        r'xoxb-[0-9]{13}-[0-9]{13}-[a-zA-Z0-9]{24}',  # Slack bot tokens
-        r'xoxp-[0-9]{13}-[0-9]{13}-[0-9]{13}-[a-zA-Z0-9]{24}',  # Slack user tokens
-        r'sk-[a-zA-Z0-9]{48}',  # Stripe keys
-        r'AIza[0-9A-Za-z_-]{35}',  # Google API keys
-        r'AKIA[0-9A-Z]{16}',  # AWS access keys
-        r'[a-zA-Z0-9_-]{40}\.[a-zA-Z0-9_-]{64}\.[a-zA-Z0-9_-]{25}',  # OpenAI tokens
-        r'[a-zA-Z0-9_-]{32}',  # Generic API keys
+        r"ghp_[a-zA-Z0-9]{36}",  # GitHub tokens
+        r"gho_[a-zA-Z0-9]{36}",  # GitHub OAuth tokens
+        r"ghu_[a-zA-Z0-9]{36}",  # GitHub user tokens
+        r"ghs_[a-zA-Z0-9]{36}",  # GitHub server tokens
+        r"ghr_[a-zA-Z0-9]{36}",  # GitHub refresh tokens
+        r"xoxb-[0-9]{13}-[0-9]{13}-[a-zA-Z0-9]{24}",  # Slack bot tokens
+        r"xoxp-[0-9]{13}-[0-9]{13}-[0-9]{13}-[a-zA-Z0-9]{24}",  # Slack user tokens
+        r"sk-[a-zA-Z0-9]{48}",  # Stripe keys
+        r"AIza[0-9A-Za-z_-]{35}",  # Google API keys
+        r"AKIA[0-9A-Z]{16}",  # AWS access keys
+        r"[a-zA-Z0-9_-]{40}\.[a-zA-Z0-9_-]{64}\.[a-zA-Z0-9_-]{25}",  # OpenAI tokens
+        r"[a-zA-Z0-9_-]{32}",  # Generic API keys
     ]
 
     @staticmethod
@@ -105,18 +105,16 @@ class InputValidator:
 
     # GitHub repository URL pattern
     GITHUB_URL_PATTERN = re.compile(
-        r'^https?://(?:www\.)?github\.com/[\w\-\.]+/[\w\-\.]+/?$',
-        re.IGNORECASE
+        r"^https?://(?:www\.)?github\.com/[\w\-\.]+/[\w\-\.]+/?$", re.IGNORECASE
     )
 
     # Generic URL pattern
     URL_PATTERN = re.compile(
-        r'^https?://(?:[\w\-]+\.)+[\w\-]+(?:/[\w\-./?%&=]*)?$',
-        re.IGNORECASE
+        r"^https?://(?:[\w\-]+\.)+[\w\-]+(?:/[\w\-./?%&=]*)?$", re.IGNORECASE
     )
 
     # Safe filename pattern
-    SAFE_FILENAME_PATTERN = re.compile(r'^[\w\-\.]+$')
+    SAFE_FILENAME_PATTERN = re.compile(r"^[\w\-\.]+$")
 
     @staticmethod
     def validate_repository_url(url: str) -> bool:
@@ -157,9 +155,9 @@ class InputValidator:
             return "unnamed"
 
         # Remove path separators and dangerous characters
-        sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
-        sanitized = re.sub(r'\.\.', '_', sanitized)
-        sanitized = sanitized.strip('._')
+        sanitized = re.sub(r'[<>:"/\\|?*]', "_", filename)
+        sanitized = re.sub(r"\.\.", "_", sanitized)
+        sanitized = sanitized.strip("._")
 
         # Ensure it's not empty
         if not sanitized:
@@ -186,7 +184,7 @@ class InputValidator:
             return False
 
         # Remove dangerous characters
-        dangerous_chars = ['<', '>', '"', "'", '&', '\x00']
+        dangerous_chars = ["<", ">", '"', "'", "&", "\x00"]
         if any(char in query for char in dangerous_chars):
             return False
 
@@ -208,14 +206,14 @@ class InputValidator:
             return "."
 
         # Normalize path separators
-        path = path.replace('\\', '/')
+        path = path.replace("\\", "/")
 
         # Remove path traversal attempts
-        path = re.sub(r'\.\./', '', path)
-        path = re.sub(r'\.\.\/', '', path)
+        path = re.sub(r"\.\./", "", path)
+        path = re.sub(r"\.\.\/", "", path)
 
         # Remove leading slashes to prevent absolute paths
-        path = path.lstrip('/')
+        path = path.lstrip("/")
 
         return path
 
@@ -288,30 +286,35 @@ def secure_input(validation_func=None):
     Returns:
         Decorated function
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Validate common inputs
-            if 'repo_url' in kwargs:
-                if not InputValidator.validate_repository_url(kwargs['repo_url']):
+            if "repo_url" in kwargs:
+                if not InputValidator.validate_repository_url(kwargs["repo_url"]):
                     raise ValueError(f"Invalid repository URL: {kwargs['repo_url']}")
 
-            if 'query' in kwargs:
-                if not InputValidator.validate_search_query(kwargs['query']):
+            if "query" in kwargs:
+                if not InputValidator.validate_search_query(kwargs["query"]):
                     raise ValueError(f"Invalid search query: {kwargs['query']}")
 
-            if 'filename' in kwargs:
-                kwargs['filename'] = InputValidator.sanitize_filename(kwargs['filename'])
+            if "filename" in kwargs:
+                kwargs["filename"] = InputValidator.sanitize_filename(
+                    kwargs["filename"]
+                )
 
-            if 'path' in kwargs:
-                kwargs['path'] = InputValidator.sanitize_path(kwargs['path'])
+            if "path" in kwargs:
+                kwargs["path"] = InputValidator.sanitize_path(kwargs["path"])
 
             # Apply custom validation if provided
             if validation_func:
                 validation_func(*args, **kwargs)
 
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -334,13 +337,13 @@ class SecurityConfig:
     SECRET_MASK_CHAR = "*"
 
     # URL validation
-    ALLOWED_PROTOCOLS = ['http', 'https']
+    ALLOWED_PROTOCOLS = ["http", "https"]
     ALLOWED_DOMAINS = [
-        'github.com',
-        'gitlab.com',
-        'huggingface.co',
-        'kaggle.com',
-        'arxiv.org'
+        "github.com",
+        "gitlab.com",
+        "huggingface.co",
+        "kaggle.com",
+        "arxiv.org",
     ]
 
     @classmethod
@@ -359,7 +362,7 @@ class SecurityConfig:
             domain = parsed.netloc.lower()
 
             # Remove www. prefix
-            if domain.startswith('www.'):
+            if domain.startswith("www."):
                 domain = domain[4:]
 
             return domain in cls.ALLOWED_DOMAINS

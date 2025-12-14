@@ -34,6 +34,7 @@ secure_logger = get_secure_logger(__name__)
 
 class FirecrawlFormat(Enum):
     """Output format options."""
+
     MARKDOWN = "markdown"
     HTML = "html"
     RAW = "raw"
@@ -42,14 +43,16 @@ class FirecrawlFormat(Enum):
 
 class FirecrawlMode(Enum):
     """Scraping modes."""
+
     SCRAPE = "scrape"  # Single page
-    CRAWL = "crawl"    # Entire site
-    MAP = "map"        # Site map only
+    CRAWL = "crawl"  # Entire site
+    MAP = "map"  # Site map only
 
 
 @dataclass
 class ScrapedContent:
     """Scraped content representation."""
+
     url: str
     title: str
     description: str
@@ -66,6 +69,7 @@ class ScrapedContent:
 @dataclass
 class SiteMap:
     """Site map representation."""
+
     base_url: str
     pages: list[dict[str, Any]]
     total_pages: int
@@ -111,7 +115,9 @@ class FirecrawlClient:
         self._session: aiohttp.ClientSession | None = None
 
         if not self.api_key:
-            secure_logger.warning("No Firecrawl API key provided. Using fallback scraping.")
+            secure_logger.warning(
+                "No Firecrawl API key provided. Using fallback scraping."
+            )
 
         secure_logger.info("Firecrawl client initialized")
 
@@ -201,7 +207,9 @@ class FirecrawlClient:
         if self.rate_limit_remaining < 10:
             wait_time = (self.rate_limit_reset - datetime.now()).total_seconds()
             if wait_time > 0:
-                secure_logger.warning(f"Rate limit approaching. Waiting {wait_time:.1f}s")
+                secure_logger.warning(
+                    f"Rate limit approaching. Waiting {wait_time:.1f}s"
+                )
                 await asyncio.sleep(wait_time)
 
     async def _fallback_scrape(self, url: str) -> ScrapedContent:
@@ -236,7 +244,9 @@ class FirecrawlClient:
                     script.decompose()
 
                 # Remove comments
-                for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                for comment in soup.find_all(
+                    string=lambda text: isinstance(text, Comment)
+                ):
                     comment.extract()
 
                 # Extract links
@@ -340,7 +350,9 @@ class FirecrawlClient:
                 # Parse response
                 content = result.get("data", {}).get("content", "")
                 title = result.get("data", {}).get("metadata", {}).get("title", "")
-                description = result.get("data", {}).get("metadata", {}).get("description", "")
+                description = (
+                    result.get("data", {}).get("metadata", {}).get("description", "")
+                )
 
                 # Calculate metrics
                 word_count = len(content.split())
@@ -456,7 +468,9 @@ class FirecrawlClient:
                 return contents
 
             except Exception as e:
-                secure_logger.warning(f"Firecrawl crawl failed, scraping single page: {e}")
+                secure_logger.warning(
+                    f"Firecrawl crawl failed, scraping single page: {e}"
+                )
 
         # Fallback: just scrape the main page
         return [await self.scrape_url(url, formats=formats)]
@@ -585,7 +599,9 @@ class FirecrawlClient:
         return {
             "remaining": self.rate_limit_remaining,
             "reset_at": self.rate_limit_reset.isoformat(),
-            "reset_in_seconds": max(0, (self.rate_limit_reset - datetime.now()).total_seconds()),
+            "reset_in_seconds": max(
+                0, (self.rate_limit_reset - datetime.now()).total_seconds()
+            ),
         }
 
     def clean_text(self, text: str) -> str:
@@ -679,7 +695,9 @@ async def main():
     parser.add_argument("--url", required=True, help="URL to scrape")
     parser.add_argument("--crawl", action="store_true", help="Crawl entire site")
     parser.add_argument("--map", action="store_true", help="Generate site map")
-    parser.add_argument("--limit", type=int, default=10, help="Page limit for crawl/map")
+    parser.add_argument(
+        "--limit", type=int, default=10, help="Page limit for crawl/map"
+    )
     parser.add_argument("--format", default="markdown", help="Output format")
     parser.add_argument("--output", help="Output file path")
 
@@ -709,7 +727,9 @@ async def main():
             for content in contents:
                 print(f"\n  {content.title}")
                 print(f"  URL: {content.url}")
-                print(f"  Words: {content.word_count} | Reading time: {content.reading_time} min")
+                print(
+                    f"  Words: {content.word_count} | Reading time: {content.reading_time} min"
+                )
                 print(f"  Preview: {content.content[:200]}...")
 
         else:
@@ -719,7 +739,9 @@ async def main():
 
             print(f"\n  Title: {content.title}")
             print(f"  Description: {content.description}")
-            print(f"  Words: {content.word_count} | Reading time: {content.reading_time} min")
+            print(
+                f"  Words: {content.word_count} | Reading time: {content.reading_time} min"
+            )
             print(f"  Links found: {len(content.links)}")
             print(f"  Images found: {len(content.images)}")
 

@@ -18,6 +18,7 @@ try:
     from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
     from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
     from langchain_core.runnables import RunnableLambda
+
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
@@ -28,6 +29,7 @@ except ImportError:
 
 try:
     from langchain_community.llms import Ollama
+
     LANGCHAIN_COMMUNITY_AVAILABLE = True
 except ImportError:
     LANGCHAIN_COMMUNITY_AVAILABLE = False
@@ -35,6 +37,7 @@ except ImportError:
 
 try:
     from langchain_openai import ChatOpenAI
+
     LANGCHAIN_OPENAI_AVAILABLE = True
 except ImportError:
     LANGCHAIN_OPENAI_AVAILABLE = False
@@ -45,6 +48,7 @@ try:
     from langchain.chains import LLMChain
     from langchain.memory import ConversationBufferMemory
     from langchain.tools import Tool
+
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -63,6 +67,7 @@ LANGCHAIN_READY = LANGCHAIN_CORE_AVAILABLE and LANGCHAIN_AVAILABLE
 @dataclass
 class ChainConfig:
     """Configuration for LangChain chains."""
+
     model_provider: str = "lmstudio"  # lmstudio, ollama, openai
     model_name: str = "local-model"
     temperature: float = 0.7
@@ -171,10 +176,12 @@ class LangChainOrchestrator:
         """
         chain = create_synthesis_chain(self._get_llm())
 
-        result = await chain.ainvoke({
-            "project_idea": project_idea,
-            "resources": resources,
-        })
+        result = await chain.ainvoke(
+            {
+                "project_idea": project_idea,
+                "resources": resources,
+            }
+        )
 
         return {
             "project_idea": project_idea,
@@ -190,24 +197,31 @@ class LangChainOrchestrator:
         """
         llm = self._get_llm()
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are an AI Project Synthesizer assistant.
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    """You are an AI Project Synthesizer assistant.
             You help users discover, combine, and build projects from open-source resources.
             You have access to GitHub, HuggingFace, and Kaggle for searching.
-            Be helpful, concise, and proactive in suggesting improvements."""),
-            ("placeholder", "{chat_history}"),
-            ("human", "{input}"),
-        ])
+            Be helpful, concise, and proactive in suggesting improvements.""",
+                ),
+                ("placeholder", "{chat_history}"),
+                ("human", "{input}"),
+            ]
+        )
 
         chain = prompt | llm | StrOutputParser()
 
         # Get chat history
         history = self._memory.load_memory_variables({})
 
-        response = await chain.ainvoke({
-            "input": message,
-            "chat_history": history.get("chat_history", []),
-        })
+        response = await chain.ainvoke(
+            {
+                "input": message,
+                "chat_history": history.get("chat_history", []),
+            }
+        )
 
         # Save to memory
         self._memory.save_context(
@@ -320,11 +334,13 @@ Provide 3-5 specific recommendations for finding the best resources:""")
 
         analysis = await analysis_chain.ainvoke({"query": query})
         search_queries = await search_chain.ainvoke({"analysis": analysis})
-        recommendations = await recommend_chain.ainvoke({
-            "query": query,
-            "analysis": analysis,
-            "search_queries": search_queries,
-        })
+        recommendations = await recommend_chain.ainvoke(
+            {
+                "query": query,
+                "analysis": analysis,
+                "search_queries": search_queries,
+            }
+        )
 
         return {
             "analysis": analysis,
@@ -416,26 +432,34 @@ README Outline:""")
         project_idea = inputs["project_idea"]
         resources = inputs["resources"]
 
-        compatibility = await compat_chain.ainvoke({
-            "project_idea": project_idea,
-            "resources": str(resources),
-        })
+        compatibility = await compat_chain.ainvoke(
+            {
+                "project_idea": project_idea,
+                "resources": str(resources),
+            }
+        )
 
-        plan = await plan_chain.ainvoke({
-            "project_idea": project_idea,
-            "compatibility": compatibility,
-            "resources": str(resources),
-        })
+        plan = await plan_chain.ainvoke(
+            {
+                "project_idea": project_idea,
+                "compatibility": compatibility,
+                "resources": str(resources),
+            }
+        )
 
-        structure = await structure_chain.ainvoke({
-            "project_idea": project_idea,
-            "plan": plan,
-        })
+        structure = await structure_chain.ainvoke(
+            {
+                "project_idea": project_idea,
+                "plan": plan,
+            }
+        )
 
-        docs = await docs_chain.ainvoke({
-            "project_idea": project_idea,
-            "structure": structure,
-        })
+        docs = await docs_chain.ainvoke(
+            {
+                "project_idea": project_idea,
+                "structure": structure,
+            }
+        )
 
         return {
             "compatibility": compatibility,
@@ -454,6 +478,7 @@ def create_synthesizer_tools() -> list[Tool]:
     async def search_github(query: str) -> str:
         """Search GitHub repositories."""
         from src.discovery.github_client import GitHubClient
+
         client = GitHubClient()
         results = await client.search_repositories(query, max_results=5)
         return str([{"name": r.name, "url": r.url, "stars": r.stars} for r in results])
@@ -461,6 +486,7 @@ def create_synthesizer_tools() -> list[Tool]:
     async def search_huggingface(query: str) -> str:
         """Search HuggingFace models."""
         from src.discovery.huggingface_client import HuggingFaceClient
+
         client = HuggingFaceClient()
         results = await client.search_models(query, limit=5)
         return str(results)
@@ -468,6 +494,7 @@ def create_synthesizer_tools() -> list[Tool]:
     async def assemble_project(idea: str) -> str:
         """Assemble a project from an idea."""
         from src.synthesis.project_assembler import ProjectAssembler
+
         assembler = ProjectAssembler()
         result = await assembler.assemble(idea)
         return f"Project assembled at: {result.base_path}"

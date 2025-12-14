@@ -45,11 +45,13 @@ class SynthesizerTUI:
 
     def header(self):
         """Display header."""
-        console.print(Panel.fit(
-            "[bold blue]🧬 AI Project Synthesizer[/bold blue]\n"
-            "[dim]Terminal Interface v1.0[/dim]",
-            border_style="blue"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]🧬 AI Project Synthesizer[/bold blue]\n"
+                "[dim]Terminal Interface v1.0[/dim]",
+                border_style="blue",
+            )
+        )
 
     def main_menu(self) -> str:
         """Display main menu and get choice."""
@@ -72,7 +74,10 @@ class SynthesizerTUI:
 
         console.print(Panel(menu, title="Main Menu", border_style="green"))
 
-        return Prompt.ask("\n[cyan]Select option[/cyan]", choices=["1", "2", "3", "4", "5", "6", "7", "8", "q"])
+        return Prompt.ask(
+            "\n[cyan]Select option[/cyan]",
+            choices=["1", "2", "3", "4", "5", "6", "7", "8", "q"],
+        )
 
     async def dashboard_view(self):
         """Display dashboard with system status."""
@@ -89,6 +94,7 @@ class SynthesizerTUI:
 
             try:
                 from src.core.health import check_health
+
                 health = await check_health()
                 progress.remove_task(task)
 
@@ -111,7 +117,11 @@ class SynthesizerTUI:
                 console.print(table)
 
                 # Overall status
-                overall = "🟢 Healthy" if health.overall_status.value == "healthy" else "🔴 Unhealthy"
+                overall = (
+                    "🟢 Healthy"
+                    if health.overall_status.value == "healthy"
+                    else "🔴 Unhealthy"
+                )
                 console.print(f"\n[bold]Overall Status:[/bold] {overall}")
 
             except Exception as e:
@@ -147,7 +157,9 @@ class SynthesizerTUI:
                 from src.discovery.unified_search import create_unified_search
 
                 search = create_unified_search()
-                results = await search.search(query, platforms=platforms, max_results=10)
+                results = await search.search(
+                    query, platforms=platforms, max_results=10
+                )
                 progress.remove_task(task)
 
                 # Results table
@@ -168,7 +180,9 @@ class SynthesizerTUI:
                     )
 
                 console.print(table)
-                console.print(f"\n[green]Found {len(results.repositories)} repositories[/green]")
+                console.print(
+                    f"\n[green]Found {len(results.repositories)} repositories[/green]"
+                )
 
             except Exception as e:
                 progress.remove_task(task)
@@ -211,14 +225,16 @@ class SynthesizerTUI:
 
                 progress.remove_task(task)
 
-                console.print(Panel(
-                    f"[green]✅ Project assembled successfully![/green]\n\n"
-                    f"[bold]Name:[/bold] {project.name}\n"
-                    f"[bold]Path:[/bold] {project.base_path}\n"
-                    f"[bold]GitHub:[/bold] {project.github_repo_url or 'Not created'}",
-                    title="Success",
-                    border_style="green"
-                ))
+                console.print(
+                    Panel(
+                        f"[green]✅ Project assembled successfully![/green]\n\n"
+                        f"[bold]Name:[/bold] {project.name}\n"
+                        f"[bold]Path:[/bold] {project.base_path}\n"
+                        f"[bold]GitHub:[/bold] {project.github_repo_url or 'Not created'}",
+                        title="Success",
+                        border_style="green",
+                    )
+                )
 
             except Exception as e:
                 progress.remove_task(task)
@@ -245,7 +261,9 @@ class SynthesizerTUI:
 
         console.print(menu)
 
-        choice = Prompt.ask("\n[cyan]Select agent[/cyan]", choices=["1", "2", "3", "4", "b"])
+        choice = Prompt.ask(
+            "\n[cyan]Select agent[/cyan]", choices=["1", "2", "3", "4", "b"]
+        )
 
         if choice == "b":
             return
@@ -265,20 +283,25 @@ class SynthesizerTUI:
         if not topic:
             return
 
-        with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+        with Progress(
+            SpinnerColumn(), TextColumn("{task.description}"), console=console
+        ) as progress:
             task = progress.add_task("Researching...", total=None)
 
             try:
                 from src.agents import ResearchAgent
+
                 agent = ResearchAgent()
                 result = await agent.research(topic)
                 progress.remove_task(task)
 
-                console.print(Panel(
-                    f"[bold]Research Results:[/bold]\n\n{result.get('output', 'No output')}",
-                    title="Research Agent",
-                    border_style="blue"
-                ))
+                console.print(
+                    Panel(
+                        f"[bold]Research Results:[/bold]\n\n{result.get('output', 'No output')}",
+                        title="Research Agent",
+                        border_style="blue",
+                    )
+                )
             except Exception as e:
                 progress.remove_task(task)
                 console.print(f"[red]Error: {e}[/red]")
@@ -291,20 +314,25 @@ class SynthesizerTUI:
         if not idea:
             return
 
-        with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+        with Progress(
+            SpinnerColumn(), TextColumn("{task.description}"), console=console
+        ) as progress:
             task = progress.add_task("Planning project...", total=None)
 
             try:
                 from src.agents import SynthesisAgent
+
                 agent = SynthesisAgent()
                 result = await agent._plan_project(idea)
                 progress.remove_task(task)
 
-                console.print(Panel(
-                    f"[bold]Project Plan:[/bold]\n\n{result}",
-                    title="Synthesis Agent",
-                    border_style="green"
-                ))
+                console.print(
+                    Panel(
+                        f"[bold]Project Plan:[/bold]\n\n{result}",
+                        title="Synthesis Agent",
+                        border_style="green",
+                    )
+                )
             except Exception as e:
                 progress.remove_task(task)
                 console.print(f"[red]Error: {e}[/red]")
@@ -322,18 +350,23 @@ class SynthesizerTUI:
 
         try:
             from src.agents import CodeAgent
+
             agent = CodeAgent()
 
             if choice == "1":
                 desc = Prompt.ask("[cyan]What should the code do?[/cyan]")
                 lang = Prompt.ask("[cyan]Language[/cyan]", default="python")
 
-                with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+                with Progress(
+                    SpinnerColumn(), TextColumn("{task.description}"), console=console
+                ) as progress:
                     task = progress.add_task("Generating...", total=None)
                     code = await agent.generate(desc, lang)
                     progress.remove_task(task)
 
-                console.print(Panel(Syntax(code, lang, theme="monokai"), title="Generated Code"))
+                console.print(
+                    Panel(Syntax(code, lang, theme="monokai"), title="Generated Code")
+                )
 
             elif choice == "2":
                 console.print("[cyan]Paste code (end with empty line):[/cyan]")
@@ -347,12 +380,16 @@ class SynthesizerTUI:
 
                 error = Prompt.ask("[cyan]Error message[/cyan]")
 
-                with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+                with Progress(
+                    SpinnerColumn(), TextColumn("{task.description}"), console=console
+                ) as progress:
                     task = progress.add_task("Fixing...", total=None)
                     fixed = await agent.fix(code, error)
                     progress.remove_task(task)
 
-                console.print(Panel(Syntax(fixed, "python", theme="monokai"), title="Fixed Code"))
+                console.print(
+                    Panel(Syntax(fixed, "python", theme="monokai"), title="Fixed Code")
+                )
 
         except Exception as e:
             console.print(f"[red]Error: {e}[/red]")
@@ -370,9 +407,12 @@ class SynthesizerTUI:
 
         try:
             from src.agents import AutomationAgent
+
             agent = AutomationAgent()
 
-            with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+            with Progress(
+                SpinnerColumn(), TextColumn("{task.description}"), console=console
+            ) as progress:
                 if choice == "1":
                     task = progress.add_task("Checking health...", total=None)
                     result = await agent._check_health()
@@ -399,6 +439,7 @@ class SynthesizerTUI:
         console.print("\n[bold]⚙️ Settings[/bold]\n")
 
         from src.core.settings_manager import SettingsTab, get_settings_manager
+
         manager = get_settings_manager()
 
         menu = Table(show_header=False, box=None)
@@ -421,7 +462,10 @@ class SynthesizerTUI:
 
         console.print(menu)
 
-        choice = Prompt.ask("\n[cyan]Select tab[/cyan]", choices=["1", "2", "3", "4", "5", "6", "7", "b"])
+        choice = Prompt.ask(
+            "\n[cyan]Select tab[/cyan]",
+            choices=["1", "2", "3", "4", "5", "6", "7", "b"],
+        )
 
         if choice == "b":
             return
@@ -461,7 +505,9 @@ class SynthesizerTUI:
                 if isinstance(current, bool):
                     new_value = Confirm.ask(f"Enable {setting_name}?", default=current)
                 else:
-                    new_value = Prompt.ask(f"New value for {setting_name}", default=str(current))
+                    new_value = Prompt.ask(
+                        f"New value for {setting_name}", default=str(current)
+                    )
                     # Convert type
                     if isinstance(current, int):
                         new_value = int(new_value)
@@ -481,6 +527,7 @@ class SynthesizerTUI:
 
         try:
             from src.automation.metrics import get_metrics_collector
+
             collector = get_metrics_collector()
             summary = collector.get_summary()
 
@@ -505,7 +552,9 @@ class SynthesizerTUI:
             else:
                 console.print("[dim]No metrics recorded yet[/dim]")
 
-            console.print(f"\n[bold]Uptime:[/bold] {summary.get('uptime_seconds', 0):.0f}s")
+            console.print(
+                f"\n[bold]Uptime:[/bold] {summary.get('uptime_seconds', 0):.0f}s"
+            )
 
         except Exception as e:
             console.print(f"[red]Error: {e}[/red]")
@@ -545,6 +594,7 @@ class SynthesizerTUI:
         if choice == "1":
             try:
                 from src.workflows import N8NClient
+
                 client = N8NClient()
                 status = await client.health_check()
                 console.print(f"[green]n8n Status: {status}[/green]")
@@ -562,6 +612,7 @@ class SynthesizerTUI:
 
         try:
             from src.llm import LMStudioClient
+
             client = LMStudioClient()
 
             history = []
@@ -574,12 +625,14 @@ class SynthesizerTUI:
 
                 history.append({"role": "user", "content": user_input})
 
-                with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+                with Progress(
+                    SpinnerColumn(), TextColumn("{task.description}"), console=console
+                ) as progress:
                     task = progress.add_task("Thinking...", total=None)
 
                     response = await client.complete(
                         user_input,
-                        system_prompt="You are a helpful AI assistant for the AI Project Synthesizer."
+                        system_prompt="You are a helpful AI assistant for the AI Project Synthesizer.",
                     )
 
                     progress.remove_task(task)

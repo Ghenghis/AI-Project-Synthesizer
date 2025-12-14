@@ -32,34 +32,46 @@ _memory_system: MemorySystem | None = None
 
 class AddMemoryRequest(BaseModel):
     """Request to add a memory."""
+
     content: str = Field(description="The memory content to store")
     category: str = Field(
         default="context",
-        description="Memory category: preference, decision, pattern, error_solution, context, learning, component, workflow"
+        description="Memory category: preference, decision, pattern, error_solution, context, learning, component, workflow",
     )
     tags: list[str] = Field(default=[], description="Tags for categorization")
-    agent_id: str | None = Field(default=None, description="ID of the agent adding the memory")
+    agent_id: str | None = Field(
+        default=None, description="ID of the agent adding the memory"
+    )
     session_id: str | None = Field(default=None, description="Current session ID")
-    importance: float = Field(default=0.5, ge=0.0, le=1.0, description="Importance score (0-1)")
+    importance: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Importance score (0-1)"
+    )
 
 
 class SearchMemoryRequest(BaseModel):
     """Request to search memories."""
+
     query: str = Field(description="Search query")
     category: str | None = Field(default=None, description="Filter by category")
-    limit: int = Field(default=10, ge=1, le=100, description="Maximum results to return")
+    limit: int = Field(
+        default=10, ge=1, le=100, description="Maximum results to return"
+    )
     agent_id: str | None = Field(default=None, description="Filter by agent ID")
 
 
 class ConsolidateRequest(BaseModel):
     """Request to consolidate memories."""
+
     category: str | None = Field(default=None, description="Category to consolidate")
     agent_id: str | None = Field(default=None, description="Agent to consolidate for")
 
 
 class ExportRequest(BaseModel):
     """Request to export memories."""
-    format: str = Field(default="json", description="Export format: json, csv, markdown")
+
+    format: str = Field(
+        default="json", description="Export format: json, csv, markdown"
+    )
     category: str | None = Field(default=None, description="Filter by category")
     agent_id: str | None = Field(default=None, description="Filter by agent ID")
 
@@ -158,16 +170,20 @@ async def search_memory(request: SearchMemoryRequest) -> dict[str, Any]:
         # Format results for MCP response
         formatted_results = []
         for result in results:
-            formatted_results.append({
-                "id": result.get("id"),
-                "content": result.get("memory", result.get("content", "")),
-                "category": result.get("metadata", {}).get("category", "unknown"),
-                "tags": result.get("metadata", {}).get("tags", []),
-                "created_at": result.get("metadata", {}).get("created_at", result.get("created_at", "")),
-                "importance": result.get("metadata", {}).get("importance", 0.5),
-                "agent_id": result.get("metadata", {}).get("agent_id"),
-                "relevance_score": result.get("score", 1.0),
-            })
+            formatted_results.append(
+                {
+                    "id": result.get("id"),
+                    "content": result.get("memory", result.get("content", "")),
+                    "category": result.get("metadata", {}).get("category", "unknown"),
+                    "tags": result.get("metadata", {}).get("tags", []),
+                    "created_at": result.get("metadata", {}).get(
+                        "created_at", result.get("created_at", "")
+                    ),
+                    "importance": result.get("metadata", {}).get("importance", 0.5),
+                    "agent_id": result.get("metadata", {}).get("agent_id"),
+                    "relevance_score": result.get("score", 1.0),
+                }
+            )
 
         return {
             "success": True,
@@ -211,13 +227,15 @@ async def get_memory(memory_id: str) -> dict[str, Any]:
                     "content": result.get("memory", result.get("content", "")),
                     "category": result.get("metadata", {}).get("category", "unknown"),
                     "tags": result.get("metadata", {}).get("tags", []),
-                    "created_at": result.get("metadata", {}).get("created_at", result.get("created_at", "")),
+                    "created_at": result.get("metadata", {}).get(
+                        "created_at", result.get("created_at", "")
+                    ),
                     "updated_at": result.get("metadata", {}).get("updated_at", ""),
                     "importance": result.get("metadata", {}).get("importance", 0.5),
                     "agent_id": result.get("metadata", {}).get("agent_id"),
                     "session_id": result.get("metadata", {}).get("session_id"),
                     "access_count": result.get("metadata", {}).get("access_count", 0),
-                }
+                },
             }
         else:
             return {
@@ -313,7 +331,9 @@ async def delete_memory(memory_id: str) -> dict[str, Any]:
 
 
 @mcp.tool()
-async def get_context_for_task(task_description: str, categories: list[str] | None = None) -> dict[str, Any]:
+async def get_context_for_task(
+    task_description: str, categories: list[str] | None = None
+) -> dict[str, Any]:
     """
     Get relevant memories for a specific task.
 
@@ -412,7 +432,9 @@ async def consolidate_memories(request: ConsolidateRequest) -> dict[str, Any]:
 
 
 @mcp.tool()
-async def get_memory_insights(agent_id: str | None = None, category: str | None = None) -> dict[str, Any]:
+async def get_memory_insights(
+    agent_id: str | None = None, category: str | None = None
+) -> dict[str, Any]:
     """
     Get insights and analytics about stored memories.
 
@@ -520,7 +542,9 @@ async def get_memory_statistics() -> dict[str, Any]:
 
 # Convenience methods for common memory types
 @mcp.tool()
-async def remember_preference(preference: str, tags: list[str] | None = None) -> dict[str, Any]:
+async def remember_preference(
+    preference: str, tags: list[str] | None = None
+) -> dict[str, Any]:
     """Remember a user preference."""
     request = AddMemoryRequest(
         content=preference,
@@ -532,7 +556,9 @@ async def remember_preference(preference: str, tags: list[str] | None = None) ->
 
 
 @mcp.tool()
-async def remember_error_solution(error: str, solution: str, tags: list[str] | None = None) -> dict[str, Any]:
+async def remember_error_solution(
+    error: str, solution: str, tags: list[str] | None = None
+) -> dict[str, Any]:
     """Remember an error and its solution."""
     content = f"Error: {error}\nSolution: {solution}"
     request = AddMemoryRequest(
@@ -545,7 +571,9 @@ async def remember_error_solution(error: str, solution: str, tags: list[str] | N
 
 
 @mcp.tool()
-async def remember_code_pattern(pattern: str, language: str | None = None, tags: list[str] | None = None) -> dict[str, Any]:
+async def remember_code_pattern(
+    pattern: str, language: str | None = None, tags: list[str] | None = None
+) -> dict[str, Any]:
     """Remember a reusable code pattern."""
     request = AddMemoryRequest(
         content=pattern,
@@ -600,7 +628,7 @@ if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     run_server(host=args.host, port=args.port)

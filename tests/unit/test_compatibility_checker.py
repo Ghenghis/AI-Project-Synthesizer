@@ -297,4 +297,3 @@ class TestCompatibilityMatrixSerialization:
         assert len(result["issues"]) == 1
         assert result["issues"][0]["severity"] == "error"
         assert result["issues"][0]["suggestion"] == "Use version resolution"
-

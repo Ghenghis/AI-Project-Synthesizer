@@ -31,7 +31,7 @@ class TestComponentHealth:
         health = ComponentHealth(
             name="test_component",
             status=HealthStatus.HEALTHY,
-            message="All systems operational"
+            message="All systems operational",
         )
         assert health.name == "test_component"
         assert health.status == HealthStatus.HEALTHY
@@ -39,9 +39,7 @@ class TestComponentHealth:
     def test_create_unhealthy_component(self):
         """Should create unhealthy component."""
         health = ComponentHealth(
-            name="database",
-            status=HealthStatus.UNHEALTHY,
-            message="Connection failed"
+            name="database", status=HealthStatus.UNHEALTHY, message="Connection failed"
         )
         assert health.status == HealthStatus.UNHEALTHY
         assert "Connection failed" in health.message
@@ -65,7 +63,7 @@ class TestHealthChecker:
     def test_has_check_all_method(self):
         """Should have check_all method."""
         checker = HealthChecker()
-        assert hasattr(checker, 'check_all')
+        assert hasattr(checker, "check_all")
 
 
 if __name__ == "__main__":

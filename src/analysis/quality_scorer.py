@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 class QualityScore:
     """Repository quality score breakdown."""
 
-    overall: float = 0.0           # 0.0-1.0 composite score
-    documentation: float = 0.0     # README, docstrings, comments
-    test_coverage: float = 0.0     # Test presence and coverage
-    code_quality: float = 0.0      # Linting, type hints, structure
-    ci_cd: float = 0.0            # CI/CD configuration
-    maintenance: float = 0.0       # Recent activity, issue handling
-    community: float = 0.0         # Stars, forks, contributors
+    overall: float = 0.0  # 0.0-1.0 composite score
+    documentation: float = 0.0  # README, docstrings, comments
+    test_coverage: float = 0.0  # Test presence and coverage
+    code_quality: float = 0.0  # Linting, type hints, structure
+    ci_cd: float = 0.0  # CI/CD configuration
+    maintenance: float = 0.0  # Recent activity, issue handling
+    community: float = 0.0  # Stars, forks, contributors
 
     # Detailed metrics
     has_readme: bool = False
@@ -157,12 +157,12 @@ class QualityScorer:
 
         # Calculate overall score
         score.overall = (
-            score.documentation * self.WEIGHTS["documentation"] +
-            score.test_coverage * self.WEIGHTS["test_coverage"] +
-            score.code_quality * self.WEIGHTS["code_quality"] +
-            score.ci_cd * self.WEIGHTS["ci_cd"] +
-            score.maintenance * self.WEIGHTS["maintenance"] +
-            score.community * self.WEIGHTS["community"]
+            score.documentation * self.WEIGHTS["documentation"]
+            + score.test_coverage * self.WEIGHTS["test_coverage"]
+            + score.code_quality * self.WEIGHTS["code_quality"]
+            + score.ci_cd * self.WEIGHTS["ci_cd"]
+            + score.maintenance * self.WEIGHTS["maintenance"]
+            + score.community * self.WEIGHTS["community"]
         )
 
         return score
@@ -222,7 +222,9 @@ class QualityScorer:
         for docs_dir in docs_dirs:
             docs_path = repo_path / docs_dir
             if docs_path.exists() and docs_path.is_dir():
-                doc_files = list(docs_path.rglob("*.md")) + list(docs_path.rglob("*.rst"))
+                doc_files = list(docs_path.rglob("*.md")) + list(
+                    docs_path.rglob("*.rst")
+                )
                 details["doc_count"] = len(doc_files)
                 score_points += min(2.0, len(doc_files) * 0.5)
                 break
@@ -331,9 +333,9 @@ class QualityScorer:
             try:
                 content = py_file.read_text(encoding="utf-8", errors="replace")
                 # Simple check for type hints
-                if re.search(r'def \w+\([^)]*:\s*\w+', content):
+                if re.search(r"def \w+\([^)]*:\s*\w+", content):
                     type_hint_count += 1
-                if re.search(r'->\s*\w+', content):
+                if re.search(r"->\s*\w+", content):
                     type_hint_count += 1
             except Exception as e:
                 logger.debug(f"Failed to analyze type hints in {py_file}: {e}")
@@ -344,8 +346,14 @@ class QualityScorer:
 
         # Check for linting configuration
         linting_configs = [
-            ".flake8", ".pylintrc", "pylintrc", ".ruff.toml",
-            "ruff.toml", ".eslintrc", ".eslintrc.js", ".eslintrc.json"
+            ".flake8",
+            ".pylintrc",
+            "pylintrc",
+            ".ruff.toml",
+            "ruff.toml",
+            ".eslintrc",
+            ".eslintrc.js",
+            ".eslintrc.json",
         ]
         for config in linting_configs:
             if (repo_path / config).exists():
@@ -420,7 +428,9 @@ class QualityScorer:
 
                 # Check workflow complexity for GitHub Actions
                 if provider == "github_actions" and full_path.is_dir():
-                    workflow_files = list(full_path.glob("*.yml")) + list(full_path.glob("*.yaml"))
+                    workflow_files = list(full_path.glob("*.yml")) + list(
+                        full_path.glob("*.yaml")
+                    )
                     if len(workflow_files) >= 2:
                         score_points += 2.0  # Multiple workflows
                 break
@@ -440,7 +450,7 @@ class QualityScorer:
         """Score maintenance based on repository metadata."""
         score = 0.5  # Base score
 
-        if hasattr(repo_info, 'updated_at') and repo_info.updated_at:
+        if hasattr(repo_info, "updated_at") and repo_info.updated_at:
             import math
             from datetime import datetime
 
@@ -470,14 +480,14 @@ class QualityScorer:
         """Score community adoption."""
         import math
 
-        stars = getattr(repo_info, 'stars', 0)
-        forks = getattr(repo_info, 'forks', 0)
+        stars = getattr(repo_info, "stars", 0)
+        forks = getattr(repo_info, "forks", 0)
 
         # Log-scaled scoring
         star_score = min(1.0, math.log10(stars + 1) / 5) if stars > 0 else 0
         fork_score = min(1.0, math.log10(forks + 1) / 4) if forks > 0 else 0
 
-        return (star_score * 0.7 + fork_score * 0.3)
+        return star_score * 0.7 + fork_score * 0.3
 
     async def _check_docstrings(self, repo_path: Path) -> float:
         """Check docstring coverage in Python files."""
@@ -493,11 +503,13 @@ class QualityScorer:
                 content = py_file.read_text(encoding="utf-8", errors="replace")
 
                 # Check for module docstring
-                if content.strip().startswith('"""') or content.strip().startswith("'''"):
+                if content.strip().startswith('"""') or content.strip().startswith(
+                    "'''"
+                ):
                     has_docstring += 1
 
                 # Check for function/class docstrings
-                func_count = len(re.findall(r'\ndef \w+', content))
+                func_count = len(re.findall(r"\ndef \w+", content))
                 doc_count = len(re.findall(r'"""[^"]+"""', content))
 
                 if func_count > 0 and doc_count >= func_count * 0.5:
@@ -512,8 +524,15 @@ class QualityScorer:
     def _should_skip(self, path: Path) -> bool:
         """Check if path should be skipped."""
         skip_patterns = {
-            "__pycache__", "node_modules", "venv", ".venv",
-            ".git", "dist", "build", ".tox", ".eggs",
+            "__pycache__",
+            "node_modules",
+            "venv",
+            ".venv",
+            ".git",
+            "dist",
+            "build",
+            ".tox",
+            ".eggs",
         }
         return any(p in path.parts for p in skip_patterns)
 

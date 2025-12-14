@@ -29,6 +29,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class Voice:
     """ElevenLabs voice information."""
+
     voice_id: str
     name: str
     category: str  # premade, cloned, generated
@@ -44,6 +45,7 @@ class Voice:
 @dataclass
 class VoiceSettings:
     """Voice generation settings."""
+
     stability: float = 0.5
     similarity_boost: float = 0.75
     style: float = 0.0
@@ -52,13 +54,23 @@ class VoiceSettings:
 
 # Popular pre-made voices
 PREMADE_VOICES = {
-    "rachel": Voice("21m00Tcm4TlvDq8ikWAM", "Rachel", "premade", "Calm, professional female"),
-    "domi": Voice("AZnzlk1XvdvUeBnXmlld", "Domi", "premade", "Strong, confident female"),
+    "rachel": Voice(
+        "21m00Tcm4TlvDq8ikWAM", "Rachel", "premade", "Calm, professional female"
+    ),
+    "domi": Voice(
+        "AZnzlk1XvdvUeBnXmlld", "Domi", "premade", "Strong, confident female"
+    ),
     "bella": Voice("EXAVITQu4vr4xnSDxMaL", "Bella", "premade", "Soft, gentle female"),
-    "antoni": Voice("ErXwobaYiN019PkySvjV", "Antoni", "premade", "Well-rounded, warm male"),
-    "elli": Voice("MF3mGyEYCl7XYWbV9V6O", "Elli", "premade", "Young, expressive female"),
+    "antoni": Voice(
+        "ErXwobaYiN019PkySvjV", "Antoni", "premade", "Well-rounded, warm male"
+    ),
+    "elli": Voice(
+        "MF3mGyEYCl7XYWbV9V6O", "Elli", "premade", "Young, expressive female"
+    ),
     "josh": Voice("TxGEqnHWrfWFTfGW9XjX", "Josh", "premade", "Deep, narrative male"),
-    "arnold": Voice("VR6AewLTigWG4xSOukaG", "Arnold", "premade", "Crisp, authoritative male"),
+    "arnold": Voice(
+        "VR6AewLTigWG4xSOukaG", "Arnold", "premade", "Crisp, authoritative male"
+    ),
     "adam": Voice("pNInz6obpgDQGcFmaJgB", "Adam", "premade", "Deep, warm male"),
     "sam": Voice("yoZ06aMxZJJ28mfd3POQ", "Sam", "premade", "Dynamic, expressive male"),
 }
@@ -96,7 +108,9 @@ class ElevenLabsClient:
     def __init__(self, api_key: str | None = None):
         """Initialize ElevenLabs client."""
         settings = get_settings()
-        self._api_key = api_key or settings.elevenlabs.elevenlabs_api_key.get_secret_value()
+        self._api_key = (
+            api_key or settings.elevenlabs.elevenlabs_api_key.get_secret_value()
+        )
 
         if not self._api_key:
             secure_logger.warning("ElevenLabs API key not configured")

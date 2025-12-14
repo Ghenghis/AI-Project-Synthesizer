@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConflictInfo:
     """Detailed information about a conflict."""
+
     package_name: str
     conflict_type: str  # "version", "extras", "python_version"
     sources: dict[str, str]  # source -> version_spec
@@ -27,6 +28,7 @@ class ConflictInfo:
 @dataclass
 class ConflictReport:
     """Complete conflict analysis report."""
+
     total_packages: int
     conflicting_packages: int
     conflicts: list[ConflictInfo]
@@ -78,9 +80,7 @@ class ConflictDetector:
     """
 
     def detect(
-        self,
-        graphs: list[DependencyGraph],
-        sources: list[str] = None
+        self, graphs: list[DependencyGraph], sources: list[str] = None
     ) -> ConflictReport:
         """
         Detect conflicts between dependency graphs.
@@ -135,9 +135,7 @@ class ConflictDetector:
         )
 
     def _check_version_conflict(
-        self,
-        package_name: str,
-        source_deps: dict[str, Dependency]
+        self, package_name: str, source_deps: dict[str, Dependency]
     ) -> ConflictInfo | None:
         """Check for version conflicts."""
         version_specs = {
@@ -181,9 +179,7 @@ class ConflictDetector:
         return None
 
     def _check_extras_conflict(
-        self,
-        package_name: str,
-        source_deps: dict[str, Dependency]
+        self, package_name: str, source_deps: dict[str, Dependency]
     ) -> ConflictInfo | None:
         """Check for extras conflicts (just informational)."""
         all_extras: set[str] = set()
@@ -192,9 +188,7 @@ class ConflictDetector:
 
         if len(all_extras) > 0:
             extras_by_source = {
-                source: dep.extras
-                for source, dep in source_deps.items()
-                if dep.extras
+                source: dep.extras for source, dep in source_deps.items() if dep.extras
             }
 
             if len(extras_by_source) > 1:
@@ -239,6 +233,7 @@ class ConflictDetector:
 
     def _version_greater(self, v1: str, v2: str) -> bool:
         """Check if v1 > v2."""
+
         def to_tuple(v: str) -> tuple:
             parts = []
             for p in v.split("."):

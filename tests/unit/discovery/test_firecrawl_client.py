@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "testing"
 
 try:
     from src.discovery.firecrawl_client import FirecrawlFormat, FirecrawlMode
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for discovery.firecrawl_client: {e}")
@@ -38,6 +39,5 @@ class TestFirecrawlMode:
         assert FirecrawlMode.CRAWL.value == "crawl"
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

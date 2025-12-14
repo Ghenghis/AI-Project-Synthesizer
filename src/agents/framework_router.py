@@ -48,6 +48,7 @@ secure_logger = get_secure_logger(__name__)
 
 class TaskType(Enum):
     """Types of tasks that can be executed."""
+
     CODE_REVIEW = "code_review"
     QUICK_FIX = "quick_fix"
     TASK_DECOMPOSITION = "task_decomposition"
@@ -61,14 +62,16 @@ class TaskType(Enum):
 
 class TaskComplexity(Enum):
     """Complexity levels for tasks."""
-    SIMPLE = "simple"      # Single agent, quick response
-    MEDIUM = "medium"      # May require multiple steps
-    COMPLEX = "complex"    # Requires multiple agents or workflows
+
+    SIMPLE = "simple"  # Single agent, quick response
+    MEDIUM = "medium"  # May require multiple steps
+    COMPLEX = "complex"  # Requires multiple agents or workflows
     ENTERPRISE = "enterprise"  # Large-scale, full team needed
 
 
 class FrameworkType(Enum):
     """Available agent frameworks."""
+
     AUTOGEN = "autogen"
     SWARM = "swarm"
     LANGGRAPH = "langgraph"
@@ -78,6 +81,7 @@ class FrameworkType(Enum):
 @dataclass
 class TaskRequest:
     """A unified task request for any framework."""
+
     task_id: str
     task_type: TaskType
     description: str
@@ -93,6 +97,7 @@ class TaskRequest:
 @dataclass
 class AgentResult:
     """Unified result from any agent framework."""
+
     task_id: str
     success: bool
     output: str
@@ -126,7 +131,7 @@ class FrameworkRouter:
     def __init__(
         self,
         voice_manager: VoiceManager | None = None,
-        llm_router: LiteLLMRouter | None = None
+        llm_router: LiteLLMRouter | None = None,
     ):
         """
         Initialize the framework router.
@@ -161,7 +166,7 @@ class FrameworkRouter:
             self.integrations[FrameworkType.AUTOGEN] = AutoGenIntegration(
                 voice_manager=self.voice_manager,
                 enable_voice_output=False,
-                llm_router=self.llm_router
+                llm_router=self.llm_router,
             )
             secure_logger.info("AutoGen integration loaded")
         except Exception as e:
@@ -172,7 +177,7 @@ class FrameworkRouter:
             self.integrations[FrameworkType.SWARM] = SwarmIntegration(
                 voice_manager=self.voice_manager,
                 enable_voice_output=False,
-                llm_router=self.llm_router
+                llm_router=self.llm_router,
             )
             secure_logger.info("Swarm integration loaded")
         except Exception as e:
@@ -183,7 +188,7 @@ class FrameworkRouter:
             self.integrations[FrameworkType.LANGGRAPH] = LangGraphIntegration(
                 voice_manager=self.voice_manager,
                 enable_voice_output=False,
-                llm_router=self.llm_router
+                llm_router=self.llm_router,
             )
             secure_logger.info("LangGraph integration loaded")
         except Exception as e:
@@ -194,16 +199,13 @@ class FrameworkRouter:
             self.integrations[FrameworkType.CREWAI] = CrewAIIntegration(
                 voice_manager=self.voice_manager,
                 enable_voice_output=False,
-                llm_router=self.llm_router
+                llm_router=self.llm_router,
             )
             secure_logger.info("CrewAI integration loaded")
         except Exception as e:
             secure_logger.warning(f"Failed to load CrewAI: {e}")
 
-    def select_framework(
-        self,
-        task: TaskRequest
-    ) -> list[FrameworkType]:
+    def select_framework(self, task: TaskRequest) -> list[FrameworkType]:
         """
         Select the best framework(s) for a task.
 
@@ -224,27 +226,23 @@ class FrameworkRouter:
 
         # Sort by score (highest first)
         sorted_frameworks = sorted(
-            framework_scores.items(),
-            key=lambda x: x[1],
-            reverse=True
+            framework_scores.items(), key=lambda x: x[1], reverse=True
         )
 
         return [fw for fw, _ in sorted_frameworks]
 
     def _score_framework_for_task(
-        self,
-        framework: FrameworkType,
-        task: TaskRequest
+        self, framework: FrameworkType, task: TaskRequest
     ) -> float:
         """Score a framework's suitability for a task."""
         score = 0.0
 
         # Base scores for each framework
         base_scores = {
-            FrameworkType.AUTOGEN: 7.0,    # Good for complex analysis
-            FrameworkType.SWARM: 9.0,      # Excellent for quick tasks
+            FrameworkType.AUTOGEN: 7.0,  # Good for complex analysis
+            FrameworkType.SWARM: 9.0,  # Excellent for quick tasks
             FrameworkType.LANGGRAPH: 8.0,  # Great for workflows
-            FrameworkType.CREWAI: 6.0      # Best for large teams
+            FrameworkType.CREWAI: 6.0,  # Best for large teams
         }
 
         score = base_scores.get(framework, 0.0)
@@ -253,23 +251,23 @@ class FrameworkRouter:
         task_type_bonus = {
             FrameworkType.AUTOGEN: {
                 TaskType.CODE_REVIEW: 3.0,
-                TaskType.SECURITY_AUDIT: 2.0
+                TaskType.SECURITY_AUDIT: 2.0,
             },
             FrameworkType.SWARM: {
                 TaskType.QUICK_FIX: 2.0,
                 TaskType.DOCUMENTATION: 1.5,
-                TaskType.TASK_DECOMPOSITION: 1.0
+                TaskType.TASK_DECOMPOSITION: 1.0,
             },
             FrameworkType.LANGGRAPH: {
                 TaskType.STATEFUL_WORKFLOW: 3.0,
                 TaskType.DEBUGGING: 2.0,
-                TaskType.FEATURE_DEVELOPMENT: 1.5
+                TaskType.FEATURE_DEVELOPMENT: 1.5,
             },
             FrameworkType.CREWAI: {
                 TaskType.TEAM_COLLABORATION: 3.0,
                 TaskType.FEATURE_DEVELOPMENT: 2.5,
-                TaskType.SECURITY_AUDIT: 2.0
-            }
+                TaskType.SECURITY_AUDIT: 2.0,
+            },
         }
 
         if framework in task_type_bonus:
@@ -325,7 +323,7 @@ class FrameworkRouter:
                 output="No suitable framework available",
                 framework_used=FrameworkType.AUTOGEN,  # Default
                 execution_time_ms=0.0,
-                error_message="All frameworks failed to initialize"
+                error_message="All frameworks failed to initialize",
             )
 
         # Try each framework in order
@@ -348,7 +346,9 @@ class FrameworkRouter:
                     return result
 
                 # Continue to next framework if this failed
-                secure_logger.warning(f"{framework.value} failed: {result.error_message}")
+                secure_logger.warning(
+                    f"{framework.value} failed: {result.error_message}"
+                )
 
             except Exception as e:
                 secure_logger.error(f"Framework {framework.value} crashed: {e}")
@@ -361,13 +361,11 @@ class FrameworkRouter:
             output="All frameworks failed to execute the task",
             framework_used=frameworks[0] if frameworks else FrameworkType.AUTOGEN,
             execution_time_ms=0.0,
-            error_message="No framework could handle the task"
+            error_message="No framework could handle the task",
         )
 
     async def _execute_with_framework(
-        self,
-        framework: FrameworkType,
-        task: TaskRequest
+        self, framework: FrameworkType, task: TaskRequest
     ) -> AgentResult:
         """Execute a task with a specific framework."""
         start_time = asyncio.get_event_loop().time()
@@ -403,7 +401,7 @@ class FrameworkRouter:
                     output="Framework execution failed",
                     framework_used=framework,
                     execution_time_ms=execution_time,
-                    error_message="Exception during execution"
+                    error_message="Exception during execution",
                 )
 
             return result
@@ -417,7 +415,7 @@ class FrameworkRouter:
             autogen_result = await integration.review_code(
                 code=task.context.get("code", ""),
                 file_path=task.context.get("file_path", "unknown.py"),
-                context=task.description
+                context=task.description,
             )
 
             return AgentResult(
@@ -428,10 +426,10 @@ class FrameworkRouter:
                 execution_time_ms=0.0,  # Will be set by caller
                 metadata={
                     "security_issues": autogen_result.security_issues,
-                    "suggestions": autogen_result.suggestions
+                    "suggestions": autogen_result.suggestions,
                 },
                 quality_score=autogen_result.code_quality_score,
-                agent_count=2  # Code reviewer + security analyst
+                agent_count=2,  # Code reviewer + security analyst
             )
         else:
             # Default fallback
@@ -441,7 +439,7 @@ class FrameworkRouter:
                 output="AutoGen only supports code review tasks",
                 framework_used=FrameworkType.AUTOGEN,
                 execution_time_ms=0.0,
-                error_message="Unsupported task type for AutoGen"
+                error_message="Unsupported task type for AutoGen",
             )
 
     async def _execute_with_swarm(self, task: TaskRequest) -> AgentResult:
@@ -452,7 +450,7 @@ class FrameworkRouter:
         if task.task_type == TaskType.QUICK_FIX:
             swarm_result = await integration.quick_fix(
                 code=task.context.get("code", ""),
-                error_message=task.context.get("error")
+                error_message=task.context.get("error"),
             )
 
             return AgentResult(
@@ -462,13 +460,13 @@ class FrameworkRouter:
                 framework_used=FrameworkType.SWARM,
                 execution_time_ms=0.0,
                 quality_score=8.0,  # Assume good quality for quick fixes
-                agent_count=1
+                agent_count=1,
             )
 
         elif task.task_type == TaskType.DOCUMENTATION:
             swarm_result = await integration.generate_docs(
                 code=task.context.get("code", ""),
-                doc_type=task.context.get("doc_type", "docstring")
+                doc_type=task.context.get("doc_type", "docstring"),
             )
 
             return AgentResult(
@@ -478,13 +476,12 @@ class FrameworkRouter:
                 framework_used=FrameworkType.SWARM,
                 execution_time_ms=0.0,
                 quality_score=7.5,
-                agent_count=1
+                agent_count=1,
             )
 
         elif task.task_type == TaskType.TASK_DECOMPOSITION:
             swarm_result = await integration.quick_handoff(
-                agent_name="task_decomposer",
-                message=task.description
+                agent_name="task_decomposer", message=task.description
             )
 
             return AgentResult(
@@ -495,13 +492,12 @@ class FrameworkRouter:
                 execution_time_ms=0.0,
                 metadata={"handoffs": swarm_result.handoff_count},
                 quality_score=7.0,
-                agent_count=1 + swarm_result.handoff_count
+                agent_count=1 + swarm_result.handoff_count,
             )
         else:
             # Try general handoff
             swarm_result = await integration.quick_handoff(
-                agent_name="code_helper",
-                message=task.description
+                agent_name="code_helper", message=task.description
             )
 
             return AgentResult(
@@ -512,7 +508,7 @@ class FrameworkRouter:
                 execution_time_ms=0.0,
                 metadata={"handoffs": swarm_result.handoff_count},
                 quality_score=6.5,
-                agent_count=1 + swarm_result.handoff_count
+                agent_count=1 + swarm_result.handoff_count,
             )
 
     async def _execute_with_langgraph(self, task: TaskRequest) -> AgentResult:
@@ -524,7 +520,7 @@ class FrameworkRouter:
             TaskType.CODE_REVIEW: "code_review",
             TaskType.TASK_DECOMPOSITION: "task_decomposition",
             TaskType.DOCUMENTATION: "documentation",
-            TaskType.DEBUGGING: "debug"
+            TaskType.DEBUGGING: "debug",
         }
 
         workflow_name = workflow_map.get(task.task_type, "code_review")
@@ -532,14 +528,16 @@ class FrameworkRouter:
         langgraph_result = await integration.run_workflow(
             workflow_name=workflow_name,
             task_description=task.description,
-            context=task.context
+            context=task.context,
         )
 
         # Extract output from final state
         output = "Workflow completed"
         if langgraph_result.final_state.get("results"):
             if langgraph_result.final_state["results"].get("report"):
-                output = langgraph_result.final_state["results"]["report"].get("summary", output)
+                output = langgraph_result.final_state["results"]["report"].get(
+                    "summary", output
+                )
             elif langgraph_result.final_state["results"].get("steps"):
                 output = "\n".join(langgraph_result.final_state["results"]["steps"])
 
@@ -552,12 +550,12 @@ class FrameworkRouter:
             metadata={
                 "status": langgraph_result.status.value,
                 "steps_completed": langgraph_result.steps_completed,
-                "total_steps": langgraph_result.total_steps
+                "total_steps": langgraph_result.total_steps,
             },
             quality_score=8.0 if langgraph_result.status.value == "completed" else 4.0,
             checkpoint_count=langgraph_result.checkpoints_created,
             human_interventions=langgraph_result.human_interventions,
-            agent_count=langgraph_result.total_steps
+            agent_count=langgraph_result.total_steps,
         )
 
     async def _execute_with_crewai(self, task: TaskRequest) -> AgentResult:
@@ -568,7 +566,7 @@ class FrameworkRouter:
         if task.task_type == TaskType.FEATURE_DEVELOPMENT:
             crewai_result = await integration.create_feature(
                 feature_description=task.description,
-                requirements=task.context.get("requirements", [])
+                requirements=task.context.get("requirements", []),
             )
 
             return AgentResult(
@@ -579,13 +577,13 @@ class FrameworkRouter:
                 execution_time_ms=crewai_result.execution_time_ms,
                 metadata={"team": "development"},
                 quality_score=crewai_result.quality_score,
-                agent_count=4  # Development team size
+                agent_count=4,  # Development team size
             )
 
         elif task.task_type == TaskType.SECURITY_AUDIT:
             crewai_result = await integration.audit_security(
                 codebase_description=task.description,
-                focus_areas=task.context.get("focus_areas", [])
+                focus_areas=task.context.get("focus_areas", []),
             )
 
             return AgentResult(
@@ -596,13 +594,13 @@ class FrameworkRouter:
                 execution_time_ms=crewai_result.execution_time_ms,
                 metadata={"team": "security_audit"},
                 quality_score=crewai_result.quality_score,
-                agent_count=4  # Security team size
+                agent_count=4,  # Security team size
             )
 
         elif task.task_type == TaskType.DOCUMENTATION:
             crewai_result = await integration.generate_documentation(
                 project_description=task.description,
-                doc_type=task.context.get("doc_type", "user_guide")
+                doc_type=task.context.get("doc_type", "user_guide"),
             )
 
             return AgentResult(
@@ -613,13 +611,12 @@ class FrameworkRouter:
                 execution_time_ms=crewai_result.execution_time_ms,
                 metadata={"team": "documentation"},
                 quality_score=crewai_result.quality_score,
-                agent_count=4  # Documentation team size
+                agent_count=4,  # Documentation team size
             )
         else:
             # Default to development team
             crewai_result = await integration.create_feature(
-                feature_description=task.description,
-                requirements=[]
+                feature_description=task.description, requirements=[]
             )
 
             return AgentResult(
@@ -630,13 +627,11 @@ class FrameworkRouter:
                 execution_time_ms=crewai_result.execution_time_ms,
                 metadata={"team": "development"},
                 quality_score=crewai_result.quality_score,
-                agent_count=4
+                agent_count=4,
             )
 
     def _update_performance_metrics(
-        self,
-        framework: FrameworkType,
-        result: AgentResult
+        self, framework: FrameworkType, result: AgentResult
     ):
         """Update performance metrics for a framework."""
         metrics = self.framework_performance[framework]
@@ -651,8 +646,7 @@ class FrameworkRouter:
         else:
             current_success = 100.0 if result.success else 0.0
             metrics["success_rate"] = (
-                alpha * current_success +
-                (1 - alpha) * metrics["success_rate"]
+                alpha * current_success + (1 - alpha) * metrics["success_rate"]
             )
 
         # Update average time (exponential moving average)
@@ -660,8 +654,7 @@ class FrameworkRouter:
             metrics["avg_time"] = result.execution_time_ms
         else:
             metrics["avg_time"] = (
-                alpha * result.execution_time_ms +
-                (1 - alpha) * metrics["avg_time"]
+                alpha * result.execution_time_ms + (1 - alpha) * metrics["avg_time"]
             )
 
     async def get_framework_status(self) -> dict[str, Any]:
@@ -675,17 +668,19 @@ class FrameworkRouter:
                 "available": integration is not None,
                 "usage_count": metrics["usage_count"],
                 "success_rate": metrics["success_rate"],
-                "average_time_ms": metrics["avg_time"]
+                "average_time_ms": metrics["avg_time"],
             }
 
             # Get framework-specific stats
             if integration:
                 try:
-                    if hasattr(integration, 'get_statistics'):
+                    if hasattr(integration, "get_statistics"):
                         fw_stats = integration.get_statistics()
                         status[framework.value]["framework_stats"] = fw_stats
                 except Exception as e:
-                    secure_logger.warning(f"Failed to get stats for {framework.value}: {e}")
+                    secure_logger.warning(
+                        f"Failed to get stats for {framework.value}: {e}"
+                    )
 
         return status
 
@@ -697,7 +692,8 @@ class FrameworkRouter:
         """Get the historically best framework for a task type."""
         # Filter history by task type
         relevant_results = [
-            r for r in self.execution_history
+            r
+            for r in self.execution_history
             if r.metadata.get("task_type") == task_type.value
         ]
 
@@ -707,7 +703,7 @@ class FrameworkRouter:
                 TaskType.CODE_REVIEW: FrameworkType.AUTOGEN,
                 TaskType.QUICK_FIX: FrameworkType.SWARM,
                 TaskType.STATEFUL_WORKFLOW: FrameworkType.LANGGRAPH,
-                TaskType.TEAM_COLLABORATION: FrameworkType.CREWAI
+                TaskType.TEAM_COLLABORATION: FrameworkType.CREWAI,
             }
             return defaults.get(task_type, FrameworkType.SWARM)
 
@@ -741,8 +737,7 @@ class FrameworkRouter:
 
 # Factory function
 async def create_framework_router(
-    voice_manager: VoiceManager | None = None,
-    llm_router: LiteLLMRouter | None = None
+    voice_manager: VoiceManager | None = None, llm_router: LiteLLMRouter | None = None
 ) -> FrameworkRouter:
     """
     Create and initialize the framework router.
@@ -754,16 +749,15 @@ async def create_framework_router(
     Returns:
         Initialized FrameworkRouter
     """
-    router = FrameworkRouter(
-        voice_manager=voice_manager,
-        llm_router=llm_router
-    )
+    router = FrameworkRouter(voice_manager=voice_manager, llm_router=llm_router)
 
     # Test that at least one framework is available
     if not router.integrations:
         raise RuntimeError("No agent frameworks could be initialized")
 
-    secure_logger.info(f"Framework router created with {len(router.integrations)} frameworks")
+    secure_logger.info(
+        f"Framework router created with {len(router.integrations)} frameworks"
+    )
     return router
 
 
@@ -802,7 +796,7 @@ async def main():
             description="Review this code",
             complexity=TaskComplexity.MEDIUM,
             context={"code": args.code_review, "file_path": "test.py"},
-            force_framework=FrameworkType(args.framework) if args.framework else None
+            force_framework=FrameworkType(args.framework) if args.framework else None,
         )
 
         print("Executing code review...")
@@ -821,7 +815,7 @@ async def main():
             description="Fix this code",
             complexity=TaskComplexity.SIMPLE,
             context={"code": args.quick_fix},
-            force_framework=FrameworkType(args.framework) if args.framework else None
+            force_framework=FrameworkType(args.framework) if args.framework else None,
         )
 
         print("Executing quick fix...")
@@ -837,7 +831,7 @@ async def main():
             task_type=TaskType.TASK_DECOMPOSITION,
             description=args.task,
             complexity=TaskComplexity.MEDIUM,
-            force_framework=FrameworkType(args.framework) if args.framework else None
+            force_framework=FrameworkType(args.framework) if args.framework else None,
         )
 
         print(f"Executing task: {args.task}")
@@ -852,8 +846,10 @@ async def main():
         if history:
             print("\nRecent Executions:")
             for result in history:
-                print(f"  {result.task_id}: {result.framework_used.value} - "
-                      f"{'✓' if result.success else '✗'} ({result.quality_score:.1f}/10)")
+                print(
+                    f"  {result.task_id}: {result.framework_used.value} - "
+                    f"{'✓' if result.success else '✗'} ({result.quality_score:.1f}/10)"
+                )
         else:
             print("No execution history")
 

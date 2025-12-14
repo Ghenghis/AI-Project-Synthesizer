@@ -31,6 +31,7 @@ secure_logger = get_secure_logger(__name__)
 
 class GitLabVisibility(Enum):
     """Project visibility levels."""
+
     PRIVATE = "private"
     INTERNAL = "internal"
     PUBLIC = "public"
@@ -38,6 +39,7 @@ class GitLabVisibility(Enum):
 
 class GitLabState(Enum):
     """Issue/MR state."""
+
     OPENED = "opened"
     CLOSED = "closed"
     MERGED = "merged"
@@ -46,6 +48,7 @@ class GitLabState(Enum):
 
 class GitLabSort(Enum):
     """Sort options."""
+
     CREATED = "created_at"
     UPDATED = "updated_at"
     NAME = "name"
@@ -57,6 +60,7 @@ class GitLabSort(Enum):
 @dataclass
 class GitLabProject:
     """GitLab project representation."""
+
     id: int
     name: str
     path: str
@@ -80,6 +84,7 @@ class GitLabProject:
 @dataclass
 class GitLabIssue:
     """GitLab issue representation."""
+
     id: int
     iid: int
     title: str
@@ -99,6 +104,7 @@ class GitLabIssue:
 @dataclass
 class GitLabMergeRequest:
     """GitLab merge request representation."""
+
     id: int
     iid: int
     title: str
@@ -118,6 +124,7 @@ class GitLabMergeRequest:
 @dataclass
 class GitLabPipeline:
     """GitLab CI/CD pipeline representation."""
+
     id: int
     sha: str
     ref: str
@@ -170,7 +177,9 @@ class GitLabClient:
         self._session: aiohttp.ClientSession | None = None
 
         if not self.token:
-            secure_logger.warning("No GitLab token provided. Some features will be limited.")
+            secure_logger.warning(
+                "No GitLab token provided. Some features will be limited."
+            )
 
         secure_logger.info(f"GitLab client initialized for {self.url}")
 
@@ -247,7 +256,9 @@ class GitLabClient:
             ) as response:
                 # Update rate limit info
                 if "RateLimit-Remaining" in response.headers:
-                    self.rate_limit_remaining = int(response.headers["RateLimit-Remaining"])
+                    self.rate_limit_remaining = int(
+                        response.headers["RateLimit-Remaining"]
+                    )
                 if "RateLimit-Reset" in response.headers:
                     self.rate_limit_reset = datetime.fromtimestamp(
                         int(response.headers["RateLimit-Reset"])
@@ -274,7 +285,9 @@ class GitLabClient:
         if self.rate_limit_remaining < 10:
             wait_time = (self.rate_limit_reset - datetime.now()).total_seconds()
             if wait_time > 0:
-                secure_logger.warning(f"Rate limit approaching. Waiting {wait_time:.1f}s")
+                secure_logger.warning(
+                    f"Rate limit approaching. Waiting {wait_time:.1f}s"
+                )
                 await asyncio.sleep(wait_time)
 
     async def _paginate(
@@ -611,7 +624,9 @@ class GitLabClient:
             labels=data.get("labels", []),
             created_at=datetime.fromisoformat(data["created_at"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),
-            closed_at=datetime.fromisoformat(data["closed_at"]) if data.get("closed_at") else None,
+            closed_at=datetime.fromisoformat(data["closed_at"])
+            if data.get("closed_at")
+            else None,
             due_date=data.get("due_date"),
             web_url=data["web_url"],
             milestone=data.get("milestone"),
@@ -679,7 +694,9 @@ class GitLabClient:
             target_branch=data["target_branch"],
             created_at=datetime.fromisoformat(data["created_at"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),
-            merged_at=datetime.fromisoformat(data["merged_at"]) if data.get("merged_at") else None,
+            merged_at=datetime.fromisoformat(data["merged_at"])
+            if data.get("merged_at")
+            else None,
             web_url=data["web_url"],
             labels=data.get("labels", []),
             changes=data.get("changes"),
@@ -800,7 +817,9 @@ class GitLabClient:
             "pipelines": {
                 "total": total_pipelines,
                 "successful": successful_pipelines,
-                "success_rate": successful_pipelines / total_pipelines if total_pipelines else 0,
+                "success_rate": successful_pipelines / total_pipelines
+                if total_pipelines
+                else 0,
             },
             "activity": {
                 "issues_per_month": self._calculate_monthly_rate(issues),
@@ -817,10 +836,10 @@ class GitLabClient:
         # Get creation dates
         dates = []
         for item in items:
-            if hasattr(item, 'created_at'):
+            if hasattr(item, "created_at"):
                 dates.append(item.created_at)
-            elif isinstance(item, dict) and 'created_at' in item:
-                dates.append(datetime.fromisoformat(item['created_at']))
+            elif isinstance(item, dict) and "created_at" in item:
+                dates.append(datetime.fromisoformat(item["created_at"]))
 
         if not dates:
             return 0.0
@@ -936,7 +955,9 @@ class GitLabClient:
         return {
             "remaining": self.rate_limit_remaining,
             "reset_at": self.rate_limit_reset.isoformat(),
-            "reset_in_seconds": max(0, (self.rate_limit_reset - datetime.now()).total_seconds()),
+            "reset_in_seconds": max(
+                0, (self.rate_limit_reset - datetime.now()).total_seconds()
+            ),
         }
 
 
@@ -1016,9 +1037,15 @@ async def main():
             # Get analytics
             analytics = await client.get_project_analytics(project.id)
             print("\n  Analytics:")
-            print(f"    Issues: {analytics['issues']['total']} ({analytics['issues']['open']} open)")
-            print(f"    MRs: {analytics['merge_requests']['total']} ({analytics['merge_requests']['merged']} merged)")
-            print(f"    Pipeline Success Rate: {analytics['pipelines']['success_rate']:.1%}")
+            print(
+                f"    Issues: {analytics['issues']['total']} ({analytics['issues']['open']} open)"
+            )
+            print(
+                f"    MRs: {analytics['merge_requests']['total']} ({analytics['merge_requests']['merged']} merged)"
+            )
+            print(
+                f"    Pipeline Success Rate: {analytics['pipelines']['success_rate']:.1%}"
+            )
 
             # Clone if requested
             if args.clone:

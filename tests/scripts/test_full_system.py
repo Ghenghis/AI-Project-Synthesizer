@@ -1,4 +1,5 @@
 """Test the full system - Assistant + Voice + Search."""
+
 import asyncio
 from pathlib import Path
 
@@ -18,7 +19,9 @@ async def test_voice():
     client = ElevenLabsClient()
 
     # Test TTS
-    text = "Hello! I'm your AI assistant. I can help you find and build amazing projects."
+    text = (
+        "Hello! I'm your AI assistant. I can help you find and build amazing projects."
+    )
     print(f"Generating voice for: '{text}'")
 
     try:
@@ -126,10 +129,12 @@ async def test_mcp_tools():
     print(f"Available voices: {[v['name'] for v in voices['voices']]}")
 
     # Test assistant_chat
-    result = await handle_assistant_chat({
-        "message": "Search for Python web frameworks on GitHub",
-        "voice_enabled": False,
-    })
+    result = await handle_assistant_chat(
+        {
+            "message": "Search for Python web frameworks on GitHub",
+            "voice_enabled": False,
+        }
+    )
 
     if result.get("success"):
         print("✅ MCP assistant_chat works!")
@@ -172,7 +177,9 @@ async def main():
         print(f"  {test}: {status}")
 
     all_passed = all(results.values())
-    print(f"\nOverall: {'✅ ALL TESTS PASSED' if all_passed else '❌ SOME TESTS FAILED'}")
+    print(
+        f"\nOverall: {'✅ ALL TESTS PASSED' if all_passed else '❌ SOME TESTS FAILED'}"
+    )
 
     return all_passed
 

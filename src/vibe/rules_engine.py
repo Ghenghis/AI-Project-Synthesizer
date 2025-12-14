@@ -23,6 +23,7 @@ from src.core.config import get_settings
 
 class RuleCategory(Enum):
     """Categories of rules."""
+
     SECURITY = "security"
     STYLE = "style"
     PROJECT = "project"
@@ -32,6 +33,7 @@ class RuleCategory(Enum):
 
 class RulePriority(Enum):
     """Priority levels for rules."""
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -41,6 +43,7 @@ class RulePriority(Enum):
 @dataclass
 class Rule:
     """Represents a single rule."""
+
     id: str
     name: str
     description: str
@@ -62,6 +65,7 @@ class Rule:
 @dataclass
 class RuleSet:
     """A collection of rules for a specific context."""
+
     name: str
     description: str
     rules: list[Rule]
@@ -106,7 +110,7 @@ class RulesEngine:
                 category=RuleCategory.SECURITY,
                 priority=RulePriority.CRITICAL,
                 pattern=r"(password|secret|key|token)\s*=\s*['\"][^'\"]{8,}['\"]",
-                tags={"security", "secrets", "credentials"}
+                tags={"security", "secrets", "credentials"},
             ),
             Rule(
                 id="sec_002",
@@ -116,7 +120,7 @@ class RulesEngine:
                 priority=RulePriority.CRITICAL,
                 pattern=r"f\"[^\"]*\{[^}]*\}[^\"]*SELECT|INSERT|UPDATE|DELETE",
                 action="Use parameterized queries or ORM",
-                tags={"security", "sql", "injection"}
+                tags={"security", "sql", "injection"},
             ),
             Rule(
                 id="sec_003",
@@ -125,7 +129,7 @@ class RulesEngine:
                 category=RuleCategory.SECURITY,
                 priority=RulePriority.HIGH,
                 conditions={"has_user_input": True},
-                tags={"security", "validation", "input"}
+                tags={"security", "validation", "input"},
             ),
             Rule(
                 id="sec_004",
@@ -134,7 +138,7 @@ class RulesEngine:
                 category=RuleCategory.SECURITY,
                 priority=RulePriority.CRITICAL,
                 pattern=r"\b(eval|exec)\s*\(",
-                tags={"security", "code_injection"}
+                tags={"security", "code_injection"},
             ),
             Rule(
                 id="sec_005",
@@ -144,8 +148,8 @@ class RulesEngine:
                 priority=RulePriority.HIGH,
                 pattern=r"http://(?!localhost)",
                 action="Replace with https://",
-                tags={"security", "https", "api"}
-            )
+                tags={"security", "https", "api"},
+            ),
         ]
 
         # Style rules
@@ -157,7 +161,7 @@ class RulesEngine:
                 category=RuleCategory.STYLE,
                 priority=RulePriority.MEDIUM,
                 conditions={"language": "python"},
-                tags={"style", "python", "types"}
+                tags={"style", "python", "types"},
             ),
             Rule(
                 id="style_002",
@@ -167,7 +171,7 @@ class RulesEngine:
                 priority=RulePriority.MEDIUM,
                 pattern=r"\b[a-z]\b\s*=",
                 action="Use descriptive names",
-                tags={"style", "naming"}
+                tags={"style", "naming"},
             ),
             Rule(
                 id="style_003",
@@ -176,7 +180,7 @@ class RulesEngine:
                 category=RuleCategory.STYLE,
                 priority=RulePriority.LOW,
                 conditions={"function_length": 50},
-                tags={"style", "complexity"}
+                tags={"style", "complexity"},
             ),
             Rule(
                 id="style_004",
@@ -185,8 +189,8 @@ class RulesEngine:
                 category=RuleCategory.STYLE,
                 priority=RulePriority.MEDIUM,
                 conditions={"is_public": True},
-                tags={"style", "documentation"}
-            )
+                tags={"style", "documentation"},
+            ),
         ]
 
         # Pattern rules
@@ -198,7 +202,7 @@ class RulesEngine:
                 category=RuleCategory.PATTERN,
                 priority=RulePriority.HIGH,
                 conditions={"has_risky_operation": True},
-                tags={"pattern", "error_handling"}
+                tags={"pattern", "error_handling"},
             ),
             Rule(
                 id="pattern_002",
@@ -207,7 +211,7 @@ class RulesEngine:
                 category=RuleCategory.PATTERN,
                 priority=RulePriority.HIGH,
                 conditions={"has_io_operation": True},
-                tags={"pattern", "async", "performance"}
+                tags={"pattern", "async", "performance"},
             ),
             Rule(
                 id="pattern_003",
@@ -216,8 +220,8 @@ class RulesEngine:
                 category=RuleCategory.PATTERN,
                 priority=RulePriority.MEDIUM,
                 conditions={"has_dependencies": True},
-                tags={"pattern", "architecture", "testing"}
-            )
+                tags={"pattern", "architecture", "testing"},
+            ),
         ]
 
         # Register all rules
@@ -241,7 +245,7 @@ class RulesEngine:
                         name=data.get("name", yaml_file.stem),
                         description=data.get("description", ""),
                         rules=[],
-                        context=data.get("context", {})
+                        context=data.get("context", {}),
                     )
 
                     for rule_data in data["rules"]:
@@ -268,7 +272,7 @@ class RulesEngine:
                 conditions=data.get("conditions"),
                 action=data.get("action"),
                 examples=data.get("examples", []),
-                tags=set(data.get("tags", []))
+                tags=set(data.get("tags", [])),
             )
         except KeyError as e:
             print(f"Missing required field in rule: {e}")
@@ -282,7 +286,9 @@ class RulesEngine:
         """Get a rule by ID."""
         return self.rules.get(rule_id)
 
-    async def get_applicable_rules(self, prompt: str, context: dict[str, Any] | None = None) -> list[Rule]:
+    async def get_applicable_rules(
+        self, prompt: str, context: dict[str, Any] | None = None
+    ) -> list[Rule]:
         """
         Get rules applicable to the given prompt and context.
 
@@ -304,13 +310,16 @@ class RulesEngine:
 
         return applicable
 
-    def _is_rule_applicable(self, rule: Rule, prompt: str, _context: dict[str, Any] | None) -> bool:
+    def _is_rule_applicable(
+        self, rule: Rule, prompt: str, _context: dict[str, Any] | None
+    ) -> bool:
         """Check if a rule applies to the given prompt and context."""
         prompt_lower = prompt.lower()
 
         # Check pattern match
         if rule.pattern:
             import re
+
             if not re.search(rule.pattern, prompt_lower):
                 return False
 
@@ -319,7 +328,13 @@ class RulesEngine:
             local_context = _context or {}
 
             for condition, value in rule.conditions.items():
-                if condition == "language" and local_context.get("language") != value or condition == "has_user_input" and value and "input" not in prompt_lower:
+                if (
+                    condition == "language"
+                    and local_context.get("language") != value
+                    or condition == "has_user_input"
+                    and value
+                    and "input" not in prompt_lower
+                ):
                     return False
                 elif condition == "has_risky_operation" and value:
                     risky_keywords = ["file", "network", "database", "api", "external"]
@@ -372,7 +387,7 @@ class RulesEngine:
                 RuleCategory.STYLE: 3,
                 RuleCategory.PATTERN: 3,
                 RuleCategory.PROJECT: 5,
-                RuleCategory.PERFORMANCE: 2
+                RuleCategory.PERFORMANCE: 2,
             }
 
             max_rules = max_per_category.get(category, 3)
@@ -396,9 +411,9 @@ class RulesEngine:
                     "priority": 1,
                     "pattern": "dangerous_pattern",
                     "action": "Replace with safe alternative",
-                    "tags": ["security", "custom"]
+                    "tags": ["security", "custom"],
                 }
-            ]
+            ],
         }
 
         # Project-specific rules file
@@ -415,16 +430,16 @@ class RulesEngine:
                     "priority": 2,
                     "pattern": r"\bprint\s*\(",
                     "action": "Use logger.info() instead",
-                    "tags": ["project", "logging"]
+                    "tags": ["project", "logging"],
                 }
-            ]
+            ],
         }
 
         # Write files
-        with open(self.rules_dir / "security.yaml", 'w') as f:
+        with open(self.rules_dir / "security.yaml", "w") as f:
             yaml.dump(security_rules, f, default_flow_style=False)
 
-        with open(self.rules_dir / "project.yaml", 'w') as f:
+        with open(self.rules_dir / "project.yaml", "w") as f:
             yaml.dump(project_rules, f, default_flow_style=False)
 
     def export_rules(self, output_path: str) -> None:
@@ -433,7 +448,7 @@ class RulesEngine:
             "exported_at": self._get_timestamp(),
             "total_rules": len(self.rules),
             "categories": {},
-            "rules": []
+            "rules": [],
         }
 
         # Group by category
@@ -448,7 +463,7 @@ class RulesEngine:
                     "description": rule.description,
                     "category": rule.category.value,
                     "priority": rule.priority.value,
-                    "tags": list(rule.tags)
+                    "tags": list(rule.tags),
                 }
 
                 if rule.pattern:
@@ -461,12 +476,13 @@ class RulesEngine:
                 export_data["rules"].append(rule_dict)
 
         # Write export
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             yaml.dump(export_data, f, default_flow_style=False)
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
         from datetime import datetime
+
         return datetime.now().isoformat()
 
 

@@ -36,14 +36,16 @@ logger = logging.getLogger(__name__)
 
 class ExecutionMode(Enum):
     """Command execution environment."""
-    LOCAL = "local"      # Direct execution on host
-    DOCKER = "docker"    # Sandboxed Docker container
-    WSL = "wsl"          # Windows Subsystem for Linux
-    REMOTE = "remote"    # Remote SSH execution
+
+    LOCAL = "local"  # Direct execution on host
+    DOCKER = "docker"  # Sandboxed Docker container
+    WSL = "wsl"  # Windows Subsystem for Linux
+    REMOTE = "remote"  # Remote SSH execution
 
 
 class ShellType(Enum):
     """Shell type for command execution."""
+
     POWERSHELL = "powershell"
     BASH = "bash"
     CMD = "cmd"
@@ -52,6 +54,7 @@ class ShellType(Enum):
 
 class ErrorType(Enum):
     """Categorized error types for recovery."""
+
     DEPENDENCY_MISSING = "dependency_missing"
     PERMISSION_DENIED = "permission_denied"
     FILE_NOT_FOUND = "file_not_found"
@@ -68,6 +71,7 @@ class ErrorType(Enum):
 @dataclass
 class CommandResult:
     """Result of a command execution."""
+
     command: str
     exit_code: int
     stdout: str
@@ -98,50 +102,55 @@ class CommandResult:
 @dataclass
 class ExecutorConfig:
     """Configuration for CLI executor."""
+
     default_mode: ExecutionMode = ExecutionMode.LOCAL
     default_shell: ShellType = ShellType.POWERSHELL
     timeout_seconds: int = 300
     working_dir: Path = field(default_factory=Path.cwd)
 
     # Safety settings
-    blocked_commands: list = field(default_factory=lambda: [
-        # Destructive file operations
-        "rm -rf /",
-        "rm -rf /*",
-        "del /s /q c:\\",
-        "format c:",
-        "format d:",
-        "rd /s /q c:\\",
-        # Fork bombs
-        ":(){:|:&};:",
-        ":(){ :|:& };:",
-        # System damage
-        "dd if=/dev/zero",
-        "mkfs.",
-        "> /dev/sda",
-        # Registry damage (Windows)
-        "reg delete HKLM",
-        "reg delete HKCU",
-        # Shutdown/reboot
-        "shutdown /s",
-        "shutdown -h",
-        "reboot",
-        "init 0",
-        "init 6",
-    ])
+    blocked_commands: list = field(
+        default_factory=lambda: [
+            # Destructive file operations
+            "rm -rf /",
+            "rm -rf /*",
+            "del /s /q c:\\",
+            "format c:",
+            "format d:",
+            "rd /s /q c:\\",
+            # Fork bombs
+            ":(){:|:&};:",
+            ":(){ :|:& };:",
+            # System damage
+            "dd if=/dev/zero",
+            "mkfs.",
+            "> /dev/sda",
+            # Registry damage (Windows)
+            "reg delete HKLM",
+            "reg delete HKCU",
+            # Shutdown/reboot
+            "shutdown /s",
+            "shutdown -h",
+            "reboot",
+            "init 0",
+            "init 6",
+        ]
+    )
 
     # Patterns that require confirmation
-    dangerous_patterns: list = field(default_factory=lambda: [
-        r"rm\s+-rf",
-        r"del\s+/[sq]",
-        r"rmdir\s+/s",
-        r"DROP\s+DATABASE",
-        r"DROP\s+TABLE",
-        r"TRUNCATE\s+TABLE",
-        r"sudo\s+rm",
-        r"chmod\s+777",
-        r"chmod\s+-R\s+777",
-    ])
+    dangerous_patterns: list = field(
+        default_factory=lambda: [
+            r"rm\s+-rf",
+            r"del\s+/[sq]",
+            r"rmdir\s+/s",
+            r"DROP\s+DATABASE",
+            r"DROP\s+TABLE",
+            r"TRUNCATE\s+TABLE",
+            r"sudo\s+rm",
+            r"chmod\s+777",
+            r"chmod\s+-R\s+777",
+        ]
+    )
 
     # Docker settings
     docker_image: str = "python:3.11-slim"
@@ -446,7 +455,13 @@ class CLIExecutor:
 
         # Build command based on shell
         if self.is_windows:
-            full_command = ["powershell", "-NoProfile", "-NonInteractive", "-Command", command]
+            full_command = [
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                command,
+            ]
         else:
             full_command = ["bash", "-c", command]
 
@@ -461,7 +476,7 @@ class CLIExecutor:
                 timeout=timeout,
                 env=cmd_env,
                 creationflags=subprocess.CREATE_NO_WINDOW if self.is_windows else 0,
-            )
+            ),
         )
 
     async def _execute_docker(
@@ -477,9 +492,13 @@ class CLIExecutor:
 
         # Build docker command
         docker_cmd = [
-            "docker", "run", "--rm",
-            "-v", f"{working_dir.absolute()}:/workspace",
-            "-w", "/workspace",
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{working_dir.absolute()}:/workspace",
+            "-w",
+            "/workspace",
         ]
 
         # Add environment variables
@@ -487,10 +506,7 @@ class CLIExecutor:
             for key, value in env.items():
                 docker_cmd.extend(["-e", f"{key}={value}"])
 
-        docker_cmd.extend([
-            self.config.docker_image,
-            "bash", "-c", command
-        ])
+        docker_cmd.extend([self.config.docker_image, "bash", "-c", command])
 
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
@@ -500,7 +516,7 @@ class CLIExecutor:
                 capture_output=True,
                 timeout=timeout,
                 creationflags=subprocess.CREATE_NO_WINDOW if self.is_windows else 0,
-            )
+            ),
         )
 
     async def _execute_wsl(
@@ -535,7 +551,7 @@ class CLIExecutor:
                 capture_output=True,
                 timeout=timeout,
                 creationflags=subprocess.CREATE_NO_WINDOW,
-            )
+            ),
         )
 
     def get_history(self, limit: int = 100) -> list[CommandResult]:

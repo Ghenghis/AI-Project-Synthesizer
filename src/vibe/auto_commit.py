@@ -24,6 +24,7 @@ from src.core.config import get_settings
 
 class CommitStrategy(Enum):
     """Strategies for automatic commits."""
+
     AFTER_EACH_PHASE = "after_each_phase"
     ON_COMPLETION = "on_completion"
     ON_FAILURE = "on_failure"
@@ -32,6 +33,7 @@ class CommitStrategy(Enum):
 
 class CommitStatus(Enum):
     """Status of a commit operation."""
+
     SUCCESS = "success"
     NO_CHANGES = "no_changes"
     FAILED = "failed"
@@ -41,6 +43,7 @@ class CommitStatus(Enum):
 @dataclass
 class CommitInfo:
     """Information about a commit."""
+
     commit_hash: str
     phase_id: str
     timestamp: datetime
@@ -54,6 +57,7 @@ class CommitInfo:
 @dataclass
 class CommitConfig:
     """Configuration for auto-commit behavior."""
+
     strategy: CommitStrategy
     auto_push: bool = False
     create_branch: bool = False
@@ -74,7 +78,7 @@ class CommitConfig:
                 ".env.local",
                 "node_modules/",
                 ".venv/",
-                "venv/"
+                "venv/",
             ]
 
 
@@ -115,7 +119,9 @@ class AutoCommit:
 
         return None
 
-    def _run_git_command(self, args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
+    def _run_git_command(
+        self, args: list[str], cwd: Path | None = None
+    ) -> subprocess.CompletedProcess:
         """Run a Git command."""
         work_dir = cwd or self.repo_root
 
@@ -123,10 +129,7 @@ class AutoCommit:
             raise ValueError("Not in a Git repository")
 
         return subprocess.run(
-            ["git"] + args,
-            cwd=work_dir,
-            capture_output=True,
-            text=True
+            ["git"] + args, cwd=work_dir, capture_output=True, text=True
         )
 
     def _get_changed_files(self, _phase_id: str) -> list[str]:
@@ -140,17 +143,17 @@ class AutoCommit:
         # Staged files
         result = self._run_git_command(["diff", "--cached", "--name-only"])
         if result.stdout:
-            files.update(result.stdout.strip().split('\n'))
+            files.update(result.stdout.strip().split("\n"))
 
         # Unstaged files
         result = self._run_git_command(["diff", "--name-only"])
         if result.stdout:
-            files.update(result.stdout.strip().split('\n'))
+            files.update(result.stdout.strip().split("\n"))
 
         # Untracked files
         result = self._run_git_command(["ls-files", "--others", "--exclude-standard"])
         if result.stdout:
-            files.update(result.stdout.strip().split('\n'))
+            files.update(result.stdout.strip().split("\n"))
 
         # Filter out ignored patterns
         filtered_files = []
@@ -175,11 +178,17 @@ class AutoCommit:
         import fnmatch
 
         # Handle directory patterns
-        if pattern.endswith('/'):
-            return file.startswith(pattern) or '/' in file and file.split('/')[0] == pattern.rstrip('/')
+        if pattern.endswith("/"):
+            return (
+                file.startswith(pattern)
+                or "/" in file
+                and file.split("/")[0] == pattern.rstrip("/")
+            )
 
         # Handle file patterns
-        return fnmatch.fnmatch(file, pattern) or fnmatch.fnmatch(file.split('/')[-1], pattern)
+        return fnmatch.fnmatch(file, pattern) or fnmatch.fnmatch(
+            file.split("/")[-1], pattern
+        )
 
     def _stage_changes(self, files: list[str]) -> bool:
         """Stage specific files for commit."""
@@ -202,17 +211,18 @@ class AutoCommit:
         deletions = 0
 
         if result.stdout:
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if line:
-                    parts = line.split('\t')
+                    parts = line.split("\t")
                     if len(parts) >= 2:
-                        additions += int(parts[0]) if parts[0] != '-' else 0
-                        deletions += int(parts[1]) if parts[1] != '-' else 0
+                        additions += int(parts[0]) if parts[0] != "-" else 0
+                        deletions += int(parts[1]) if parts[1] != "-" else 0
 
         return additions, deletions
 
-    def _create_commit_message(self, phase_id: str, phase_name: str,
-                             artifacts: dict[str, Any] | None = None) -> str:
+    def _create_commit_message(
+        self, phase_id: str, phase_name: str, artifacts: dict[str, Any] | None = None
+    ) -> str:
         """Create a structured commit message for a phase."""
         message = [f"feat: Complete phase {phase_id} - {phase_name}"]
         message.append("")
@@ -233,11 +243,16 @@ class AutoCommit:
         message.append("")
         message.append("Committed automatically by VIBE MCP")
 
-        return '\n'.join(message)
+        return "\n".join(message)
 
-    async def commit_phase(self, task_id: str, _phase_id: str, phase_name: str,
-                          artifacts: dict[str, Any] | None = None,
-                          force: bool = False) -> CommitInfo:
+    async def commit_phase(
+        self,
+        task_id: str,
+        _phase_id: str,
+        phase_name: str,
+        artifacts: dict[str, Any] | None = None,
+        force: bool = False,
+    ) -> CommitInfo:
         """
         Commit changes for a completed phase.
 
@@ -260,7 +275,7 @@ class AutoCommit:
                 files_changed=[],
                 additions=0,
                 deletions=0,
-                status=CommitStatus.FAILED
+                status=CommitStatus.FAILED,
             )
 
         # Check if already committed
@@ -273,7 +288,7 @@ class AutoCommit:
                 files_changed=[],
                 additions=0,
                 deletions=0,
-                status=CommitStatus.SKIPPED
+                status=CommitStatus.SKIPPED,
             )
 
         # Get changed files
@@ -288,7 +303,7 @@ class AutoCommit:
                 files_changed=[],
                 additions=0,
                 deletions=0,
-                status=CommitStatus.NO_CHANGES
+                status=CommitStatus.NO_CHANGES,
             )
 
         # Stage changes
@@ -301,7 +316,7 @@ class AutoCommit:
                 files_changed=[],
                 additions=0,
                 deletions=0,
-                status=CommitStatus.FAILED
+                status=CommitStatus.FAILED,
             )
 
         # Get diff stats
@@ -322,7 +337,7 @@ class AutoCommit:
                 files_changed=changed_files,
                 additions=additions,
                 deletions=deletions,
-                status=CommitStatus.FAILED
+                status=CommitStatus.FAILED,
             )
 
         # Get commit hash
@@ -338,7 +353,7 @@ class AutoCommit:
             files_changed=changed_files,
             additions=additions,
             deletions=deletions,
-            status=CommitStatus.SUCCESS
+            status=CommitStatus.SUCCESS,
         )
 
         # Track commit
@@ -383,7 +398,7 @@ class AutoCommit:
 
         # Sanitize branch name
         branch_name = f"{self.config.branch_prefix}/{task_id}"
-        branch_name = branch_name.replace(' ', '-').replace('_', '-').lower()
+        branch_name = branch_name.replace(" ", "-").replace("_", "-").lower()
 
         # Create and checkout branch
         result = self._run_git_command(["checkout", "-b", branch_name])
@@ -434,7 +449,9 @@ class AutoCommit:
 
         # Get current branch
         branch_result = self._run_git_command(["branch", "--show-current"])
-        current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
+        current_branch = (
+            branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
+        )
 
         # Get status
         status_result = self._run_git_command(["status", "--porcelain"])
@@ -444,12 +461,12 @@ class AutoCommit:
         untracked = 0
 
         if status_result.stdout:
-            for line in status_result.stdout.strip().split('\n'):
+            for line in status_result.stdout.strip().split("\n"):
                 if line:
-                    if line.startswith(' '):
+                    if line.startswith(" "):
                         untracked += 1
-                    elif line[0] in ['M', 'A', 'D', 'R', 'C']:
-                        if line[1] != ' ':
+                    elif line[0] in ["M", "A", "D", "R", "C"]:
+                        if line[1] != " ":
                             staged += 1
                         else:
                             modified += 1
@@ -461,7 +478,7 @@ class AutoCommit:
             "modified": modified,
             "untracked": untracked,
             "total_commits": len(self._commits),
-            "committed_phases": len(self._committed_phases)
+            "committed_phases": len(self._committed_phases),
         }
 
     def save_config(self, config_path: str) -> None:
@@ -472,10 +489,10 @@ class AutoCommit:
             "create_branch": self.config.create_branch,
             "branch_prefix": self.config.branch_prefix,
             "include_artifacts": self.config.include_artifacts,
-            "ignore_patterns": self.config.ignore_patterns
+            "ignore_patterns": self.config.ignore_patterns,
         }
 
-        with open(config_path, 'w') as f:
+        with open(config_path, "w") as f:
             json.dump(config_data, f, indent=2)
 
     def load_config(self, config_path: str) -> bool:
@@ -490,7 +507,7 @@ class AutoCommit:
                 create_branch=config_data.get("create_branch", False),
                 branch_prefix=config_data.get("branch_prefix", "feature/vibe"),
                 include_artifacts=config_data.get("include_artifacts", True),
-                ignore_patterns=config_data.get("ignore_patterns", [])
+                ignore_patterns=config_data.get("ignore_patterns", []),
             )
 
             return True
@@ -516,14 +533,14 @@ if __name__ == "__main__":
             artifacts = {
                 "files_created": ["main.py", "utils.py"],
                 "functions_added": 5,
-                "tests_written": 3
+                "tests_written": 3,
             }
 
             commit_info = await auto_commit.commit_phase(
                 task_id="demo_task",
                 phase_id="phase_1",
                 phase_name="Setup project structure",
-                artifacts=artifacts
+                artifacts=artifacts,
             )
 
             print(f"\nCommit Status: {commit_info.status.value}")

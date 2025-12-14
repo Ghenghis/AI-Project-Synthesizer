@@ -7,9 +7,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from docker.client import DockerClient
 
 import docker
-from docker.client import DockerClient
 
 
 @pytest.fixture(scope="session")
@@ -43,11 +43,18 @@ def temp_workspace():
         workspace = Path(tmpdir)
         # Initialize as git repo
         import subprocess
+
         subprocess.run(["git", "init"], cwd=workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"],
-                      cwd=workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"],
-                      cwd=workspace, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=workspace,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=workspace,
+            capture_output=True,
+        )
         yield workspace
 
 
@@ -117,9 +124,13 @@ print(hello_world())
 
     # Initial git commit
     import subprocess
+
     subprocess.run(["git", "add", "."], cwd=temp_workspace, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "Initial commit"],
-                  cwd=temp_workspace, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "Initial commit"],
+        cwd=temp_workspace,
+        capture_output=True,
+    )
 
     return temp_workspace
 
@@ -127,7 +138,7 @@ print(hello_world())
 @pytest.fixture
 def mock_github_responses():
     """Mock GitHub API responses."""
-    with patch('src.discovery.github_client.requests.get') as mock_get:
+    with patch("src.discovery.github_client.requests.get") as mock_get:
         # Mock repository response
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -143,10 +154,7 @@ def mock_github_responses():
             "created_at": "2024-01-01T00:00:00Z",
             "updated_at": "2024-01-15T00:00:00Z",
             "default_branch": "main",
-            "owner": {
-                "login": "user",
-                "type": "User"
-            }
+            "owner": {"login": "user", "type": "User"},
         }
         mock_get.return_value = mock_response
         yield mock_get
@@ -155,12 +163,12 @@ def mock_github_responses():
 @pytest.fixture
 def mock_llm_response():
     """Mock LLM provider responses."""
-    with patch('src.llm.litellm_router.LiteLLMRouter.complete') as mock_complete:
+    with patch("src.llm.litellm_router.LiteLLMRouter.complete") as mock_complete:
         mock_complete.return_value = {
             "content": "This is a well-structured Python project with clear separation of concerns.",
             "provider": "mock",
             "tokens_used": 150,
-            "cost": 0.001
+            "cost": 0.001,
         }
         yield mock_complete
 
@@ -168,7 +176,7 @@ def mock_llm_response():
 @pytest.fixture
 def mock_memory_system():
     """Mock memory system for testing."""
-    with patch('src.memory.mem0_integration.MemorySystem') as mock_memory:
+    with patch("src.memory.mem0_integration.MemorySystem") as mock_memory:
         instance = mock_memory.return_value
         instance.add.return_value = MagicMock(id="mem123", content="test")
         instance.search.return_value = []

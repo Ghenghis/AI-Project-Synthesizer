@@ -30,6 +30,7 @@ secure_logger = get_secure_logger(__name__)
 
 class KaggleResourceType(str, Enum):
     """Types of Kaggle resources."""
+
     DATASET = "dataset"
     COMPETITION = "competition"
     NOTEBOOK = "notebook"
@@ -39,6 +40,7 @@ class KaggleResourceType(str, Enum):
 @dataclass
 class KaggleDataset:
     """Kaggle dataset information."""
+
     ref: str  # owner/dataset-slug
     title: str
     subtitle: str | None
@@ -57,6 +59,7 @@ class KaggleDataset:
 @dataclass
 class KaggleCompetition:
     """Kaggle competition information."""
+
     ref: str
     title: str
     description: str | None
@@ -73,6 +76,7 @@ class KaggleCompetition:
 @dataclass
 class KaggleNotebook:
     """Kaggle notebook/kernel information."""
+
     ref: str  # owner/notebook-slug
     title: str
     author: str
@@ -89,6 +93,7 @@ class KaggleNotebook:
 @dataclass
 class KaggleModel:
     """Kaggle model information."""
+
     ref: str  # owner/model-slug
     title: str
     subtitle: str | None
@@ -153,11 +158,12 @@ class KaggleClient(PlatformClient):
             return
 
         # Set environment variables for kaggle library
-        os.environ['KAGGLE_USERNAME'] = self._username
-        os.environ['KAGGLE_KEY'] = self._key
+        os.environ["KAGGLE_USERNAME"] = self._username
+        os.environ["KAGGLE_KEY"] = self._key
 
         try:
             from kaggle.api.kaggle_api_extended import KaggleApi
+
             self._api = KaggleApi()
             self._api.authenticate()
             secure_logger.info("Kaggle API client initialized and authenticated")
@@ -215,16 +221,22 @@ class KaggleClient(PlatformClient):
 
         try:
             if resource_type == "dataset":
-                results = await self._search_datasets(query, min_stars, max_results, sort_by)
+                results = await self._search_datasets(
+                    query, min_stars, max_results, sort_by
+                )
             elif resource_type == "competition":
                 results = await self._search_competitions(query, max_results, sort_by)
             elif resource_type == "notebook":
-                results = await self._search_notebooks(query, language, max_results, sort_by)
+                results = await self._search_notebooks(
+                    query, language, max_results, sort_by
+                )
             elif resource_type == "model":
                 results = await self._search_models(query, max_results, sort_by)
             else:
                 # Default to datasets
-                results = await self._search_datasets(query, min_stars, max_results, sort_by)
+                results = await self._search_datasets(
+                    query, min_stars, max_results, sort_by
+                )
 
             search_time_ms = int((time.time() - start_time) * 1000)
 
@@ -232,7 +244,7 @@ class KaggleClient(PlatformClient):
                 "Kaggle search completed",
                 query=query[:50],
                 resource_type=resource_type,
-                result_count=len(results)
+                result_count=len(results),
             )
 
             return SearchResult(
@@ -276,21 +288,23 @@ class KaggleClient(PlatformClient):
         loop = asyncio.get_event_loop()
         datasets = await loop.run_in_executor(
             None,
-            lambda: list(self._api.dataset_list(
-                search=query,
-                sort_by=kaggle_sort,
-            ))[:max_results]
+            lambda: list(
+                self._api.dataset_list(
+                    search=query,
+                    sort_by=kaggle_sort,
+                )
+            )[:max_results],
         )
 
         # Convert to RepositoryInfo
         repositories = []
         for ds in datasets:
-            if hasattr(ds, 'voteCount') and ds.voteCount < min_votes:
+            if hasattr(ds, "voteCount") and ds.voteCount < min_votes:
                 continue
 
             # Convert tags to strings (Kaggle returns Tag objects)
-            tags = getattr(ds, 'tags', []) or []
-            tag_strings = [str(t.name) if hasattr(t, 'name') else str(t) for t in tags]
+            tags = getattr(ds, "tags", []) or []
+            tag_strings = [str(t.name) if hasattr(t, "name") else str(t) for t in tags]
 
             repo_info = RepositoryInfo(
                 platform="kaggle",
@@ -298,18 +312,18 @@ class KaggleClient(PlatformClient):
                 url=f"https://www.kaggle.com/datasets/{ds.ref}",
                 name=ds.ref.split("/")[-1] if "/" in ds.ref else ds.ref,
                 full_name=ds.ref,
-                description=getattr(ds, 'subtitle', None) or getattr(ds, 'title', ''),
+                description=getattr(ds, "subtitle", None) or getattr(ds, "title", ""),
                 owner=ds.ref.split("/")[0] if "/" in ds.ref else "unknown",
-                stars=getattr(ds, 'voteCount', 0),
+                stars=getattr(ds, "voteCount", 0),
                 forks=0,
-                watchers=getattr(ds, 'downloadCount', 0),
+                watchers=getattr(ds, "downloadCount", 0),
                 open_issues=0,
                 language=None,
-                license=getattr(ds, 'licenseName', None),
+                license=getattr(ds, "licenseName", None),
                 created_at=None,
-                updated_at=str(getattr(ds, 'lastUpdated', None)),
+                updated_at=str(getattr(ds, "lastUpdated", None)),
                 topics=tag_strings,
-                size_kb=getattr(ds, 'totalBytes', 0) // 1024,
+                size_kb=getattr(ds, "totalBytes", 0) // 1024,
             )
             repositories.append(repo_info)
 
@@ -327,20 +341,23 @@ class KaggleClient(PlatformClient):
         # Get competitions - filter by search query manually since API doesn't support search
         competitions = await loop.run_in_executor(
             None,
-            lambda: list(self._api.competitions_list(
-                sort_by="latestDeadline",
-                page=1,
-                page_size=100,  # Get more to filter
-            ))
+            lambda: list(
+                self._api.competitions_list(
+                    sort_by="latestDeadline",
+                    page=1,
+                    page_size=100,  # Get more to filter
+                )
+            ),
         )
 
         # Filter by query
         query_lower = query.lower()
         filtered = [
-            c for c in competitions
-            if query_lower in getattr(c, 'title', '').lower()
-            or query_lower in getattr(c, 'description', '').lower()
-            or query_lower in str(getattr(c, 'tags', [])).lower()
+            c
+            for c in competitions
+            if query_lower in getattr(c, "title", "").lower()
+            or query_lower in getattr(c, "description", "").lower()
+            or query_lower in str(getattr(c, "tags", [])).lower()
         ]
 
         # Convert to RepositoryInfo
@@ -352,17 +369,18 @@ class KaggleClient(PlatformClient):
                 url=f"https://www.kaggle.com/competitions/{comp.ref}",
                 name=comp.ref,
                 full_name=f"competition/{comp.ref}",
-                description=getattr(comp, 'description', None) or getattr(comp, 'title', ''),
+                description=getattr(comp, "description", None)
+                or getattr(comp, "title", ""),
                 owner="kaggle",
-                stars=getattr(comp, 'teamCount', 0),
+                stars=getattr(comp, "teamCount", 0),
                 forks=0,
-                watchers=getattr(comp, 'teamCount', 0),
+                watchers=getattr(comp, "teamCount", 0),
                 open_issues=0,
                 language=None,
                 license=None,
                 created_at=None,
-                updated_at=str(getattr(comp, 'deadline', None)),
-                topics=getattr(comp, 'tags', []) or [],
+                updated_at=str(getattr(comp, "deadline", None)),
+                topics=getattr(comp, "tags", []) or [],
             )
             repositories.append(repo_info)
 
@@ -399,8 +417,7 @@ class KaggleClient(PlatformClient):
             search_params["language"] = language
 
         notebooks = await loop.run_in_executor(
-            None,
-            lambda: list(self._api.kernels_list(**search_params))
+            None, lambda: list(self._api.kernels_list(**search_params))
         )
 
         # Convert to RepositoryInfo
@@ -412,16 +429,16 @@ class KaggleClient(PlatformClient):
                 url=f"https://www.kaggle.com/code/{nb.ref}",
                 name=nb.ref.split("/")[-1] if "/" in nb.ref else nb.ref,
                 full_name=nb.ref,
-                description=getattr(nb, 'title', ''),
+                description=getattr(nb, "title", ""),
                 owner=nb.ref.split("/")[0] if "/" in nb.ref else "unknown",
-                stars=getattr(nb, 'totalVotes', 0),
+                stars=getattr(nb, "totalVotes", 0),
                 forks=0,
                 watchers=0,
                 open_issues=0,
-                language=getattr(nb, 'language', None),
+                language=getattr(nb, "language", None),
                 license=None,
                 created_at=None,
-                updated_at=str(getattr(nb, 'lastRunTime', None)),
+                updated_at=str(getattr(nb, "lastRunTime", None)),
                 topics=[],
             )
             repositories.append(repo_info)
@@ -441,10 +458,12 @@ class KaggleClient(PlatformClient):
             # Model search may not be available in all kaggle versions
             models = await loop.run_in_executor(
                 None,
-                lambda: list(self._api.model_list(
-                    search=query,
-                    page_size=max_results,
-                ))
+                lambda: list(
+                    self._api.model_list(
+                        search=query,
+                        page_size=max_results,
+                    )
+                ),
             )
         except AttributeError:
             secure_logger.warning("Kaggle model search not available in this version")
@@ -458,21 +477,22 @@ class KaggleClient(PlatformClient):
         for model in models:
             repo_info = RepositoryInfo(
                 platform="kaggle",
-                id=getattr(model, 'ref', str(model)),
+                id=getattr(model, "ref", str(model)),
                 url=f"https://www.kaggle.com/models/{getattr(model, 'ref', '')}",
-                name=getattr(model, 'title', str(model)),
+                name=getattr(model, "title", str(model)),
                 full_name=f"model/{getattr(model, 'ref', '')}",
-                description=getattr(model, 'subtitle', None) or getattr(model, 'overview', ''),
-                owner=getattr(model, 'author', 'unknown'),
-                stars=getattr(model, 'downloadCount', 0),
+                description=getattr(model, "subtitle", None)
+                or getattr(model, "overview", ""),
+                owner=getattr(model, "author", "unknown"),
+                stars=getattr(model, "downloadCount", 0),
                 forks=0,
-                watchers=getattr(model, 'instanceCount', 0),
+                watchers=getattr(model, "instanceCount", 0),
                 open_issues=0,
-                language=getattr(model, 'modelFramework', None),
+                language=getattr(model, "modelFramework", None),
                 license=None,
                 created_at=None,
                 updated_at=None,
-                topics=getattr(model, 'tags', []) or [],
+                topics=getattr(model, "tags", []) or [],
             )
             repositories.append(repo_info)
 
@@ -499,8 +519,7 @@ class KaggleClient(PlatformClient):
                 comp_ref = repo_id.replace("competition/", "")
                 # Get competition details - not directly supported, search for it
                 comps = await loop.run_in_executor(
-                    None,
-                    lambda: list(self._api.competitions_list())
+                    None, lambda: list(self._api.competitions_list())
                 )
                 comp = next((c for c in comps if c.ref == comp_ref), None)
                 if not comp:
@@ -512,10 +531,10 @@ class KaggleClient(PlatformClient):
                     url=f"https://www.kaggle.com/competitions/{comp.ref}",
                     name=comp.ref,
                     full_name=f"competition/{comp.ref}",
-                    description=getattr(comp, 'description', ''),
+                    description=getattr(comp, "description", ""),
                     owner="kaggle",
-                    stars=getattr(comp, 'teamCount', 0),
-                    topics=getattr(comp, 'tags', []) or [],
+                    stars=getattr(comp, "teamCount", 0),
+                    topics=getattr(comp, "tags", []) or [],
                 )
             else:
                 # Assume it's a dataset
@@ -523,7 +542,7 @@ class KaggleClient(PlatformClient):
 
                 datasets = await loop.run_in_executor(
                     None,
-                    lambda: list(self._api.dataset_list(search=slug, page_size=10))
+                    lambda: list(self._api.dataset_list(search=slug, page_size=10)),
                 )
 
                 ds = next((d for d in datasets if d.ref == repo_id), None)
@@ -536,14 +555,15 @@ class KaggleClient(PlatformClient):
                     url=f"https://www.kaggle.com/datasets/{ds.ref}",
                     name=slug,
                     full_name=ds.ref,
-                    description=getattr(ds, 'subtitle', None) or getattr(ds, 'title', ''),
+                    description=getattr(ds, "subtitle", None)
+                    or getattr(ds, "title", ""),
                     owner=owner,
-                    stars=getattr(ds, 'voteCount', 0),
-                    watchers=getattr(ds, 'downloadCount', 0),
-                    license=getattr(ds, 'licenseName', None),
-                    updated_at=str(getattr(ds, 'lastUpdated', None)),
-                    topics=getattr(ds, 'tags', []) or [],
-                    size_kb=getattr(ds, 'totalBytes', 0) // 1024,
+                    stars=getattr(ds, "voteCount", 0),
+                    watchers=getattr(ds, "downloadCount", 0),
+                    license=getattr(ds, "licenseName", None),
+                    updated_at=str(getattr(ds, "lastUpdated", None)),
+                    topics=getattr(ds, "tags", []) or [],
+                    size_kb=getattr(ds, "totalBytes", 0) // 1024,
                 )
 
         except RepositoryNotFoundError:
@@ -560,7 +580,9 @@ class KaggleClient(PlatformClient):
         """Get contents of a specific file."""
         return await self.get_file_content(repo_id, file_path)
 
-    async def clone(self, repo_id: str, destination: Path, depth: int = 1, branch: str | None = None) -> Path:
+    async def clone(
+        self, repo_id: str, destination: Path, depth: int = 1, branch: str | None = None
+    ) -> Path:
         """Download dataset to local filesystem."""
         return await self.download_dataset(repo_id, destination, unzip=True)
 
@@ -588,7 +610,7 @@ class KaggleClient(PlatformClient):
                     repo_id,
                     path=tmpdir,
                     unzip=True,
-                )
+                ),
             )
 
             # Read the specific file
@@ -627,17 +649,18 @@ class KaggleClient(PlatformClient):
 
         try:
             files = await loop.run_in_executor(
-                None,
-                lambda: list(self._api.dataset_list_files(repo_id).files)
+                None, lambda: list(self._api.dataset_list_files(repo_id).files)
             )
 
             file_list = []
             for f in files:
-                file_list.append({
-                    "name": f.name,
-                    "size": getattr(f, 'totalBytes', 0),
-                    "type": "file",
-                })
+                file_list.append(
+                    {
+                        "name": f.name,
+                        "size": getattr(f, "totalBytes", 0),
+                        "type": "file",
+                    }
+                )
 
             return DirectoryListing(
                 path="/",
@@ -662,26 +685,28 @@ class KaggleClient(PlatformClient):
         loop = asyncio.get_event_loop()
         datasets = await loop.run_in_executor(
             None,
-            lambda: list(self._api.dataset_list(
-                sort_by="hotness",
-                page_size=max_results,
-            ))
+            lambda: list(
+                self._api.dataset_list(
+                    sort_by="hotness",
+                    page_size=max_results,
+                )
+            ),
         )
 
         return [
             KaggleDataset(
                 ref=ds.ref,
-                title=getattr(ds, 'title', ''),
-                subtitle=getattr(ds, 'subtitle', None),
+                title=getattr(ds, "title", ""),
+                subtitle=getattr(ds, "subtitle", None),
                 creator_name=ds.ref.split("/")[0] if "/" in ds.ref else "unknown",
-                total_bytes=getattr(ds, 'totalBytes', 0),
+                total_bytes=getattr(ds, "totalBytes", 0),
                 url=f"https://www.kaggle.com/datasets/{ds.ref}",
-                last_updated=str(getattr(ds, 'lastUpdated', None)),
-                download_count=getattr(ds, 'downloadCount', 0),
-                vote_count=getattr(ds, 'voteCount', 0),
-                usability_rating=getattr(ds, 'usabilityRating', 0.0),
-                tags=getattr(ds, 'tags', []) or [],
-                license_name=getattr(ds, 'licenseName', None),
+                last_updated=str(getattr(ds, "lastUpdated", None)),
+                download_count=getattr(ds, "downloadCount", 0),
+                vote_count=getattr(ds, "voteCount", 0),
+                usability_rating=getattr(ds, "usabilityRating", 0.0),
+                tags=getattr(ds, "tags", []) or [],
+                license_name=getattr(ds, "licenseName", None),
             )
             for ds in datasets
         ]
@@ -711,23 +736,22 @@ class KaggleClient(PlatformClient):
             params["category"] = category
 
         competitions = await loop.run_in_executor(
-            None,
-            lambda: list(self._api.competitions_list(**params))
+            None, lambda: list(self._api.competitions_list(**params))
         )
 
         return [
             KaggleCompetition(
                 ref=comp.ref,
-                title=getattr(comp, 'title', ''),
-                description=getattr(comp, 'description', None),
+                title=getattr(comp, "title", ""),
+                description=getattr(comp, "description", None),
                 url=f"https://www.kaggle.com/competitions/{comp.ref}",
-                deadline=str(getattr(comp, 'deadline', None)),
-                category=getattr(comp, 'category', ''),
-                reward=getattr(comp, 'reward', None),
-                team_count=getattr(comp, 'teamCount', 0),
-                user_has_entered=getattr(comp, 'userHasEntered', False),
-                tags=getattr(comp, 'tags', []) or [],
-                evaluation_metric=getattr(comp, 'evaluationMetric', None),
+                deadline=str(getattr(comp, "deadline", None)),
+                category=getattr(comp, "category", ""),
+                reward=getattr(comp, "reward", None),
+                team_count=getattr(comp, "teamCount", 0),
+                user_has_entered=getattr(comp, "userHasEntered", False),
+                tags=getattr(comp, "tags", []) or [],
+                evaluation_metric=getattr(comp, "evaluationMetric", None),
             )
             for comp in competitions
         ]
@@ -757,21 +781,20 @@ class KaggleClient(PlatformClient):
             params["language"] = language
 
         notebooks = await loop.run_in_executor(
-            None,
-            lambda: list(self._api.kernels_list(**params))
+            None, lambda: list(self._api.kernels_list(**params))
         )
 
         return [
             KaggleNotebook(
                 ref=nb.ref,
-                title=getattr(nb, 'title', ''),
+                title=getattr(nb, "title", ""),
                 author=nb.ref.split("/")[0] if "/" in nb.ref else "unknown",
                 url=f"https://www.kaggle.com/code/{nb.ref}",
-                last_run_time=str(getattr(nb, 'lastRunTime', None)),
-                total_votes=getattr(nb, 'totalVotes', 0),
-                language=getattr(nb, 'language', 'python'),
-                kernel_type=getattr(nb, 'kernelType', 'notebook'),
-                is_private=getattr(nb, 'isPrivate', False),
+                last_run_time=str(getattr(nb, "lastRunTime", None)),
+                total_votes=getattr(nb, "totalVotes", 0),
+                language=getattr(nb, "language", "python"),
+                kernel_type=getattr(nb, "kernelType", "notebook"),
+                is_private=getattr(nb, "isPrivate", False),
             )
             for nb in notebooks
         ]
@@ -806,7 +829,7 @@ class KaggleClient(PlatformClient):
                 dataset_ref,
                 path=str(destination),
                 unzip=unzip,
-            )
+            ),
         )
 
         secure_logger.info(f"Downloaded dataset {dataset_ref} to {destination}")
@@ -839,10 +862,12 @@ class KaggleClient(PlatformClient):
             lambda: self._api.competition_download_files(
                 competition_ref,
                 path=str(destination),
-            )
+            ),
         )
 
-        secure_logger.info(f"Downloaded competition data {competition_ref} to {destination}")
+        secure_logger.info(
+            f"Downloaded competition data {competition_ref} to {destination}"
+        )
         return destination
 
 
@@ -850,7 +875,10 @@ def create_kaggle_client() -> KaggleClient | None:
     """Factory function to create Kaggle client if credentials are available."""
     settings = get_settings()
 
-    if settings.platforms.kaggle_username and settings.platforms.kaggle_key.get_secret_value():
+    if (
+        settings.platforms.kaggle_username
+        and settings.platforms.kaggle_key.get_secret_value()
+    ):
         return KaggleClient()
 
     return None

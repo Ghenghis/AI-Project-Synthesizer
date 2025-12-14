@@ -35,7 +35,7 @@ class PiperTTSClient:
         self,
         piper_path: str | Path | None = None,
         model_dir: str | Path | None = None,
-        voice_dir: str | Path | None = None
+        voice_dir: str | Path | None = None,
     ):
         """
         Initialize Piper TTS client.
@@ -77,19 +77,23 @@ class PiperTTSClient:
                 str(self.piper_path),
                 "--help",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await result.communicate()
 
             if result.returncode != 0:
-                secure_logger.error(f"Piper not found or not working: {stderr.decode()}")
+                secure_logger.error(
+                    f"Piper not found or not working: {stderr.decode()}"
+                )
                 return False
 
             # Load available voice models
             await self._load_voice_models()
 
-            secure_logger.info(f"Piper TTS initialized with {len(self._available_models)} models")
+            secure_logger.info(
+                f"Piper TTS initialized with {len(self._available_models)} models"
+            )
             return True
 
         except Exception as e:
@@ -112,7 +116,7 @@ class PiperTTSClient:
                 self._available_models[voice_name] = {
                     "model": str(model_file),
                     "config": str(config_file),
-                    "name": voice_name.replace("_", " ").title()
+                    "name": voice_name.replace("_", " ").title(),
                 }
 
         secure_logger.info(f"Loaded {len(self._available_models)} Piper models")
@@ -124,7 +128,7 @@ class PiperTTSClient:
         output_format: str = "wav",
         speed: float = 1.0,
         noise_scale: float = 0.667,
-        noise_w: float = 0.8
+        noise_w: float = 0.8,
     ) -> bytes:
         """
         Synthesize speech from text using Piper.
@@ -156,19 +160,27 @@ class PiperTTSClient:
         model_info = self._available_models[voice]
 
         # Create temporary output file
-        with tempfile.NamedTemporaryFile(suffix=f".{output_format}", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=f".{output_format}", delete=False
+        ) as temp_file:
             temp_path = temp_file.name
 
         try:
             # Build Piper command
             cmd = [
                 str(self.piper_path),
-                "--model", model_info["model"],
-                "--config_file", model_info["config"],
-                "--output_file", temp_path,
-                "--length_scale", str(1.0 / speed),  # Piper uses inverse of speed
-                "--noise_scale", str(noise_scale),
-                "--noise_w", str(noise_w)
+                "--model",
+                model_info["model"],
+                "--config_file",
+                model_info["config"],
+                "--output_file",
+                temp_path,
+                "--length_scale",
+                str(1.0 / speed),  # Piper uses inverse of speed
+                "--noise_scale",
+                str(noise_scale),
+                "--noise_w",
+                str(noise_w),
             ]
 
             # Run Piper synthesis
@@ -176,7 +188,7 @@ class PiperTTSClient:
                 *cmd,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             # Send text to Piper
@@ -190,7 +202,9 @@ class PiperTTSClient:
             with open(temp_path, "rb") as f:
                 audio_data = f.read()
 
-            secure_logger.info(f"Generated {len(audio_data)} bytes of audio for voice '{voice}'")
+            secure_logger.info(
+                f"Generated {len(audio_data)} bytes of audio for voice '{voice}'"
+            )
             return audio_data
 
         finally:
@@ -208,10 +222,7 @@ class PiperTTSClient:
         return self._available_models.copy()
 
     async def create_voice_model(
-        self,
-        voice_name: str,
-        audio_samples: list[Path],
-        output_dir: Path | None = None
+        self, voice_name: str, audio_samples: list[Path], output_dir: Path | None = None
     ) -> bool:
         """
         Create a custom voice model from audio samples.
@@ -270,7 +281,7 @@ class PiperTTSClient:
                                         "name": voice_dir.name,
                                         "path": str(voice_dir),
                                         "samples": len(audio_files),
-                                        "ready_for_training": len(audio_files) >= 10
+                                        "ready_for_training": len(audio_files) >= 10,
                                     }
 
         return voices
@@ -300,16 +311,16 @@ DEFAULT_PIPER_VOICES = {
     "default": {
         "model": "en_US-lessac-medium.onnx",
         "config": "en_US-lessac-medium.onnx.json",
-        "description": "Default American English male voice"
+        "description": "Default American English male voice",
     },
     "female": {
         "model": "en_US-lessac-medium.onnx",  # Would be female model in practice
         "config": "en_US-lessac-medium.onnx.json",
-        "description": "Default American English female voice"
+        "description": "Default American English female voice",
     },
     "british": {
         "model": "en_GB-lessac-medium.onnx",  # Would be British model
         "config": "en_GB-lessac-medium.onnx.json",
-        "description": "British English male voice"
-    }
+        "description": "British English male voice",
+    },
 }

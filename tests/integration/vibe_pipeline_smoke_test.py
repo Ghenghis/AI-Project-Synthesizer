@@ -55,10 +55,12 @@ class VibePipelineSmokeTest(unittest.TestCase):
         self.create_sample_project()
 
         # Test data
-        self.sample_request = "Create a REST API for a todo application with CRUD operations"
+        self.sample_request = (
+            "Create a REST API for a todo application with CRUD operations"
+        )
         self.sample_context = {
             "project_type": "web_api",
-            "tech_stack": ["Python", "FastAPI", "PostgreSQL"]
+            "tech_stack": ["Python", "FastAPI", "PostgreSQL"],
         }
 
     def tearDown(self):
@@ -102,7 +104,7 @@ python_version = "3.11"
                         "responsibilities": ["Handle HTTP requests", "Validate input"],
                         "interfaces": ["REST API"],
                         "dependencies": ["component_2"],
-                        "technology": "FastAPI"
+                        "technology": "FastAPI",
                     },
                     {
                         "id": "component_2",
@@ -112,7 +114,7 @@ python_version = "3.11"
                         "responsibilities": ["Process data", "Apply rules"],
                         "interfaces": ["Internal API"],
                         "dependencies": ["component_3"],
-                        "technology": "Python"
+                        "technology": "Python",
                     },
                     {
                         "id": "component_3",
@@ -122,20 +124,20 @@ python_version = "3.11"
                         "responsibilities": ["Store data", "Query data"],
                         "interfaces": ["SQL"],
                         "dependencies": [],
-                        "technology": "PostgreSQL"
-                    }
+                        "technology": "PostgreSQL",
+                    },
                 ],
                 "data_flows": [],
                 "technology_stack": {
                     "backend": ["FastAPI"],
-                    "database": ["PostgreSQL"]
+                    "database": ["PostgreSQL"],
                 },
                 "non_functional_requirements": {
                     "performance": "Medium",
                     "security": "Medium",
-                    "scalability": "Medium"
+                    "scalability": "Medium",
                 },
-                "considerations": ["Simple CRUD operations"]
+                "considerations": ["Simple CRUD operations"],
             },
             "decomposer": {
                 "task_id": "task_001",
@@ -149,7 +151,7 @@ python_version = "3.11"
                         "estimated_time": 30,
                         "dependencies": [],
                         "success_criteria": ["Structure created"],
-                        "prompt": "Create project structure for todo API"
+                        "prompt": "Create project structure for todo API",
                     },
                     {
                         "id": "phase_2",
@@ -160,18 +162,21 @@ python_version = "3.11"
                         "estimated_time": 120,
                         "dependencies": ["phase_1"],
                         "success_criteria": ["Endpoints working"],
-                        "prompt": "Implement FastAPI endpoints for todo CRUD"
-                    }
-                ]
+                        "prompt": "Implement FastAPI endpoints for todo CRUD",
+                    },
+                ],
             },
             "explain": {
                 "title": "API Endpoint Implementation",
                 "summary": "Implemented REST API endpoints using FastAPI",
-                "reasoning": ["FastAPI provides automatic docs", "Type safety with Pydantic"],
+                "reasoning": [
+                    "FastAPI provides automatic docs",
+                    "Type safety with Pydantic",
+                ],
                 "alternatives": ["Flask", "Django REST"],
                 "impact": {"performance": "Medium", "security": "Medium"},
-                "best_practices": ["Type hints", "Async support"]
-            }
+                "best_practices": ["Type hints", "Async support"],
+            },
         }
 
     async def test_pipeline_success_scenario(self):
@@ -182,14 +187,13 @@ python_version = "3.11"
         mock_responses = self.get_mock_llm_responses()
 
         # Mock LLM router
-        with patch.object(LiteLLMRouter, 'generate') as mock_generate:
+        with patch.object(LiteLLMRouter, "generate") as mock_generate:
             mock_generate.return_value = json.dumps(mock_responses["architect"])
 
             # 1. Architect Agent
             architect = ArchitectAgent()
             arch_plan = await architect.create_architecture(
-                self.sample_request,
-                self.sample_context
+                self.sample_request, self.sample_context
             )
 
             self.assertEqual(arch_plan.pattern.value, "rest_api")
@@ -197,14 +201,11 @@ python_version = "3.11"
             print("✓ ArchitectAgent created architectural plan")
 
         # 2. Task Decomposer
-        with patch.object(LiteLLMRouter, 'generate') as mock_generate:
+        with patch.object(LiteLLMRouter, "generate") as mock_generate:
             mock_generate.return_value = json.dumps(mock_responses["decomposer"])
 
             decomposer = TaskDecomposer()
-            task_plan = await decomposer.decompose(
-                self.sample_request,
-                arch_plan
-            )
+            task_plan = await decomposer.decompose(self.sample_request, arch_plan)
 
             self.assertEqual(len(task_plan.phases), 2)
             self.assertEqual(task_plan.phases[0].name, "Setup Project Structure")
@@ -220,7 +221,7 @@ python_version = "3.11"
 
         # 4. Process phases
         for i, phase in enumerate(task_plan.phases):
-            print(f"\n--- Processing Phase {i+1}: {phase.name} ---")
+            print(f"\n--- Processing Phase {i + 1}: {phase.name} ---")
 
             # Start phase
             await context_manager.start_phase(task_context.task_id, phase.id)
@@ -251,34 +252,25 @@ class Todo(BaseModel):
 
             # Complete phase
             await context_manager.complete_phase(
-                task_context.task_id,
-                phase.id,
-                {"status": "completed"}
+                task_context.task_id, phase.id, {"status": "completed"}
             )
 
             # 5. Auto Commit
             auto_commit = AutoCommit()
             commit_result = await auto_commit.commit_phase(
-                task_context.task_id,
-                phase.id,
-                phase.name
+                task_context.task_id, phase.id, phase.name
             )
 
             self.assertTrue(commit_result.success)
             print(f"✓ AutoCommit committed phase: {commit_result.message}")
 
         # 6. Quality Gate (mock success)
-        with patch.object(QualityGate, 'evaluate') as mock_evaluate:
-            mock_evaluate.return_value = MagicMock(
-                passed=True,
-                issues=[],
-                score=95
-            )
+        with patch.object(QualityGate, "evaluate") as mock_evaluate:
+            mock_evaluate.return_value = MagicMock(passed=True, issues=[], score=95)
 
             quality_gate = QualityGate()
             gate_result = await quality_gate.evaluate(
-                "sample_code",
-                {"project": "todo_api"}
+                "sample_code", {"project": "todo_api"}
             )
 
             self.assertTrue(gate_result.passed)
@@ -298,26 +290,21 @@ class Todo(BaseModel):
         # Create rollback point
         auto_rollback = AutoRollback(mode=RollbackMode.AUTO)
         rollback_point = await auto_rollback.create_rollback_point(
-            task_context.task_id,
-            "test_phase",
-            strategy=RollbackStrategy.GIT
+            task_context.task_id, "test_phase", strategy=RollbackStrategy.GIT
         )
 
         self.assertIsNotNone(rollback_point.checkpoint_id)
         print("✓ Created rollback point")
 
         # Simulate phase failure
-        with patch.object(QualityGate, 'evaluate') as mock_evaluate:
+        with patch.object(QualityGate, "evaluate") as mock_evaluate:
             mock_evaluate.return_value = MagicMock(
-                passed=False,
-                issues=["Security vulnerability detected"],
-                score=45
+                passed=False, issues=["Security vulnerability detected"], score=45
             )
 
             quality_gate = QualityGate()
             gate_result = await quality_gate.evaluate(
-                "vulnerable_code",
-                {"project": "todo_api"}
+                "vulnerable_code", {"project": "todo_api"}
             )
 
             self.assertFalse(gate_result.passed)
@@ -328,7 +315,7 @@ class Todo(BaseModel):
             task_context.task_id,
             "test_phase",
             "Quality gate failed: Security vulnerability",
-            rollback_point
+            rollback_point,
         )
 
         self.assertEqual(rollback_result.status.value, "success")
@@ -348,20 +335,18 @@ class Todo(BaseModel):
         change = CodeChange(
             file_path="src/main.py",
             old_code="def hello():\n    return 'Hello'",
-            new_code="def hello() -> str:\n    \"\"\"Return greeting message.\"\"\"\n    return 'Hello'",
+            new_code='def hello() -> str:\n    """Return greeting message."""\n    return \'Hello\'',
             change_type="modify",
-            line_numbers=(1, 3)
+            line_numbers=(1, 3),
         )
 
         # Mock LLM response
         mock_responses = self.get_mock_llm_responses()
-        with patch.object(LiteLLMRouter, 'generate') as mock_generate:
+        with patch.object(LiteLLMRouter, "generate") as mock_generate:
             mock_generate.return_value = json.dumps(mock_responses["explain"])
 
             explanation = await explain_mode.explain_code_change(
-                change,
-                {"task": "Add type hints"},
-                ExplanationLevel.STANDARD
+                change, {"task": "Add type hints"}, ExplanationLevel.STANDARD
             )
 
             self.assertEqual(explanation.type.value, "code_decision")
@@ -404,8 +389,7 @@ class Todo(BaseModel):
             # Test with real LLM
             architect = ArchitectAgent()
             arch_plan = await architect.create_architecture(
-                "Create a simple calculator API",
-                {"project_type": "web_api"}
+                "Create a simple calculator API", {"project_type": "web_api"}
             )
 
             self.assertIsNotNone(arch_plan)

@@ -7,7 +7,6 @@ Full coverage tests for:
 - VoiceProvider
 """
 
-
 import contextlib
 
 import pytest
@@ -140,16 +139,16 @@ class TestVoiceManager:
 
     def test_set_current_voice(self, manager):
         # Test setting current voice if method exists
-        if hasattr(manager, 'set_current_voice'):
+        if hasattr(manager, "set_current_voice"):
             manager.set_current_voice("rachel")
-        elif hasattr(manager, '_current_voice'):
+        elif hasattr(manager, "_current_voice"):
             manager._current_voice = "rachel"
 
     def test_get_current_voice(self, manager):
         # Test getting current voice
-        if hasattr(manager, 'get_current_voice'):
+        if hasattr(manager, "get_current_voice"):
             manager.get_current_voice()
-        elif hasattr(manager, '_current_voice'):
+        elif hasattr(manager, "_current_voice"):
             pass
 
     def test_voice_selection(self, manager):

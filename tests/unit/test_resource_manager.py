@@ -58,22 +58,26 @@ class TestResourceManager:
 
     def test_cleanup_type_sync(self):
         """Should clean up resources of specific type."""
+
         # Create real objects instead of MagicMock for WeakSet compatibility
         class CloseResource:
             def __init__(self):
                 self.close_called = False
+
             def close(self):
                 self.close_called = True
 
         class TerminateResource:
             def __init__(self):
                 self.terminate_called = False
+
             def terminate(self):
                 self.terminate_called = True
 
         class CancelResource:
             def __init__(self):
                 self.cancel_called = False
+
             def cancel(self):
                 self.cancel_called = True
 
@@ -239,7 +243,7 @@ class TestResourceLeakDetector:
 
     def setup_method(self):
         """Setup for each test."""
-        with patch('psutil.Process') as mock_process:
+        with patch("psutil.Process") as mock_process:
             mock_proc = MagicMock()
             mock_proc.num_fds.return_value = 10
             mock_proc.num_threads.return_value = 5
@@ -261,7 +265,7 @@ class TestResourceLeakDetector:
     def test_check_for_leaks_no_leaks(self):
         """Should not detect leaks when usage is normal."""
         # Simulate normal usage with higher threshold
-        with patch.object(self.detector, '_get_current_usage') as mock_get:
+        with patch.object(self.detector, "_get_current_usage") as mock_get:
             mock_get.return_value = {
                 "fds": 10,
                 "threads": 5,
@@ -277,7 +281,7 @@ class TestResourceLeakDetector:
     def test_check_for_leaks_detected(self):
         """Should detect leaks when usage increases."""
         # Simulate increased usage
-        with patch.object(self.detector, '_get_current_usage') as mock_get:
+        with patch.object(self.detector, "_get_current_usage") as mock_get:
             mock_get.return_value = {
                 "fds": 20,  # 2x increase
                 "threads": 5,
@@ -295,7 +299,7 @@ class TestResourceLeakDetector:
 @pytest.mark.asyncio
 async def test_start_leak_monitor():
     """Should start leak monitoring task."""
-    with patch('src.core.resource_manager.ResourceLeakDetector') as mock_detector:
+    with patch("src.core.resource_manager.ResourceLeakDetector") as mock_detector:
         mock_instance = MagicMock()
         mock_detector.return_value = mock_instance
 

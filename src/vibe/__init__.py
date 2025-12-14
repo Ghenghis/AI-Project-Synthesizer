@@ -18,8 +18,9 @@ Components:
 - AutoRollback: Automatically rolls back on phase failures
 """
 
-from .architect_agent import ArchitectAgent, ArchitecturePlan, Component, DataFlow
+from .architect_agent import ArchitectAgent
 from .architect_agent import ArchitecturePattern as ArchPattern
+from .architect_agent import ArchitecturePlan, Component, DataFlow
 from .auto_commit import (
     AutoCommit,
     CommitConfig,

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RepositoryInfo:
     """Information about a repository for compatibility checking."""
+
     url: str
     name: str
     path: Path | None = None
@@ -28,6 +29,7 @@ class RepositoryInfo:
 @dataclass
 class CompatibilityIssue:
     """Represents a compatibility issue between repositories."""
+
     severity: str  # "error", "warning", "info"
     category: str  # "dependency", "python_version", "language", "license"
     repos_involved: list[str]
@@ -38,6 +40,7 @@ class CompatibilityIssue:
 @dataclass
 class CompatibilityMatrix:
     """Complete compatibility analysis result."""
+
     repositories: list[str]
     overall_compatible: bool
     python_version: str | None
@@ -89,7 +92,14 @@ class CompatibilityChecker:
 
     # License compatibility matrix (simplified)
     LICENSE_COMPATIBILITY = {
-        "MIT": ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unlicense"],
+        "MIT": [
+            "MIT",
+            "Apache-2.0",
+            "BSD-3-Clause",
+            "BSD-2-Clause",
+            "ISC",
+            "Unlicense",
+        ],
         "Apache-2.0": ["Apache-2.0", "MIT", "BSD-3-Clause", "BSD-2-Clause", "ISC"],
         "GPL-3.0": ["GPL-3.0", "AGPL-3.0"],
         "LGPL-3.0": ["LGPL-3.0", "GPL-3.0", "MIT", "Apache-2.0"],
@@ -101,9 +111,7 @@ class CompatibilityChecker:
         self.dep_analyzer = DependencyAnalyzer()
 
     async def check(
-        self,
-        repositories: list[RepositoryInfo],
-        target_python: str = "3.11"
+        self, repositories: list[RepositoryInfo], target_python: str = "3.11"
     ) -> CompatibilityMatrix:
         """
         Check compatibility between repositories.
@@ -149,9 +157,7 @@ class CompatibilityChecker:
         )
 
     def _check_python_versions(
-        self,
-        repositories: list[RepositoryInfo],
-        target_python: str
+        self, repositories: list[RepositoryInfo], target_python: str
     ) -> list[CompatibilityIssue]:
         """Check Python version compatibility."""
         issues = []
@@ -162,19 +168,20 @@ class CompatibilityChecker:
                 min_version = self._parse_python_requirement(repo.python_version)
 
                 if min_version and self._version_less_than(target_python, min_version):
-                    issues.append(CompatibilityIssue(
-                        severity="warning",
-                        category="python_version",
-                        repos_involved=[repo.name],
-                        description=f"{repo.name} requires Python {repo.python_version}, target is {target_python}",
-                        suggestion=f"Consider using Python {min_version} or newer",
-                    ))
+                    issues.append(
+                        CompatibilityIssue(
+                            severity="warning",
+                            category="python_version",
+                            repos_involved=[repo.name],
+                            description=f"{repo.name} requires Python {repo.python_version}, target is {target_python}",
+                            suggestion=f"Consider using Python {min_version} or newer",
+                        )
+                    )
 
         return issues
 
     def _check_dependencies(
-        self,
-        repositories: list[RepositoryInfo]
+        self, repositories: list[RepositoryInfo]
     ) -> tuple[list[CompatibilityIssue], set[str], set[str]]:
         """Check for dependency conflicts."""
         issues = []
@@ -194,26 +201,24 @@ class CompatibilityChecker:
             if len(repo_versions) > 1:
                 versions = list(set(repo_versions.values()))
                 if len(versions) > 1 and not self._versions_might_overlap(versions):
-                    issues.append(CompatibilityIssue(
-                        severity="error",
-                        category="dependency",
-                        repos_involved=list(repo_versions.keys()),
-                        description=f"Conflicting versions of '{pkg_name}': {repo_versions}",
-                        suggestion="Use dependency resolution to find compatible version",
-                    ))
+                    issues.append(
+                        CompatibilityIssue(
+                            severity="error",
+                            category="dependency",
+                            repos_involved=list(repo_versions.keys()),
+                            description=f"Conflicting versions of '{pkg_name}': {repo_versions}",
+                            suggestion="Use dependency resolution to find compatible version",
+                        )
+                    )
 
         # Calculate shared and all dependencies
         all_pkg_names = set(all_deps.keys())
-        shared_pkg_names = {
-            name for name, repos in all_deps.items()
-            if len(repos) > 1
-        }
+        shared_pkg_names = {name for name, repos in all_deps.items() if len(repos) > 1}
 
         return issues, all_pkg_names, shared_pkg_names
 
     def _check_languages(
-        self,
-        repositories: list[RepositoryInfo]
+        self, repositories: list[RepositoryInfo]
     ) -> list[CompatibilityIssue]:
         """Check language compatibility."""
         issues = []
@@ -227,13 +232,15 @@ class CompatibilityChecker:
         # Check for mixed language projects
         unique_languages = set(primary_languages.values())
         if len(unique_languages) > 1:
-            issues.append(CompatibilityIssue(
-                severity="info",
-                category="language",
-                repos_involved=list(primary_languages.keys()),
-                description=f"Mixed language project: {primary_languages}",
-                suggestion="Ensure proper build tooling for multi-language projects",
-            ))
+            issues.append(
+                CompatibilityIssue(
+                    severity="info",
+                    category="language",
+                    repos_involved=list(primary_languages.keys()),
+                    description=f"Mixed language project: {primary_languages}",
+                    suggestion="Ensure proper build tooling for multi-language projects",
+                )
+            )
 
         return issues
 
@@ -249,6 +256,7 @@ class CompatibilityChecker:
 
     def _version_less_than(self, v1: str, v2: str) -> bool:
         """Compare version strings."""
+
         def to_tuple(v: str) -> tuple:
             return tuple(int(x) for x in v.split("."))
 

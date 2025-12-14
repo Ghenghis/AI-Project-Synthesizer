@@ -20,7 +20,7 @@ class TestQualityScorer:
     def test_scorer_has_score_method(self):
         """Should have score method."""
         scorer = QualityScorer()
-        assert hasattr(scorer, 'score') or hasattr(scorer, 'calculate_score')
+        assert hasattr(scorer, "score") or hasattr(scorer, "calculate_score")
 
 
 if __name__ == "__main__":

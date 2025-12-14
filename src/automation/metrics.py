@@ -22,6 +22,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class TimingRecord:
     """Single timing measurement."""
+
     action: str
     start_time: float
     end_time: float
@@ -37,10 +38,11 @@ class TimingRecord:
 @dataclass
 class ActionMetrics:
     """Aggregated metrics for an action."""
+
     action: str
     count: int = 0
     total_ms: float = 0
-    min_ms: float = float('inf')
+    min_ms: float = float("inf")
     max_ms: float = 0
     success_count: int = 0
     failure_count: int = 0
@@ -84,7 +86,7 @@ class ActionMetrics:
             "action": self.action,
             "count": self.count,
             "avg_ms": round(self.avg_ms, 2),
-            "min_ms": round(self.min_ms, 2) if self.min_ms != float('inf') else 0,
+            "min_ms": round(self.min_ms, 2) if self.min_ms != float("inf") else 0,
             "max_ms": round(self.max_ms, 2),
             "p50_ms": round(self.p50_ms, 2),
             "p95_ms": round(self.p95_ms, 2),
@@ -175,7 +177,7 @@ class MetricsCollector:
 
         # Keep only recent records
         if len(self._records) > self._max_samples * 10:
-            self._records = self._records[-self._max_samples * 5:]
+            self._records = self._records[-self._max_samples * 5 :]
 
         # Update aggregated metrics
         if record.action not in self._metrics:
@@ -194,7 +196,7 @@ class MetricsCollector:
         # Keep samples for percentile calculation
         metrics.samples.append(record.duration_ms)
         if len(metrics.samples) > self._max_samples:
-            metrics.samples = metrics.samples[-self._max_samples:]
+            metrics.samples = metrics.samples[-self._max_samples :]
 
     def get_metrics(self, action: str) -> ActionMetrics | None:
         """Get metrics for a specific action."""
@@ -210,8 +212,7 @@ class MetricsCollector:
             "uptime_seconds": time.time() - self._start_time,
             "total_actions": sum(m.count for m in self._metrics.values()),
             "actions": {
-                name: metrics.to_dict()
-                for name, metrics in self._metrics.items()
+                name: metrics.to_dict() for name, metrics in self._metrics.items()
             },
         }
 
@@ -255,9 +256,12 @@ def timed(action: str):
         async def search_github(query: str):
             ...
     """
+
     def decorator(func: Callable):
         async def wrapper(*args, **kwargs):
             async with ActionTimer(action):
                 return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator

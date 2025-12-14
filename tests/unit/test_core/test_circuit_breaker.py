@@ -30,9 +30,7 @@ class TestCircuitBreakerConfig:
     def test_custom_config(self):
         """Should create config with custom values."""
         config = CircuitBreakerConfig(
-            failure_threshold=10,
-            recovery_timeout=60.0,
-            success_threshold=3
+            failure_threshold=10, recovery_timeout=60.0, success_threshold=3
         )
         assert config.failure_threshold == 10
         assert config.recovery_timeout == 60.0

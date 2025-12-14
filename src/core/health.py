@@ -22,6 +22,7 @@ secure_logger = get_secure_logger(__name__)
 
 class HealthStatus(str, Enum):
     """Health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -31,6 +32,7 @@ class HealthStatus(str, Enum):
 @dataclass
 class ComponentHealth:
     """Health status of a component."""
+
     name: str
     status: HealthStatus
     message: str = ""
@@ -42,6 +44,7 @@ class ComponentHealth:
 @dataclass
 class SystemHealth:
     """Overall system health."""
+
     status: HealthStatus
     version: str
     uptime_seconds: float
@@ -64,7 +67,7 @@ class SystemHealth:
                     "details": c.details,
                 }
                 for c in self.components
-            ]
+            ],
         }
 
 
@@ -118,6 +121,7 @@ class HealthChecker:
         start = time.time()
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.get("http://localhost:1234/v1/models")
 
@@ -145,6 +149,7 @@ class HealthChecker:
         start = time.time()
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.get("http://localhost:11434/api/tags")
 
@@ -171,6 +176,7 @@ class HealthChecker:
         start = time.time()
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
             token = settings.platforms.github_token.get_secret_value()
 
@@ -182,10 +188,11 @@ class HealthChecker:
                 )
 
             import httpx
+
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(
                     "https://api.github.com/user",
-                    headers={"Authorization": f"token {token}"}
+                    headers={"Authorization": f"token {token}"},
                 )
 
                 if response.status_code == 200:
@@ -211,6 +218,7 @@ class HealthChecker:
         start = time.time()
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get("https://huggingface.co/api/models?limit=1")
 
@@ -236,6 +244,7 @@ class HealthChecker:
         start = time.time()
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
 
             if settings.platforms.kaggle_username and settings.platforms.kaggle_key:
@@ -260,6 +269,7 @@ class HealthChecker:
         start = time.time()
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
             api_key = settings.elevenlabs.elevenlabs_api_key.get_secret_value()
 
@@ -271,10 +281,10 @@ class HealthChecker:
                 )
 
             import httpx
+
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(
-                    "https://api.elevenlabs.io/v1/user",
-                    headers={"xi-api-key": api_key}
+                    "https://api.elevenlabs.io/v1/user", headers={"xi-api-key": api_key}
                 )
 
                 if response.status_code == 200:
@@ -299,6 +309,7 @@ class HealthChecker:
         start = time.time()
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
             api_key = settings.llm.openai_api_key.get_secret_value()
 
