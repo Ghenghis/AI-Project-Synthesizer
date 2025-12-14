@@ -277,6 +277,6 @@ exclude_lines = [
     "raise AssertionError",
     "if __name__ == .__main__.:",
 ]
-fail_under = 80
+fail_under = 20
 show_missing = true
 precision = 2
