@@ -32,21 +32,26 @@ import pytest
 # Optional Dependency Checks
 # ============================================
 
+
 def _has_autogen():
     """Check if AutoGen is available."""
     try:
         from autogen_agentchat.agents import AssistantAgent
+
         return True
     except ImportError:
         return False
+
 
 def _has_swarm():
     """Check if Swarm is available."""
     try:
         import swarm
+
         return True
     except ImportError:
         return False
+
 
 def _has_piper():
     """Check if Piper TTS binary is available."""
@@ -55,44 +60,48 @@ def _has_piper():
         import shutil
 
         from src.voice.tts.piper_client import PiperTTSClient
+
         client = PiperTTSClient()
         return os.path.exists(client.piper_path) or shutil.which("piper")
     except Exception:
         return False
+
 
 def _has_glm_asr():
     """Check if GLM ASR dependencies are available."""
     try:
         import torch
         import transformers
+
         return True
     except ImportError:
         return False
 
+
 # Create pytest markers
 requires_autogen = pytest.mark.skipif(
     not _has_autogen(),
-    reason="AutoGen not installed. Install with: pip install pyautogen"
+    reason="AutoGen not installed. Install with: pip install pyautogen",
 )
 
 requires_swarm = pytest.mark.skipif(
     not _has_swarm(),
-    reason="Swarm not installed. Install with: pip install git+https://github.com/openai/swarm.git"
+    reason="Swarm not installed. Install with: pip install git+https://github.com/openai/swarm.git",
 )
 
 requires_piper = pytest.mark.skipif(
-    not _has_piper(),
-    reason="Piper TTS binary not available"
+    not _has_piper(), reason="Piper TTS binary not available"
 )
 
 requires_glm_asr = pytest.mark.skipif(
     not _has_glm_asr(),
-    reason="GLM ASR dependencies not installed. Install with: pip install torch transformers"
+    reason="GLM ASR dependencies not installed. Install with: pip install torch transformers",
 )
 
 # ============================================
 # Async Configuration
 # ============================================
+
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
@@ -105,6 +114,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 # ============================================
 # Environment Fixtures
 # ============================================
+
 
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):
@@ -134,9 +144,11 @@ def output_dir(tmp_path: Path) -> Path:
 # Mock Fixtures - Discovery
 # ============================================
 
+
 @pytest.fixture
 def mock_github_response():
     """Mock GitHub API search response that supports both dict and attribute access."""
+
     class MockRepo:
         def __init__(self):
             self.id = 123456
@@ -166,6 +178,7 @@ def mock_github_response():
 
     class MockSearchResult:
         """Mock that supports both dict-style and attribute access like ghapi."""
+
         def __init__(self):
             self.items = [MockRepo()]
             self.total_count = 1
@@ -222,6 +235,7 @@ def mock_repository_info():
 # ============================================
 # Mock Fixtures - Analysis
 # ============================================
+
 
 @pytest.fixture
 def sample_python_code():
@@ -291,6 +305,7 @@ dev = [
 # Mock Fixtures - LLM
 # ============================================
 
+
 @pytest.fixture
 def mock_ollama_client():
     """Mock Ollama client."""
@@ -312,6 +327,7 @@ def mock_llm_response():
 # Integration Test Fixtures
 # ============================================
 
+
 @pytest.fixture
 def sample_repo_structure(tmp_path: Path) -> Path:
     """Create sample repository structure for testing."""
@@ -326,11 +342,13 @@ def sample_repo_structure(tmp_path: Path) -> Path:
     # Create files
     (repo / "README.md").write_text("# Sample Repository\n\nA test repository.")
     (repo / "requirements.txt").write_text("fastapi>=0.100.0\npydantic>=2.0.0\n")
-    (repo / "pyproject.toml").write_text('[project]\nname = "sample"\nversion = "1.0.0"\n')
+    (repo / "pyproject.toml").write_text(
+        '[project]\nname = "sample"\nversion = "1.0.0"\n'
+    )
     (repo / "src" / "__init__.py").write_text("")
     (repo / "src" / "main.py").write_text('def main():\n    print("Hello")\n')
     (repo / "tests" / "__init__.py").write_text("")
-    (repo / "tests" / "test_main.py").write_text('def test_main():\n    assert True\n')
+    (repo / "tests" / "test_main.py").write_text("def test_main():\n    assert True\n")
 
     return repo
 
@@ -338,6 +356,7 @@ def sample_repo_structure(tmp_path: Path) -> Path:
 # ============================================
 # Markers
 # ============================================
+
 
 def pytest_configure(config):
     """Configure custom markers."""

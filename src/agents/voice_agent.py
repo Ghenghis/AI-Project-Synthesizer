@@ -24,6 +24,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class VoiceState:
     """Voice agent state."""
+
     is_listening: bool = False
     is_speaking: bool = False
     is_processing: bool = False
@@ -61,38 +62,48 @@ class VoiceAgent(BaseAgent):
 
     def _setup_tools(self):
         """Set up voice tools."""
-        self.register_tool(AgentTool(
-            name="speak",
-            description="Speak text aloud",
-            func=self._speak,
-            parameters={
-                "text": {"type": "string", "description": "Text to speak"},
-                "voice": {"type": "string", "description": "Voice to use"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="speak",
+                description="Speak text aloud",
+                func=self._speak,
+                parameters={
+                    "text": {"type": "string", "description": "Text to speak"},
+                    "voice": {"type": "string", "description": "Voice to use"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="listen",
-            description="Listen for voice input",
-            func=self._listen,
-            parameters={
-                "timeout": {"type": "integer", "description": "Listen timeout (0=unlimited)"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="listen",
+                description="Listen for voice input",
+                func=self._listen,
+                parameters={
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Listen timeout (0=unlimited)",
+                    },
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="execute_command",
-            description="Execute a voice command",
-            func=self._execute_command,
-            parameters={
-                "command": {"type": "string", "description": "Command to execute"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="execute_command",
+                description="Execute a voice command",
+                func=self._execute_command,
+                parameters={
+                    "command": {"type": "string", "description": "Command to execute"},
+                },
+            )
+        )
 
     async def _get_voice_manager(self):
         """Get voice manager."""
         if self._voice_manager is None:
             from src.voice import get_voice_manager
+
             self._voice_manager = get_voice_manager()
         return self._voice_manager
 
@@ -180,10 +191,12 @@ class VoiceAgent(BaseAgent):
         settings = get_settings_manager().settings.voice
 
         # Build conversation context
-        history = "\n".join([
-            f"{m['role']}: {m['content']}"
-            for m in self._memory[-10:]  # Last 10 messages
-        ])
+        history = "\n".join(
+            [
+                f"{m['role']}: {m['content']}"
+                for m in self._memory[-10:]  # Last 10 messages
+            ]
+        )
 
         prompt = f"""You are a helpful voice assistant. Respond naturally and concisely.
 

@@ -11,6 +11,7 @@ from .loader import Recipe, RecipeLoader
 @dataclass
 class RecipeResult:
     """Result of running a recipe."""
+
     success: bool
     project_path: Path | None = None
     repos_cloned: int = 0
@@ -50,17 +51,13 @@ class RecipeRunner:
         recipe = self.loader.load_recipe(recipe_name)
         if recipe is None:
             return RecipeResult(
-                success=False,
-                errors=[f"Recipe not found: {recipe_name}"]
+                success=False, errors=[f"Recipe not found: {recipe_name}"]
             )
 
         # Validate recipe
         errors = self.loader.validate_recipe(recipe)
         if errors:
-            return RecipeResult(
-                success=False,
-                errors=errors
-            )
+            return RecipeResult(success=False, errors=errors)
 
         # Merge variables
         merged_vars = {}
@@ -72,7 +69,7 @@ class RecipeRunner:
             elif var_config.get("required", False):
                 return RecipeResult(
                     success=False,
-                    errors=[f"Required variable not provided: {var_name}"]
+                    errors=[f"Required variable not provided: {var_name}"],
                 )
 
         # Determine output name
@@ -84,7 +81,7 @@ class RecipeRunner:
                 success=True,
                 project_path=project_path,
                 repos_cloned=len(recipe.sources),
-                warnings=[f"DRY RUN - would create project at {project_path}"]
+                warnings=[f"DRY RUN - would create project at {project_path}"],
             )
 
         # Create project directory
@@ -112,7 +109,9 @@ class RecipeRunner:
                     result.warnings.append(f"Post-synthesis step {step} failed: {e}")
 
             # Count created files
-            result.files_created = sum(1 for _ in project_path.rglob("*") if _.is_file())
+            result.files_created = sum(
+                1 for _ in project_path.rglob("*") if _.is_file()
+            )
 
         except Exception as e:
             result.success = False
@@ -138,7 +137,9 @@ class RecipeRunner:
 
             # Create placeholder file
             readme = comp_path / "README.md"
-            readme.write_text(f"# {component.get('name', 'Component')}\n\nExtracted from: {source.repo}\n")
+            readme.write_text(
+                f"# {component.get('name', 'Component')}\n\nExtracted from: {source.repo}\n"
+            )
 
     async def _run_post_step(
         self,
@@ -189,9 +190,13 @@ MIT
         elif step == "generate_api_docs":
             docs_path = project_path / "docs"
             docs_path.mkdir(exist_ok=True)
-            (docs_path / "API.md").write_text(f"# API Documentation\n\nGenerated for {recipe.name}\n")
+            (docs_path / "API.md").write_text(
+                f"# API Documentation\n\nGenerated for {recipe.name}\n"
+            )
 
         elif step == "generate_diagrams":
             docs_path = project_path / "docs"
             docs_path.mkdir(exist_ok=True)
-            (docs_path / "ARCHITECTURE.md").write_text(f"# Architecture\n\nDiagrams for {recipe.name}\n")
+            (docs_path / "ARCHITECTURE.md").write_text(
+                f"# Architecture\n\nDiagrams for {recipe.name}\n"
+            )

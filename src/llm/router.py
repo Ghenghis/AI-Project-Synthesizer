@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class ProviderType(Enum):
     """LLM provider types."""
+
     OLLAMA = "ollama"
     LMSTUDIO = "lmstudio"
     OPENAI = "openai"
@@ -24,14 +25,16 @@ class ProviderType(Enum):
 
 class TaskComplexity(Enum):
     """Task complexity levels for routing decisions."""
-    SIMPLE = "simple"      # Formatting, simple questions
+
+    SIMPLE = "simple"  # Formatting, simple questions
     MODERATE = "moderate"  # Code review, basic analysis
-    COMPLEX = "complex"    # Architecture, multi-file reasoning
+    COMPLEX = "complex"  # Architecture, multi-file reasoning
 
 
 @dataclass
 class RoutingDecision:
     """Result of routing decision."""
+
     provider: ProviderType
     model: str
     reason: str
@@ -62,8 +65,8 @@ class LLMRouter:
 
     # Token thresholds for routing
     CONTEXT_THRESHOLD_LOCAL = 32000  # Max context for local models
-    CONTEXT_THRESHOLD_7B = 8000      # Recommended for 7B
-    CONTEXT_THRESHOLD_14B = 16000    # Recommended for 14B
+    CONTEXT_THRESHOLD_7B = 8000  # Recommended for 7B
+    CONTEXT_THRESHOLD_14B = 16000  # Recommended for 14B
 
     def __init__(
         self,
@@ -100,17 +103,17 @@ class LLMRouter:
         # Size-based model configurations (optimized for 7B and smaller)
         self.local_models = {
             "ollama": {
-                "tiny": "qwen2.5-coder:1.5b-instruct",      # < 2B parameters
-                "small": "qwen2.5-coder:3b-instruct",      # 2-4B parameters
-                "medium": "qwen2.5-coder:7b-instruct-q8_0", # 4-7B parameters (DEFAULT)
-                "large": "qwen2.5-coder:14b-instruct-q4_K_M", # 8-14B parameters
+                "tiny": "qwen2.5-coder:1.5b-instruct",  # < 2B parameters
+                "small": "qwen2.5-coder:3b-instruct",  # 2-4B parameters
+                "medium": "qwen2.5-coder:7b-instruct-q8_0",  # 4-7B parameters (DEFAULT)
+                "large": "qwen2.5-coder:14b-instruct-q4_K_M",  # 8-14B parameters
             },
             "lmstudio": {
-                "tiny": "local-model-tiny",      # User's < 2B model
-                "small": "local-model-small",    # User's 2-4B model
+                "tiny": "local-model-tiny",  # User's < 2B model
+                "small": "local-model-small",  # User's 2-4B model
                 "medium": "local-model-medium",  # User's 4-7B model (DEFAULT)
-                "large": "local-model-large",    # User's 8-14B model
-            }
+                "large": "local-model-large",  # User's 8-14B model
+            },
         }
 
         self._cloud_client = None  # Lazy initialization
@@ -150,14 +153,20 @@ class LLMRouter:
             return self.preferred_provider
 
         if not self.fallback_enabled:
-            logger.warning(f"Preferred provider {self.preferred_provider} unavailable, fallback disabled")
+            logger.warning(
+                f"Preferred provider {self.preferred_provider} unavailable, fallback disabled"
+            )
             return self.preferred_provider
 
         # Try other local providers
         local_providers = [ProviderType.OLLAMA, ProviderType.LMSTUDIO]
         for provider in local_providers:
-            if provider != self.preferred_provider and await self.check_provider_health(provider):
-                logger.info(f"Falling back from {self.preferred_provider} to {provider}")
+            if provider != self.preferred_provider and await self.check_provider_health(
+                provider
+            ):
+                logger.info(
+                    f"Falling back from {self.preferred_provider} to {provider}"
+                )
                 return provider
 
         # Fall back to cloud if enabled
@@ -188,7 +197,13 @@ class LLMRouter:
 
         # Simple heuristics
         keywords_simple = ["format", "fix typo", "rename", "what is", "explain briefly"]
-        keywords_complex = ["architecture", "design", "refactor entire", "across files", "system"]
+        keywords_complex = [
+            "architecture",
+            "design",
+            "refactor entire",
+            "across files",
+            "system",
+        ]
 
         prompt_lower = prompt.lower()
 
@@ -228,7 +243,9 @@ class LLMRouter:
         provider = preferred_provider or self.preferred_provider
 
         # Get model based on size preference
-        model = self.local_models.get(provider.value, {}).get(self.model_size_preference, "local-model")
+        model = self.local_models.get(provider.value, {}).get(
+            self.model_size_preference, "local-model"
+        )
 
         # Adjust model selection based on task complexity and size preference
         if complexity == TaskComplexity.SIMPLE:
@@ -244,13 +261,20 @@ class LLMRouter:
 
         elif complexity == TaskComplexity.MODERATE:
             # For moderate tasks, use preferred size but consider context
-            if context_length > self.CONTEXT_THRESHOLD_7B and self.model_size_preference == "small":
+            if (
+                context_length > self.CONTEXT_THRESHOLD_7B
+                and self.model_size_preference == "small"
+            ):
                 size_to_use = "medium"
-                model = self.local_models.get(provider.value, {}).get(size_to_use, model)
+                model = self.local_models.get(provider.value, {}).get(
+                    size_to_use, model
+                )
                 reason = f"Moderate task with long context → {size_to_use} {provider.value} model"
             else:
                 size_to_use = self.model_size_preference
-                model = self.local_models.get(provider.value, {}).get(size_to_use, model)
+                model = self.local_models.get(provider.value, {}).get(
+                    size_to_use, model
+                )
                 reason = f"Moderate task → {size_to_use} {provider.value} model"
 
         else:  # COMPLEX
@@ -378,7 +402,9 @@ class LLMRouter:
                                         max_tokens=max_tokens,
                                     )
                         except Exception as fallback_error:
-                            logger.warning(f"Fallback to {fallback_provider} also failed: {fallback_error}")
+                            logger.warning(
+                                f"Fallback to {fallback_provider} also failed: {fallback_error}"
+                            )
                             continue
 
                 # Try cloud as last resort

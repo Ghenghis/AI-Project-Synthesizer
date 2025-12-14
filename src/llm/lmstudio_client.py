@@ -20,6 +20,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class CompletionResult:
     """Result from LLM completion."""
+
     content: str
     model: str
     tokens_used: int
@@ -84,7 +85,7 @@ class LMStudioClient:
         recovery_timeout=60.0,
         success_threshold=2,
         timeout=10.0,
-        expected_exception=Exception
+        expected_exception=Exception,
     )
     @track_performance("lmstudio_health_check")
     async def is_available(self) -> bool:
@@ -99,7 +100,7 @@ class LMStudioClient:
             secure_logger.info(
                 "LM Studio health check successful",
                 correlation_id=correlation_id,
-                available_models=len(models.data)
+                available_models=len(models.data),
             )
 
             metrics.increment("lmstudio_health_success_total")
@@ -109,7 +110,7 @@ class LMStudioClient:
             secure_logger.warning(
                 "LM Studio health check failed",
                 correlation_id=correlation_id,
-                error=str(e)[:200]
+                error=str(e)[:200],
             )
             metrics.increment("lmstudio_health_error_total")
             return False
@@ -120,7 +121,7 @@ class LMStudioClient:
         recovery_timeout=60.0,
         success_threshold=2,
         timeout=10.0,
-        expected_exception=Exception
+        expected_exception=Exception,
     )
     @track_performance("lmstudio_list_models")
     async def list_models(self) -> list[str]:
@@ -136,7 +137,7 @@ class LMStudioClient:
             secure_logger.info(
                 "LM Studio models listed",
                 correlation_id=correlation_id,
-                model_count=len(model_names)
+                model_count=len(model_names),
             )
 
             metrics.increment("lmstudio_list_models_success_total")
@@ -148,7 +149,7 @@ class LMStudioClient:
             secure_logger.error(
                 "Failed to list LM Studio models",
                 correlation_id=correlation_id,
-                error=str(e)[:200]
+                error=str(e)[:200],
             )
             metrics.increment("lmstudio_list_models_error_total")
             return []
@@ -159,7 +160,7 @@ class LMStudioClient:
         recovery_timeout=OLLAMA_BREAKER_CONFIG.recovery_timeout,
         success_threshold=OLLAMA_BREAKER_CONFIG.success_threshold,
         timeout=OLLAMA_BREAKER_CONFIG.timeout,
-        expected_exception=Exception
+        expected_exception=Exception,
     )
     @track_performance("lmstudio_complete")
     async def complete(
@@ -186,6 +187,7 @@ class LMStudioClient:
             CompletionResult with generated content
         """
         import time
+
         start_time = time.time()
 
         correlation_id = correlation_manager.get_correlation_id()
@@ -196,7 +198,7 @@ class LMStudioClient:
             correlation_id=correlation_id,
             model=model,
             prompt_length=len(prompt),
-            temperature=temperature
+            temperature=temperature,
         )
 
         metrics.increment("lmstudio_completion_requests_total", tags={"model": model})
@@ -249,12 +251,18 @@ class LMStudioClient:
                 correlation_id=correlation_id,
                 model=model,
                 tokens_used=tokens_used,
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
             )
 
-            metrics.increment("lmstudio_completion_success_total", tags={"model": model})
-            metrics.record_histogram("lmstudio_completion_tokens", tokens_used, tags={"model": model})
-            metrics.record_histogram("lmstudio_completion_duration", duration_ms, tags={"model": model})
+            metrics.increment(
+                "lmstudio_completion_success_total", tags={"model": model}
+            )
+            metrics.record_histogram(
+                "lmstudio_completion_tokens", tokens_used, tags={"model": model}
+            )
+            metrics.record_histogram(
+                "lmstudio_completion_duration", duration_ms, tags={"model": model}
+            )
 
             return result
 
@@ -264,10 +272,13 @@ class LMStudioClient:
                 correlation_id=correlation_id,
                 model=model,
                 error=str(e)[:200],
-                error_type=type(e).__name__
+                error_type=type(e).__name__,
             )
 
-            metrics.increment("lmstudio_completion_error_total", tags={"model": model, "error_type": type(e).__name__})
+            metrics.increment(
+                "lmstudio_completion_error_total",
+                tags={"model": model, "error_type": type(e).__name__},
+            )
             raise
 
     async def analyze_code(
@@ -303,7 +314,7 @@ class LMStudioClient:
             correlation_id=correlation_id,
             task=task,
             language=language,
-            code_length=len(code)
+            code_length=len(code),
         )
 
         result = await self.complete(
@@ -312,7 +323,9 @@ class LMStudioClient:
             temperature=0.3,
         )
 
-        metrics.increment("lmstudio_code_analysis_total", tags={"task": task, "language": language})
+        metrics.increment(
+            "lmstudio_code_analysis_total", tags={"task": task, "language": language}
+        )
         return result.content
 
     async def generate_code(
@@ -346,7 +359,7 @@ class LMStudioClient:
             correlation_id=correlation_id,
             language=language,
             description_length=len(description),
-            has_context=bool(context)
+            has_context=bool(context),
         )
 
         result = await self.complete(
@@ -365,7 +378,12 @@ class LMStudioClient:
                 if i % 2 == 1:  # Inside code block
                     # Remove language identifier
                     code_lines = block.split("\n")
-                    if code_lines and code_lines[0].strip() in ["python", "javascript", "typescript", language]:
+                    if code_lines and code_lines[0].strip() in [
+                        "python",
+                        "javascript",
+                        "typescript",
+                        language,
+                    ]:
                         code_lines = code_lines[1:]
                     return "\n".join(code_lines).strip()
 
@@ -406,6 +424,6 @@ class LMStudioClient:
                 "Failed to get LM Studio model info",
                 correlation_id=correlation_id,
                 model=model,
-                error=str(e)[:200]
+                error=str(e)[:200],
             )
             return {"id": model, "status": "error", "error": str(e)}

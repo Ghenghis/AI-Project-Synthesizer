@@ -42,12 +42,14 @@ class ProjectWizard:
 
     def run(self) -> dict[str, Any] | None:
         """Run the interactive wizard."""
-        console.print(Panel(
-            "[bold cyan]🧙 AI Project Synthesizer Wizard[/bold cyan]\n\n"
-            "This wizard will guide you through creating a new project.\n"
-            "Press Ctrl+C at any time to cancel.",
-            title="Welcome"
-        ))
+        console.print(
+            Panel(
+                "[bold cyan]🧙 AI Project Synthesizer Wizard[/bold cyan]\n\n"
+                "This wizard will guide you through creating a new project.\n"
+                "Press Ctrl+C at any time to cancel.",
+                title="Welcome",
+            )
+        )
 
         try:
             # Step 1: Project Type
@@ -93,7 +95,7 @@ class ProjectWizard:
         choice = Prompt.ask(
             "\nSelect project type",
             choices=list(self.PROJECT_TYPES.keys()),
-            default="1"
+            default="1",
         )
 
         name, type_id, _ = self.PROJECT_TYPES[choice]
@@ -108,10 +110,7 @@ class ProjectWizard:
 
         default_name = f"my-{self.config['project_type']}-project"
 
-        name = Prompt.ask(
-            "Enter project name",
-            default=default_name
-        )
+        name = Prompt.ask("Enter project name", default=default_name)
 
         # Sanitize name
         name = name.lower().replace(" ", "-").replace("_", "-")
@@ -139,9 +138,13 @@ class ProjectWizard:
                 self.config["tech_stack"] = [t.strip() for t in custom.split(",")]
         else:
             custom = Prompt.ask("Enter technologies (comma-separated)")
-            self.config["tech_stack"] = [t.strip() for t in custom.split(",") if t.strip()]
+            self.config["tech_stack"] = [
+                t.strip() for t in custom.split(",") if t.strip()
+            ]
 
-        console.print(f"  ✓ Stack: [green]{', '.join(self.config['tech_stack'])}[/green]")
+        console.print(
+            f"  ✓ Stack: [green]{', '.join(self.config['tech_stack'])}[/green]"
+        )
 
     def _step_example_repos(self) -> None:
         """Step 4: Add example repositories."""
@@ -152,10 +155,7 @@ class ProjectWizard:
 
         repos = []
         while True:
-            repo = Prompt.ask(
-                f"Repository URL ({len(repos)} added)",
-                default=""
-            )
+            repo = Prompt.ask(f"Repository URL ({len(repos)} added)", default="")
 
             if not repo:
                 break
@@ -177,15 +177,16 @@ class ProjectWizard:
 
         default_path = "G:/" if Path("G:/").exists() else str(Path.home() / "projects")
 
-        output = Prompt.ask(
-            "Output directory",
-            default=default_path
-        )
+        output = Prompt.ask("Output directory", default=default_path)
 
         self.config["output_path"] = Path(output)
-        self.config["full_path"] = self.config["output_path"] / self.config["project_name"]
+        self.config["full_path"] = (
+            self.config["output_path"] / self.config["project_name"]
+        )
 
-        console.print(f"  ✓ Project will be created at: [green]{self.config['full_path']}[/green]")
+        console.print(
+            f"  ✓ Project will be created at: [green]{self.config['full_path']}[/green]"
+        )
 
     def _step_confirm(self) -> bool:
         """Step 6: Confirm and create."""
@@ -227,13 +228,13 @@ async def execute_wizard_config(config: dict[str, Any]) -> bool:
         (config["full_path"] / "docs").mkdir(exist_ok=True)
 
         # Create README
-        readme_content = f"""# {config['project_name']}
+        readme_content = f"""# {config["project_name"]}
 
-{config['project_type_name']} project created with AI Synthesizer.
+{config["project_type_name"]} project created with AI Synthesizer.
 
 ## Tech Stack
 
-{chr(10).join(f'- {tech}' for tech in config['tech_stack'])}
+{chr(10).join(f"- {tech}" for tech in config["tech_stack"])}
 
 ## Getting Started
 
@@ -248,7 +249,7 @@ python -m src.main
 ## Project Structure
 
 ```
-{config['project_name']}/
+{config["project_name"]}/
 ├── src/           # Source code
 ├── tests/         # Test files
 ├── docs/          # Documentation
@@ -278,12 +279,12 @@ This project was created using the AI Project Synthesizer wizard.
 
         # Create main.py
         main_content = f'''"""
-{config['project_name']} - Main Entry Point
+{config["project_name"]} - Main Entry Point
 """
 
 def main():
     """Main function."""
-    print("Hello from {config['project_name']}!")
+    print("Hello from {config["project_name"]}!")
 
 
 if __name__ == "__main__":

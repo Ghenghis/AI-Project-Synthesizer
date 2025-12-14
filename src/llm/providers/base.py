@@ -14,6 +14,7 @@ from typing import Any
 
 class ProviderType(Enum):
     """Supported LLM provider types."""
+
     # Local Providers
     OLLAMA = "ollama"
     LMSTUDIO = "lmstudio"
@@ -41,6 +42,7 @@ class ProviderType(Enum):
 
 class ProviderStatus(Enum):
     """Provider health status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -50,6 +52,7 @@ class ProviderStatus(Enum):
 @dataclass
 class ProviderCapabilities:
     """Capabilities supported by a provider."""
+
     streaming: bool = True
     function_calling: bool = False
     vision: bool = False
@@ -64,6 +67,7 @@ class ProviderCapabilities:
 @dataclass
 class ProviderConfig:
     """Configuration for an LLM provider."""
+
     provider_type: ProviderType
     name: str
     host: str
@@ -88,6 +92,7 @@ class ProviderConfig:
 @dataclass
 class CompletionResult:
     """Result from LLM completion."""
+
     content: str
     model: str
     provider: str
@@ -103,6 +108,7 @@ class CompletionResult:
 @dataclass
 class StreamChunk:
     """Chunk from streaming completion."""
+
     content: str
     finish_reason: str | None = None
     is_final: bool = False
@@ -166,7 +172,7 @@ class LLMProvider(ABC):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> CompletionResult:
         """Generate completion for prompt."""
         pass
@@ -178,7 +184,7 @@ class LLMProvider(ABC):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> AsyncIterator[StreamChunk]:
         """Stream completion for prompt (optional, not all providers support)."""
         # Default implementation: return full completion as single chunk
@@ -188,7 +194,7 @@ class LLMProvider(ABC):
             system_prompt=system_prompt,
             temperature=temperature,
             max_tokens=max_tokens,
-            **kwargs
+            **kwargs,
         )
         yield StreamChunk(content=result.content, finish_reason="stop", is_final=True)
 
@@ -196,7 +202,9 @@ class LLMProvider(ABC):
         """Perform health check and return status."""
         try:
             is_healthy = await self.is_available()
-            self._health_status = ProviderStatus.HEALTHY if is_healthy else ProviderStatus.UNHEALTHY
+            self._health_status = (
+                ProviderStatus.HEALTHY if is_healthy else ProviderStatus.UNHEALTHY
+            )
             self._last_health_check = time.time()
             return self._health_status
         except Exception:

@@ -15,6 +15,7 @@ try:
         BrowserType,
         ViewportSize,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for automation.browser_client: {e}")
@@ -30,6 +31,7 @@ class TestBrowserType:
         instance = BrowserType.CHROMIUM
         assert instance is not None
 
+
 class TestViewportSize:
     """Test ViewportSize."""
 
@@ -38,6 +40,7 @@ class TestViewportSize:
         """Should create ViewportSize."""
         instance = ViewportSize.DESKTOP
         assert instance is not None
+
 
 class TestBrowserAction:
     """Test BrowserAction."""
@@ -48,6 +51,7 @@ class TestBrowserAction:
         instance = BrowserAction(type="click")
         assert instance is not None
 
+
 class TestBrowserSession:
     """Test BrowserSession."""
 
@@ -55,15 +59,17 @@ class TestBrowserSession:
     def test_create_browsersession(self):
         """Should create BrowserSession."""
         from datetime import datetime
+
         instance = BrowserSession(
             session_id="test_session",
             browser_type=BrowserType.CHROMIUM,
             url="http://example.com",
             title="Test Page",
             created_at=datetime.now(),
-            last_activity=datetime.now()
+            last_activity=datetime.now(),
         )
         assert instance is not None
+
 
 class TestBrowserClient:
     """Test BrowserClient."""
@@ -75,6 +81,5 @@ class TestBrowserClient:
         assert instance is not None
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 class SettingsTab(str, Enum):
     """Settings panel tabs."""
+
     GENERAL = "general"
     VOICE = "voice"
     AUTOMATION = "automation"
@@ -33,6 +34,7 @@ class SettingsTab(str, Enum):
 
 class VoiceMode(str, Enum):
     """Voice interaction modes."""
+
     PUSH_TO_TALK = "push_to_talk"
     CONTINUOUS = "continuous"
     AUTO_DETECT = "auto_detect"
@@ -41,6 +43,7 @@ class VoiceMode(str, Enum):
 
 class AutoContinueMode(str, Enum):
     """Auto-continue behavior."""
+
     DISABLED = "disabled"
     ON_COMPLETION = "on_completion"
     ON_SILENCE = "on_silence"
@@ -51,13 +54,17 @@ class AutoContinueMode(str, Enum):
 # Settings Models
 # ============================================
 
+
 class GeneralSettings(BaseModel):
     """General application settings."""
+
     theme: str = Field(default="dark", description="UI theme")
     language: str = Field(default="en", description="Interface language")
     auto_save: bool = Field(default=True, description="Auto-save settings")
     notifications_enabled: bool = Field(default=True, description="Show notifications")
-    startup_check_updates: bool = Field(default=True, description="Check for updates on startup")
+    startup_check_updates: bool = Field(
+        default=True, description="Check for updates on startup"
+    )
     log_level: str = Field(default="INFO", description="Logging level")
     output_directory: str = Field(default="G:/", description="Default output directory")
     max_concurrent_tasks: int = Field(default=5, description="Max parallel tasks")
@@ -65,13 +72,20 @@ class GeneralSettings(BaseModel):
 
 class VoiceSettings(BaseModel):
     """Voice and speech settings."""
+
     # Voice mode
-    mode: VoiceMode = Field(default=VoiceMode.HOTKEY_TOGGLE, description="Voice activation mode")
+    mode: VoiceMode = Field(
+        default=VoiceMode.HOTKEY_TOGGLE, description="Voice activation mode"
+    )
 
     # No pause limits
     pause_detection: bool = Field(default=False, description="Enable pause detection")
-    pause_threshold_ms: int = Field(default=0, description="Pause threshold (0 = disabled)")
-    max_recording_duration: int = Field(default=0, description="Max recording (0 = unlimited)")
+    pause_threshold_ms: int = Field(
+        default=0, description="Pause threshold (0 = disabled)"
+    )
+    max_recording_duration: int = Field(
+        default=0, description="Max recording (0 = unlimited)"
+    )
 
     # Voice provider
     provider: str = Field(default="elevenlabs", description="TTS provider")
@@ -83,7 +97,9 @@ class VoiceSettings(BaseModel):
     similarity_boost: float = Field(default=0.75, description="Voice similarity")
 
     # Response settings
-    auto_speak_responses: bool = Field(default=True, description="Auto-speak AI responses")
+    auto_speak_responses: bool = Field(
+        default=True, description="Auto-speak AI responses"
+    )
     speak_actions: bool = Field(default=True, description="Announce actions")
     speak_errors: bool = Field(default=True, description="Speak error messages")
 
@@ -97,34 +113,51 @@ class VoiceSettings(BaseModel):
 
 class AutomationSettings(BaseModel):
     """Automation and auto-continue settings."""
+
     # Auto-continue
     auto_continue_mode: AutoContinueMode = Field(
-        default=AutoContinueMode.ON_COMPLETION,
-        description="Auto-continue behavior"
+        default=AutoContinueMode.ON_COMPLETION, description="Auto-continue behavior"
     )
-    auto_continue_delay_ms: int = Field(default=500, description="Delay before auto-continue")
+    auto_continue_delay_ms: int = Field(
+        default=500, description="Delay before auto-continue"
+    )
 
     # Auto-actions
     auto_fix_errors: bool = Field(default=True, description="Auto-fix detected errors")
-    auto_retry_failed: bool = Field(default=True, description="Auto-retry failed operations")
+    auto_retry_failed: bool = Field(
+        default=True, description="Auto-retry failed operations"
+    )
     max_retries: int = Field(default=3, description="Max retry attempts")
 
     # Workflow automation
-    auto_run_workflows: bool = Field(default=True, description="Auto-run scheduled workflows")
+    auto_run_workflows: bool = Field(
+        default=True, description="Auto-run scheduled workflows"
+    )
     auto_health_check: bool = Field(default=True, description="Auto health monitoring")
-    health_check_interval_s: int = Field(default=300, description="Health check interval")
+    health_check_interval_s: int = Field(
+        default=300, description="Health check interval"
+    )
 
     # Response automation
-    auto_execute_suggestions: bool = Field(default=False, description="Auto-execute AI suggestions")
-    require_confirmation: bool = Field(default=True, description="Require confirmation for actions")
+    auto_execute_suggestions: bool = Field(
+        default=False, description="Auto-execute AI suggestions"
+    )
+    require_confirmation: bool = Field(
+        default=True, description="Require confirmation for actions"
+    )
 
     # Background tasks
-    background_research: bool = Field(default=True, description="Enable background research")
-    background_indexing: bool = Field(default=True, description="Enable background indexing")
+    background_research: bool = Field(
+        default=True, description="Enable background research"
+    )
+    background_indexing: bool = Field(
+        default=True, description="Enable background indexing"
+    )
 
 
 class HotkeySettings(BaseModel):
     """Hotkey configuration."""
+
     # Voice
     voice_toggle: str = Field(default="ctrl+shift+v", description="Toggle voice")
     voice_push_to_talk: str = Field(default="ctrl+space", description="Push to talk")
@@ -140,17 +173,26 @@ class HotkeySettings(BaseModel):
     open_dashboard: str = Field(default="ctrl+shift+d", description="Open dashboard")
 
     # Automation
-    pause_automation: str = Field(default="ctrl+shift+p", description="Pause automation")
-    resume_automation: str = Field(default="ctrl+shift+r", description="Resume automation")
+    pause_automation: str = Field(
+        default="ctrl+shift+p", description="Pause automation"
+    )
+    resume_automation: str = Field(
+        default="ctrl+shift+r", description="Resume automation"
+    )
 
     # System
-    emergency_stop: str = Field(default="ctrl+shift+escape", description="Emergency stop all")
+    emergency_stop: str = Field(
+        default="ctrl+shift+escape", description="Emergency stop all"
+    )
 
 
 class AIMLSettings(BaseModel):
     """AI/ML configuration."""
+
     # Provider priority
-    primary_provider: str = Field(default="lmstudio", description="Primary LLM provider")
+    primary_provider: str = Field(
+        default="lmstudio", description="Primary LLM provider"
+    )
     fallback_provider: str = Field(default="ollama", description="Fallback provider")
     cloud_fallback: bool = Field(default=False, description="Use cloud as last resort")
 
@@ -161,34 +203,55 @@ class AIMLSettings(BaseModel):
 
     # Context
     context_window: int = Field(default=8192, description="Context window size")
-    include_system_context: bool = Field(default=True, description="Include system context")
+    include_system_context: bool = Field(
+        default=True, description="Include system context"
+    )
 
     # Features
-    enable_function_calling: bool = Field(default=True, description="Enable function calling")
-    enable_code_execution: bool = Field(default=False, description="Enable code execution")
+    enable_function_calling: bool = Field(
+        default=True, description="Enable function calling"
+    )
+    enable_code_execution: bool = Field(
+        default=False, description="Enable code execution"
+    )
     enable_web_search: bool = Field(default=True, description="Enable web search")
 
     # Agents
-    enable_research_agent: bool = Field(default=True, description="Enable research agent")
-    enable_synthesis_agent: bool = Field(default=True, description="Enable synthesis agent")
+    enable_research_agent: bool = Field(
+        default=True, description="Enable research agent"
+    )
+    enable_synthesis_agent: bool = Field(
+        default=True, description="Enable synthesis agent"
+    )
     enable_voice_agent: bool = Field(default=True, description="Enable voice agent")
-    enable_automation_agent: bool = Field(default=True, description="Enable automation agent")
+    enable_automation_agent: bool = Field(
+        default=True, description="Enable automation agent"
+    )
 
     # Learning
-    learn_from_feedback: bool = Field(default=True, description="Learn from user feedback")
-    save_conversation_history: bool = Field(default=True, description="Save conversations")
+    learn_from_feedback: bool = Field(
+        default=True, description="Learn from user feedback"
+    )
+    save_conversation_history: bool = Field(
+        default=True, description="Save conversations"
+    )
 
 
 class WorkflowSettings(BaseModel):
     """Workflow configuration."""
+
     # n8n
     n8n_enabled: bool = Field(default=True, description="Enable n8n integration")
     n8n_url: str = Field(default="http://localhost:5678", description="n8n URL")
     n8n_auto_sync: bool = Field(default=True, description="Auto-sync workflows")
 
     # Scheduling
-    enable_scheduled_workflows: bool = Field(default=True, description="Enable scheduled workflows")
-    research_schedule: str = Field(default="0 */6 * * *", description="Research cron schedule")
+    enable_scheduled_workflows: bool = Field(
+        default=True, description="Enable scheduled workflows"
+    )
+    research_schedule: str = Field(
+        default="0 */6 * * *", description="Research cron schedule"
+    )
     health_schedule: str = Field(default="*/5 * * * *", description="Health check cron")
 
     # Execution
@@ -202,6 +265,7 @@ class WorkflowSettings(BaseModel):
 
 class AdvancedSettings(BaseModel):
     """Advanced settings."""
+
     # Debug
     debug_mode: bool = Field(default=False, description="Enable debug mode")
     verbose_logging: bool = Field(default=False, description="Verbose logging")
@@ -211,16 +275,21 @@ class AdvancedSettings(BaseModel):
     cache_ttl_seconds: int = Field(default=3600, description="Cache TTL")
 
     # Security
-    require_api_key_confirmation: bool = Field(default=True, description="Confirm API key usage")
+    require_api_key_confirmation: bool = Field(
+        default=True, description="Confirm API key usage"
+    )
     sanitize_outputs: bool = Field(default=True, description="Sanitize sensitive data")
 
     # Experimental
-    experimental_features: bool = Field(default=False, description="Enable experimental features")
+    experimental_features: bool = Field(
+        default=False, description="Enable experimental features"
+    )
     beta_agents: bool = Field(default=False, description="Enable beta agents")
 
 
 class AllSettings(BaseModel):
     """Complete settings configuration."""
+
     general: GeneralSettings = Field(default_factory=GeneralSettings)
     voice: VoiceSettings = Field(default_factory=VoiceSettings)
     automation: AutomationSettings = Field(default_factory=AutomationSettings)
@@ -233,6 +302,7 @@ class AllSettings(BaseModel):
 # ============================================
 # Settings Manager
 # ============================================
+
 
 class SettingsManager:
     """
@@ -267,9 +337,7 @@ class SettingsManager:
     def save(self):
         """Save settings to file."""
         self._settings_path.parent.mkdir(parents=True, exist_ok=True)
-        self._settings_path.write_text(
-            self._settings.model_dump_json(indent=2)
-        )
+        self._settings_path.write_text(self._settings.model_dump_json(indent=2))
 
     @property
     def settings(self) -> AllSettings:

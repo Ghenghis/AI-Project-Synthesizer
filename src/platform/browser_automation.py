@@ -37,6 +37,7 @@ secure_logger = get_secure_logger(__name__)
 
 class BrowserType(Enum):
     """Supported browser types."""
+
     CHROMIUM = "chromium"
     FIREFOX = "firefox"
     WEBKIT = "webkit"
@@ -44,6 +45,7 @@ class BrowserType(Enum):
 
 class ViewportSize(Enum):
     """Common viewport sizes."""
+
     DESKTOP = (1920, 1080)
     TABLET = (768, 1024)
     MOBILE = (375, 667)
@@ -53,6 +55,7 @@ class ViewportSize(Enum):
 @dataclass
 class ScreenshotOptions:
     """Screenshot capture options."""
+
     full_page: bool = True
     quality: int = 80  # For JPEG
     type: str = "png"  # png, jpeg
@@ -64,6 +67,7 @@ class ScreenshotOptions:
 @dataclass
 class FormField:
     """Form field definition."""
+
     selector: str
     value: str
     field_type: str = "input"  # input, select, textarea, checkbox, radio
@@ -73,6 +77,7 @@ class FormField:
 @dataclass
 class PageAction:
     """Page action definition."""
+
     action: str  # click, fill, type, press, screenshot, evaluate
     selector: str | None = None
     value: str | None = None
@@ -83,6 +88,7 @@ class PageAction:
 @dataclass
 class BrowserSession:
     """Browser session information."""
+
     id: str
     browser_type: BrowserType
     started_at: datetime
@@ -174,19 +180,20 @@ class BrowserAutomation:
 
         # Add browser-specific options
         if self.browser_type == BrowserType.CHROMIUM:
-            launch_options.update({
-                "args": [
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-web-security",
-                    "--disable-features=VizDisplayCompositor",
-                ]
-            })
+            launch_options.update(
+                {
+                    "args": [
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-web-security",
+                        "--disable-features=VizDisplayCompositor",
+                    ]
+                }
+            )
 
-        self.browser = await getattr(
-            self.playwright,
-            self.browser_type.value
-        ).launch(**launch_options)
+        self.browser = await getattr(self.playwright, self.browser_type.value).launch(
+            **launch_options
+        )
 
         # Create context
         context_options = {
@@ -245,21 +252,25 @@ class BrowserAutomation:
 
         # Monitor requests
         async def on_request(request: Request):
-            self.network_requests.append({
-                "url": request.url,
-                "method": request.method,
-                "headers": dict(request.headers),
-                "timestamp": datetime.now(),
-            })
+            self.network_requests.append(
+                {
+                    "url": request.url,
+                    "method": request.method,
+                    "headers": dict(request.headers),
+                    "timestamp": datetime.now(),
+                }
+            )
 
         # Monitor responses
         async def on_response(response: Response):
-            self.network_responses.append({
-                "url": response.url,
-                "status": response.status,
-                "headers": dict(response.headers),
-                "timestamp": datetime.now(),
-            })
+            self.network_responses.append(
+                {
+                    "url": response.url,
+                    "status": response.status,
+                    "headers": dict(response.headers),
+                    "timestamp": datetime.now(),
+                }
+            )
 
         self.page.on("request", on_request)
         self.page.on("response", on_response)
@@ -476,7 +487,9 @@ class BrowserAutomation:
 
         if submit:
             # Find submit button or form
-            submit_selector = "input[type='submit'], button[type='submit'], button:not([type])"
+            submit_selector = (
+                "input[type='submit'], button[type='submit'], button:not([type])"
+            )
             try:
                 await self.page.click(submit_selector)
             except Exception:
@@ -816,7 +829,6 @@ if __name__ == "__main__":
             browser_type=browser_type,
             headless=not args.headed,
         ) as browser:
-
             # Navigate
             print(f"\nNavigating to: {args.url}")
             metrics = await browser.navigate(args.url)

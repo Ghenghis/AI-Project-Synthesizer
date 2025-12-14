@@ -27,10 +27,7 @@ class TestCacheEntry:
         """Should track expiration time."""
         now = time.time()
         entry = CacheEntry(
-            key="test",
-            value="data",
-            created_at=now,
-            expires_at=now + 3600
+            key="test", value="data", created_at=now, expires_at=now + 3600
         )
         assert entry.expires_at == now + 3600
 
@@ -45,7 +42,7 @@ class TestCacheEntry:
             key="test",
             value="data",
             created_at=time.time(),
-            expires_at=time.time() + 3600
+            expires_at=time.time() + 3600,
         )
         assert entry.is_expired is False
 
@@ -55,7 +52,7 @@ class TestCacheEntry:
             key="test",
             value="data",
             created_at=time.time() - 7200,
-            expires_at=time.time() - 3600
+            expires_at=time.time() - 3600,
         )
         assert entry.is_expired is True
 

@@ -32,11 +32,19 @@ class MockGitLabClient:
                 return project
         return None
 
-    async def get_merge_requests(self, project_id: int, state: str = "opened") -> list[dict[str, Any]]:
+    async def get_merge_requests(
+        self, project_id: int, state: str = "opened"
+    ) -> list[dict[str, Any]]:
         """Mock get merge requests."""
-        return [mr for mr in self.merge_requests if mr["project_id"] == project_id and mr["state"] == state]
+        return [
+            mr
+            for mr in self.merge_requests
+            if mr["project_id"] == project_id and mr["state"] == state
+        ]
 
-    async def create_merge_request(self, project_id: int, title: str, source_branch: str, target_branch: str) -> dict[str, Any]:
+    async def create_merge_request(
+        self, project_id: int, title: str, source_branch: str, target_branch: str
+    ) -> dict[str, Any]:
         """Mock create merge request."""
         mr = {
             "id": len(self.merge_requests) + 1,
@@ -45,7 +53,7 @@ class MockGitLabClient:
             "source_branch": source_branch,
             "target_branch": target_branch,
             "state": "opened",
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
         self.merge_requests.append(mr)
         return mr
@@ -64,7 +72,7 @@ class MockGitLabClient:
             "project_id": project_id,
             "ref": ref,
             "status": "pending",
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
         self.pipelines.append(pipeline)
         return pipeline
@@ -82,7 +90,9 @@ class MockFirecrawlClient:
         """Set scraped content for a URL."""
         self.scraped_content[url] = content
 
-    async def scrape_url(self, url: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def scrape_url(
+        self, url: str, options: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Mock scrape URL."""
         self.crawled_urls.append(url)
         if url in self.scraped_content:
@@ -92,14 +102,12 @@ class MockFirecrawlClient:
             "title": f"Mock Title for {url}",
             "content": f"Mock content for {url}",
             "markdown": f"# Mock Title\n\nMock content for {url}",
-            "metadata": {
-                "sourceURL": url,
-                "pageStatusCode": 200,
-                "pageError": None
-            }
+            "metadata": {"sourceURL": url, "pageStatusCode": 200, "pageError": None},
         }
 
-    async def crawl_urls(self, urls: list[str], options: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    async def crawl_urls(
+        self, urls: list[str], options: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """Mock crawl URLs."""
         results = []
         for url in urls:
@@ -108,7 +116,9 @@ class MockFirecrawlClient:
         self.crawl_results.extend(results)
         return results
 
-    async def search(self, query: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def search(
+        self, query: str, options: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Mock search."""
         return {
             "success": True,
@@ -117,15 +127,15 @@ class MockFirecrawlClient:
                     "url": f"https://example.com/result1?q={query}",
                     "title": f"Mock Result 1 for {query}",
                     "description": f"Mock description for {query}",
-                    "score": 0.95
+                    "score": 0.95,
                 },
                 {
                     "url": f"https://example.com/result2?q={query}",
                     "title": f"Mock Result 2 for {query}",
                     "description": f"Another mock result for {query}",
-                    "score": 0.85
-                }
-            ]
+                    "score": 0.85,
+                },
+            ],
         }
 
 
@@ -133,11 +143,7 @@ class MockSupabaseClient:
     """Mock Supabase client for testing."""
 
     def __init__(self):
-        self.tables = {
-            "projects": [],
-            "tasks": [],
-            "agent_memory": []
-        }
+        self.tables = {"projects": [], "tasks": [], "agent_memory": []}
         self.auth = MagicMock()
         self.auth.user = lambda: {"id": "mock_user_id"}
 
@@ -148,11 +154,7 @@ class MockSupabaseClient:
     async def rpc(self, function_name: str, params: dict[str, Any]) -> Any:
         """Mock RPC call."""
         if function_name == "get_project_stats":
-            return {
-                "total_projects": 10,
-                "active_projects": 5,
-                "completed_tasks": 100
-            }
+            return {"total_projects": 10, "active_projects": 5, "completed_tasks": 100}
         return None
 
 
@@ -212,10 +214,12 @@ class MockGitHubClient:
             "owner": {"login": owner},
             "description": f"Mock {owner}/{repo} repository",
             "stars": 100,
-            "forks": 50
+            "forks": 50,
         }
 
-    async def create_pull_request(self, owner: str, repo: str, title: str, head: str, base: str) -> dict[str, Any]:
+    async def create_pull_request(
+        self, owner: str, repo: str, title: str, head: str, base: str
+    ) -> dict[str, Any]:
         """Mock create pull request."""
         pr = {
             "id": len(self.pull_requests) + 1,
@@ -224,11 +228,13 @@ class MockGitHubClient:
             "head": head,
             "base": base,
             "state": "open",
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
         self.pull_requests.append(pr)
         return pr
 
-    async def get_commits(self, owner: str, repo: str, sha: str | None = None) -> list[dict[str, Any]]:
+    async def get_commits(
+        self, owner: str, repo: str, sha: str | None = None
+    ) -> list[dict[str, Any]]:
         """Mock get commits."""
         return self.commits.copy()

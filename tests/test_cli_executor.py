@@ -55,24 +55,32 @@ class TestCLIExecutor:
         executor = CLIExecutor()
 
         # Dependency missing
-        assert executor._detect_error_type(
-            "ModuleNotFoundError: No module named 'requests'"
-        ) == ErrorType.DEPENDENCY_MISSING
+        assert (
+            executor._detect_error_type(
+                "ModuleNotFoundError: No module named 'requests'"
+            )
+            == ErrorType.DEPENDENCY_MISSING
+        )
 
         # Permission denied
-        assert executor._detect_error_type(
-            "Permission denied: /etc/passwd"
-        ) == ErrorType.PERMISSION_DENIED
+        assert (
+            executor._detect_error_type("Permission denied: /etc/passwd")
+            == ErrorType.PERMISSION_DENIED
+        )
 
         # File not found
-        assert executor._detect_error_type(
-            "FileNotFoundError: No such file or directory: 'missing.txt'"
-        ) == ErrorType.FILE_NOT_FOUND
+        assert (
+            executor._detect_error_type(
+                "FileNotFoundError: No such file or directory: 'missing.txt'"
+            )
+            == ErrorType.FILE_NOT_FOUND
+        )
 
         # Git error
-        assert executor._detect_error_type(
-            "fatal: not a git repository"
-        ) == ErrorType.GIT_ERROR
+        assert (
+            executor._detect_error_type("fatal: not a git repository")
+            == ErrorType.GIT_ERROR
+        )
 
     @pytest.mark.asyncio
     async def test_execute_simple_command(self):

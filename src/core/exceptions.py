@@ -24,7 +24,7 @@ class SynthesizerError(Exception):
         self,
         message: str,
         code: str | None = None,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.code = code or "SYNTHESIZER_ERROR"
@@ -37,13 +37,14 @@ class SynthesizerError(Exception):
             "error": True,
             "code": self.code,
             "message": self.message,
-            "details": self.details
+            "details": self.details,
         }
 
 
 # ============================================
 # Discovery Layer Exceptions
 # ============================================
+
 
 class DiscoveryError(SynthesizerError):
     """Base exception for discovery layer errors."""
@@ -58,7 +59,7 @@ class RepositoryNotFoundError(DiscoveryError):
     def __init__(self, repo_url: str, platform: str = "unknown"):
         super().__init__(
             message=f"Repository not found: {repo_url}",
-            details={"repo_url": repo_url, "platform": platform}
+            details={"repo_url": repo_url, "platform": platform},
         )
         self.code = "REPO_NOT_FOUND"
 
@@ -69,7 +70,7 @@ class PlatformUnavailableError(DiscoveryError):
     def __init__(self, platform: str, reason: str = ""):
         super().__init__(
             message=f"Platform unavailable: {platform}. {reason}",
-            details={"platform": platform, "reason": reason}
+            details={"platform": platform, "reason": reason},
         )
         self.code = "PLATFORM_UNAVAILABLE"
 
@@ -80,7 +81,7 @@ class SearchError(DiscoveryError):
     def __init__(self, query: str, platform: str, reason: str):
         super().__init__(
             message=f"Search failed on {platform}: {reason}",
-            details={"query": query, "platform": platform, "reason": reason}
+            details={"query": query, "platform": platform, "reason": reason},
         )
         self.code = "SEARCH_ERROR"
 
@@ -88,6 +89,7 @@ class SearchError(DiscoveryError):
 # ============================================
 # Analysis Layer Exceptions
 # ============================================
+
 
 class AnalysisError(SynthesizerError):
     """Base exception for analysis layer errors."""
@@ -102,7 +104,7 @@ class ParseError(AnalysisError):
     def __init__(self, file_path: str, language: str, reason: str):
         super().__init__(
             message=f"Failed to parse {file_path}: {reason}",
-            details={"file_path": file_path, "language": language, "reason": reason}
+            details={"file_path": file_path, "language": language, "reason": reason},
         )
         self.code = "PARSE_ERROR"
 
@@ -113,7 +115,7 @@ class UnsupportedLanguageError(AnalysisError):
     def __init__(self, language: str, supported: list):
         super().__init__(
             message=f"Unsupported language: {language}",
-            details={"language": language, "supported": supported}
+            details={"language": language, "supported": supported},
         )
         self.code = "UNSUPPORTED_LANGUAGE"
 
@@ -121,6 +123,7 @@ class UnsupportedLanguageError(AnalysisError):
 # ============================================
 # Resolution Layer Exceptions
 # ============================================
+
 
 class ResolutionError(SynthesizerError):
     """Base exception for dependency resolution errors."""
@@ -136,7 +139,7 @@ class DependencyConflictError(ResolutionError):
         conflict_str = ", ".join(f"{c['source']}: {c['version']}" for c in conflicts)
         super().__init__(
             message=f"Dependency conflict for {package}: {conflict_str}",
-            details={"package": package, "conflicts": conflicts}
+            details={"package": package, "conflicts": conflicts},
         )
         self.code = "DEPENDENCY_CONFLICT"
 
@@ -147,7 +150,7 @@ class ResolutionTimeoutError(ResolutionError):
     def __init__(self, timeout_seconds: int):
         super().__init__(
             message=f"Dependency resolution timed out after {timeout_seconds}s",
-            details={"timeout_seconds": timeout_seconds}
+            details={"timeout_seconds": timeout_seconds},
         )
         self.code = "RESOLUTION_TIMEOUT"
 
@@ -155,6 +158,7 @@ class ResolutionTimeoutError(ResolutionError):
 # ============================================
 # Synthesis Layer Exceptions
 # ============================================
+
 
 class SynthesisError(SynthesizerError):
     """Base exception for synthesis layer errors."""
@@ -169,7 +173,7 @@ class MergeConflictError(SynthesisError):
     def __init__(self, file_path: str, conflict_type: str):
         super().__init__(
             message=f"Merge conflict in {file_path}: {conflict_type}",
-            details={"file_path": file_path, "conflict_type": conflict_type}
+            details={"file_path": file_path, "conflict_type": conflict_type},
         )
         self.code = "MERGE_CONFLICT"
 
@@ -180,7 +184,7 @@ class ExtractionError(SynthesisError):
     def __init__(self, repo_url: str, component: str, reason: str):
         super().__init__(
             message=f"Failed to extract {component} from {repo_url}: {reason}",
-            details={"repo_url": repo_url, "component": component, "reason": reason}
+            details={"repo_url": repo_url, "component": component, "reason": reason},
         )
         self.code = "EXTRACTION_ERROR"
 
@@ -191,7 +195,7 @@ class TemplateError(SynthesisError):
     def __init__(self, template: str, reason: str):
         super().__init__(
             message=f"Template error ({template}): {reason}",
-            details={"template": template, "reason": reason}
+            details={"template": template, "reason": reason},
         )
         self.code = "TEMPLATE_ERROR"
 
@@ -199,6 +203,7 @@ class TemplateError(SynthesisError):
 # ============================================
 # Generation Layer Exceptions
 # ============================================
+
 
 class GenerationError(SynthesizerError):
     """Base exception for documentation generation errors."""
@@ -213,7 +218,7 @@ class DiagramGenerationError(GenerationError):
     def __init__(self, diagram_type: str, reason: str):
         super().__init__(
             message=f"Failed to generate {diagram_type} diagram: {reason}",
-            details={"diagram_type": diagram_type, "reason": reason}
+            details={"diagram_type": diagram_type, "reason": reason},
         )
         self.code = "DIAGRAM_ERROR"
 
@@ -221,6 +226,7 @@ class DiagramGenerationError(GenerationError):
 # ============================================
 # Infrastructure Exceptions
 # ============================================
+
 
 class RateLimitError(SynthesizerError):
     """API rate limit exceeded."""
@@ -231,8 +237,7 @@ class RateLimitError(SynthesizerError):
             message += f". Resets in {reset_time} seconds"
 
         super().__init__(
-            message=message,
-            details={"platform": platform, "reset_time": reset_time}
+            message=message, details={"platform": platform, "reset_time": reset_time}
         )
         self.code = "RATE_LIMITED"
 
@@ -243,7 +248,7 @@ class AuthenticationError(SynthesizerError):
     def __init__(self, platform: str, reason: str = "Invalid or expired token"):
         super().__init__(
             message=f"Authentication failed for {platform}: {reason}",
-            details={"platform": platform, "reason": reason}
+            details={"platform": platform, "reason": reason},
         )
         self.code = "AUTH_FAILED"
 
@@ -254,7 +259,7 @@ class ConfigurationError(SynthesizerError):
     def __init__(self, setting: str, reason: str):
         super().__init__(
             message=f"Configuration error for {setting}: {reason}",
-            details={"setting": setting, "reason": reason}
+            details={"setting": setting, "reason": reason},
         )
         self.code = "CONFIG_ERROR"
 
@@ -265,7 +270,7 @@ class LLMError(SynthesizerError):
     def __init__(self, provider: str, reason: str):
         super().__init__(
             message=f"LLM error ({provider}): {reason}",
-            details={"provider": provider, "reason": reason}
+            details={"provider": provider, "reason": reason},
         )
         self.code = "LLM_ERROR"
 
@@ -276,7 +281,7 @@ class TimeoutError(SynthesizerError):
     def __init__(self, operation: str, timeout_seconds: int):
         super().__init__(
             message=f"Operation '{operation}' timed out after {timeout_seconds}s",
-            details={"operation": operation, "timeout_seconds": timeout_seconds}
+            details={"operation": operation, "timeout_seconds": timeout_seconds},
         )
         self.code = "TIMEOUT"
 

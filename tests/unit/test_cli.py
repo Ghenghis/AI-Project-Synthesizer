@@ -62,14 +62,23 @@ class TestSearchCommand:
         )
         mock_create_search.return_value = mock_search
 
-        result = runner.invoke(app, [
-            "search", "transformers",
-            "--platforms", "github,huggingface",
-            "--max-results", "10",
-            "--language", "python",
-            "--min-stars", "100",
-            "--format", "json"
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "search",
+                "transformers",
+                "--platforms",
+                "github,huggingface",
+                "--max-results",
+                "10",
+                "--language",
+                "python",
+                "--min-stars",
+                "100",
+                "--format",
+                "json",
+            ],
+        )
         assert "Searching for" in result.stdout
 
     def test_search_no_query(self):
@@ -112,10 +121,9 @@ class TestAnalyzeCommand:
             "files_analyzed": 10,
         }
 
-        result = runner.invoke(app, [
-            "analyze", "https://github.com/user/repo",
-            "--format", "json"
-        ])
+        result = runner.invoke(
+            app, ["analyze", "https://github.com/user/repo", "--format", "json"]
+        )
         # Should attempt JSON output
         assert "Analyzing" in result.stdout or result.exit_code == 0
 
@@ -141,12 +149,18 @@ class TestSynthesizeCommand:
             "project_path": "/tmp/test-project",
         }
 
-        result = runner.invoke(app, [
-            "synthesize",
-            "--repos", "https://github.com/user/repo1,https://github.com/user/repo2",
-            "--name", "test-project",
-            "--output", "./output"
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "synthesize",
+                "--repos",
+                "https://github.com/user/repo1,https://github.com/user/repo2",
+                "--name",
+                "test-project",
+                "--output",
+                "./output",
+            ],
+        )
         assert "Synthesizing" in result.stdout or result.exit_code == 0
 
 
@@ -170,10 +184,9 @@ class TestResolveCommand:
             "warnings": [],
         }
 
-        result = runner.invoke(app, [
-            "resolve",
-            "--repos", "https://github.com/user/repo1"
-        ])
+        result = runner.invoke(
+            app, ["resolve", "--repos", "https://github.com/user/repo1"]
+        )
         assert "Resolving" in result.stdout or result.exit_code == 0
 
 
@@ -241,14 +254,18 @@ class TestConfigCommand:
 class TestServeCommand:
     """Test the serve command."""
 
-    @pytest.mark.skip(reason="MCP server requires external mcp package with stdio module")
+    @pytest.mark.skip(
+        reason="MCP server requires external mcp package with stdio module"
+    )
     def test_serve_starts(self):
         """Test that serve command attempts to start server."""
         # Note: This test is skipped because src.mcp_server.server imports mcp.server.stdio
         # which requires the external MCP package to be properly configured
         import src.mcp_server.server as mcp_server_module
 
-        with patch.object(mcp_server_module, 'main', new_callable=AsyncMock) as mock_main:
+        with patch.object(
+            mcp_server_module, "main", new_callable=AsyncMock
+        ) as mock_main:
             mock_main.side_effect = KeyboardInterrupt()
 
             result = runner.invoke(app, ["serve"])

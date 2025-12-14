@@ -31,14 +31,16 @@ secure_logger = get_secure_logger(__name__)
 
 class ResearchDepth(str, Enum):
     """How deep to research."""
-    LIGHT = "light"      # Quick search, top results
-    MEDIUM = "medium"    # More results, some analysis
-    DEEP = "deep"        # Papers, synthesis recommendations
+
+    LIGHT = "light"  # Quick search, top results
+    MEDIUM = "medium"  # More results, some analysis
+    DEEP = "deep"  # Papers, synthesis recommendations
 
 
 @dataclass
 class ResearchResult:
     """Results from proactive research."""
+
     query: str
     depth: ResearchDepth
 
@@ -77,6 +79,7 @@ class ResearchResult:
 @dataclass
 class ResearchConfig:
     """Configuration for proactive research."""
+
     # Idle thresholds (seconds)
     light_research_after: float = 30.0
     medium_research_after: float = 60.0
@@ -165,10 +168,26 @@ class ProactiveResearchEngine:
 
         # Tech keywords
         tech_terms = [
-            "chatbot", "rag", "llm", "machine learning", "ml", "ai",
-            "web", "api", "database", "frontend", "backend",
-            "python", "javascript", "react", "pytorch", "tensorflow",
-            "nlp", "computer vision", "data", "pipeline",
+            "chatbot",
+            "rag",
+            "llm",
+            "machine learning",
+            "ml",
+            "ai",
+            "web",
+            "api",
+            "database",
+            "frontend",
+            "backend",
+            "python",
+            "javascript",
+            "react",
+            "pytorch",
+            "tensorflow",
+            "nlp",
+            "computer vision",
+            "data",
+            "pipeline",
         ]
 
         for term in tech_terms:
@@ -233,6 +252,7 @@ class ProactiveResearchEngine:
             # Initialize search if needed
             if self._search is None:
                 from src.discovery.unified_search import create_unified_search
+
                 self._search = create_unified_search()
 
             # Search projects
@@ -322,19 +342,23 @@ class ProactiveResearchEngine:
         papers = []
 
         # Simple regex parsing (avoid XML dependency)
-        entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
+        entries = re.findall(r"<entry>(.*?)</entry>", xml_text, re.DOTALL)
 
-        for entry in entries[:self.config.max_papers]:
-            title_match = re.search(r'<title>(.*?)</title>', entry, re.DOTALL)
-            summary_match = re.search(r'<summary>(.*?)</summary>', entry, re.DOTALL)
-            link_match = re.search(r'<id>(.*?)</id>', entry)
+        for entry in entries[: self.config.max_papers]:
+            title_match = re.search(r"<title>(.*?)</title>", entry, re.DOTALL)
+            summary_match = re.search(r"<summary>(.*?)</summary>", entry, re.DOTALL)
+            link_match = re.search(r"<id>(.*?)</id>", entry)
 
             if title_match:
-                papers.append({
-                    "title": title_match.group(1).strip().replace('\n', ' '),
-                    "summary": summary_match.group(1).strip()[:200] + "..." if summary_match else "",
-                    "url": link_match.group(1) if link_match else "",
-                })
+                papers.append(
+                    {
+                        "title": title_match.group(1).strip().replace("\n", " "),
+                        "summary": summary_match.group(1).strip()[:200] + "..."
+                        if summary_match
+                        else "",
+                        "url": link_match.group(1) if link_match else "",
+                    }
+                )
 
         return papers
 
@@ -397,7 +421,9 @@ class ProactiveResearchEngine:
         if result.projects:
             lines.append("**📦 Projects Found:**")
             for p in result.projects[:5]:
-                lines.append(f"  • {p['name']} ({p['stars']} ⭐) - {p['description'][:60]}...")
+                lines.append(
+                    f"  • {p['name']} ({p['stars']} ⭐) - {p['description'][:60]}..."
+                )
             lines.append("")
 
         if result.papers:

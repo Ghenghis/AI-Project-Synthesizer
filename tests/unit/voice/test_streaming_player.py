@@ -17,6 +17,7 @@ try:
         StreamConfig,
         StreamingPlayer,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for voice.streaming_player: {e}")
@@ -53,10 +54,7 @@ class TestStreamConfig:
     def test_create_stream_config_custom(self):
         """Should create StreamConfig with custom values."""
         config = StreamConfig(
-            buffer_size=4096,
-            sample_rate=22050,
-            channels=1,
-            chunk_duration=0.05
+            buffer_size=4096, sample_rate=22050, channels=1, chunk_duration=0.05
         )
         assert config.buffer_size == 4096
         assert config.sample_rate == 22050
@@ -154,7 +152,7 @@ class TestStreamingPlayer:
         assert player.config.sample_rate == 22050
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.streaming_player.asyncio')
+    @patch("src.voice.streaming_player.asyncio")
     async def test_start_streaming(self, mock_asyncio):
         """Should start streaming audio."""
         player = StreamingPlayer()
@@ -220,7 +218,7 @@ class TestStreamingPlayer:
         assert player.get_buffer_level() == 1.0
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.streaming_player.pyaudio.PyAudio')
+    @patch("src.voice.streaming_player.pyaudio.PyAudio")
     def test_initialize_audio(self, mock_pyaudio):
         """Should initialize audio output."""
         mock_stream = MagicMock()
@@ -237,7 +235,7 @@ class TestStreamingPlayer:
             format=mock_pa.get_format_from_width.return_value,
             channels=2,
             rate=44100,
-            output=True
+            output=True,
         )
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
@@ -254,8 +252,8 @@ class TestStreamingPlayer:
         player._audio.terminate.assert_called_once()
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.voice.streaming_player.StreamingPlayer._initialize_audio')
-    @patch('src.voice.streaming_player.StreamingPlayer._cleanup_audio')
+    @patch("src.voice.streaming_player.StreamingPlayer._initialize_audio")
+    @patch("src.voice.streaming_player.StreamingPlayer._cleanup_audio")
     async def test_playback_loop(self, mock_cleanup, mock_init):
         """Should run playback loop correctly."""
         player = StreamingPlayer()
@@ -297,11 +295,11 @@ class TestStreamingPlayer:
 
         stats = player.get_stats()
 
-        assert stats['bytes_played'] == 1024
-        assert stats['chunks_played'] == 10
-        assert stats['start_time'] == 1234567890.0
-        assert 'duration' in stats
+        assert stats["bytes_played"] == 1024
+        assert stats["chunks_played"] == 10
+        assert stats["start_time"] == 1234567890.0
+        assert "duration" in stats
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -124,10 +124,12 @@ class TestEventBus:
 
         bus.subscribe(EventType.NOTIFICATION, callback)
 
-        await bus.publish(Event(
-            type=EventType.NOTIFICATION,
-            data={"msg": "test"},
-        ))
+        await bus.publish(
+            Event(
+                type=EventType.NOTIFICATION,
+                data={"msg": "test"},
+            )
+        )
 
         assert len(received) == 1
         assert received[0].data["msg"] == "test"
@@ -192,10 +194,12 @@ class TestEventBus:
     @pytest.mark.asyncio
     async def test_event_history(self, bus):
         for i in range(5):
-            await bus.publish(Event(
-                type=EventType.LOG,
-                data={"index": i},
-            ))
+            await bus.publish(
+                Event(
+                    type=EventType.LOG,
+                    data={"index": i},
+                )
+            )
 
         history = bus.get_history()
         assert len(history) == 5
@@ -307,6 +311,12 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_emit_notification(self):
         bus = get_event_bus()
-        await bus.emit_async(EventType.NOTIFICATION, {"title": "Title", "message": "Message"})
-        await bus.emit_async(EventType.NOTIFICATION, {"title": "Warning", "level": "warning"})
-        await bus.emit_async(EventType.NOTIFICATION, {"title": "Error", "level": "error"})
+        await bus.emit_async(
+            EventType.NOTIFICATION, {"title": "Title", "message": "Message"}
+        )
+        await bus.emit_async(
+            EventType.NOTIFICATION, {"title": "Warning", "level": "warning"}
+        )
+        await bus.emit_async(
+            EventType.NOTIFICATION, {"title": "Error", "level": "error"}
+        )

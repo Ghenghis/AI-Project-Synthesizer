@@ -21,6 +21,7 @@ try:
         WorkflowStatus,
         WorkflowStep,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for workflows.langchain_integration: {e}")
@@ -63,7 +64,7 @@ class TestWorkflowStep:
             name="Test Step",
             description="A test workflow step",
             chain_type=ChainType.LLM_CHAIN,
-            config={"temperature": 0.7}
+            config={"temperature": 0.7},
         )
         assert step.step_id == "step1"
         assert step.name == "Test Step"
@@ -81,7 +82,7 @@ class TestPromptTemplate:
         template = PromptTemplate(
             template="Hello {name}, how are you?",
             input_variables=["name"],
-            template_format="f-string"
+            template_format="f-string",
         )
         assert template.template == "Hello {name}, how are you?"
         assert template.input_variables == ["name"]
@@ -100,7 +101,7 @@ class TestLLMConfig:
             max_tokens=1000,
             top_p=0.9,
             frequency_penalty=0.1,
-            presence_penalty=0.1
+            presence_penalty=0.1,
         )
         assert config.model_name == "gpt-3.5-turbo"
         assert config.temperature == 0.7
@@ -117,7 +118,7 @@ class TestWorkflowContext:
         context = WorkflowContext(
             inputs={"text": "Hello"},
             variables={"name": "World"},
-            metadata={"session_id": "123"}
+            metadata={"session_id": "123"},
         )
         assert context.inputs["text"] == "Hello"
         assert context.variables["name"] == "World"
@@ -135,7 +136,7 @@ class TestWorkflowResult:
             outputs={"response": "Hello World!"},
             error=None,
             execution_time=1.5,
-            tokens_used=100
+            tokens_used=100,
         )
         assert result.status == WorkflowStatus.COMPLETED
         assert result.outputs["response"] == "Hello World!"
@@ -154,7 +155,7 @@ class TestToolIntegration:
             name="search",
             description="Search the web",
             func=lambda x: f"Results for {x}",
-            parameters={"query": "string"}
+            parameters={"query": "string"},
         )
         assert tool.name == "search"
         assert tool.description == "Search the web"
@@ -169,8 +170,7 @@ class TestLangChainWorkflow:
     def test_create_workflow(self):
         """Should create workflow with steps."""
         workflow = LangChainWorkflow(
-            name="Test Workflow",
-            description="A test workflow"
+            name="Test Workflow", description="A test workflow"
         )
         assert workflow.name == "Test Workflow"
         assert workflow.description == "A test workflow"
@@ -182,9 +182,7 @@ class TestLangChainWorkflow:
         """Should add step to workflow."""
         workflow = LangChainWorkflow("Test")
         step = WorkflowStep(
-            step_id="step1",
-            name="Step 1",
-            chain_type=ChainType.LLM_CHAIN
+            step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN
         )
 
         workflow.add_step(step)
@@ -197,9 +195,7 @@ class TestLangChainWorkflow:
         """Should remove step from workflow."""
         workflow = LangChainWorkflow("Test")
         step = WorkflowStep(
-            step_id="step1",
-            name="Step 1",
-            chain_type=ChainType.LLM_CHAIN
+            step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN
         )
         workflow.add_step(step)
 
@@ -208,8 +204,8 @@ class TestLangChainWorkflow:
         assert len(workflow.steps) == 0
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.workflows.langchain_integration.LLMChain')
-    @patch('src.workflows.langchain_integration.ChatOpenAI')
+    @patch("src.workflows.langchain_integration.LLMChain")
+    @patch("src.workflows.langchain_integration.ChatOpenAI")
     async def test_execute_llm_chain_step(self, mock_llm, mock_chain):
         """Should execute LLM chain step."""
         # Mock LLM and chain
@@ -228,19 +224,15 @@ class TestLangChainWorkflow:
             chain_type=ChainType.LLM_CHAIN,
             config={
                 "prompt": PromptTemplate(
-                    template="Say hello to {name}",
-                    input_variables=["name"]
+                    template="Say hello to {name}", input_variables=["name"]
                 ),
-                "llm": LLMConfig(model_name="gpt-3.5-turbo")
-            }
+                "llm": LLMConfig(model_name="gpt-3.5-turbo"),
+            },
         )
         workflow.add_step(step)
 
         # Execute
-        context = WorkflowContext(
-            inputs={"name": "World"},
-            variables={}
-        )
+        context = WorkflowContext(inputs={"name": "World"}, variables={})
         result = await workflow.execute_step(step, context)
 
         assert isinstance(result, WorkflowResult)
@@ -248,7 +240,7 @@ class TestLangChainWorkflow:
         assert "Hello World!" in str(result.outputs)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.workflows.langchain_integration.SequentialChain')
+    @patch("src.workflows.langchain_integration.SequentialChain")
     async def test_execute_sequential_chain(self, mock_sequential):
         """Should execute sequential chain."""
         # Mock sequential chain
@@ -265,9 +257,9 @@ class TestLangChainWorkflow:
             config={
                 "chains": [
                     {"prompt": "Step 1: {input}"},
-                    {"prompt": "Step 2: {step1_output}"}
+                    {"prompt": "Step 2: {step1_output}"},
                 ]
-            }
+            },
         )
         workflow.add_step(step)
 
@@ -278,8 +270,8 @@ class TestLangChainWorkflow:
         assert result.status == WorkflowStatus.COMPLETED
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
-    @patch('src.workflows.langchain_integration.AgentExecutor')
-    @patch('src.workflows.langchain_integration.initialize_agent')
+    @patch("src.workflows.langchain_integration.AgentExecutor")
+    @patch("src.workflows.langchain_integration.initialize_agent")
     async def test_execute_agent_step(self, mock_init_agent, mock_executor):
         """Should execute agent step."""
         # Mock agent
@@ -297,17 +289,14 @@ class TestLangChainWorkflow:
                 name="calculator",
                 description="Calculate",
                 func=lambda x: str(eval(x)),
-                parameters={"expression": "string"}
+                parameters={"expression": "string"},
             )
         ]
         step = WorkflowStep(
             step_id="agent1",
             name="Agent Step",
             chain_type=ChainType.AGENT,
-            config={
-                "tools": tools,
-                "llm": LLMConfig(model_name="gpt-3.5-turbo")
-            }
+            config={"tools": tools, "llm": LLMConfig(model_name="gpt-3.5-turbo")},
         )
         workflow.add_step(step)
 
@@ -323,22 +312,28 @@ class TestLangChainWorkflow:
         workflow = LangChainWorkflow("Test")
 
         # Mock step execution
-        workflow.execute_step = AsyncMock(side_effect=[
-            WorkflowResult(
-                status=WorkflowStatus.COMPLETED,
-                outputs={"step1": "Result 1"},
-                execution_time=1.0
-            ),
-            WorkflowResult(
-                status=WorkflowStatus.COMPLETED,
-                outputs={"step2": "Result 2"},
-                execution_time=1.0
-            )
-        ])
+        workflow.execute_step = AsyncMock(
+            side_effect=[
+                WorkflowResult(
+                    status=WorkflowStatus.COMPLETED,
+                    outputs={"step1": "Result 1"},
+                    execution_time=1.0,
+                ),
+                WorkflowResult(
+                    status=WorkflowStatus.COMPLETED,
+                    outputs={"step2": "Result 2"},
+                    execution_time=1.0,
+                ),
+            ]
+        )
 
         # Add steps
-        step1 = WorkflowStep(step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN)
-        step2 = WorkflowStep(step_id="step2", name="Step 2", chain_type=ChainType.LLM_CHAIN)
+        step1 = WorkflowStep(
+            step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN
+        )
+        step2 = WorkflowStep(
+            step_id="step2", name="Step 2", chain_type=ChainType.LLM_CHAIN
+        )
         workflow.add_step(step1)
         workflow.add_step(step2)
 
@@ -358,7 +353,9 @@ class TestLangChainWorkflow:
         # Mock step execution with error
         workflow.execute_step = AsyncMock(side_effect=Exception("Step failed"))
 
-        step = WorkflowStep(step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN)
+        step = WorkflowStep(
+            step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN
+        )
         workflow.add_step(step)
 
         # Execute
@@ -394,12 +391,12 @@ class TestLangChainWorkflow:
 
         stats = workflow.get_stats()
 
-        assert stats['name'] == "Test"
-        assert stats['status'] == WorkflowStatus.PENDING
-        assert stats['step_count'] == 0
-        assert stats['total_tokens'] == 1000
-        assert stats['execution_count'] == 5
-        assert 'start_time' in stats
+        assert stats["name"] == "Test"
+        assert stats["status"] == WorkflowStatus.PENDING
+        assert stats["step_count"] == 0
+        assert stats["total_tokens"] == 1000
+        assert stats["execution_count"] == 5
+        assert "start_time" in stats
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_validate_workflow(self):
@@ -415,12 +412,9 @@ class TestLangChainWorkflow:
             name="Step 1",
             chain_type=ChainType.LLM_CHAIN,
             config={
-                "prompt": PromptTemplate(
-                    template="Test prompt",
-                    input_variables=[]
-                ),
-                "llm": LLMConfig(model_name="gpt-3.5-turbo")
-            }
+                "prompt": PromptTemplate(template="Test prompt", input_variables=[]),
+                "llm": LLMConfig(model_name="gpt-3.5-turbo"),
+            },
         )
         workflow.add_step(step)
 
@@ -437,17 +431,17 @@ class TestLangChainWorkflow:
             name="Step 1",
             description="First step",
             chain_type=ChainType.LLM_CHAIN,
-            config={"temperature": 0.7}
+            config={"temperature": 0.7},
         )
         workflow.add_step(step)
 
         exported = workflow.export()
 
-        assert exported['name'] == "Test Workflow"
-        assert exported['description'] == "A test workflow"
-        assert len(exported['steps']) == 1
-        assert exported['steps'][0]['step_id'] == "step1"
-        assert exported['steps'][0]['chain_type'] == "llm_chain"
+        assert exported["name"] == "Test Workflow"
+        assert exported["description"] == "A test workflow"
+        assert len(exported["steps"]) == 1
+        assert exported["steps"][0]["step_id"] == "step1"
+        assert exported["steps"][0]["chain_type"] == "llm_chain"
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_import_workflow(self):
@@ -460,9 +454,9 @@ class TestLangChainWorkflow:
                     "step_id": "step1",
                     "name": "Step 1",
                     "chain_type": "llm_chain",
-                    "config": {"temperature": 0.5}
+                    "config": {"temperature": 0.5},
                 }
-            ]
+            ],
         }
 
         workflow = LangChainWorkflow.import_workflow(workflow_dict)
@@ -473,5 +467,5 @@ class TestLangChainWorkflow:
         assert workflow.steps[0].step_id == "step1"
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

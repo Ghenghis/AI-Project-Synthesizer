@@ -29,17 +29,19 @@ secure_logger = get_secure_logger(__name__)
 
 class PluginType(str, Enum):
     """Types of plugins."""
-    PLATFORM = "platform"      # New search platforms
-    SYNTHESIS = "synthesis"    # Synthesis strategies
-    ANALYSIS = "analysis"      # Code analysis tools
-    VOICE = "voice"           # Voice providers
-    LLM = "llm"               # LLM providers
-    HOOK = "hook"             # Event hooks
+
+    PLATFORM = "platform"  # New search platforms
+    SYNTHESIS = "synthesis"  # Synthesis strategies
+    ANALYSIS = "analysis"  # Code analysis tools
+    VOICE = "voice"  # Voice providers
+    LLM = "llm"  # LLM providers
+    HOOK = "hook"  # Event hooks
 
 
 @dataclass
 class PluginMetadata:
     """Plugin metadata."""
+
     name: str
     version: str
     description: str
@@ -165,8 +167,8 @@ class PluginManager:
         self._plugins: dict[str, Plugin] = {}
         self._plugin_paths: list[Path] = [
             Path(__file__).parent.parent / "plugins",  # Built-in
-            Path.home() / ".synthesizer" / "plugins",   # User
-            Path.cwd() / ".synthesizer" / "plugins",    # Project
+            Path.home() / ".synthesizer" / "plugins",  # User
+            Path.cwd() / ".synthesizer" / "plugins",  # Project
         ]
 
     async def discover_plugins(self) -> int:
@@ -211,15 +213,15 @@ class PluginManager:
         for name in dir(module):
             obj = getattr(module, name)
             if (
-                isinstance(obj, type) and
-                issubclass(obj, Plugin) and
-                obj is not Plugin and
-                not name.startswith("_")
+                isinstance(obj, type)
+                and issubclass(obj, Plugin)
+                and obj is not Plugin
+                and not name.startswith("_")
             ):
                 # Check if it's a concrete class (not abstract base)
                 if not any(
                     getattr(obj, m, None) is getattr(Plugin, m, None)
-                    for m in ['metadata']
+                    for m in ["metadata"]
                     if hasattr(Plugin, m)
                 ):
                     return obj()

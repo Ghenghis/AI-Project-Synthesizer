@@ -24,10 +24,10 @@ class TestGetLogger:
         """Logger should have logging methods."""
         logger = get_logger("my_module")
         # structlog loggers have these methods
-        assert hasattr(logger, 'info')
-        assert hasattr(logger, 'debug')
-        assert hasattr(logger, 'error')
-        assert hasattr(logger, 'warning')
+        assert hasattr(logger, "info")
+        assert hasattr(logger, "debug")
+        assert hasattr(logger, "error")
+        assert hasattr(logger, "warning")
 
 
 class TestSetupLogging:

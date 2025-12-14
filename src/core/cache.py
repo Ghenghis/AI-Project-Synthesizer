@@ -25,12 +25,13 @@ from src.core.security import get_secure_logger
 
 secure_logger = get_secure_logger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class CacheEntry(Generic[T]):
     """A cached item with metadata."""
+
     key: str
     value: T
     created_at: float
@@ -130,7 +131,9 @@ class MemoryCache(CacheBackend):
             "max_size": self._max_size,
             "hits": self._hits,
             "misses": self._misses,
-            "hit_rate": self._hits / (self._hits + self._misses) if (self._hits + self._misses) > 0 else 0,
+            "hit_rate": self._hits / (self._hits + self._misses)
+            if (self._hits + self._misses) > 0
+            else 0,
         }
 
     def _evict_oldest(self):
@@ -167,8 +170,7 @@ class SQLiteCache(CacheBackend):
     async def get(self, key: str) -> Any | None:
         with sqlite3.connect(self._db_path) as conn:
             cursor = conn.execute(
-                "SELECT value, expires_at FROM cache WHERE key = ?",
-                (key,)
+                "SELECT value, expires_at FROM cache WHERE key = ?", (key,)
             )
             row = cursor.fetchone()
 
@@ -193,10 +195,13 @@ class SQLiteCache(CacheBackend):
         expires_at = time.time() + ttl_seconds if ttl_seconds else None
 
         with sqlite3.connect(self._db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO cache (key, value, created_at, expires_at, hits)
                 VALUES (?, ?, ?, ?, 0)
-            """, (key, json.dumps(value), time.time(), expires_at))
+            """,
+                (key, json.dumps(value), time.time(), expires_at),
+            )
             conn.commit()
 
         return True
@@ -230,7 +235,7 @@ class SQLiteCache(CacheBackend):
         with sqlite3.connect(self._db_path) as conn:
             cursor = conn.execute(
                 "DELETE FROM cache WHERE expires_at IS NOT NULL AND expires_at < ?",
-                (time.time(),)
+                (time.time(),),
             )
             conn.commit()
             return cursor.rowcount
@@ -249,6 +254,7 @@ class RedisCache(CacheBackend):
         if self._client is None:
             try:
                 import redis.asyncio as redis
+
                 self._client = redis.from_url(self._url)
             except ImportError:
                 raise RuntimeError("Redis not installed. Run: pip install redis")
@@ -388,6 +394,7 @@ def cached(ttl_seconds: int = 3600, key_prefix: str = ""):
         async def search_repos(query: str):
             ...
     """
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             cache = get_cache()
@@ -409,4 +416,5 @@ def cached(ttl_seconds: int = 3600, key_prefix: str = ""):
             return result
 
         return wrapper
+
     return decorator

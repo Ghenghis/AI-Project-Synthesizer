@@ -67,7 +67,7 @@ class TestActionMetrics:
         assert metrics.action == "test"
         assert metrics.count == 0
         assert metrics.total_ms == 0
-        assert metrics.min_ms == float('inf')
+        assert metrics.min_ms == float("inf")
         assert metrics.max_ms == 0
         assert metrics.success_count == 0
         assert metrics.failure_count == 0
@@ -233,13 +233,15 @@ class TestMetricsCollector:
 
     def test_multiple_records(self, collector):
         for i in range(5):
-            collector.record(TimingRecord(
-                action="multi",
-                start_time=0,
-                end_time=0,
-                duration_ms=10 * (i + 1),
-                success=True,
-            ))
+            collector.record(
+                TimingRecord(
+                    action="multi",
+                    start_time=0,
+                    end_time=0,
+                    duration_ms=10 * (i + 1),
+                    success=True,
+                )
+            )
 
         metrics = collector.get_metrics("multi")
         assert metrics.count == 5
@@ -252,24 +254,39 @@ class TestMetricsCollector:
         assert metrics is None
 
     def test_get_all_metrics(self, collector):
-        collector.record(TimingRecord(
-            action="action1", start_time=0, end_time=0,
-            duration_ms=10, success=True,
-        ))
-        collector.record(TimingRecord(
-            action="action2", start_time=0, end_time=0,
-            duration_ms=20, success=True,
-        ))
+        collector.record(
+            TimingRecord(
+                action="action1",
+                start_time=0,
+                end_time=0,
+                duration_ms=10,
+                success=True,
+            )
+        )
+        collector.record(
+            TimingRecord(
+                action="action2",
+                start_time=0,
+                end_time=0,
+                duration_ms=20,
+                success=True,
+            )
+        )
 
         all_metrics = collector.get_all_metrics()
         assert "action1" in all_metrics
         assert "action2" in all_metrics
 
     def test_get_summary(self, collector):
-        collector.record(TimingRecord(
-            action="summary_test", start_time=0, end_time=0,
-            duration_ms=100, success=True,
-        ))
+        collector.record(
+            TimingRecord(
+                action="summary_test",
+                start_time=0,
+                end_time=0,
+                duration_ms=100,
+                success=True,
+            )
+        )
 
         summary = collector.get_summary()
         assert "uptime_seconds" in summary
@@ -277,10 +294,15 @@ class TestMetricsCollector:
         assert "actions" in summary
 
     def test_reset(self, collector):
-        collector.record(TimingRecord(
-            action="to_reset", start_time=0, end_time=0,
-            duration_ms=10, success=True,
-        ))
+        collector.record(
+            TimingRecord(
+                action="to_reset",
+                start_time=0,
+                end_time=0,
+                duration_ms=10,
+                success=True,
+            )
+        )
 
         # Reset by creating new collector or clearing internal state
         collector._metrics = {}
@@ -293,10 +315,15 @@ class TestMetricsCollector:
         collector = MetricsCollector(max_samples=5)
 
         for i in range(10):
-            collector.record(TimingRecord(
-                action="limited", start_time=0, end_time=0,
-                duration_ms=i, success=True,
-            ))
+            collector.record(
+                TimingRecord(
+                    action="limited",
+                    start_time=0,
+                    end_time=0,
+                    duration_ms=i,
+                    success=True,
+                )
+            )
 
         metrics = collector.get_metrics("limited")
         assert len(metrics.samples) == 5
@@ -306,10 +333,15 @@ class TestMetricsCollector:
 
         # Add many records
         for i in range(200):
-            collector.record(TimingRecord(
-                action="cleanup", start_time=0, end_time=0,
-                duration_ms=i, success=True,
-            ))
+            collector.record(
+                TimingRecord(
+                    action="cleanup",
+                    start_time=0,
+                    end_time=0,
+                    duration_ms=i,
+                    success=True,
+                )
+            )
 
         # Records should be cleaned up
         assert len(collector._records) <= 100

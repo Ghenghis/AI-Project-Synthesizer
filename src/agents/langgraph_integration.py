@@ -26,26 +26,34 @@ try:
     from langgraph.middleware import StateMiddleware
     from langgraph.prebuilt import ToolNode
     from langgraph.store.memory import MemoryStore
+
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
+
     # Create mock classes for graceful degradation
     class StateGraph:
         def __init__(self, *args, **kwargs):
             pass
+
         def add_node(self, *args, **kwargs):
             return self
+
         def add_edge(self, *args, **kwargs):
             return self
+
         def add_conditional_edges(self, *args, **kwargs):
             return self
+
         def set_entry_point(self, *args, **kwargs):
             return self
+
         def compile(self, *args, **kwargs):
             return self
 
     class END:
         pass
+
 
 from src.core.security import get_secure_logger
 from src.llm.litellm_router import LiteLLMRouter
@@ -56,6 +64,7 @@ secure_logger = get_secure_logger(__name__)
 
 class WorkflowStatus(Enum):
     """Status of a workflow execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     PAUSED = "paused"
@@ -67,6 +76,7 @@ class WorkflowStatus(Enum):
 @dataclass
 class WorkflowState(TypedDict):
     """State for LangGraph workflows."""
+
     # Core state
     messages: Annotated[list[dict[str, str]], "Conversation messages"]
     current_step: str
@@ -95,6 +105,7 @@ class WorkflowState(TypedDict):
 @dataclass
 class WorkflowResult:
     """Result of a workflow execution."""
+
     workflow_id: str
     status: WorkflowStatus
     final_state: WorkflowState
@@ -118,7 +129,7 @@ class LangGraphIntegration:
         voice_manager: VoiceManager | None = None,
         enable_voice_output: bool = False,
         llm_router: LiteLLMRouter | None = None,
-        checkpoint_db_path: str | None = None
+        checkpoint_db_path: str | None = None,
     ):
         """
         Initialize LangGraph integration.
@@ -147,7 +158,9 @@ class LangGraphIntegration:
             self._initialize_checkpointing()
             self._create_default_workflows()
         else:
-            secure_logger.warning("LangGraph not installed. Add to requirements with: langgraph>=0.2.0")
+            secure_logger.warning(
+                "LangGraph not installed. Add to requirements with: langgraph>=0.2.0"
+            )
 
         secure_logger.info("LangGraph integration initialized")
         secure_logger.info(f"  Voice output: {self.enable_voice_output}")
@@ -161,7 +174,9 @@ class LangGraphIntegration:
             os.makedirs(os.path.dirname(self.checkpoint_db_path), exist_ok=True)
 
             # Use SQLite for persistent checkpoints
-            self.checkpoint_saver = SqliteSaver.from_conn_string(f"sqlite:///{self.checkpoint_db_path}")
+            self.checkpoint_saver = SqliteSaver.from_conn_string(
+                f"sqlite:///{self.checkpoint_db_path}"
+            )
             secure_logger.info("SQLite checkpoint saver initialized")
         except Exception as e:
             secure_logger.warning(f"Failed to initialize SQLite checkpoints: {e}")
@@ -198,7 +213,7 @@ class LangGraphIntegration:
             state["results"]["analysis"] = {
                 "complexity": "medium",
                 "issues_found": 2,
-                "suggestions": ["Add type hints", "Improve error handling"]
+                "suggestions": ["Add type hints", "Improve error handling"],
             }
             state["current_step"] = "security_check"
             state["completed_steps"] += 1
@@ -214,7 +229,10 @@ class LangGraphIntegration:
                 state["human_input_required"] = True
                 state["current_step"] = "awaiting_human_input"
             else:
-                state["results"]["security"] = {"vulnerabilities": 0, "risk_level": "low"}
+                state["results"]["security"] = {
+                    "vulnerabilities": 0,
+                    "risk_level": "low",
+                }
                 state["current_step"] = "generate_report"
                 state["completed_steps"] += 1
 
@@ -228,7 +246,10 @@ class LangGraphIntegration:
                 # Process human input
                 approval = state["human_input"].lower().startswith("approve")
                 if approval:
-                    state["results"]["security"] = {"vulnerabilities": 0, "approved_by_human": True}
+                    state["results"]["security"] = {
+                        "vulnerabilities": 0,
+                        "approved_by_human": True,
+                    }
                     state["current_step"] = "generate_report"
                 else:
                     state["error"] = "Security review rejected"
@@ -247,7 +268,7 @@ class LangGraphIntegration:
             state["results"]["report"] = {
                 "summary": "Code review completed",
                 "score": 8.5,
-                "recommendations": state["results"]["analysis"]["suggestions"]
+                "recommendations": state["results"]["analysis"]["suggestions"],
             }
             state["status"] = "completed"
             state["current_step"] = "end"
@@ -300,7 +321,7 @@ class LangGraphIntegration:
                 "Implement core functionality",
                 "Add error handling",
                 "Write tests",
-                "Create documentation"
+                "Create documentation",
             ]
 
             state["results"]["steps"] = steps
@@ -317,7 +338,7 @@ class LangGraphIntegration:
             state["results"]["validation"] = {
                 "complete": True,
                 "missing_aspects": [],
-                "estimated_time": "2-3 hours"
+                "estimated_time": "2-3 hours",
             }
             state["status"] = "completed"
             state["current_step"] = "end"
@@ -348,11 +369,7 @@ class LangGraphIntegration:
             """Extract code structure for documentation."""
             await self._speak_if_enabled("Extracting code structure...")
 
-            state["results"]["structure"] = {
-                "functions": 5,
-                "classes": 2,
-                "modules": 1
-            }
+            state["results"]["structure"] = {"functions": 5, "classes": 2, "modules": 1}
             state["current_step"] = "generate_docs"
             state["completed_steps"] += 1
 
@@ -365,7 +382,7 @@ class LangGraphIntegration:
             state["results"]["documentation"] = {
                 "docstrings": True,
                 "readme": True,
-                "api_docs": True
+                "api_docs": True,
             }
             state["status"] = "completed"
             state["current_step"] = "end"
@@ -415,7 +432,9 @@ class LangGraphIntegration:
             await self._speak_if_enabled("Proposing solution...")
 
             state["results"]["fix"] = "Add input validation before processing"
-            state["results"]["fixed_code"] = "def process(value: str) -> str:\n    if not isinstance(value, str):\n        raise TypeError('Expected string')\n    return value.upper()"
+            state["results"]["fixed_code"] = (
+                "def process(value: str) -> str:\n    if not isinstance(value, str):\n        raise TypeError('Expected string')\n    return value.upper()"
+            )
             state["status"] = "completed"
             state["current_step"] = "end"
             state["completed_steps"] += 1
@@ -441,7 +460,7 @@ class LangGraphIntegration:
         workflow_name: str,
         task_description: str,
         context: dict[str, Any] | None = None,
-        resume_from_checkpoint: str | None = None
+        resume_from_checkpoint: str | None = None,
     ) -> WorkflowResult:
         """
         Run a stateful workflow.
@@ -464,11 +483,13 @@ class LangGraphIntegration:
                 total_steps=0,
                 execution_time_ms=0.0,
                 checkpoints_created=0,
-                human_interventions=0
+                human_interventions=0,
             )
 
         if workflow_name not in self.active_workflows:
-            raise ValueError(f"Workflow '{workflow_name}' not found. Available: {list(self.active_workflows.keys())}")
+            raise ValueError(
+                f"Workflow '{workflow_name}' not found. Available: {list(self.active_workflows.keys())}"
+            )
 
         # Generate workflow ID
         workflow_id = f"{workflow_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -488,7 +509,7 @@ class LangGraphIntegration:
             error=None,
             retry_count=0,
             total_steps=4,  # Default, workflows can override
-            completed_steps=0
+            completed_steps=0,
         )
 
         start_time = asyncio.get_event_loop().time()
@@ -506,8 +527,7 @@ class LangGraphIntegration:
             # Execute workflow
             final_state = None
             async for event in self.active_workflows[workflow_name].astream(
-                initial_state,
-                config=config
+                initial_state, config=config
             ):
                 # Track checkpoints
                 if event.get("__checkpoint__"):
@@ -541,7 +561,7 @@ class LangGraphIntegration:
                 total_steps=total,
                 execution_time_ms=execution_time,
                 checkpoints_created=checkpoints_created,
-                human_interventions=human_interventions
+                human_interventions=human_interventions,
             )
 
             # Store in history
@@ -564,7 +584,7 @@ class LangGraphIntegration:
                 total_steps=0,
                 execution_time_ms=0.0,
                 checkpoints_created=0,
-                human_interventions=0
+                human_interventions=0,
             )
 
     async def pause_workflow(self, workflow_id: str) -> bool:
@@ -574,9 +594,7 @@ class LangGraphIntegration:
         return True
 
     async def resume_workflow(
-        self,
-        workflow_id: str,
-        human_input: str | None = None
+        self, workflow_id: str, human_input: str | None = None
     ) -> WorkflowResult:
         """Resume a paused workflow."""
         secure_logger.info(f"Resuming workflow: {workflow_id}")
@@ -599,7 +617,7 @@ class LangGraphIntegration:
             workflow_name,
             previous_result.final_state.get("task_description", ""),
             context,
-            resume_from_checkpoint=workflow_id
+            resume_from_checkpoint=workflow_id,
         )
 
     async def get_workflow_list(self) -> list[dict[str, str]]:
@@ -608,23 +626,23 @@ class LangGraphIntegration:
             {
                 "name": "code_review",
                 "description": "Stateful code review with security checks and human approval",
-                "steps": 4
+                "steps": 4,
             },
             {
                 "name": "task_decomposition",
                 "description": "Break down complex tasks into manageable steps",
-                "steps": 3
+                "steps": 3,
             },
             {
                 "name": "documentation",
                 "description": "Generate comprehensive documentation for code",
-                "steps": 2
+                "steps": 2,
             },
             {
                 "name": "debug",
                 "description": "Systematic debugging workflow with fix proposals",
-                "steps": 3
-            }
+                "steps": 3,
+            },
         ]
 
     async def get_workflow_history(self) -> list[WorkflowResult]:
@@ -648,14 +666,18 @@ class LangGraphIntegration:
             WorkflowStatus.COMPLETED: "completed successfully",
             WorkflowStatus.FAILED: "failed",
             WorkflowStatus.PAUSED: "was paused",
-            WorkflowStatus.CANCELLED: "was cancelled"
+            WorkflowStatus.CANCELLED: "was cancelled",
         }
 
         announcement = f"Workflow {status_msg.get(result.status, 'finished')}. "
-        announcement += f"Completed {result.steps_completed} of {result.total_steps} steps. "
+        announcement += (
+            f"Completed {result.steps_completed} of {result.total_steps} steps. "
+        )
 
         if result.human_interventions > 0:
-            announcement += f"Required {result.human_interventions} human interventions. "
+            announcement += (
+                f"Required {result.human_interventions} human interventions. "
+            )
 
         if result.checkpoints_created > 0:
             announcement += f"Created {result.checkpoints_created} checkpoints."
@@ -670,15 +692,22 @@ class LangGraphIntegration:
                 "success_rate": 0.0,
                 "average_execution_time_ms": 0.0,
                 "total_checkpoints": 0,
-                "total_human_interventions": 0
+                "total_human_interventions": 0,
             }
 
         total = len(self.workflow_history)
-        successful = sum(1 for r in self.workflow_history.values()
-                        if r.status == WorkflowStatus.COMPLETED)
+        successful = sum(
+            1
+            for r in self.workflow_history.values()
+            if r.status == WorkflowStatus.COMPLETED
+        )
         total_time = sum(r.execution_time_ms for r in self.workflow_history.values())
-        total_checkpoints = sum(r.checkpoints_created for r in self.workflow_history.values())
-        total_interventions = sum(r.human_interventions for r in self.workflow_history.values())
+        total_checkpoints = sum(
+            r.checkpoints_created for r in self.workflow_history.values()
+        )
+        total_interventions = sum(
+            r.human_interventions for r in self.workflow_history.values()
+        )
 
         return {
             "total_workflows": total,
@@ -686,7 +715,7 @@ class LangGraphIntegration:
             "average_execution_time_ms": total_time / total,
             "total_checkpoints": total_checkpoints,
             "total_human_interventions": total_interventions,
-            "active_workflows": len(self.active_workflows)
+            "active_workflows": len(self.active_workflows),
         }
 
 
@@ -694,7 +723,7 @@ class LangGraphIntegration:
 async def create_langgraph_integration(
     voice_manager: VoiceManager | None = None,
     enable_voice_output: bool = False,
-    checkpoint_db_path: str | None = None
+    checkpoint_db_path: str | None = None,
 ) -> LangGraphIntegration | None:
     """
     Create and initialize LangGraph integration.
@@ -711,7 +740,7 @@ async def create_langgraph_integration(
         integration = LangGraphIntegration(
             voice_manager=voice_manager,
             enable_voice_output=enable_voice_output,
-            checkpoint_db_path=checkpoint_db_path
+            checkpoint_db_path=checkpoint_db_path,
         )
 
         if LANGGRAPH_AVAILABLE:
@@ -739,7 +768,9 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="LangGraph Integration Test")
-    parser.add_argument("--list-workflows", action="store_true", help="List available workflows")
+    parser.add_argument(
+        "--list-workflows", action="store_true", help="List available workflows"
+    )
     parser.add_argument("--run", help="Workflow name to run")
     parser.add_argument("--task", help="Task description")
     parser.add_argument("--history", action="store_true", help="Show workflow history")
@@ -758,16 +789,16 @@ async def main():
         workflows = await integration.get_workflow_list()
         print("Available workflows:")
         for workflow in workflows:
-            print(f"  - {workflow['name']}: {workflow['description']} ({workflow['steps']} steps)")
+            print(
+                f"  - {workflow['name']}: {workflow['description']} ({workflow['steps']} steps)"
+            )
 
     if args.run and args.task:
         print(f"Running workflow: {args.run}")
         print(f"Task: {args.task}")
 
         result = await integration.run_workflow(
-            workflow_name=args.run,
-            task_description=args.task,
-            context={"test": True}
+            workflow_name=args.run, task_description=args.task, context={"test": True}
         )
 
         print(f"\nResult: {result.status.value}")

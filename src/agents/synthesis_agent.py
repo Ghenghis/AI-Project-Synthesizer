@@ -41,56 +41,69 @@ class SynthesisAgent(BaseAgent):
 
     def _setup_tools(self):
         """Set up synthesis tools."""
-        self.register_tool(AgentTool(
-            name="plan_project",
-            description="Create project structure plan",
-            func=self._plan_project,
-            parameters={
-                "idea": {"type": "string", "description": "Project idea"},
-                "type": {"type": "string", "enum": ["python", "web", "api", "ml"]},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="plan_project",
+                description="Create project structure plan",
+                func=self._plan_project,
+                parameters={
+                    "idea": {"type": "string", "description": "Project idea"},
+                    "type": {"type": "string", "enum": ["python", "web", "api", "ml"]},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="generate_file",
-            description="Generate a code file",
-            func=self._generate_file,
-            parameters={
-                "path": {"type": "string", "description": "File path"},
-                "description": {"type": "string", "description": "What the file should do"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="generate_file",
+                description="Generate a code file",
+                func=self._generate_file,
+                parameters={
+                    "path": {"type": "string", "description": "File path"},
+                    "description": {
+                        "type": "string",
+                        "description": "What the file should do",
+                    },
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="resolve_dependencies",
-            description="Resolve and list project dependencies",
-            func=self._resolve_dependencies,
-            parameters={
-                "project_type": {"type": "string"},
-                "features": {"type": "array", "items": {"type": "string"}},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="resolve_dependencies",
+                description="Resolve and list project dependencies",
+                func=self._resolve_dependencies,
+                parameters={
+                    "project_type": {"type": "string"},
+                    "features": {"type": "array", "items": {"type": "string"}},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="create_readme",
-            description="Generate README documentation",
-            func=self._create_readme,
-            parameters={
-                "project_name": {"type": "string"},
-                "description": {"type": "string"},
-                "features": {"type": "array", "items": {"type": "string"}},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="create_readme",
+                description="Generate README documentation",
+                func=self._create_readme,
+                parameters={
+                    "project_name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "features": {"type": "array", "items": {"type": "string"}},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="assemble_project",
-            description="Assemble complete project",
-            func=self._assemble_project,
-            parameters={
-                "idea": {"type": "string"},
-                "output_dir": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="assemble_project",
+                description="Assemble complete project",
+                func=self._assemble_project,
+                parameters={
+                    "idea": {"type": "string"},
+                    "output_dir": {"type": "string"},
+                },
+            )
+        )
 
     async def _plan_project(
         self,
@@ -114,6 +127,7 @@ Be specific and practical."""
 
         # Parse response
         import json
+
         try:
             # Try to extract JSON from response
             if "```json" in response:
@@ -228,7 +242,7 @@ Return ONLY the code, no explanations."""
 
 Project: {project_name}
 Description: {description}
-Features: {', '.join(features)}
+Features: {", ".join(features)}
 
 Include:
 - Title and badges
@@ -282,10 +296,9 @@ Include:
         llm = await self._get_llm()
 
         # Build prompt
-        tools_desc = "\n".join([
-            f"- {t.name}: {t.description}"
-            for t in self._tools.values()
-        ])
+        tools_desc = "\n".join(
+            [f"- {t.name}: {t.description}" for t in self._tools.values()]
+        )
 
         previous = context.get("previous_step", {})
 
@@ -294,8 +307,8 @@ Include:
 Available tools:
 {tools_desc}
 
-Previous step result: {previous.get('result', 'None')}
-Steps completed: {context.get('steps_completed', 0)}
+Previous step result: {previous.get("result", "None")}
+Steps completed: {context.get("steps_completed", 0)}
 
 Decide the next action. Respond in this format:
 TOOL: <tool_name>
@@ -330,6 +343,7 @@ SUMMARY: <what was created>
 
         if "PARAMS:" in response:
             import json
+
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)
@@ -373,7 +387,6 @@ SUMMARY: <what was created>
             Synthesis results
         """
         result = await self.run(
-            f"Synthesize project: {idea}",
-            context={"output_dir": output_dir}
+            f"Synthesize project: {idea}", context={"output_dir": output_dir}
         )
         return result.to_dict()

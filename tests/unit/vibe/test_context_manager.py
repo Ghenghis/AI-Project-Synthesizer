@@ -18,6 +18,7 @@ try:
         PhaseStatus,
         TaskContext,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for vibe.context_manager: {e}")
@@ -42,15 +43,11 @@ class TestPhaseState:
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_phasestate(self):
         """Should create PhaseState."""
-        instance = PhaseState(
-            phase_id="phase_001",
-            status=PhaseStatus.PENDING
-        )
+        instance = PhaseState(phase_id="phase_001", status=PhaseStatus.PENDING)
         assert instance is not None
         assert instance.phase_id == "phase_001"
         assert instance.status == PhaseStatus.PENDING
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

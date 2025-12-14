@@ -49,13 +49,7 @@ class SystemTester:
         self.verbose = verbose
         self.results: list[TestResult] = []
 
-    async def run_test(
-        self,
-        name: str,
-        test_func,
-        *args,
-        **kwargs
-    ) -> TestResult:
+    async def run_test(self, name: str, test_func, *args, **kwargs) -> TestResult:
         """Run a single test."""
         start = time.perf_counter()
 
@@ -87,11 +81,13 @@ class SystemTester:
 
     async def run_all(self, quick: bool = False) -> dict[str, Any]:
         """Run all tests."""
-        console.print(Panel.fit(
-            "[bold blue]AI Project Synthesizer[/bold blue]\n"
-            "[dim]Full System Test[/dim]",
-            border_style="blue"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]AI Project Synthesizer[/bold blue]\n"
+                "[dim]Full System Test[/dim]",
+                border_style="blue",
+            )
+        )
 
         tests = [
             # Core tests
@@ -99,38 +95,33 @@ class SystemTester:
             ("Import: Core Security", self.test_import_security),
             ("Import: Core Cache", self.test_import_cache),
             ("Import: Core Health", self.test_import_health),
-
             # Discovery tests
             ("Import: Discovery", self.test_import_discovery),
-
             # Workflow tests
             ("Import: Workflows", self.test_import_workflows),
             ("Import: Automation", self.test_import_automation),
-
             # Voice tests
             ("Import: Voice", self.test_import_voice),
-
             # LLM tests
             ("Import: LLM", self.test_import_llm),
-
             # Dashboard tests
             ("Import: Dashboard", self.test_import_dashboard),
-
             # Agent tests
             ("Import: Agents", self.test_import_agents),
-
             # Settings tests
             ("Import: Settings", self.test_import_settings),
         ]
 
         if not quick:
-            tests.extend([
-                # Functional tests
-                ("Config: Load Settings", self.test_load_settings),
-                ("Cache: Operations", self.test_cache_operations),
-                ("Metrics: Collection", self.test_metrics_collection),
-                ("Health: Check", self.test_health_check),
-            ])
+            tests.extend(
+                [
+                    # Functional tests
+                    ("Config: Load Settings", self.test_load_settings),
+                    ("Cache: Operations", self.test_cache_operations),
+                    ("Metrics: Collection", self.test_metrics_collection),
+                    ("Health: Check", self.test_health_check),
+                ]
+            )
 
         # Run tests with progress
         with Progress(
@@ -197,7 +188,9 @@ class SystemTester:
         rate = (passed / total * 100) if total > 0 else 0
 
         color = "green" if rate == 100 else "yellow" if rate >= 80 else "red"
-        console.print(f"\n[bold {color}]Results: {passed}/{total} passed ({rate:.0f}%)[/bold {color}]")
+        console.print(
+            f"\n[bold {color}]Results: {passed}/{total} passed ({rate:.0f}%)[/bold {color}]"
+        )
 
     # ============================================
     # Import Tests
@@ -222,6 +215,7 @@ class SystemTester:
         # LangChain is optional
         try:
             from src.workflows import LangChainOrchestrator
+
             return True, "Workflows module OK (with LangChain)"
         except ImportError:
             return True, "Workflows module OK (no LangChain)"
@@ -250,6 +244,7 @@ class SystemTester:
 
     async def test_load_settings(self) -> tuple[bool, str]:
         from src.core.config import get_settings
+
         settings = get_settings()
         return settings is not None, "Loaded settings"
 
@@ -290,10 +285,7 @@ class SystemTester:
 
         health = await check_health()
 
-        healthy_count = sum(
-            1 for c in health.components
-            if c.status.value == "healthy"
-        )
+        healthy_count = sum(1 for c in health.components if c.status.value == "healthy")
 
         return True, f"{healthy_count}/{len(health.components)} healthy"
 
@@ -302,7 +294,9 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="AI Synthesizer System Test")
-    parser.add_argument("--quick", action="store_true", help="Run quick import tests only")
+    parser.add_argument(
+        "--quick", action="store_true", help="Run quick import tests only"
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()

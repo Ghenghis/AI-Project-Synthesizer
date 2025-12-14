@@ -16,6 +16,7 @@ try:
         PipelineConfig,
         PipelineTrigger,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for discovery.gitlab_enhanced: {e}")
@@ -32,6 +33,7 @@ class TestMRAction:
         assert instance is not None
         assert instance.value == "create"
 
+
 class TestPipelineTrigger:
     """Test PipelineTrigger."""
 
@@ -42,6 +44,7 @@ class TestPipelineTrigger:
         assert instance is not None
         assert instance.value == "manual"
 
+
 class TestMRTemplate:
     """Test MRTemplate."""
 
@@ -51,10 +54,11 @@ class TestMRTemplate:
         instance = MRTemplate(
             name="test_template",
             title_template="[Feature] {title}",
-            description_template="## Description\n{description}"
+            description_template="## Description\n{description}",
         )
         assert instance is not None
         assert instance.name == "test_template"
+
 
 class TestMRReviewResult:
     """Test MRReviewResult."""
@@ -66,11 +70,12 @@ class TestMRReviewResult:
             mr_iid=123,
             approved=True,
             review_comments=["Looks good"],
-            suggested_changes=[]
+            suggested_changes=[],
         )
         assert instance is not None
         assert instance.mr_iid == 123
         assert instance.approved == True
+
 
 class TestPipelineConfig:
     """Test PipelineConfig."""
@@ -82,6 +87,7 @@ class TestPipelineConfig:
         assert instance is not None
         assert instance.trigger == PipelineTrigger.MANUAL
 
+
 class TestGitLabEnhanced:
     """Test GitLabEnhanced."""
 
@@ -92,6 +98,5 @@ class TestGitLabEnhanced:
         assert instance is not None
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

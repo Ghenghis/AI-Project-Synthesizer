@@ -137,7 +137,9 @@ class MCPConnectivityTest:
                 print(f"   - Environment: {self.config.app.app_env}")
                 print(f"   - Debug: {self.config.app.debug}")
                 print(f"   - Ollama Host: {self.config.llm.ollama_host}")
-                print(f"   - Ollama Model Medium: {self.config.llm.ollama_model_medium}")
+                print(
+                    f"   - Ollama Model Medium: {self.config.llm.ollama_model_medium}"
+                )
                 print(f"   - LM Studio Host: {self.config.llm.lmstudio_host}")
                 print(f"   - Cloud LLM Enabled: {self.config.llm.cloud_llm_enabled}")
 
@@ -199,7 +201,7 @@ class MCPConnectivityTest:
     async def cleanup(self):
         """Clean up resources."""
         try:
-            if hasattr(self.server, 'close'):
+            if hasattr(self.server, "close"):
                 await self.server.close()
         except:
             pass

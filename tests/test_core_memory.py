@@ -192,17 +192,21 @@ class TestMemoryStore:
     def test_search_memories_by_type(self, temp_store):
         # Save multiple memories
         for i in range(5):
-            temp_store.save_memory(MemoryEntry(
-                id=f"conv_{i}",
-                type=MemoryType.CONVERSATION,
-                content={"msg": f"message {i}"},
-            ))
+            temp_store.save_memory(
+                MemoryEntry(
+                    id=f"conv_{i}",
+                    type=MemoryType.CONVERSATION,
+                    content={"msg": f"message {i}"},
+                )
+            )
         for i in range(3):
-            temp_store.save_memory(MemoryEntry(
-                id=f"note_{i}",
-                type=MemoryType.NOTE,
-                content={"text": f"note {i}"},
-            ))
+            temp_store.save_memory(
+                MemoryEntry(
+                    id=f"note_{i}",
+                    type=MemoryType.NOTE,
+                    content={"text": f"note {i}"},
+                )
+            )
 
         convs = temp_store.search_memories(type=MemoryType.CONVERSATION)
         assert len(convs) == 5
@@ -211,18 +215,22 @@ class TestMemoryStore:
         assert len(notes) == 3
 
     def test_search_memories_by_tags(self, temp_store):
-        temp_store.save_memory(MemoryEntry(
-            id="tagged_1",
-            type=MemoryType.NOTE,
-            content={},
-            tags=["important", "work"],
-        ))
-        temp_store.save_memory(MemoryEntry(
-            id="tagged_2",
-            type=MemoryType.NOTE,
-            content={},
-            tags=["personal"],
-        ))
+        temp_store.save_memory(
+            MemoryEntry(
+                id="tagged_1",
+                type=MemoryType.NOTE,
+                content={},
+                tags=["important", "work"],
+            )
+        )
+        temp_store.save_memory(
+            MemoryEntry(
+                id="tagged_2",
+                type=MemoryType.NOTE,
+                content={},
+                tags=["personal"],
+            )
+        )
 
         results = temp_store.search_memories(tags=["important"])
         assert len(results) == 1
@@ -230,21 +238,25 @@ class TestMemoryStore:
 
     def test_search_memories_limit(self, temp_store):
         for i in range(20):
-            temp_store.save_memory(MemoryEntry(
-                id=f"mem_{i}",
-                type=MemoryType.NOTE,
-                content={},
-            ))
+            temp_store.save_memory(
+                MemoryEntry(
+                    id=f"mem_{i}",
+                    type=MemoryType.NOTE,
+                    content={},
+                )
+            )
 
         results = temp_store.search_memories(limit=5)
         assert len(results) == 5
 
     def test_delete_memory(self, temp_store):
-        temp_store.save_memory(MemoryEntry(
-            id="to_delete",
-            type=MemoryType.NOTE,
-            content={},
-        ))
+        temp_store.save_memory(
+            MemoryEntry(
+                id="to_delete",
+                type=MemoryType.NOTE,
+                content={},
+            )
+        )
 
         assert temp_store.get_memory("to_delete") is not None
 
@@ -303,30 +315,36 @@ class TestMemoryStore:
         assert bookmarks[0].name == "Test Bookmark"
 
     def test_get_bookmarks_by_type(self, temp_store):
-        temp_store.save_bookmark(Bookmark(
-            id="bm_repo",
-            name="Repo",
-            url="https://github.com/test",
-            type="repo",
-        ))
-        temp_store.save_bookmark(Bookmark(
-            id="bm_model",
-            name="Model",
-            url="https://huggingface.co/model",
-            type="model",
-        ))
+        temp_store.save_bookmark(
+            Bookmark(
+                id="bm_repo",
+                name="Repo",
+                url="https://github.com/test",
+                type="repo",
+            )
+        )
+        temp_store.save_bookmark(
+            Bookmark(
+                id="bm_model",
+                name="Model",
+                url="https://huggingface.co/model",
+                type="model",
+            )
+        )
 
         repos = temp_store.get_bookmarks(type="repo")
         assert len(repos) == 1
         assert repos[0].type == "repo"
 
     def test_delete_bookmark(self, temp_store):
-        temp_store.save_bookmark(Bookmark(
-            id="bm_delete",
-            name="To Delete",
-            url="https://example.com",
-            type="repo",
-        ))
+        temp_store.save_bookmark(
+            Bookmark(
+                id="bm_delete",
+                name="To Delete",
+                url="https://example.com",
+                type="repo",
+            )
+        )
 
         deleted = temp_store.delete_bookmark("bm_delete")
         assert deleted is True

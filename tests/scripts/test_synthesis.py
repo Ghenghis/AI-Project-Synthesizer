@@ -36,7 +36,7 @@ async def test_synthesis():
                     repo_url="https://github.com/octocat/Hello-World",
                     components=["README.md"],
                     destination="src",
-                    rename_map={}
+                    rename_map={},
                 )
             ],
             output_path=str(output_path),
@@ -80,6 +80,7 @@ async def test_synthesis():
         except Exception as e:
             print(f"❌ Synthesis failed: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -102,12 +103,12 @@ async def test_build_method():
                     "repo_url": "https://github.com/octocat/Hello-World",
                     "components": ["README.md"],
                     "destination": "src",
-                    "rename_map": {}
+                    "rename_map": {},
                 }
             ],
             project_name="test-build",
             output_path=output_path,
-            template="python-default"
+            template="python-default",
         )
 
         print("✅ Build completed")

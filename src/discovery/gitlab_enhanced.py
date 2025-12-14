@@ -41,6 +41,7 @@ secure_logger = logging.getLogger(__name__)
 
 class MRAction(Enum):
     """Merge request actions."""
+
     CREATE = "create"
     UPDATE = "update"
     MERGE = "merge"
@@ -51,6 +52,7 @@ class MRAction(Enum):
 
 class PipelineTrigger(Enum):
     """Pipeline trigger types."""
+
     MANUAL = "manual"
     SCHEDULED = "scheduled"
     WEB = "web"
@@ -60,6 +62,7 @@ class PipelineTrigger(Enum):
 @dataclass
 class MRTemplate:
     """Merge request template."""
+
     name: str
     title_template: str
     description_template: str
@@ -71,6 +74,7 @@ class MRTemplate:
 @dataclass
 class MRReviewResult:
     """Result of MR review."""
+
     mr_iid: int
     approved: bool
     review_comments: list[str]
@@ -82,6 +86,7 @@ class MRReviewResult:
 @dataclass
 class PipelineConfig:
     """CI/CD pipeline configuration."""
+
     trigger: PipelineTrigger
     variables: dict[str, str] = field(default_factory=dict)
     target_branch: str | None = None
@@ -227,7 +232,9 @@ Fixes #{issue_number}
 
         # Generate title and description safely
         title = MR_FORMATTER.format_markdown(template.title_template, context)
-        description = MR_FORMATTER.format_markdown(template.description_template, context)
+        description = MR_FORMATTER.format_markdown(
+            template.description_template, context
+        )
 
         # Create MR
         mr_data = {
@@ -308,7 +315,9 @@ Fixes #{issue_number}
         mr_iid: int,
     ) -> GitLabMergeRequest:
         """Get a specific merge request."""
-        endpoint = f"/projects/{str(project_id).replace('/', '%2F')}/merge_requests/{mr_iid}"
+        endpoint = (
+            f"/projects/{str(project_id).replace('/', '%2F')}/merge_requests/{mr_iid}"
+        )
         response = await self._request("GET", endpoint)
         return self._parse_merge_request(response)
 
@@ -371,7 +380,9 @@ Target Branch: {mr.target_branch}
         if changes:
             prompt += "\nChanges:\n"
             for change in changes.get("changes", [])[:5]:  # Limit to 5 files
-                prompt += f"\nFile: {change.get('new_path', change.get('old_path', ''))}\n"
+                prompt += (
+                    f"\nFile: {change.get('new_path', change.get('old_path', ''))}\n"
+                )
                 prompt += f"```diff\n{change.get('diff', '')[:500]}\n```\n"
 
         prompt += """
@@ -450,8 +461,7 @@ Format your response as JSON:
 
         if config.variables:
             data["variables"] = [
-                {"key": k, "value": v}
-                for k, v in config.variables.items()
+                {"key": k, "value": v} for k, v in config.variables.items()
             ]
 
         response = await self._request("POST", endpoint, data=data)
@@ -487,7 +497,9 @@ Format your response as JSON:
 
             # Check timeout
             if (datetime.now() - start_time).total_seconds() > timeout:
-                raise TimeoutError(f"Pipeline {pipeline_id} did not complete within {timeout}s")
+                raise TimeoutError(
+                    f"Pipeline {pipeline_id} did not complete within {timeout}s"
+                )
 
             # Wait before polling
             await asyncio.sleep(10)
@@ -498,7 +510,9 @@ Format your response as JSON:
         pipeline_id: int,
     ) -> GitLabPipeline:
         """Get specific pipeline."""
-        endpoint = f"/projects/{str(project_id).replace('/', '%2F')}/pipelines/{pipeline_id}"
+        endpoint = (
+            f"/projects/{str(project_id).replace('/', '%2F')}/pipelines/{pipeline_id}"
+        )
         response = await self._request("GET", endpoint)
         return self._parse_pipeline(response)
 
@@ -517,7 +531,9 @@ Format your response as JSON:
         job_id: int,
     ) -> dict[str, Any]:
         """Retry a failed pipeline job."""
-        endpoint = f"/projects/{str(project_id).replace('/', '%2F')}/jobs/{job_id}/retry"
+        endpoint = (
+            f"/projects/{str(project_id).replace('/', '%2F')}/jobs/{job_id}/retry"
+        )
         return await self._request("POST", endpoint)
 
     # ========================================================================
@@ -588,7 +604,9 @@ Format your response as JSON:
         mr_iid: int,
     ) -> dict[str, Any]:
         """Link an issue to a merge request."""
-        endpoint = f"/projects/{str(project_id).replace('/', '%2F')}/issues/{issue_iid}/links"
+        endpoint = (
+            f"/projects/{str(project_id).replace('/', '%2F')}/issues/{issue_iid}/links"
+        )
 
         data = {
             "target_project_id": project_id,
@@ -642,7 +660,9 @@ Format your response as JSON:
         hook_id: int,
     ) -> dict[str, Any]:
         """Test a webhook."""
-        endpoint = f"/projects/{str(project_id).replace('/', '%2F')}/hooks/{hook_id}/test"
+        endpoint = (
+            f"/projects/{str(project_id).replace('/', '%2F')}/hooks/{hook_id}/test"
+        )
         return await self._request("POST", endpoint)
 
     # ========================================================================
@@ -711,9 +731,13 @@ if __name__ == "__main__":
     async def main():
         parser = argparse.ArgumentParser(description="Enhanced GitLab Client Test")
         parser.add_argument("--project", required=True, help="Project ID or path")
-        parser.add_argument("--action", choices=["mr", "pipeline", "issue"], required=True)
+        parser.add_argument(
+            "--action", choices=["mr", "pipeline", "issue"], required=True
+        )
         parser.add_argument("--source-branch", help="Source branch for MR")
-        parser.add_argument("--target-branch", default="main", help="Target branch for MR")
+        parser.add_argument(
+            "--target-branch", default="main", help="Target branch for MR"
+        )
         parser.add_argument("--title", help="MR/Issue title")
         parser.add_argument("--description", help="MR/Issue description")
 
@@ -749,7 +773,9 @@ if __name__ == "__main__":
 
                 # AI review
                 review = await client.review_mr_with_ai(args.project, mr.iid)
-                print(f"\nAI Review: {'Approved' if review.approved else 'Changes Requested'}")
+                print(
+                    f"\nAI Review: {'Approved' if review.approved else 'Changes Requested'}"
+                )
                 print(f"Confidence: {review.confidence_score:.2f}")
                 for comment in review.review_comments:
                     print(f"  - {comment}")
@@ -768,7 +794,9 @@ if __name__ == "__main__":
 
                 # Wait for completion
                 print("\nWaiting for pipeline...")
-                final_pipeline = await client.wait_for_pipeline(args.project, pipeline.id)
+                final_pipeline = await client.wait_for_pipeline(
+                    args.project, pipeline.id
+                )
                 print(f"Final status: {final_pipeline.status}")
 
     asyncio.run(main())

@@ -16,6 +16,7 @@ try:
         ProjectClassifier,
         ProjectType,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for vibe.project_classifier: {e}")
@@ -54,6 +55,5 @@ class TestProjectClassifier:
         assert instance is not None
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

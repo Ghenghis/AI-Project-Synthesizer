@@ -59,9 +59,13 @@ class TestMCPServerCore:
     async def test_server_initialization(self, mock_llm_router, mock_memory_system):
         """Test server can initialize with mocked dependencies."""
         # Mock the imports
-        with patch('src.llm.litellm_router.LiteLLMRouter', return_value=mock_llm_router), \
-             patch('src.memory.mem0_integration.MemorySystem', return_value=mock_memory_system):
-
+        with (
+            patch("src.llm.litellm_router.LiteLLMRouter", return_value=mock_llm_router),
+            patch(
+                "src.memory.mem0_integration.MemorySystem",
+                return_value=mock_memory_system,
+            ),
+        ):
             # Import after patching
             from src.mcp_server.server import MCPServer
 
@@ -70,8 +74,8 @@ class TestMCPServerCore:
 
             # Verify server initialized
             assert server is not None
-            assert hasattr(server, 'llm_router')
-            assert hasattr(server, 'memory_system')
+            assert hasattr(server, "llm_router")
+            assert hasattr(server, "memory_system")
 
             # Test basic server info
             info = await self._get_server_info(server)
@@ -139,11 +143,7 @@ class TestMCPServerCore:
     async def test_gitlab_integration(self, mock_gitlab_client):
         """Test GitLab integration with mock."""
         # Add a test project
-        project = {
-            "id": 1,
-            "name": "test-project",
-            "description": "Test project"
-        }
+        project = {"id": 1, "name": "test-project", "description": "Test project"}
         mock_gitlab_client.add_project(project)
 
         # Get project
@@ -166,7 +166,7 @@ class TestMCPServerCore:
         content = {
             "url": "https://example.com",
             "title": "Example Page",
-            "content": "This is example content"
+            "content": "This is example content",
         }
         mock_firecrawl_client.set_scraped_content("https://example.com", content)
 
@@ -185,8 +185,7 @@ class TestMCPServerCore:
         """Test memory system with mock."""
         # Add memory
         memory = await mock_memory_system.add_memory(
-            "Test memory content",
-            {"type": "test", "importance": "high"}
+            "Test memory content", {"type": "test", "importance": "high"}
         )
         assert memory["content"] == "Test memory content"
         assert memory["metadata"]["type"] == "test"
@@ -203,7 +202,7 @@ class TestMCPServerCore:
         return {
             "name": "AI Project Synthesizer",
             "version": "1.0.0",
-            "tools": ["code_analysis", "browser_automation", "voice_player"]
+            "tools": ["code_analysis", "browser_automation", "voice_player"],
         }
 
 
@@ -217,11 +216,11 @@ class TestToolIntegration:
         mock_llm_router.set_response("This code looks good. No issues found.")
 
         # Mock the tool execution
-        with patch('src.mcp_server.tools.handle_analyze_repository') as mock_analyze:
+        with patch("src.mcp_server.tools.handle_analyze_repository") as mock_analyze:
             mock_analyze.return_value = {
                 "summary": "Code analysis complete",
                 "issues": [],
-                "suggestions": []
+                "suggestions": [],
             }
 
             # Execute tool
@@ -232,7 +231,10 @@ class TestToolIntegration:
     @pytest.mark.asyncio
     async def test_browser_automation_tool(self, mock_browser_client):
         """Test browser automation tool with mocked browser."""
-        with patch('src.automation.browser_client.BrowserClient', return_value=mock_browser_client):
+        with patch(
+            "src.automation.browser_client.BrowserClient",
+            return_value=mock_browser_client,
+        ):
             # Start browser
             await mock_browser_client.start_browser()
 
@@ -247,7 +249,7 @@ class TestToolIntegration:
     @pytest.mark.asyncio
     async def test_voice_player_tool(self, mock_voice_player):
         """Test voice player tool with mocked voice."""
-        with patch('src.voice.player.get_voice_player', return_value=mock_voice_player):
+        with patch("src.voice.player.get_voice_player", return_value=mock_voice_player):
             # Import after patching
             from src.voice.player import play_audio
 

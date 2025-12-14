@@ -36,7 +36,7 @@ class TestMemoryEntry:
         entry = MemoryEntry(
             id="mem_001",
             type=MemoryType.CONVERSATION,
-            content={"message": "Test memory content"}
+            content={"message": "Test memory content"},
         )
 
         assert entry.id == "mem_001"
@@ -49,7 +49,7 @@ class TestMemoryEntry:
             id="mem_002",
             type=MemoryType.SEARCH,
             content={"query": "test search"},
-            tags=["test", "search"]
+            tags=["test", "search"],
         )
 
         result = entry.to_dict()
@@ -68,7 +68,7 @@ class TestSearchEntry:
             id="search_001",
             query="machine learning",
             platforms=["github", "huggingface"],
-            results_count=25
+            results_count=25,
         )
 
         assert entry.id == "search_001"
@@ -78,10 +78,7 @@ class TestSearchEntry:
     def test_search_entry_to_dict(self):
         """Test converting search entry to dict."""
         entry = SearchEntry(
-            id="search_002",
-            query="test",
-            platforms=["github"],
-            results_count=10
+            id="search_002", query="test", platforms=["github"], results_count=10
         )
 
         result = entry.to_dict()
@@ -99,7 +96,7 @@ class TestBookmark:
             name="Test Repo",
             url="https://github.com/test/repo",
             type="repo",
-            description="A test repository"
+            description="A test repository",
         )
 
         assert bookmark.id == "bm_001"
@@ -114,6 +111,7 @@ class TestMemoryStore:
         """Test memory store initializes correctly."""
         import tempfile
         from pathlib import Path
+
         with tempfile.TemporaryDirectory() as tmpdir:
             store = MemoryStore(db_path=Path(tmpdir) / "test_memory.db")
             assert store is not None
@@ -122,6 +120,7 @@ class TestMemoryStore:
         """Test getting memory from store."""
         import tempfile
         from pathlib import Path
+
         with tempfile.TemporaryDirectory() as tmpdir:
             store = MemoryStore(db_path=Path(tmpdir) / "test_memory.db")
 

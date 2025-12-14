@@ -40,6 +40,7 @@ secure_logger = logging.getLogger(__name__)
 
 class CacheStrategy(Enum):
     """Caching strategies."""
+
     NONE = "none"
     MEMORY = "memory"
     DISK = "disk"
@@ -48,6 +49,7 @@ class CacheStrategy(Enum):
 
 class RateLimitStrategy(Enum):
     """Rate limiting strategies."""
+
     FIXED = "fixed"
     EXPONENTIAL_BACKOFF = "exponential"
     ADAPTIVE = "adaptive"
@@ -56,6 +58,7 @@ class RateLimitStrategy(Enum):
 
 class ContentPriority(Enum):
     """Content processing priority."""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -65,6 +68,7 @@ class ContentPriority(Enum):
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     content: ScrapedContent
     timestamp: datetime
@@ -84,6 +88,7 @@ class CacheEntry:
 @dataclass
 class RateLimitConfig:
     """Rate limiting configuration."""
+
     requests_per_second: float = 1.0
     burst_limit: int = 10
     strategy: RateLimitStrategy = RateLimitStrategy.ADAPTIVE
@@ -94,6 +99,7 @@ class RateLimitConfig:
 @dataclass
 class ContentExtractionConfig:
     """Content extraction configuration."""
+
     extract_images: bool = True
     extract_tables: bool = True
     extract_code: bool = True
@@ -153,7 +159,9 @@ class FirecrawlEnhanced(FirecrawlClient):
         self._content_queue: list[tuple[ContentPriority, dict[str, Any]]] = []
         self._queue_lock = asyncio.Lock()
 
-        secure_logger.info(f"Enhanced Firecrawl client initialized with {cache_strategy.value} caching")
+        secure_logger.info(
+            f"Enhanced Firecrawl client initialized with {cache_strategy.value} caching"
+        )
 
     def _init_disk_cache(self):
         """Initialize SQLite disk cache."""
@@ -311,7 +319,9 @@ class FirecrawlEnhanced(FirecrawlClient):
         """Generate cache key for URL and options."""
         key_data = {
             "url": url,
-            "formats": [f.value for f in options.get("formats", [FirecrawlFormat.MARKDOWN])],
+            "formats": [
+                f.value for f in options.get("formats", [FirecrawlFormat.MARKDOWN])
+            ],
             "only_main_content": options.get("only_main_content", True),
         }
         key_str = json.dumps(key_data, sort_keys=True)
@@ -422,6 +432,7 @@ class FirecrawlEnhanced(FirecrawlClient):
             # Extract content based on format
             if FirecrawlFormat.MARKDOWN in formats:
                 import markdownify
+
                 content = markdownify.markdownify(str(soup), heading_style="ATX")
             else:
                 # Clean text
@@ -482,7 +493,9 @@ class FirecrawlEnhanced(FirecrawlClient):
 
         # Detect language
         if config.language_detection:
-            enhanced.metadata["language"] = await self._detect_language(enhanced.content)
+            enhanced.metadata["language"] = await self._detect_language(
+                enhanced.content
+            )
 
         # Generate summary
         if config.summarize_content and len(enhanced.content) > 500:
@@ -537,10 +550,12 @@ class FirecrawlEnhanced(FirecrawlClient):
                     language = cls
                     break
 
-            code_blocks.append({
-                "code": code,
-                "language": language,
-            })
+            code_blocks.append(
+                {
+                    "code": code,
+                    "language": language,
+                }
+            )
 
         if code_blocks:
             content.metadata["code_blocks"] = code_blocks
@@ -681,7 +696,8 @@ Summary:
             "memory_size_mb": sum(
                 len(str(entry.content.__dict__))
                 for entry in self._memory_cache.values()
-            ) / (1024 * 1024),
+            )
+            / (1024 * 1024),
         }
 
         if self.cache_strategy in [CacheStrategy.DISK, CacheStrategy.HYBRID]:
@@ -740,7 +756,7 @@ class RateLimiter:
     async def _exponential_backoff_wait(self):
         """Exponential backoff after failures."""
         if self._failures > 0:
-            delay = self.config.backoff_factor ** self._failures
+            delay = self.config.backoff_factor**self._failures
             await asyncio.sleep(min(delay, 60))  # Cap at 60 seconds
         else:
             await self._fixed_wait()
@@ -824,11 +840,21 @@ if __name__ == "__main__":
     async def main():
         parser = argparse.ArgumentParser(description="Enhanced Firecrawl Client Test")
         parser.add_argument("--url", required=True, help="URL to scrape")
-        parser.add_argument("--cache", choices=["none", "memory", "disk", "hybrid"], default="hybrid")
+        parser.add_argument(
+            "--cache", choices=["none", "memory", "disk", "hybrid"], default="hybrid"
+        )
         parser.add_argument("--summarize", action="store_true", help="Generate summary")
-        parser.add_argument("--extract-tables", action="store_true", help="Extract tables")
-        parser.add_argument("--extract-code", action="store_true", help="Extract code blocks")
-        parser.add_argument("--priority", choices=["low", "normal", "high", "critical"], default="normal")
+        parser.add_argument(
+            "--extract-tables", action="store_true", help="Extract tables"
+        )
+        parser.add_argument(
+            "--extract-code", action="store_true", help="Extract code blocks"
+        )
+        parser.add_argument(
+            "--priority",
+            choices=["low", "normal", "high", "critical"],
+            default="normal",
+        )
 
         args = parser.parse_args()
 
@@ -855,7 +881,9 @@ if __name__ == "__main__":
 
             print(f"\n  Title: {content.title}")
             print(f"  Description: {content.description}")
-            print(f"  Words: {content.word_count} | Reading time: {content.reading_time} min")
+            print(
+                f"  Words: {content.word_count} | Reading time: {content.reading_time} min"
+            )
 
             # Show extracted content
             if content.metadata.get("tables"):

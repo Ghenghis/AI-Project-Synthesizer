@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 try:
     from mem0 import Memory
     from mem0.configs.base import MemoryConfig as Mem0Config
+
     MEM0_AVAILABLE = True
 except ImportError:
     MEM0_AVAILABLE = False
@@ -58,6 +59,7 @@ except ImportError:
 # Import LiteLLM router for advanced features
 try:
     from src.llm.litellm_router import LiteLLMRouter, TaskType
+
     LITELLM_AVAILABLE = True
 except ImportError:
     LITELLM_AVAILABLE = False
@@ -65,14 +67,15 @@ except ImportError:
 
 class MemoryCategory(Enum):
     """Categories for organizing memories."""
-    PREFERENCE = "preference"      # User preferences
-    DECISION = "decision"          # Project decisions
-    PATTERN = "pattern"            # Code patterns
+
+    PREFERENCE = "preference"  # User preferences
+    DECISION = "decision"  # Project decisions
+    PATTERN = "pattern"  # Code patterns
     ERROR_SOLUTION = "error_solution"  # Error fixes
-    CONTEXT = "context"            # General context
-    LEARNING = "learning"          # Things learned during sessions
-    COMPONENT = "component"        # Reusable components
-    WORKFLOW = "workflow"          # Workflow patterns
+    CONTEXT = "context"  # General context
+    LEARNING = "learning"  # Things learned during sessions
+    COMPONENT = "component"  # Reusable components
+    WORKFLOW = "workflow"  # Workflow patterns
 
     # Map to memory types for advanced features
     @property
@@ -94,6 +97,7 @@ class MemoryCategory(Enum):
 @dataclass
 class MemoryEntry:
     """A single memory entry."""
+
     id: str
     content: str
     category: MemoryCategory
@@ -127,7 +131,9 @@ class MemoryEntry:
             "session_id": self.session_id,
             "importance_score": self.importance_score,
             "consolidated": self.consolidated,
-            "last_consolidated": self.last_consolidated.isoformat() if self.last_consolidated else None,
+            "last_consolidated": self.last_consolidated.isoformat()
+            if self.last_consolidated
+            else None,
         }
 
     @classmethod
@@ -147,18 +153,23 @@ class MemoryEntry:
             session_id=data.get("session_id"),
             importance_score=data.get("importance_score", 0.5),
             consolidated=data.get("consolidated", False),
-            last_consolidated=datetime.fromisoformat(data["last_consolidated"]) if data.get("last_consolidated") else None,
+            last_consolidated=datetime.fromisoformat(data["last_consolidated"])
+            if data.get("last_consolidated")
+            else None,
         )
 
 
 @dataclass
 class MemoryConfig:
     """Configuration for memory system."""
+
     # Mem0 settings
     user_id: str = "vibe_mcp_user"
 
     # Local fallback settings
-    storage_path: Path = field(default_factory=lambda: Path.home() / ".vibe_mcp" / "memory")
+    storage_path: Path = field(
+        default_factory=lambda: Path.home() / ".vibe_mcp" / "memory"
+    )
 
     # Memory limits
     max_memories_per_category: int = 1000
@@ -202,9 +213,7 @@ class LocalMemoryStore:
         if storage_file.exists():
             try:
                 data = json.loads(storage_file.read_text(encoding="utf-8"))
-                self._memories = {
-                    k: MemoryEntry.from_dict(v) for k, v in data.items()
-                }
+                self._memories = {k: MemoryEntry.from_dict(v) for k, v in data.items()}
                 logger.info(f"Loaded {len(self._memories)} memories from local storage")
             except Exception as e:
                 logger.error(f"Failed to load memories: {e}")
@@ -361,20 +370,20 @@ class MemorySystem:
                         "config": {
                             "model": self.config.llm_model,
                             "temperature": 0.1,
-                        }
+                        },
                     },
                     "embedder": {
                         "provider": self.config.llm_provider,
                         "config": {
                             "model": self.config.embedding_model,
-                        }
+                        },
                     },
                     "vector_store": {
                         "provider": "chroma",
                         "config": {
                             "collection_name": "vibe_mcp_memories",
                             "path": self.config.storage_path / "chroma",
-                        }
+                        },
                     },
                     "version": "v1.1",
                 }
@@ -425,14 +434,16 @@ class MemorySystem:
         """
         tags = tags or []
         metadata = metadata or {}
-        metadata.update({
-            "category": category.value,
-            "tags": tags,
-            "memory_type": category.memory_type,
-            "agent_id": agent_id,
-            "session_id": session_id,
-            "importance": importance,
-        })
+        metadata.update(
+            {
+                "category": category.value,
+                "tags": tags,
+                "memory_type": category.memory_type,
+                "agent_id": agent_id,
+                "session_id": session_id,
+                "importance": importance,
+            }
+        )
 
         # Update analytics
         self._analytics["total_additions"] += 1
@@ -440,7 +451,10 @@ class MemorySystem:
 
         if agent_id:
             if agent_id not in self._analytics["agent_stats"]:
-                self._analytics["agent_stats"][agent_id] = {"additions": 0, "searches": 0}
+                self._analytics["agent_stats"][agent_id] = {
+                    "additions": 0,
+                    "searches": 0,
+                }
             self._analytics["agent_stats"][agent_id]["additions"] += 1
 
         # Invalidate cache
@@ -465,12 +479,7 @@ class MemorySystem:
                 # Fall through to local store
 
         if self._local_store:
-            entry = self._local_store.add(
-                content,
-                category,
-                tags,
-                metadata
-            )
+            entry = self._local_store.add(content, category, tags, metadata)
             # Update entry with advanced fields
             entry.agent_id = agent_id
             entry.session_id = session_id
@@ -506,7 +515,10 @@ class MemorySystem:
         self._analytics["total_searches"] += 1
         if agent_id:
             if agent_id not in self._analytics["agent_stats"]:
-                self._analytics["agent_stats"][agent_id] = {"additions": 0, "searches": 0}
+                self._analytics["agent_stats"][agent_id] = {
+                    "additions": 0,
+                    "searches": 0,
+                }
             self._analytics["agent_stats"][agent_id]["searches"] += 1
 
         # Check cache first
@@ -533,7 +545,9 @@ class MemorySystem:
 
                 # Cache results
                 self._cache[cache_key] = results
-                self._cache_expiry[cache_key] = datetime.now() + timedelta(seconds=self.config.cache_ttl)
+                self._cache_expiry[cache_key] = datetime.now() + timedelta(
+                    seconds=self.config.cache_ttl
+                )
 
                 return results
             except Exception as e:
@@ -550,7 +564,9 @@ class MemorySystem:
 
             # Cache results
             self._cache[cache_key] = results
-            self._cache_expiry[cache_key] = datetime.now() + timedelta(seconds=self.config.cache_ttl)
+            self._cache_expiry[cache_key] = datetime.now() + timedelta(
+                seconds=self.config.cache_ttl
+            )
 
             return results
 
@@ -607,7 +623,8 @@ class MemorySystem:
                 results = self._mem0.get_all(user_id=self.config.user_id)
                 if category:
                     results = [
-                        r for r in results
+                        r
+                        for r in results
                         if r.get("metadata", {}).get("category") == category.value
                     ]
                 return results
@@ -749,7 +766,9 @@ class MemorySystem:
         all_relevant = []
 
         for category in categories:
-            results = await self.search(task_description, category=category, limit=limit)
+            results = await self.search(
+                task_description, category=category, limit=limit
+            )
             if results:
                 context["memories"][category.value] = results
                 all_relevant.extend(results)
@@ -791,7 +810,9 @@ class MemorySystem:
     async def get_error_solutions(self, error_query: str | None = None) -> list[dict]:
         """Get error solutions, optionally filtered by query."""
         if error_query:
-            return await self.search(error_query, category=MemoryCategory.ERROR_SOLUTION)
+            return await self.search(
+                error_query, category=MemoryCategory.ERROR_SOLUTION
+            )
         return await self.get_all(category=MemoryCategory.ERROR_SOLUTION)
 
     # ========================================================================
@@ -831,12 +852,19 @@ class MemorySystem:
 
             # Filter by agent if specified
             if agent_id:
-                memories = [m for m in memories if m.get("metadata", {}).get("agent_id") == agent_id]
+                memories = [
+                    m
+                    for m in memories
+                    if m.get("metadata", {}).get("agent_id") == agent_id
+                ]
 
             # Filter for consolidation candidates
-            cutoff_date = datetime.now() - timedelta(days=self.config.consolidation_interval)
+            cutoff_date = datetime.now() - timedelta(
+                days=self.config.consolidation_interval
+            )
             candidates = [
-                m for m in memories
+                m
+                for m in memories
                 if datetime.fromisoformat(m["created_at"]) < cutoff_date
                 and not m.get("metadata", {}).get("consolidated", False)
                 and len(memories) > self.config.consolidation_threshold
@@ -860,9 +888,9 @@ class MemorySystem:
                     continue
 
                 # Create summary using LLM
-                memories_text = "\n".join([
-                    f"- {m['content']}" for m in group_memories[:10]
-                ])
+                memories_text = "\n".join(
+                    [f"- {m['content']}" for m in group_memories[:10]]
+                )
 
                 prompt = f"""
                 Summarize these related memories into a concise, comprehensive summary:
@@ -877,9 +905,7 @@ class MemorySystem:
 
                 try:
                     result = await self._llm_router.complete(
-                        prompt=prompt,
-                        task_type=TaskType.SIMPLE,
-                        max_tokens=500
+                        prompt=prompt, task_type=TaskType.SIMPLE, max_tokens=500
                     )
 
                     # Add consolidated memory
@@ -892,11 +918,15 @@ class MemorySystem:
                             "original_count": len(group_memories),
                             "date_range": (
                                 min(m["created_at"] for m in group_memories),
-                                max(m["created_at"] for m in group_memories)
+                                max(m["created_at"] for m in group_memories),
                             ),
                             "agent_id": agent_id,
                         },
-                        importance=sum(m.get("metadata", {}).get("importance", 0.5) for m in group_memories) / len(group_memories),
+                        importance=sum(
+                            m.get("metadata", {}).get("importance", 0.5)
+                            for m in group_memories
+                        )
+                        / len(group_memories),
                     )
 
                     # Mark original memories as consolidated
@@ -952,7 +982,9 @@ class MemorySystem:
         memories = await self.get_all(category=category)
 
         if agent_id:
-            memories = [m for m in memories if m.get("metadata", {}).get("agent_id") == agent_id]
+            memories = [
+                m for m in memories if m.get("metadata", {}).get("agent_id") == agent_id
+            ]
 
         if not memories:
             return insights
@@ -960,10 +992,15 @@ class MemorySystem:
         # Basic stats
         insights["summary"] = {
             "total_memories": len(memories),
-            "avg_importance": sum(m.get("metadata", {}).get("importance", 0.5) for m in memories) / len(memories),
+            "avg_importance": sum(
+                m.get("metadata", {}).get("importance", 0.5) for m in memories
+            )
+            / len(memories),
             "oldest_memory": min(m["created_at"] for m in memories),
             "newest_memory": max(m["created_at"] for m in memories),
-            "consolidated_count": sum(1 for m in memories if m.get("metadata", {}).get("consolidated", False)),
+            "consolidated_count": sum(
+                1 for m in memories if m.get("metadata", {}).get("consolidated", False)
+            ),
         }
 
         # Category breakdown
@@ -981,7 +1018,9 @@ class MemorySystem:
                 agent_counts[agent] = {"count": 0, "categories": {}}
             agent_counts[agent]["count"] += 1
             cat = memory.get("category", "unknown")
-            agent_counts[agent]["categories"][cat] = agent_counts[agent]["categories"].get(cat, 0) + 1
+            agent_counts[agent]["categories"][cat] = (
+                agent_counts[agent]["categories"].get(cat, 0) + 1
+            )
         insights["agent_breakdown"] = agent_counts
 
         # Identify patterns
@@ -992,6 +1031,7 @@ class MemorySystem:
                 all_tags.extend(memory.get("tags", []))
 
             from collections import Counter
+
             tag_counts = Counter(all_tags)
             insights["patterns"] = [
                 {"type": "top_tags", "data": tag_counts.most_common(5)}
@@ -1008,7 +1048,9 @@ class MemorySystem:
                 )
 
         # Check for low importance memories
-        low_importance = sum(1 for m in memories if m.get("metadata", {}).get("importance", 0.5) < 0.3)
+        low_importance = sum(
+            1 for m in memories if m.get("metadata", {}).get("importance", 0.5) < 0.3
+        )
         if low_importance > len(memories) * 0.5:
             recommendations.append(
                 "Many memories have low importance scores - consider reviewing and updating"
@@ -1038,7 +1080,9 @@ class MemorySystem:
         memories = await self.get_all(category=category)
 
         if agent_id:
-            memories = [m for m in memories if m.get("metadata", {}).get("agent_id") == agent_id]
+            memories = [
+                m for m in memories if m.get("metadata", {}).get("agent_id") == agent_id
+            ]
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         export_dir = self.config.storage_path / "exports"
@@ -1051,24 +1095,31 @@ class MemorySystem:
 
         elif format == "csv":
             import csv
+
             file_path = export_dir / f"memories_{timestamp}.csv"
             with open(file_path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow(["id", "content", "category", "tags", "created_at", "importance"])
+                writer.writerow(
+                    ["id", "content", "category", "tags", "created_at", "importance"]
+                )
                 for m in memories:
-                    writer.writerow([
-                        m["id"],
-                        m["content"],
-                        m.get("category", ""),
-                        ",".join(m.get("tags", [])),
-                        m["created_at"],
-                        m.get("metadata", {}).get("importance", ""),
-                    ])
+                    writer.writerow(
+                        [
+                            m["id"],
+                            m["content"],
+                            m.get("category", ""),
+                            ",".join(m.get("tags", [])),
+                            m["created_at"],
+                            m.get("metadata", {}).get("importance", ""),
+                        ]
+                    )
 
         elif format == "markdown":
             file_path = export_dir / f"memories_{timestamp}.md"
             with open(file_path, "w", encoding="utf-8") as f:
-                f.write(f"# Memory Export\n\nGenerated: {datetime.now().isoformat()}\n\n")
+                f.write(
+                    f"# Memory Export\n\nGenerated: {datetime.now().isoformat()}\n\n"
+                )
 
                 # Group by category
                 grouped = {}
@@ -1128,9 +1179,10 @@ class MemorySystem:
         category_counts = {}
         for category in MemoryCategory:
             category_memories = [
-                m for m in all_memories
-                if m.get("category") == category.value or
-                   m.get("metadata", {}).get("category") == category.value
+                m
+                for m in all_memories
+                if m.get("category") == category.value
+                or m.get("metadata", {}).get("category") == category.value
             ]
             category_counts[category.value] = len(category_memories)
 
@@ -1140,7 +1192,9 @@ class MemorySystem:
             "backend": "mem0" if self.is_mem0_active else "local",
             "analytics": self._analytics,
             "cache_size": len(self._cache),
-            "consolidation_history": self._consolidation_history[-5:],  # Last 5 consolidations
+            "consolidation_history": self._consolidation_history[
+                -5:
+            ],  # Last 5 consolidations
         }
 
 

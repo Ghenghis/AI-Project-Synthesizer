@@ -16,9 +16,7 @@ from src.core.config import get_settings
 
 
 def setup_logging(
-    level: str | None = None,
-    json_format: bool = False,
-    log_file: Path | None = None
+    level: str | None = None, json_format: bool = False, log_file: Path | None = None
 ) -> None:
     """
     Configure application logging.
@@ -57,8 +55,7 @@ def setup_logging(
     else:
         processors.append(
             structlog.dev.ConsoleRenderer(
-                colors=True,
-                exception_formatter=structlog.dev.plain_traceback
+                colors=True, exception_formatter=structlog.dev.plain_traceback
             )
         )
 
@@ -78,9 +75,7 @@ def setup_logging(
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(numeric_level)
         file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         )
         logging.getLogger().addHandler(file_handler)
 
@@ -128,9 +123,11 @@ class LogContext:
 # Initialize logging on module import
 _initialized = False
 
+
 def _ensure_logging_initialized():
     """Ensure logging is initialized exactly once."""
     import os
+
     global _initialized
     # Skip initialization during tests to avoid Settings validation issues
     if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("APP_ENV") == "testing":
@@ -139,5 +136,6 @@ def _ensure_logging_initialized():
     if not _initialized:
         setup_logging()
         _initialized = True
+
 
 _ensure_logging_initialized()

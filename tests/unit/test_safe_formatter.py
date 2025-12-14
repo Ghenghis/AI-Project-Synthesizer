@@ -163,7 +163,9 @@ class TestIssueFormatter:
 
     def test_issue_formatter_valid_template(self):
         """Should format valid issue templates."""
-        template = "Error: {error_type}\n\n{error_message}\n\nFile: {file_path}:{line_number}"
+        template = (
+            "Error: {error_type}\n\n{error_message}\n\nFile: {file_path}:{line_number}"
+        )
         context = {
             "error_type": "ValueError",
             "error_message": "Invalid input",

@@ -19,6 +19,7 @@ try:
         Component,
         DataFlow,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for vibe.architect_agent: {e}")
@@ -56,7 +57,7 @@ class TestComponent:
             description="A test component",
             responsibilities=["handle requests"],
             interfaces=["REST API"],
-            dependencies=[]
+            dependencies=[],
         )
         assert instance is not None
         assert instance.id == "comp_001"
@@ -74,12 +75,11 @@ class TestDataFlow:
             to_component="comp_002",
             data_type="JSON",
             protocol="HTTP",
-            description="Data flow between components"
+            description="Data flow between components",
         )
         assert instance is not None
         assert instance.from_component == "comp_001"
         assert instance.to_component == "comp_002"
-
 
 
 class TestArchitecturePlan:
@@ -99,7 +99,7 @@ class TestArchitecturePlan:
                     description="Handles user operations",
                     responsibilities=["Create user", "Update user"],
                     interfaces=["REST API"],
-                    dependencies=["Database"]
+                    dependencies=["Database"],
                 )
             ],
             data_flows=[
@@ -108,19 +108,19 @@ class TestArchitecturePlan:
                     to_component="Database",
                     data_type="JSON",
                     protocol="HTTP",
-                    description="User data persistence"
+                    description="User data persistence",
                 )
             ],
             technology_stack={
                 "backend": ["Python", "FastAPI"],
-                "database": ["PostgreSQL"]
+                "database": ["PostgreSQL"],
             },
             non_functional_requirements={
                 "scalability": "High",
-                "availability": "99.9%"
+                "availability": "99.9%",
             },
             diagram="graph TD",
-            considerations=["Security", "Performance"]
+            considerations=["Security", "Performance"],
         )
         assert plan.pattern == ArchitecturePattern.MICROSERVICES
         assert len(plan.components) == 1
@@ -133,9 +133,11 @@ class TestArchitectAgent:
     @pytest.fixture(autouse=True)
     def setup_mocks(self):
         """Setup common mocks for all tests."""
-        with patch('src.vibe.architect_agent.AutoGenIntegration') as mock_autogen, \
-             patch('src.vibe.architect_agent.LiteLLMRouter') as mock_llm, \
-             patch('src.vibe.architect_agent.get_settings') as mock_settings:
+        with (
+            patch("src.vibe.architect_agent.AutoGenIntegration") as mock_autogen,
+            patch("src.vibe.architect_agent.LiteLLMRouter") as mock_llm,
+            patch("src.vibe.architect_agent.get_settings") as mock_settings,
+        ):
             mock_settings.return_value = MagicMock()
             mock_autogen.return_value = MagicMock()
             mock_llm.return_value = MagicMock()
@@ -263,7 +265,7 @@ class TestArchitectAgent:
                     description="Gateway",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 ),
                 Component(
                     id="service",
@@ -272,8 +274,8 @@ class TestArchitectAgent:
                     description="User service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["api"]
-                )
+                    dependencies=["api"],
+                ),
             ],
             data_flows=[
                 DataFlow(
@@ -281,13 +283,13 @@ class TestArchitectAgent:
                     to_component="service",
                     data_type="JSON",
                     protocol="HTTP",
-                    description="API calls"
+                    description="API calls",
                 )
             ],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_diagram(plan)
@@ -327,7 +329,7 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["service2"]
+                    dependencies=["service2"],
                 ),
                 Component(
                     id="service2",
@@ -336,14 +338,14 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["service1"]
-                )
+                    dependencies=["service1"],
+                ),
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         # Should detect circular dependency
@@ -366,14 +368,14 @@ class TestArchitectAgent:
                     description="Gateway",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_microservices_diagram(plan)
@@ -397,14 +399,14 @@ class TestArchitectAgent:
                     description="API",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_rest_diagram(plan)
@@ -418,40 +420,42 @@ class TestArchitectAgent:
         agent = ArchitectAgent()
 
         # Mock the LLM response as JSON string
-        mock_response = json.dumps({
-            "overview": "E-commerce platform architecture",
-            "components": [
-                {
-                    "id": "frontend",
-                    "name": "Frontend App",
-                    "type": "ui",
-                    "description": "React-based frontend",
-                    "responsibilities": ["Display products", "Handle checkout"],
-                    "interfaces": ["HTTP API"],
-                    "dependencies": ["api_gateway"],
-                    "technology": "React"
-                }
-            ],
-            "data_flows": [
-                {
-                    "from_component": "frontend",
-                    "to_component": "api_gateway",
-                    "data_type": "JSON",
-                    "protocol": "HTTPS",
-                    "description": "API calls"
-                }
-            ],
-            "technology_stack": {
-                "frontend": ["React", "TypeScript"],
-                "backend": ["Node.js", "Express"],
-                "database": ["MongoDB"]
-            },
-            "non_functional_requirements": {
-                "scalability": "High",
-                "performance": "<200ms response time"
-            },
-            "considerations": ["Security", "Scalability", "Performance"]
-        })
+        mock_response = json.dumps(
+            {
+                "overview": "E-commerce platform architecture",
+                "components": [
+                    {
+                        "id": "frontend",
+                        "name": "Frontend App",
+                        "type": "ui",
+                        "description": "React-based frontend",
+                        "responsibilities": ["Display products", "Handle checkout"],
+                        "interfaces": ["HTTP API"],
+                        "dependencies": ["api_gateway"],
+                        "technology": "React",
+                    }
+                ],
+                "data_flows": [
+                    {
+                        "from_component": "frontend",
+                        "to_component": "api_gateway",
+                        "data_type": "JSON",
+                        "protocol": "HTTPS",
+                        "description": "API calls",
+                    }
+                ],
+                "technology_stack": {
+                    "frontend": ["React", "TypeScript"],
+                    "backend": ["Node.js", "Express"],
+                    "database": ["MongoDB"],
+                },
+                "non_functional_requirements": {
+                    "scalability": "High",
+                    "performance": "<200ms response time",
+                },
+                "considerations": ["Security", "Scalability", "Performance"],
+            }
+        )
 
         # Create a proper async mock for the generate method
         async def mock_generate(*args, **kwargs):
@@ -476,28 +480,30 @@ class TestArchitectAgent:
         """Should create MVC architecture with mocked LLM."""
         agent = ArchitectAgent()
 
-        mock_response = json.dumps({
-            "overview": "Blog application with MVC pattern",
-            "components": [
-                {
-                    "id": "controller",
-                    "name": "PostController",
-                    "type": "api",
-                    "description": "Handles HTTP requests",
-                    "responsibilities": ["Handle CRUD operations"],
-                    "interfaces": ["HTTP"],
-                    "dependencies": ["model", "view"],
-                    "technology": "Flask"
-                }
-            ],
-            "data_flows": [],
-            "technology_stack": {
-                "backend": ["Python", "Flask"],
-                "database": ["SQLite"]
-            },
-            "non_functional_requirements": {},
-            "considerations": ["Simplicity", "Rapid development"]
-        })
+        mock_response = json.dumps(
+            {
+                "overview": "Blog application with MVC pattern",
+                "components": [
+                    {
+                        "id": "controller",
+                        "name": "PostController",
+                        "type": "api",
+                        "description": "Handles HTTP requests",
+                        "responsibilities": ["Handle CRUD operations"],
+                        "interfaces": ["HTTP"],
+                        "dependencies": ["model", "view"],
+                        "technology": "Flask",
+                    }
+                ],
+                "data_flows": [],
+                "technology_stack": {
+                    "backend": ["Python", "Flask"],
+                    "database": ["SQLite"],
+                },
+                "non_functional_requirements": {},
+                "considerations": ["Simplicity", "Rapid development"],
+            }
+        )
 
         # Create a proper async mock
         async def mock_generate(*args, **kwargs):
@@ -529,14 +535,14 @@ class TestArchitectAgent:
                     description="Handles requests",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_mvc_diagram(plan)
@@ -560,14 +566,14 @@ class TestArchitectAgent:
                     description="UI Layer",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_generic_diagram(plan)
@@ -591,14 +597,14 @@ class TestArchitectAgent:
                     description="WebSocket server",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         diagram = agent._generate_diagram(plan)
@@ -654,10 +660,12 @@ class TestArchitectAgent:
         agent = ArchitectAgent()
 
         # Mock response with missing fields
-        mock_response = json.dumps({
-            "overview": "Test plan",
-            # Missing components and other fields
-        })
+        mock_response = json.dumps(
+            {
+                "overview": "Test plan",
+                # Missing components and other fields
+            }
+        )
 
         async def mock_generate(*args, **kwargs):
             return mock_response
@@ -689,7 +697,7 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 ),
                 Component(
                     id="db1",
@@ -698,7 +706,7 @@ class TestArchitectAgent:
                     description="Test database",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 ),
                 Component(
                     id="service2",
@@ -707,14 +715,14 @@ class TestArchitectAgent:
                     description="Another service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
-                )
+                    dependencies=[],
+                ),
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         services = agent.get_components_by_type(plan, "service")
@@ -741,14 +749,14 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         component = agent.get_component_by_id(plan, "service1")
@@ -776,14 +784,14 @@ class TestArchitectAgent:
                     description="UI component",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=[]
+                    dependencies=[],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         issues = agent.validate_plan(plan)
@@ -807,14 +815,14 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["nonexistent_service"]
+                    dependencies=["nonexistent_service"],
                 )
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         issues = agent.validate_plan(plan)
@@ -838,7 +846,7 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["service2"]
+                    dependencies=["service2"],
                 ),
                 Component(
                     id="service2",
@@ -847,14 +855,14 @@ class TestArchitectAgent:
                     description="Test service",
                     responsibilities=[],
                     interfaces=[],
-                    dependencies=["service1"]
-                )
+                    dependencies=["service1"],
+                ),
             ],
             data_flows=[],
             technology_stack={},
             non_functional_requirements={},
             diagram="",
-            considerations=[]
+            considerations=[],
         )
 
         issues = agent.validate_plan(plan)
@@ -878,7 +886,7 @@ class TestArchitectAgent:
                     responsibilities=["Handle requests"],
                     interfaces=["REST API"],
                     dependencies=[],
-                    technology="Python"
+                    technology="Python",
                 )
             ],
             data_flows=[
@@ -887,18 +895,19 @@ class TestArchitectAgent:
                     to_component="service2",
                     data_type="JSON",
                     protocol="HTTP",
-                    description="API call"
+                    description="API call",
                 )
             ],
             technology_stack={"backend": ["Python"]},
             non_functional_requirements={"scalability": "High"},
             diagram="graph TD",
-            considerations=["Security"]
+            considerations=["Security"],
         )
 
         # Export to file
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = f.name
 
         try:
@@ -919,6 +928,7 @@ class TestArchitectAgent:
             assert data["considerations"] == ["Security"]
         finally:
             import os
+
             os.unlink(output_path)
 
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
@@ -938,7 +948,7 @@ class TestArchitectAgent:
                     responsibilities=["Create user", "Update user"],
                     interfaces=["REST API"],
                     dependencies=["database"],
-                    technology="Python"
+                    technology="Python",
                 ),
                 Component(
                     id="db1",
@@ -948,8 +958,8 @@ class TestArchitectAgent:
                     responsibilities=["Store users", "Query users"],
                     interfaces=["SQL"],
                     dependencies=[],
-                    technology="PostgreSQL"
-                )
+                    technology="PostgreSQL",
+                ),
             ],
             data_flows=[
                 DataFlow(
@@ -957,19 +967,19 @@ class TestArchitectAgent:
                     to_component="db1",
                     data_type="SQL",
                     protocol="JDBC",
-                    description="Database queries"
+                    description="Database queries",
                 )
             ],
             technology_stack={
                 "backend": ["Python", "FastAPI"],
-                "database": ["PostgreSQL"]
+                "database": ["PostgreSQL"],
             },
             non_functional_requirements={
                 "scalability": "High",
-                "availability": "99.9%"
+                "availability": "99.9%",
             },
             diagram="graph TD\n    service1 --> db1",
-            considerations=["Security", "Performance"]
+            considerations=["Security", "Performance"],
         )
 
         report = agent.create_markdown_report(plan)
@@ -1003,5 +1013,5 @@ class TestArchitectAgent:
         assert "Performance" in report
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

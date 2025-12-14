@@ -8,7 +8,6 @@ Full coverage tests for:
 - Webhook routes
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -86,8 +85,7 @@ class TestSettingsRoutes:
 
     def test_update_settings(self, client):
         response = client.put(
-            "/api/settings/general",
-            json={"updates": {"theme": "light"}}
+            "/api/settings/general", json={"updates": {"theme": "light"}}
         )
         assert response.status_code == 200
         data = response.json()
@@ -95,8 +93,7 @@ class TestSettingsRoutes:
 
     def test_toggle_feature(self, client):
         response = client.post(
-            "/api/settings/general/toggle",
-            json={"feature": "auto_save"}
+            "/api/settings/general/toggle", json={"feature": "auto_save"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -169,21 +166,27 @@ class TestMemoryRoutes:
         assert "count" in data
 
     def test_save_memory(self, client):
-        response = client.post("/api/memory", json={
-            "type": "note",
-            "content": {"text": "test note"},
-            "tags": ["test"],
-        })
+        response = client.post(
+            "/api/memory",
+            json={
+                "type": "note",
+                "content": {"text": "test note"},
+                "tags": ["test"],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
         assert "id" in data
 
     def test_save_memory_invalid_type(self, client):
-        response = client.post("/api/memory", json={
-            "type": "invalid_type",
-            "content": {},
-        })
+        response = client.post(
+            "/api/memory",
+            json={
+                "type": "invalid_type",
+                "content": {},
+            },
+        )
         assert response.status_code == 400
 
     def test_get_search_history(self, client):
@@ -193,11 +196,14 @@ class TestMemoryRoutes:
         assert "searches" in data
 
     def test_save_search_history(self, client):
-        response = client.post("/api/search-history", json={
-            "query": "test query",
-            "platforms": ["github"],
-            "results_count": 10,
-        })
+        response = client.post(
+            "/api/search-history",
+            json={
+                "query": "test query",
+                "platforms": ["github"],
+                "results_count": 10,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -209,33 +215,42 @@ class TestMemoryRoutes:
         assert "bookmarks" in data
 
     def test_save_bookmark(self, client):
-        response = client.post("/api/bookmarks", json={
-            "name": "Test Repo",
-            "url": "https://github.com/test/repo",
-            "type": "repo",
-            "tags": ["test"],
-        })
+        response = client.post(
+            "/api/bookmarks",
+            json={
+                "name": "Test Repo",
+                "url": "https://github.com/test/repo",
+                "type": "repo",
+                "tags": ["test"],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
 
     def test_save_conversation_message(self, client):
-        response = client.post("/api/conversations/message", json={
-            "session_id": "test_session",
-            "role": "user",
-            "content": "Hello",
-        })
+        response = client.post(
+            "/api/conversations/message",
+            json={
+                "session_id": "test_session",
+                "role": "user",
+                "content": "Hello",
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
 
     def test_get_conversation(self, client):
         # First save a message
-        client.post("/api/conversations/message", json={
-            "session_id": "conv_test",
-            "role": "user",
-            "content": "Test message",
-        })
+        client.post(
+            "/api/conversations/message",
+            json={
+                "session_id": "conv_test",
+                "role": "user",
+                "content": "Test message",
+            },
+        )
 
         response = client.get("/api/conversations/conv_test")
         assert response.status_code == 200
@@ -249,18 +264,20 @@ class TestMemoryRoutes:
         assert "events" in data
 
     def test_emit_event(self, client):
-        response = client.post("/api/events/emit", json={
-            "type": "notification",
-            "data": {"message": "test"},
-        })
+        response = client.post(
+            "/api/events/emit",
+            json={
+                "type": "notification",
+                "data": {"message": "test"},
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
 
     def test_save_workflow_state(self, client):
         response = client.post(
-            "/api/workflow-state/test_workflow",
-            json={"step": 1, "status": "running"}
+            "/api/workflow-state/test_workflow", json={"step": 1, "status": "running"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -268,10 +285,7 @@ class TestMemoryRoutes:
 
     def test_get_workflow_state(self, client):
         # First save state
-        client.post(
-            "/api/workflow-state/get_test",
-            json={"step": 2}
-        )
+        client.post("/api/workflow-state/get_test", json={"step": 2})
 
         response = client.get("/api/workflow-state/get_test")
         assert response.status_code == 200
@@ -297,7 +311,7 @@ class TestWebhookRoutes:
                 "repository": {"full_name": "test/repo"},
                 "sender": {"login": "testuser"},
             },
-            headers={"X-GitHub-Event": "push"}
+            headers={"X-GitHub-Event": "push"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -309,7 +323,7 @@ class TestWebhookRoutes:
             json={
                 "status": "completed",
                 "result": {"success": True},
-            }
+            },
         )
         assert response.status_code == 200
         data = response.json()
@@ -322,7 +336,7 @@ class TestWebhookRoutes:
             json={
                 "message": "Custom event",
                 "level": "info",
-            }
+            },
         )
         assert response.status_code == 200
         data = response.json()
@@ -335,24 +349,21 @@ class TestWebhookRoutes:
                 "command": "/synth-status",
                 "text": "",
                 "user_name": "testuser",
-            }
+            },
         )
         assert response.status_code == 200
 
     def test_discord_webhook_ping(self, client):
         response = client.post(
             "/api/webhooks/discord",
-            json={"type": 1}  # Ping
+            json={"type": 1},  # Ping
         )
         assert response.status_code == 200
         data = response.json()
         assert data["type"] == 1
 
     def test_test_webhook(self, client):
-        response = client.post(
-            "/api/webhooks/test",
-            json={"test": "data"}
-        )
+        response = client.post("/api/webhooks/test", json={"test": "data"})
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "received"

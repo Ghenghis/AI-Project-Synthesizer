@@ -32,6 +32,7 @@ class TestMCPApiContract:
         # Test that server has basic MCP structure
         # The actual MCP protocol testing would require the full FastMCP framework
         # For now, we verify the server module loads correctly
+
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_tool_execution_contract(self):
@@ -40,16 +41,14 @@ class TestMCPApiContract:
         # Test that tools can be called directly and return proper structure
         from src.mcp_server import tools
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             # Call search tool
             result = await tools.search_repositories(
-                query="test",
-                platforms=["github"],
-                max_results=5
+                query="test", platforms=["github"], max_results=5
             )
 
             # Verify result structure
@@ -63,7 +62,7 @@ class TestMCPApiContract:
         client = GitHubClient(token="test_token")
 
         # Mock GitHub API responses
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             # Repository response
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -79,10 +78,7 @@ class TestMCPApiContract:
                 "created_at": "2024-01-01T00:00:00Z",
                 "updated_at": "2024-01-15T00:00:00Z",
                 "default_branch": "main",
-                "owner": {
-                    "login": "owner",
-                    "type": "User"
-                }
+                "owner": {"login": "owner", "type": "User"},
             }
             mock_get.return_value = mock_response
 
@@ -98,7 +94,7 @@ class TestMCPApiContract:
             # Verify correct API endpoint was called
             mock_get.assert_called_with(
                 "https://api.github.com/repos/owner/test-repo",
-                headers={"Authorization": "token test_token"}
+                headers={"Authorization": "token test_token"},
             )
 
     @pytest.mark.integration
@@ -107,7 +103,7 @@ class TestMCPApiContract:
 
         client = GitLabClient(token="test_token")
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             # Project response
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -123,10 +119,7 @@ class TestMCPApiContract:
                 "last_activity_at": "2024-01-15T00:00:00Z",
                 "default_branch": "main",
                 "visibility": "public",
-                "owner": {
-                    "name": "owner",
-                    "username": "owner"
-                }
+                "owner": {"name": "owner", "username": "owner"},
             }
             mock_get.return_value = mock_response
 
@@ -141,7 +134,7 @@ class TestMCPApiContract:
             # Verify correct API endpoint
             mock_get.assert_called_with(
                 "https://gitlab.com/api/v4/projects/98765",
-                headers={"Private-Token": "test_token"}
+                headers={"Private-Token": "test_token"},
             )
 
     @pytest.mark.integration
@@ -152,7 +145,7 @@ class TestMCPApiContract:
         router = LiteLLMRouter()
 
         # Mock provider responses
-        with patch.object(router, '_call_provider') as mock_call:
+        with patch.object(router, "_call_provider") as mock_call:
             # Primary provider fails
             mock_call.side_effect = [
                 Exception("Primary provider down"),
@@ -160,13 +153,12 @@ class TestMCPApiContract:
                     "content": "Response from fallback provider",
                     "provider": "fallback",
                     "tokens_used": 100,
-                    "cost": 0.001
-                }
+                    "cost": 0.001,
+                },
             ]
 
             result = await router.complete(
-                prompt="Test prompt",
-                providers=["primary", "fallback"]
+                prompt="Test prompt", providers=["primary", "fallback"]
             )
 
             # Verify fallback was used
@@ -183,12 +175,12 @@ class TestMCPApiContract:
         # Test GitHub API errors
         client = GitHubClient(token="invalid")
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 404
             mock_response.json.return_value = {
                 "message": "Not Found",
-                "documentation_url": "https://docs.github.com/rest"
+                "documentation_url": "https://docs.github.com/rest",
             }
             mock_get.return_value = mock_response
 
@@ -206,7 +198,7 @@ class TestMCPApiContract:
             invalid_request = {
                 "jsonrpc": "1.0",  # Invalid version
                 "id": 1,
-                "method": "tools/list"
+                "method": "tools/list",
             }
 
             response = await server.handle_request(invalid_request)
@@ -217,6 +209,7 @@ class TestMCPApiContract:
             await server.shutdown()
 
         import asyncio
+
         asyncio.run(test_mcp_errors())
 
     @pytest.mark.integration
@@ -225,18 +218,18 @@ class TestMCPApiContract:
 
         client = GitHubClient(token="test_token")
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             # Rate limit response
             mock_response = MagicMock()
             mock_response.status_code = 403
             mock_response.headers = {
                 "X-RateLimit-Limit": "60",
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(int(__import__('time').time()) + 3600)
+                "X-RateLimit-Reset": str(int(__import__("time").time()) + 3600),
             }
             mock_response.json.return_value = {
                 "message": "API rate limit exceeded",
-                "documentation_url": "https://docs.github.com/rest"
+                "documentation_url": "https://docs.github.com/rest",
             }
             mock_get.return_value = mock_response
 
@@ -269,8 +262,8 @@ class TestMCPApiContract:
                 "params": {
                     "protocolVersion": version,
                     "capabilities": {"tools": {}},
-                    "clientInfo": {"name": "test", "version": "1.0"}
-                }
+                    "clientInfo": {"name": "test", "version": "1.0"},
+                },
             }
 
             response = await server.handle_request(request)

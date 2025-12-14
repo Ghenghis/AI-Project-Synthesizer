@@ -41,69 +41,87 @@ class CodeAgent(BaseAgent):
 
     def _setup_tools(self):
         """Set up code tools."""
-        self.register_tool(AgentTool(
-            name="generate_code",
-            description="Generate code from description",
-            func=self._generate_code,
-            parameters={
-                "description": {"type": "string"},
-                "language": {"type": "string"},
-                "style": {"type": "string", "enum": ["minimal", "documented", "production"]},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="generate_code",
+                description="Generate code from description",
+                func=self._generate_code,
+                parameters={
+                    "description": {"type": "string"},
+                    "language": {"type": "string"},
+                    "style": {
+                        "type": "string",
+                        "enum": ["minimal", "documented", "production"],
+                    },
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="fix_code",
-            description="Fix bugs in code",
-            func=self._fix_code,
-            parameters={
-                "code": {"type": "string"},
-                "error": {"type": "string"},
-                "language": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="fix_code",
+                description="Fix bugs in code",
+                func=self._fix_code,
+                parameters={
+                    "code": {"type": "string"},
+                    "error": {"type": "string"},
+                    "language": {"type": "string"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="review_code",
-            description="Review code for quality issues",
-            func=self._review_code,
-            parameters={
-                "code": {"type": "string"},
-                "language": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="review_code",
+                description="Review code for quality issues",
+                func=self._review_code,
+                parameters={
+                    "code": {"type": "string"},
+                    "language": {"type": "string"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="refactor_code",
-            description="Refactor code for better quality",
-            func=self._refactor_code,
-            parameters={
-                "code": {"type": "string"},
-                "goal": {"type": "string"},
-                "language": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="refactor_code",
+                description="Refactor code for better quality",
+                func=self._refactor_code,
+                parameters={
+                    "code": {"type": "string"},
+                    "goal": {"type": "string"},
+                    "language": {"type": "string"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="generate_docs",
-            description="Generate documentation for code",
-            func=self._generate_docs,
-            parameters={
-                "code": {"type": "string"},
-                "language": {"type": "string"},
-                "style": {"type": "string", "enum": ["docstring", "markdown", "readme"]},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="generate_docs",
+                description="Generate documentation for code",
+                func=self._generate_docs,
+                parameters={
+                    "code": {"type": "string"},
+                    "language": {"type": "string"},
+                    "style": {
+                        "type": "string",
+                        "enum": ["docstring", "markdown", "readme"],
+                    },
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="explain_code",
-            description="Explain what code does",
-            func=self._explain_code,
-            parameters={
-                "code": {"type": "string"},
-                "language": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="explain_code",
+                description="Explain what code does",
+                func=self._explain_code,
+                parameters={
+                    "code": {"type": "string"},
+                    "language": {"type": "string"},
+                },
+            )
+        )
 
     async def _generate_code(
         self,
@@ -122,7 +140,7 @@ class CodeAgent(BaseAgent):
 
         prompt = f"""Generate {language} code for: {description}
 
-Style: {style_instructions.get(style, style_instructions['production'])}
+Style: {style_instructions.get(style, style_instructions["production"])}
 
 Requirements:
 - Follow {language} best practices
@@ -285,7 +303,7 @@ Provide the refactored code that achieves the goal while maintaining functionali
             "readme": f"Generate a README.md for a project containing this {language} code",
         }
 
-        prompt = f"""{style_prompts.get(style, style_prompts['docstring'])}:
+        prompt = f"""{style_prompts.get(style, style_prompts["docstring"])}:
 
 ```{language}
 {code}
@@ -337,17 +355,16 @@ Provide:
         llm = await self._get_llm()
 
         # Build prompt
-        tools_desc = "\n".join([
-            f"- {t.name}: {t.description}"
-            for t in self._tools.values()
-        ])
+        tools_desc = "\n".join(
+            [f"- {t.name}: {t.description}" for t in self._tools.values()]
+        )
 
         prompt = f"""You are a code agent. Your task: {task}
 
 Available tools:
 {tools_desc}
 
-Previous context: {context.get('previous_step', 'None')}
+Previous context: {context.get("previous_step", "None")}
 
 Decide the next action. Respond in this format:
 TOOL: <tool_name>
@@ -381,6 +398,7 @@ OUTPUT: <final output>
 
         if "PARAMS:" in response:
             import json
+
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)

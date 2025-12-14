@@ -45,7 +45,7 @@ class TestRateLimiter:
     def test_limiter_has_acquire_method(self):
         """Should have acquire method."""
         limiter = RateLimiter()
-        assert hasattr(limiter, 'acquire')
+        assert hasattr(limiter, "acquire")
 
     @pytest.mark.asyncio
     async def test_acquire_token(self):

@@ -36,18 +36,14 @@ class TestRunner:
             {
                 "name": "Pipeline Smoke Tests",
                 "file": "tests/integration/vibe_pipeline_smoke_test.py",
-                "type": "integration"
+                "type": "integration",
             },
             {
                 "name": "Component Integration Tests",
                 "file": "tests/integration/test_vibe_components.py",
-                "type": "integration"
+                "type": "integration",
             },
-            {
-                "name": "Unit Tests",
-                "file": "tests/unit/",
-                "type": "pytest"
-            }
+            {"name": "Unit Tests", "file": "tests/unit/", "type": "pytest"},
         ]
 
         # Run each test suite
@@ -73,23 +69,27 @@ class TestRunner:
             else:
                 result = {"passed": False, "output": "Unknown test type"}
 
-            self.results.append({
-                "name": suite["name"],
-                "passed": result["passed"],
-                "output": result["output"],
-                "duration": result.get("duration", 0)
-            })
+            self.results.append(
+                {
+                    "name": suite["name"],
+                    "passed": result["passed"],
+                    "output": result["output"],
+                    "duration": result.get("duration", 0),
+                }
+            )
 
             status = "✅ PASSED" if result["passed"] else "❌ FAILED"
             print(f"\n{status}: {suite['name']}")
 
         except Exception as e:
-            self.results.append({
-                "name": suite["name"],
-                "passed": False,
-                "output": str(e),
-                "duration": 0
-            })
+            self.results.append(
+                {
+                    "name": suite["name"],
+                    "passed": False,
+                    "output": str(e),
+                    "duration": 0,
+                }
+            )
             print(f"\n❌ ERROR: {suite['name']} - {e}")
 
     async def run_integration_test(self, test_file):
@@ -102,7 +102,7 @@ class TestRunner:
                 [sys.executable, test_file],
                 capture_output=True,
                 text=True,
-                cwd=project_root
+                cwd=project_root,
             )
 
             duration = (datetime.now() - start).total_seconds()
@@ -110,14 +110,14 @@ class TestRunner:
             return {
                 "passed": result.returncode == 0,
                 "output": result.stdout + result.stderr,
-                "duration": duration
+                "duration": duration,
             }
 
         except Exception as e:
             return {
                 "passed": False,
                 "output": str(e),
-                "duration": (datetime.now() - start).total_seconds()
+                "duration": (datetime.now() - start).total_seconds(),
             }
 
     async def run_pytest(self, test_dir):
@@ -130,7 +130,7 @@ class TestRunner:
                 [sys.executable, "-m", "pytest", test_dir, "-v"],
                 capture_output=True,
                 text=True,
-                cwd=project_root
+                cwd=project_root,
             )
 
             duration = (datetime.now() - start).total_seconds()
@@ -138,14 +138,14 @@ class TestRunner:
             return {
                 "passed": result.returncode == 0,
                 "output": result.stdout + result.stderr,
-                "duration": duration
+                "duration": duration,
             }
 
         except Exception as e:
             return {
                 "passed": False,
                 "output": str(e),
-                "duration": (datetime.now() - start).total_seconds()
+                "duration": (datetime.now() - start).total_seconds(),
             }
 
     def print_summary(self):
@@ -189,17 +189,25 @@ class TestRunner:
             # Install coverage if needed
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "coverage"],
-                capture_output=True
+                capture_output=True,
             )
 
             # Run coverage
-            subprocess.run([
-                sys.executable, "-m", "coverage", "run",
-                "-m", "pytest", "tests/",
-                "--cov=src",
-                "--cov-report=html",
-                "--cov-report=term"
-            ], cwd=project_root)
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "coverage",
+                    "run",
+                    "-m",
+                    "pytest",
+                    "tests/",
+                    "--cov=src",
+                    "--cov-report=html",
+                    "--cov-report=term",
+                ],
+                cwd=project_root,
+            )
 
             print("\nCoverage report generated in htmlcov/")
 
@@ -212,12 +220,13 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Run Vibe MCP tests")
-    parser.add_argument("--coverage", action="store_true",
-                       help="Run tests with coverage report")
-    parser.add_argument("--integration-only", action="store_true",
-                       help="Run only integration tests")
-    parser.add_argument("--unit-only", action="store_true",
-                       help="Run only unit tests")
+    parser.add_argument(
+        "--coverage", action="store_true", help="Run tests with coverage report"
+    )
+    parser.add_argument(
+        "--integration-only", action="store_true", help="Run only integration tests"
+    )
+    parser.add_argument("--unit-only", action="store_true", help="Run only unit tests")
 
     args = parser.parse_args()
 
@@ -231,13 +240,13 @@ async def main():
             {
                 "name": "Pipeline Smoke Tests",
                 "file": "tests/integration/vibe_pipeline_smoke_test.py",
-                "type": "integration"
+                "type": "integration",
             },
             {
                 "name": "Component Integration Tests",
                 "file": "tests/integration/test_vibe_components.py",
-                "type": "integration"
-            }
+                "type": "integration",
+            },
         ]
 
         for suite in integration_suites:

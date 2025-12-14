@@ -32,9 +32,13 @@ class PiperTTSIntegrationTest:
         # Check default voice is set to Piper
         default_voice = self.manager.get_voice("piper_default")
         assert default_voice is not None, "Piper default voice not found"
-        assert default_voice.provider == VoiceProvider.PIPER, "Default voice should be Piper"
+        assert default_voice.provider == VoiceProvider.PIPER, (
+            "Default voice should be Piper"
+        )
 
-        print(f"   ✅ Default voice: {default_voice.name} ({default_voice.provider.value})")
+        print(
+            f"   ✅ Default voice: {default_voice.name} ({default_voice.provider.value})"
+        )
 
         # Check all available voices
         voices = self.manager.list_voices()
@@ -55,14 +59,16 @@ class PiperTTSIntegrationTest:
             "piper_default",
             "piper_female",
             "piper_british",
-            "rachel_local"
+            "rachel_local",
         ]
 
         for voice_id in piper_voices:
             voice = self.manager.get_voice(voice_id)
             if voice:
                 print(f"   ✅ {voice.name}: {voice.description}")
-                assert voice.provider == VoiceProvider.PIPER, f"{voice_id} should be Piper"
+                assert voice.provider == VoiceProvider.PIPER, (
+                    f"{voice_id} should be Piper"
+                )
             else:
                 print(f"   ❌ Voice not found: {voice_id}")
 
@@ -80,10 +86,16 @@ class PiperTTSIntegrationTest:
         # Test ElevenLabs voice selection
         elevenlabs_voice = self.manager.get_voice("rachel")
         assert elevenlabs_voice is not None, "ElevenLabs Rachel should exist"
-        assert elevenlabs_voice.provider == VoiceProvider.ELEVENLABS, "Should route to ElevenLabs"
+        assert elevenlabs_voice.provider == VoiceProvider.ELEVENLABS, (
+            "Should route to ElevenLabs"
+        )
 
-        print(f"   ✅ Piper routing: {piper_voice.name} -> {piper_voice.provider.value}")
-        print(f"   ✅ ElevenLabs routing: {elevenlabs_voice.name} -> {elevenlabs_voice.provider.value}")
+        print(
+            f"   ✅ Piper routing: {piper_voice.name} -> {piper_voice.provider.value}"
+        )
+        print(
+            f"   ✅ ElevenLabs routing: {elevenlabs_voice.name} -> {elevenlabs_voice.provider.value}"
+        )
 
         return True
 
@@ -99,8 +111,14 @@ class PiperTTSIntegrationTest:
             if extracted_voices:
                 print(f"   ✅ Found {len(extracted_voices)} extracted voice groups:")
                 for voice_key, voice_info in extracted_voices.items():
-                    status = "✅ Ready" if voice_info["ready_for_training"] else "⚠️ Needs more samples"
-                    print(f"      - {voice_info['name']}: {voice_info['samples']} samples {status}")
+                    status = (
+                        "✅ Ready"
+                        if voice_info["ready_for_training"]
+                        else "⚠️ Needs more samples"
+                    )
+                    print(
+                        f"      - {voice_info['name']}: {voice_info['samples']} samples {status}"
+                    )
             else:
                 print("   ⚠️ No extracted voices found (expected if extraction not run)")
 

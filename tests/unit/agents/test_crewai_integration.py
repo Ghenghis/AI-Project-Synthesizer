@@ -22,6 +22,7 @@ try:
         TeamTask,
         get_statistics,
     )
+
     CREWAI_AVAILABLE = True
 except ImportError:
     CREWAI_AVAILABLE = False
@@ -38,6 +39,7 @@ class TestTeamRole:
         instance = TeamRole()
         assert instance is not None
 
+
 class TestTeamTask:
     """Test TeamTask."""
 
@@ -47,6 +49,7 @@ class TestTeamTask:
         instance = TeamTask()
         assert instance is not None
 
+
 class TestTeamResult:
     """Test TeamResult."""
 
@@ -55,6 +58,7 @@ class TestTeamResult:
         """Should create TeamResult."""
         instance = TeamResult()
         assert instance is not None
+
 
 class TestCrewAIIntegration:
     """Test CrewAIIntegration."""
@@ -69,8 +73,9 @@ class TestCrewAIIntegration:
     def test_get_statistics_exists(self):
         """Should have get_statistics method."""
         instance = CrewAIIntegration()
-        assert hasattr(instance, 'get_statistics')
+        assert hasattr(instance, "get_statistics")
         assert callable(instance.get_statistics)
+
 
 class TestAgent:
     """Test Agent."""
@@ -81,6 +86,7 @@ class TestAgent:
         instance = Agent()
         assert instance is not None
 
+
 class TestTask:
     """Test Task."""
 
@@ -90,6 +96,7 @@ class TestTask:
         instance = Task()
         assert instance is not None
 
+
 class TestCrew:
     """Test Crew."""
 
@@ -98,6 +105,7 @@ class TestCrew:
         """Should create Crew."""
         instance = Crew()
         assert instance is not None
+
 
 class TestProcess:
     """Test Process."""
@@ -115,6 +123,5 @@ def test_get_statistics_exists():
     assert callable(get_statistics)
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

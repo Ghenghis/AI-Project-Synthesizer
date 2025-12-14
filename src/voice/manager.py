@@ -22,6 +22,7 @@ secure_logger = get_secure_logger(__name__)
 
 class VoiceProvider(str, Enum):
     """Available voice providers."""
+
     ELEVENLABS = "elevenlabs"
     OPENAI = "openai"
     LOCAL = "local"
@@ -30,6 +31,7 @@ class VoiceProvider(str, Enum):
 
 class AudioFormat(str, Enum):
     """Audio output formats."""
+
     MP3 = "mp3"
     WAV = "wav"
     PCM = "pcm"
@@ -38,6 +40,7 @@ class AudioFormat(str, Enum):
 @dataclass
 class VoiceProfile:
     """Voice profile configuration."""
+
     id: str
     name: str
     provider: VoiceProvider
@@ -104,7 +107,6 @@ DEFAULT_VOICES: dict[str, VoiceProfile] = {
         stability=0.5,
         similarity_boost=0.75,
     ),
-
     # Piper TTS voices (new local voices)
     "piper_default": VoiceProfile(
         id="piper_default",
@@ -157,6 +159,7 @@ DEFAULT_VOICES: dict[str, VoiceProfile] = {
 @dataclass
 class AudioSession:
     """Active audio session."""
+
     id: str
     profile: VoiceProfile
     started_at: datetime = field(default_factory=datetime.now)
@@ -199,6 +202,7 @@ class VoiceManager:
         """Get ElevenLabs client."""
         if self._elevenlabs_client is None:
             from src.voice.elevenlabs_client import ElevenLabsClient
+
             self._elevenlabs_client = ElevenLabsClient()
         return self._elevenlabs_client
 
@@ -206,6 +210,7 @@ class VoiceManager:
         """Get Piper TTS client."""
         if self._piper_client is None:
             from src.voice.tts.piper_client import create_piper_client
+
             self._piper_client = await create_piper_client()
             if self._piper_client is None:
                 raise RuntimeError("Failed to initialize Piper TTS client")
@@ -287,7 +292,9 @@ class VoiceManager:
 
                 # Piper doesn't support streaming in the same way
                 if stream:
-                    secure_logger.warning("Streaming not fully supported with Piper TTS")
+                    secure_logger.warning(
+                        "Streaming not fully supported with Piper TTS"
+                    )
 
                 audio_data = await client.synthesize(
                     text,

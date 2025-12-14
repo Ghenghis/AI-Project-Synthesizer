@@ -27,6 +27,7 @@ router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 # GitHub Webhooks
 # ============================================
 
+
 @router.post("/github")
 async def github_webhook(
     request: Request,
@@ -57,63 +58,77 @@ async def github_webhook(
         commits = payload.get("commits", [])
         repo = payload.get("repository", {}).get("full_name", "unknown")
 
-        await bus.emit_async(EventType.NOTIFICATION, {
-            "title": "GitHub Push",
-            "message": f"{len(commits)} commit(s) pushed to {repo}",
-            "level": "info",
-            "source": "github",
-        })
+        await bus.emit_async(
+            EventType.NOTIFICATION,
+            {
+                "title": "GitHub Push",
+                "message": f"{len(commits)} commit(s) pushed to {repo}",
+                "level": "info",
+                "source": "github",
+            },
+        )
 
     elif event_type == "pull_request":
         action = payload.get("action", "")
         pr = payload.get("pull_request", {})
         title = pr.get("title", "")
 
-        await bus.emit_async(EventType.NOTIFICATION, {
-            "title": f"PR {action.title()}",
-            "message": title,
-            "level": "info",
-            "source": "github",
-        })
+        await bus.emit_async(
+            EventType.NOTIFICATION,
+            {
+                "title": f"PR {action.title()}",
+                "message": title,
+                "level": "info",
+                "source": "github",
+            },
+        )
 
     elif event_type == "release":
         action = payload.get("action", "")
         release = payload.get("release", {})
         tag = release.get("tag_name", "")
 
-        await bus.emit_async(EventType.NOTIFICATION, {
-            "title": "New Release",
-            "message": f"Version {tag} released",
-            "level": "success",
-            "source": "github",
-        })
+        await bus.emit_async(
+            EventType.NOTIFICATION,
+            {
+                "title": "New Release",
+                "message": f"Version {tag} released",
+                "level": "success",
+                "source": "github",
+            },
+        )
 
     elif event_type == "star":
         action = payload.get("action", "")
         repo = payload.get("repository", {}).get("full_name", "")
 
         if action == "created":
-            await bus.emit_async(EventType.NOTIFICATION, {
-                "title": "New Star",
-                "message": f"{repo} was starred",
-                "level": "info",
-                "source": "github",
-            })
+            await bus.emit_async(
+                EventType.NOTIFICATION,
+                {
+                    "title": "New Star",
+                    "message": f"{repo} was starred",
+                    "level": "info",
+                    "source": "github",
+                },
+            )
 
     # Save to memory
     store = get_memory_store()
-    store.save_memory(MemoryEntry(
-        id=f"gh_{datetime.now().timestamp()}",
-        type=MemoryType.WORKFLOW,
-        content={
-            "event": event_type,
-            "payload_summary": {
-                "repo": payload.get("repository", {}).get("full_name"),
-                "sender": payload.get("sender", {}).get("login"),
+    store.save_memory(
+        MemoryEntry(
+            id=f"gh_{datetime.now().timestamp()}",
+            type=MemoryType.WORKFLOW,
+            content={
+                "event": event_type,
+                "payload_summary": {
+                    "repo": payload.get("repository", {}).get("full_name"),
+                    "sender": payload.get("sender", {}).get("login"),
+                },
             },
-        },
-        tags=["github", event_type],
-    ))
+            tags=["github", event_type],
+        )
+    )
 
     return {"status": "received", "event": event_type}
 
@@ -121,6 +136,7 @@ async def github_webhook(
 # ============================================
 # n8n Webhooks
 # ============================================
+
 
 @router.post("/n8n/{workflow_name}")
 async def n8n_webhook(workflow_name: str, request: Request):
@@ -141,24 +157,33 @@ async def n8n_webhook(workflow_name: str, request: Request):
     status = body.get("status", "unknown")
 
     if status == "completed":
-        await bus.emit_async(EventType.WORKFLOW_COMPLETED, {
-            "workflow": workflow_name,
-            "result": body.get("result"),
-            "duration_ms": body.get("duration_ms"),
-        })
+        await bus.emit_async(
+            EventType.WORKFLOW_COMPLETED,
+            {
+                "workflow": workflow_name,
+                "result": body.get("result"),
+                "duration_ms": body.get("duration_ms"),
+            },
+        )
 
     elif status == "failed":
-        await bus.emit_async(EventType.WORKFLOW_FAILED, {
-            "workflow": workflow_name,
-            "error": body.get("error"),
-        })
+        await bus.emit_async(
+            EventType.WORKFLOW_FAILED,
+            {
+                "workflow": workflow_name,
+                "error": body.get("error"),
+            },
+        )
 
     elif status == "progress":
-        await bus.emit_async(EventType.WORKFLOW_PROGRESS, {
-            "workflow": workflow_name,
-            "progress": body.get("progress"),
-            "message": body.get("message"),
-        })
+        await bus.emit_async(
+            EventType.WORKFLOW_PROGRESS,
+            {
+                "workflow": workflow_name,
+                "progress": body.get("progress"),
+                "message": body.get("message"),
+            },
+        )
 
     return {"status": "received", "workflow": workflow_name}
 
@@ -166,6 +191,7 @@ async def n8n_webhook(workflow_name: str, request: Request):
 # ============================================
 # Custom Webhooks
 # ============================================
+
 
 @router.post("/custom/{hook_id}")
 async def custom_webhook(hook_id: str, request: Request):
@@ -184,22 +210,27 @@ async def custom_webhook(hook_id: str, request: Request):
     bus = get_event_bus()
 
     # Emit as notification
-    await bus.emit_async(EventType.NOTIFICATION, {
-        "title": f"Webhook: {hook_id}",
-        "message": body.get("message", "Webhook received"),
-        "level": body.get("level", "info"),
-        "source": hook_id,
-        "data": body,
-    })
+    await bus.emit_async(
+        EventType.NOTIFICATION,
+        {
+            "title": f"Webhook: {hook_id}",
+            "message": body.get("message", "Webhook received"),
+            "level": body.get("level", "info"),
+            "source": hook_id,
+            "data": body,
+        },
+    )
 
     # Save to memory
     store = get_memory_store()
-    store.save_memory(MemoryEntry(
-        id=f"hook_{datetime.now().timestamp()}",
-        type=MemoryType.WORKFLOW,
-        content=body,
-        tags=["webhook", hook_id],
-    ))
+    store.save_memory(
+        MemoryEntry(
+            id=f"hook_{datetime.now().timestamp()}",
+            type=MemoryType.WORKFLOW,
+            content=body,
+            tags=["webhook", hook_id],
+        )
+    )
 
     return {"status": "received", "hook_id": hook_id}
 
@@ -207,6 +238,7 @@ async def custom_webhook(hook_id: str, request: Request):
 # ============================================
 # Slack Integration
 # ============================================
+
 
 @router.post("/slack")
 async def slack_webhook(request: Request):
@@ -245,6 +277,7 @@ async def slack_webhook(request: Request):
 # Discord Integration
 # ============================================
 
+
 @router.post("/discord")
 async def discord_webhook(request: Request):
     """
@@ -282,6 +315,7 @@ async def discord_webhook(request: Request):
 # ============================================
 # Webhook Management
 # ============================================
+
 
 @router.get("/list")
 async def list_webhooks():
@@ -327,11 +361,7 @@ async def test_webhook(data: dict[str, Any]):
     """Test webhook endpoint for debugging."""
     secure_logger.info(f"Test webhook received: {data}")
 
-    emit_notification(
-        "Test Webhook",
-        f"Received: {json.dumps(data)[:100]}",
-        "info"
-    )
+    emit_notification("Test Webhook", f"Received: {json.dumps(data)[:100]}", "info")
 
     return {
         "status": "received",

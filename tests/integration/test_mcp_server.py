@@ -11,8 +11,7 @@ import os
 import pytest
 
 pytestmark = pytest.mark.skipif(
-    not os.getenv("GITHUB_TOKEN"),
-    reason="GITHUB_TOKEN not set"
+    not os.getenv("GITHUB_TOKEN"), reason="GITHUB_TOKEN not set"
 )
 
 
@@ -26,6 +25,7 @@ class TestMCPServerStartup:
             handle_search_repositories,
             handle_synthesize_project,
         )
+
         assert handle_search_repositories is not None
         assert handle_analyze_repository is not None
         assert handle_synthesize_project is not None
@@ -65,6 +65,7 @@ class TestMCPToolSchemas:
         import inspect
 
         from src.mcp_server.tools import search_repositories
+
         sig = inspect.signature(search_repositories)
         params = list(sig.parameters.keys())
 
@@ -77,6 +78,7 @@ class TestMCPToolSchemas:
         import inspect
 
         from src.mcp_server.tools import analyze_repository
+
         sig = inspect.signature(analyze_repository)
         params = list(sig.parameters.keys())
 
@@ -87,6 +89,7 @@ class TestMCPToolSchemas:
         import inspect
 
         from src.mcp_server.tools import synthesize_project
+
         sig = inspect.signature(synthesize_project)
         params = list(sig.parameters.keys())
 

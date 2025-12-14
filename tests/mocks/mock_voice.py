@@ -27,7 +27,9 @@ class MockVoicePlayer:
             self.is_playing = True
         return {"success": True, "file": str(file_path)}
 
-    async def play_base64(self, audio_base64: str, format: str = "mp3", wait: bool = True) -> dict[str, Any]:
+    async def play_base64(
+        self, audio_base64: str, format: str = "mp3", wait: bool = True
+    ) -> dict[str, Any]:
         """Mock play base64 audio."""
         self.played_audio.append((audio_base64[:50], format, wait))
         if wait:
@@ -44,7 +46,9 @@ class MockVoicePlayer:
             self.is_playing = True
         return {"success": True}
 
-    async def play_base64(self, audio_base64: str, format: str = "mp3", wait: bool = True) -> dict[str, Any]:
+    async def play_base64(
+        self, audio_base64: str, format: str = "mp3", wait: bool = True
+    ) -> dict[str, Any]:
         """Mock play base64 audio."""
         self.played_audio.append((audio_base64[:50], format, wait))
         if wait:
@@ -78,26 +82,25 @@ class MockASRClient:
         """Set the next transcription to return."""
         self.transcriptions.append(text)
 
-    async def transcribe_file(self, audio_path: str, language: str = "en") -> dict[str, Any]:
+    async def transcribe_file(
+        self, audio_path: str, language: str = "en"
+    ) -> dict[str, Any]:
         """Mock transcribe audio file."""
         if self.transcriptions:
             text = self.transcriptions.pop(0)
         else:
             text = f"Mock transcription for {Path(audio_path).name}"
 
-        return {
-            "text": text,
-            "language": language,
-            "confidence": 0.95,
-            "duration": 2.5
-        }
+        return {"text": text, "language": language, "confidence": 0.95, "duration": 2.5}
 
-    async def transcribe_stream(self, audio_stream, language: str = "en") -> dict[str, Any]:
+    async def transcribe_stream(
+        self, audio_stream, language: str = "en"
+    ) -> dict[str, Any]:
         """Mock transcribe audio stream."""
         return {
             "text": "Mock stream transcription",
             "language": language,
-            "confidence": 0.90
+            "confidence": 0.90,
         }
 
     def get_supported_languages(self) -> list[str]:
@@ -112,7 +115,9 @@ class MockTTSClient:
         self.synthesized_texts = []
         self.voices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
 
-    async def synthesize(self, text: str, voice: str = "alloy", format: str = "mp3") -> bytes:
+    async def synthesize(
+        self, text: str, voice: str = "alloy", format: str = "mp3"
+    ) -> bytes:
         """Mock synthesize text to speech."""
         self.synthesized_texts.append((text, voice, format))
         # Return mock audio data

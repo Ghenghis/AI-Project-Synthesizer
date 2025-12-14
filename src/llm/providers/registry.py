@@ -28,6 +28,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class ProviderInfo:
     """Information about a registered provider."""
+
     provider: LLMProvider
     config: ProviderConfig
     status: ProviderStatus = ProviderStatus.UNKNOWN
@@ -102,9 +103,7 @@ class ProviderRegistry:
             self._provider_classes[provider_type] = OpenAICompatibleProvider
 
     def register_provider_class(
-        self,
-        provider_type: ProviderType,
-        provider_class: type[LLMProvider]
+        self, provider_type: ProviderType, provider_class: type[LLMProvider]
     ):
         """Register a custom provider class."""
         self._provider_classes[provider_type] = provider_class
@@ -121,7 +120,9 @@ class ProviderRegistry:
         """
         provider_class = self._provider_classes.get(config.provider_type)
         if not provider_class:
-            raise ValueError(f"No provider class registered for type: {config.provider_type}")
+            raise ValueError(
+                f"No provider class registered for type: {config.provider_type}"
+            )
 
         provider = provider_class(config)
 
@@ -139,7 +140,7 @@ class ProviderRegistry:
                 "provider_type": config.provider_type.value,
                 "host": config.host,
                 "priority": config.priority,
-            }
+            },
         )
 
         return config.name
@@ -192,10 +193,7 @@ class ProviderRegistry:
         """Check health of all providers."""
         results = {}
 
-        tasks = [
-            self.check_provider_health(name)
-            for name in self._providers
-        ]
+        tasks = [self.check_provider_health(name) for name in self._providers]
 
         statuses = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -208,9 +206,7 @@ class ProviderRegistry:
         return results
 
     async def get_best_provider(
-        self,
-        require_local: bool = False,
-        exclude: list[str] | None = None
+        self, require_local: bool = False, exclude: list[str] | None = None
     ) -> LLMProvider | None:
         """
         Get the best available provider.
@@ -227,12 +223,13 @@ class ProviderRegistry:
         # Sort by priority (lower = higher priority)
         candidates = sorted(
             [
-                info for name, info in self._providers.items()
+                info
+                for name, info in self._providers.items()
                 if name not in exclude
                 and info.config.enabled
                 and (not require_local or info.provider.is_local)
             ],
-            key=lambda x: x.config.priority
+            key=lambda x: x.config.priority,
         )
 
         for info in candidates:
@@ -258,7 +255,7 @@ class ProviderRegistry:
         max_tokens: int = 4096,
         provider_name: str | None = None,
         fallback: bool = True,
-        **kwargs
+        **kwargs,
     ) -> CompletionResult:
         """
         Complete prompt with automatic provider selection and fallback.
@@ -296,7 +293,7 @@ class ProviderRegistry:
                     system_prompt=system_prompt,
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    **kwargs
+                    **kwargs,
                 )
 
                 # Update success count
@@ -309,7 +306,7 @@ class ProviderRegistry:
             except Exception as e:
                 secure_logger.warning(
                     f"Provider {provider.name} failed: {e}",
-                    extra={"correlation_id": correlation_id}
+                    extra={"correlation_id": correlation_id},
                 )
 
                 # Update failure count

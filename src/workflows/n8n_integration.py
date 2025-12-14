@@ -24,6 +24,7 @@ secure_logger = get_secure_logger(__name__)
 
 class WorkflowStatus(str, Enum):
     """Workflow execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -34,6 +35,7 @@ class WorkflowStatus(str, Enum):
 @dataclass
 class N8NConfig:
     """n8n connection configuration."""
+
     base_url: str = "http://localhost:5678"
     api_key: str | None = None
     timeout: int = 30
@@ -42,6 +44,7 @@ class N8NConfig:
 @dataclass
 class N8NWorkflow:
     """Represents an n8n workflow."""
+
     id: str
     name: str
     active: bool = False
@@ -63,6 +66,7 @@ class N8NWorkflow:
 @dataclass
 class WorkflowExecution:
     """Workflow execution result."""
+
     id: str
     workflow_id: str
     status: WorkflowStatus
@@ -325,7 +329,9 @@ class N8NWorkflowTemplates:
                 },
             ],
             connections={
-                "trigger": {"main": [[{"node": "github_search"}, {"node": "hf_search"}]]},
+                "trigger": {
+                    "main": [[{"node": "github_search"}, {"node": "hf_search"}]]
+                },
                 "github_search": {"main": [[{"node": "merge"}]]},
                 "hf_search": {"main": [[{"node": "merge"}]]},
                 "merge": {"main": [[{"node": "output"}]]},
@@ -352,7 +358,9 @@ class N8NWorkflowTemplates:
                     "type": "n8n-nodes-base.cron",
                     "position": [250, 300],
                     "parameters": {
-                        "triggerTimes": {"item": [{"mode": "custom", "cronExpression": cron}]},
+                        "triggerTimes": {
+                            "item": [{"mode": "custom", "cronExpression": cron}]
+                        },
                     },
                 },
                 {
@@ -362,7 +370,10 @@ class N8NWorkflowTemplates:
                     "parameters": {
                         "url": "http://localhost:8000/api/search",
                         "method": "POST",
-                        "body": {"query": query, "platforms": ["github", "huggingface"]},
+                        "body": {
+                            "query": query,
+                            "platforms": ["github", "huggingface"],
+                        },
                     },
                 },
                 {
@@ -406,7 +417,12 @@ class N8NWorkflowTemplates:
                     "position": [450, 300],
                     "parameters": {
                         "conditions": {
-                            "string": [{"value1": "={{ $json.idea }}", "operation": "isNotEmpty"}],
+                            "string": [
+                                {
+                                    "value1": "={{ $json.idea }}",
+                                    "operation": "isNotEmpty",
+                                }
+                            ],
                         },
                     },
                 },
@@ -445,7 +461,7 @@ class N8NWorkflowTemplates:
                 "validate": {
                     "main": [
                         [{"node": "assemble"}],  # true
-                        [{"node": "error"}],     # false
+                        [{"node": "error"}],  # false
                     ],
                 },
                 "assemble": {"main": [[{"node": "success"}]]},

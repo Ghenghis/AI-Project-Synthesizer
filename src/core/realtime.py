@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class EventType(str, Enum):
     """Types of real-time events."""
+
     # Workflow events
     WORKFLOW_STARTED = "workflow.started"
     WORKFLOW_PROGRESS = "workflow.progress"
@@ -65,6 +66,7 @@ class EventType(str, Enum):
 @dataclass
 class Event:
     """Real-time event."""
+
     type: EventType
     data: dict[str, Any]
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -122,8 +124,7 @@ class EventBus:
         """Unsubscribe from an event type."""
         if event_type in self._subscribers:
             self._subscribers[event_type] = [
-                cb for cb in self._subscribers[event_type]
-                if cb != callback
+                cb for cb in self._subscribers[event_type] if cb != callback
             ]
 
     async def publish(self, event: Event):
@@ -131,7 +132,7 @@ class EventBus:
         # Add to history
         self._history.append(event)
         if len(self._history) > self._max_history:
-            self._history = self._history[-self._max_history:]
+            self._history = self._history[-self._max_history :]
 
         # Notify specific subscribers
         for callback in self._subscribers.get(event.type, []):
@@ -161,7 +162,9 @@ class EventBus:
         event = Event(type=event_type, data=data, source=source)
         asyncio.create_task(self.publish(event))
 
-    async def emit_async(self, event_type: EventType, data: dict[str, Any], source: str = "system"):
+    async def emit_async(
+        self, event_type: EventType, data: dict[str, Any], source: str = "system"
+    ):
         """Emit an event asynchronously."""
         event = Event(type=event_type, data=data, source=source)
         await self.publish(event)
@@ -222,6 +225,7 @@ def get_event_bus() -> EventBus:
 # Convenience Functions
 # ============================================
 
+
 def emit_workflow_event(
     workflow_id: str,
     status: str,
@@ -240,12 +244,16 @@ def emit_workflow_event(
 
     event_type = event_map.get(status, EventType.WORKFLOW_PROGRESS)
 
-    bus.emit(event_type, {
-        "workflow_id": workflow_id,
-        "status": status,
-        "progress": progress,
-        "message": message,
-    }, source="workflow")
+    bus.emit(
+        event_type,
+        {
+            "workflow_id": workflow_id,
+            "status": status,
+            "progress": progress,
+            "message": message,
+        },
+        source="workflow",
+    )
 
 
 def emit_agent_event(
@@ -266,12 +274,16 @@ def emit_agent_event(
 
     event_type = event_map.get(status, EventType.AGENT_STEP)
 
-    bus.emit(event_type, {
-        "agent": agent_name,
-        "status": status,
-        "step": step,
-        "output": output,
-    }, source="agent")
+    bus.emit(
+        event_type,
+        {
+            "agent": agent_name,
+            "status": status,
+            "step": step,
+            "output": output,
+        },
+        source="agent",
+    )
 
 
 def emit_search_event(
@@ -291,12 +303,16 @@ def emit_search_event(
 
     event_type = event_map.get(status, EventType.SEARCH_RESULT)
 
-    bus.emit(event_type, {
-        "query": query,
-        "status": status,
-        "results": results,
-        "count": count,
-    }, source="search")
+    bus.emit(
+        event_type,
+        {
+            "query": query,
+            "status": status,
+            "results": results,
+            "count": count,
+        },
+        source="search",
+    )
 
 
 def emit_notification(
@@ -307,8 +323,12 @@ def emit_notification(
     """Emit a notification event."""
     bus = get_event_bus()
 
-    bus.emit(EventType.NOTIFICATION, {
-        "title": title,
-        "message": message,
-        "level": level,
-    }, source="notification")
+    bus.emit(
+        EventType.NOTIFICATION,
+        {
+            "title": title,
+            "message": message,
+            "level": level,
+        },
+        source="notification",
+    )

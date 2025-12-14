@@ -36,7 +36,7 @@ class GLMASRClient:
         self,
         model_name: str = "zai-org/GLM-ASR-Nano-2512",
         device: str | None = None,
-        torch_dtype: torch.dtype | None = None
+        torch_dtype: torch.dtype | None = None,
     ):
         """
         Initialize GLM-ASR client.
@@ -51,7 +51,9 @@ class GLMASRClient:
         # Model configuration
         self.model_name = model_name
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.torch_dtype = torch_dtype or (torch.float16 if self.device == "cuda" else torch.float32)
+        self.torch_dtype = torch_dtype or (
+            torch.float16 if self.device == "cuda" else torch.float32
+        )
 
         # Model components
         self.processor = None
@@ -76,9 +78,7 @@ class GLMASRClient:
             # Load processor and model
             self.processor = AutoProcessor.from_pretrained(self.model_name)
             self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                low_cpu_mem_usage=True
+                self.model_name, torch_dtype=self.torch_dtype, low_cpu_mem_usage=True
             )
 
             # Move model to device
@@ -91,7 +91,11 @@ class GLMASRClient:
 
             secure_logger.info("GLM-ASR model loaded successfully")
             secure_logger.info(f"  Model parameters: {self.model.num_parameters():,}")
-            secure_logger.info(f"  Device memory: {torch.cuda.memory_allocated() / 1024**3:.2f} GB" if torch.cuda.is_available() else "CPU mode")
+            secure_logger.info(
+                f"  Device memory: {torch.cuda.memory_allocated() / 1024**3:.2f} GB"
+                if torch.cuda.is_available()
+                else "CPU mode"
+            )
 
             return True
 
@@ -103,7 +107,7 @@ class GLMASRClient:
         self,
         audio_path: str | Path,
         language: str | None = None,
-        task: str = "transcribe"
+        task: str = "transcribe",
     ) -> str:
         """
         Transcribe audio file to text.
@@ -127,7 +131,7 @@ class GLMASRClient:
             inputs = self.processor(
                 str(audio_path),
                 sampling_rate=16000,  # GLM-ASR expects 16kHz
-                return_tensors="pt"
+                return_tensors="pt",
             )
 
             # Move inputs to device
@@ -138,28 +142,25 @@ class GLMASRClient:
                 if language:
                     # Force specific language
                     forced_decoder_ids = self.processor.get_decoder_prompt_ids(
-                        language=language,
-                        task=task
+                        language=language, task=task
                     )
                     outputs = self.model.generate(
                         **inputs,
                         forced_decoder_ids=forced_decoder_ids,
-                        max_new_tokens=448
+                        max_new_tokens=448,
                     )
                 else:
                     # Auto-detect language
-                    outputs = self.model.generate(
-                        **inputs,
-                        max_new_tokens=448
-                    )
+                    outputs = self.model.generate(**inputs, max_new_tokens=448)
 
             # Decode transcription
             transcription = self.processor.batch_decode(
-                outputs,
-                skip_special_tokens=True
+                outputs, skip_special_tokens=True
             )[0]
 
-            secure_logger.info(f"Transcribed {audio_path.name}: {transcription[:50]}...")
+            secure_logger.info(
+                f"Transcribed {audio_path.name}: {transcription[:50]}..."
+            )
 
             return transcription.strip()
 
@@ -171,7 +172,7 @@ class GLMASRClient:
         self,
         audio_paths: list[str | Path],
         language: str | None = None,
-        batch_size: int = 4
+        batch_size: int = 4,
     ) -> dict[str, str]:
         """
         Transcribe multiple audio files in batch.
@@ -190,22 +191,24 @@ class GLMASRClient:
 
         # Process in batches to manage memory
         for i in range(0, len(audio_paths), batch_size):
-            batch_paths = audio_paths[i:i + batch_size]
+            batch_paths = audio_paths[i : i + batch_size]
 
-            batch_tasks = [
-                self.transcribe(path, language) for path in batch_paths
-            ]
+            batch_tasks = [self.transcribe(path, language) for path in batch_paths]
 
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
 
             for path, result in zip(batch_paths, batch_results, strict=False):
                 if isinstance(result, Exception):
-                    secure_logger.error(f"Batch transcription failed for {path}: {result}")
+                    secure_logger.error(
+                        f"Batch transcription failed for {path}: {result}"
+                    )
                     results[str(path)] = ""
                 else:
                     results[str(path)] = result
 
-        secure_logger.info(f"Batch transcription completed: {len(results)} files processed")
+        secure_logger.info(
+            f"Batch transcription completed: {len(results)} files processed"
+        )
         return results
 
     async def detect_language(self, audio_path: str | Path) -> str:
@@ -222,7 +225,7 @@ class GLMASRClient:
         transcription = await self.transcribe(audio_path)
 
         # Simple language detection based on characters
-        chinese_chars = sum(1 for char in transcription if '\u4e00' <= char <= '\u9fff')
+        chinese_chars = sum(1 for char in transcription if "\u4e00" <= char <= "\u9fff")
         total_chars = len(transcription.strip())
 
         if total_chars == 0:
@@ -246,7 +249,7 @@ class GLMASRClient:
             "auto": "Auto-detect",
             "en": "English",
             "zh": "Mandarin Chinese",
-            "yue": "Cantonese"
+            "yue": "Cantonese",
         }
 
     async def release_memory(self):
@@ -322,7 +325,9 @@ class FallbackTranscriber:
 
 
 # Unified transcription interface
-async def get_transcription_client(use_glm_asr: bool = True) -> GLMASRClient | FallbackTranscriber:
+async def get_transcription_client(
+    use_glm_asr: bool = True,
+) -> GLMASRClient | FallbackTranscriber:
     """
     Get the best available transcription client.
 

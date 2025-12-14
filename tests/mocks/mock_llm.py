@@ -27,16 +27,8 @@ class MockLiteLLMRouter:
             response = f"Mock response to: {prompt[:50]}..."
 
         return {
-            "choices": [{
-                "message": {
-                    "content": response
-                }
-            }],
-            "usage": {
-                "prompt_tokens": 10,
-                "completion_tokens": 10,
-                "total_tokens": 20
-            }
+            "choices": [{"message": {"content": response}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
         }
 
 
@@ -63,7 +55,7 @@ class MockOllamaClient:
             "response": response,
             "model": model,
             "created_at": "2024-01-01T00:00:00Z",
-            "done": True
+            "done": True,
         }
 
     def list_models(self) -> list[str]:
@@ -83,17 +75,21 @@ class MockMemorySystem:
         """Set memories to return from search."""
         self.memories = memories
 
-    async def _add_memory(self, content: str, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def _add_memory(
+        self, content: str, metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Mock add memory method."""
         memory = {
             "id": f"mock_memory_{len(self.memories)}",
             "content": content,
             "metadata": metadata or {},
-            "created_at": "2024-01-01T00:00:00Z"
+            "created_at": "2024-01-01T00:00:00Z",
         }
         self.memories.append(memory)
         return memory
 
-    async def _search_memories(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def _search_memories(
+        self, query: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Mock search memories method."""
         return self.memories[:limit]

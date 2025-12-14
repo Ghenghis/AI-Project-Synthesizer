@@ -31,9 +31,9 @@ class TestConfigurationDefaults:
         settings = get_settings()
 
         # Check main sections exist
-        assert hasattr(settings, 'app')
-        assert hasattr(settings, 'llm')
-        assert hasattr(settings, 'platforms')
+        assert hasattr(settings, "app")
+        assert hasattr(settings, "llm")
+        assert hasattr(settings, "platforms")
 
     def test_app_settings_defaults(self):
         """App settings should have sensible defaults."""
@@ -66,8 +66,8 @@ class TestLLMProviderAvailability:
         settings = get_settings()
 
         # Should have model settings
-        assert hasattr(settings.llm, 'ollama_model_tiny')
-        assert hasattr(settings.llm, 'lmstudio_enabled')
+        assert hasattr(settings.llm, "ollama_model_tiny")
+        assert hasattr(settings.llm, "lmstudio_enabled")
 
 
 class TestSecretMasking:
@@ -176,7 +176,7 @@ class TestInputValidation:
         from src.core.security import InputValidator
 
         # Test that validate_path exists and works
-        if hasattr(InputValidator, 'validate_path'):
+        if hasattr(InputValidator, "validate_path"):
             # Valid path should pass
             result = InputValidator.validate_path("src/main.py")
             assert result is not None
@@ -296,7 +296,10 @@ class TestMCPServerTools:
         result = await handle_search_repositories({})
 
         assert result.get("error") is True
-        assert "query" in result.get("message", "").lower() or "required" in result.get("message", "").lower()
+        assert (
+            "query" in result.get("message", "").lower()
+            or "required" in result.get("message", "").lower()
+        )
 
     @pytest.mark.asyncio
     async def test_get_synthesis_status_requires_id(self):

@@ -1,4 +1,5 @@
 """Test the conversational assistant."""
+
 import asyncio
 
 from src.assistant.core import AssistantConfig, ConversationalAssistant
@@ -25,6 +26,7 @@ async def test():
         print(f"Assistant: {response['text']}\n")
         print(f"Suggested actions: {response['actions']}\n")
         print("-" * 50 + "\n")
+
 
 if __name__ == "__main__":
     asyncio.run(test())

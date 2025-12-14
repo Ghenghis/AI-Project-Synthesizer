@@ -36,11 +36,7 @@ class MockBrowserAutomation:
     async def navigate(self, url: str) -> dict[str, Any]:
         """Mock navigate to URL."""
         self.navigated_urls.append(url)
-        return {
-            "url": url,
-            "title": f"Mock Page for {url}",
-            "load_time": 0.5
-        }
+        return {"url": url, "title": f"Mock Page for {url}", "load_time": 0.5}
 
     async def click(self, selector: str):
         """Mock click element."""
@@ -87,7 +83,9 @@ class MockBrowserClient:
         """Delegate to browser's clicked_selectors."""
         return self.browser.clicked_selectors
 
-    async def start_browser(self, browser_type: str = "chromium", headless: bool = True):
+    async def start_browser(
+        self, browser_type: str = "chromium", headless: bool = True
+    ):
         """Mock start browser."""
         await self.browser.start(browser_type, headless)
         return {"success": True}
@@ -109,7 +107,7 @@ class MockBrowserClient:
         self.sessions[session_id] = {
             "name": name,
             "created_at": datetime.now(),
-            "last_activity": datetime.now()
+            "last_activity": datetime.now(),
         }
         self.current_session_id = session_id
         return {"session_id": session_id}
@@ -128,8 +126,4 @@ class MockBrowserClient:
     async def screenshot(self, path: str | None = None) -> dict[str, Any]:
         """Mock screenshot."""
         screenshot_data = await self.browser.screenshot()
-        return {
-            "success": True,
-            "data": screenshot_data,
-            "path": path
-        }
+        return {"success": True, "data": screenshot_data, "path": path}

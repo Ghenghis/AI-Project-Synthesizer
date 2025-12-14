@@ -40,11 +40,11 @@ class TestScaffolder:
     def test_scaffolder_has_scaffold_method(self):
         """Should have scaffold method."""
         scaffolder = Scaffolder()
-        assert hasattr(scaffolder, 'scaffold')
+        assert hasattr(scaffolder, "scaffold")
 
     def test_templates_exist(self):
         """Should have template definitions."""
-        assert hasattr(Scaffolder, 'TEMPLATES')
+        assert hasattr(Scaffolder, "TEMPLATES")
         assert "python-default" in Scaffolder.TEMPLATES
         assert "python-fastapi" in Scaffolder.TEMPLATES
 

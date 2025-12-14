@@ -94,6 +94,7 @@ class TestBrowserAutomation:
         finally:
             # Add a small delay and retry deletion
             import time
+
             for _ in range(5):
                 try:
                     os.unlink(tmp_path)
@@ -262,6 +263,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"\nTest failed: {e}")
             import traceback
+
             traceback.print_exc()
             sys.exit(1)
 

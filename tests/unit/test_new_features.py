@@ -80,9 +80,9 @@ class TestCaching:
             assert result == {"nested": {"data": 123}}
         finally:
             # Ensure cache is closed before cleanup
-            if hasattr(cache, 'close'):
+            if hasattr(cache, "close"):
                 await cache.close()
-            elif hasattr(cache, '_conn') and cache._conn:
+            elif hasattr(cache, "_conn") and cache._conn:
                 cache._conn.close()
 
     @pytest.mark.asyncio
@@ -216,8 +216,10 @@ class TestTelemetry:
         )
 
         # Mock file operations to avoid permission issues
-        with patch.object(TelemetryCollector, '_load_config'), \
-             patch.object(TelemetryCollector, '_save_events'):
+        with (
+            patch.object(TelemetryCollector, "_load_config"),
+            patch.object(TelemetryCollector, "_save_events"),
+        ):
             telemetry = TelemetryCollector(config)
             telemetry.config.enabled = True  # Ensure enabled after mock
 
@@ -238,18 +240,23 @@ class TestTelemetry:
         )
 
         # Mock file operations to avoid permission issues
-        with patch.object(TelemetryCollector, '_load_config'), \
-             patch.object(TelemetryCollector, '_save_events'):
+        with (
+            patch.object(TelemetryCollector, "_load_config"),
+            patch.object(TelemetryCollector, "_save_events"),
+        ):
             telemetry = TelemetryCollector(config)
             telemetry.config.enabled = True  # Ensure enabled after mock
 
             # Try to track with potentially sensitive data
-            telemetry.track("test", {
-                "platform": "github",  # Allowed
-                "api_key": "secret123",  # Not allowed
-                "password": "hunter2",  # Not allowed
-                "count": 5,  # Allowed
-            })
+            telemetry.track(
+                "test",
+                {
+                    "platform": "github",  # Allowed
+                    "api_key": "secret123",  # Not allowed
+                    "password": "hunter2",  # Not allowed
+                    "count": 5,  # Allowed
+                },
+            )
 
             props = telemetry._events[0].properties
 

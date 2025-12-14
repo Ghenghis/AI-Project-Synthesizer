@@ -39,41 +39,49 @@ class ResearchAgent(BaseAgent):
 
     def _setup_tools(self):
         """Set up research tools."""
-        self.register_tool(AgentTool(
-            name="search_github",
-            description="Search GitHub for repositories",
-            func=self._search_github,
-            parameters={
-                "query": {"type": "string", "description": "Search query"},
-                "max_results": {"type": "integer", "default": 10},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="search_github",
+                description="Search GitHub for repositories",
+                func=self._search_github,
+                parameters={
+                    "query": {"type": "string", "description": "Search query"},
+                    "max_results": {"type": "integer", "default": 10},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="search_huggingface",
-            description="Search HuggingFace for models and datasets",
-            func=self._search_huggingface,
-            parameters={
-                "query": {"type": "string", "description": "Search query"},
-                "type": {"type": "string", "enum": ["model", "dataset"]},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="search_huggingface",
+                description="Search HuggingFace for models and datasets",
+                func=self._search_huggingface,
+                parameters={
+                    "query": {"type": "string", "description": "Search query"},
+                    "type": {"type": "string", "enum": ["model", "dataset"]},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="analyze_repo",
-            description="Analyze a GitHub repository",
-            func=self._analyze_repo,
-            parameters={
-                "repo_url": {"type": "string", "description": "Repository URL"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="analyze_repo",
+                description="Analyze a GitHub repository",
+                func=self._analyze_repo,
+                parameters={
+                    "repo_url": {"type": "string", "description": "Repository URL"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="get_trends",
-            description="Get trending topics in AI/ML",
-            func=self._get_trends,
-            parameters={},
-        ))
+        self.register_tool(
+            AgentTool(
+                name="get_trends",
+                description="Get trending topics in AI/ML",
+                func=self._get_trends,
+                parameters={},
+            )
+        )
 
     async def _search_github(self, query: str, max_results: int = 10) -> dict[str, Any]:
         """Search GitHub repositories."""
@@ -123,7 +131,9 @@ class ResearchAgent(BaseAgent):
 
             return {
                 "success": True,
-                "count": len(results.models) if type == "model" else len(results.datasets),
+                "count": len(results.models)
+                if type == "model"
+                else len(results.datasets),
                 "results": [
                     {"name": m.name, "url": m.url}
                     for m in (results.models if type == "model" else results.datasets)
@@ -171,17 +181,16 @@ class ResearchAgent(BaseAgent):
         llm = await self._get_llm()
 
         # Build prompt
-        tools_desc = "\n".join([
-            f"- {t.name}: {t.description}"
-            for t in self._tools.values()
-        ])
+        tools_desc = "\n".join(
+            [f"- {t.name}: {t.description}" for t in self._tools.values()]
+        )
 
         prompt = f"""You are a research agent. Your task is to research: {task}
 
 Available tools:
 {tools_desc}
 
-Previous context: {context.get('previous_step', 'None')}
+Previous context: {context.get("previous_step", "None")}
 
 Decide which tool to use and what parameters. Respond in this format:
 TOOL: <tool_name>
@@ -219,6 +228,7 @@ RECOMMENDATIONS: <list of recommendations>
 
         if "PARAMS:" in response:
             import json
+
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)

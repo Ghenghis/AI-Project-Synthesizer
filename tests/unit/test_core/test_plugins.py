@@ -32,20 +32,14 @@ class TestPluginMetadata:
     def test_create_plugin_metadata(self):
         """Should create plugin metadata."""
         meta = PluginMetadata(
-            name="test_plugin",
-            version="1.0.0",
-            description="A test plugin"
+            name="test_plugin", version="1.0.0", description="A test plugin"
         )
         assert meta.name == "test_plugin"
         assert meta.version == "1.0.0"
 
     def test_plugin_metadata_defaults(self):
         """Should have correct defaults."""
-        meta = PluginMetadata(
-            name="test",
-            version="1.0.0",
-            description="Test"
-        )
+        meta = PluginMetadata(name="test", version="1.0.0", description="Test")
         assert meta.author == ""
         assert meta.plugin_type == PluginType.PLATFORM
 

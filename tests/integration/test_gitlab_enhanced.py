@@ -34,7 +34,7 @@ class TestGitLabEnhanced:
     async def client(self):
         """Create GitLab enhanced client for testing."""
         # Mock the client to avoid needing real GitLab credentials
-        with patch('src.discovery.gitlab_enhanced.GitLabClient.__init__') as mock_init:
+        with patch("src.discovery.gitlab_enhanced.GitLabClient.__init__") as mock_init:
             mock_init.return_value = None
             client = GitLabEnhanced()
 
@@ -108,31 +108,39 @@ class TestGitLabEnhanced:
     async def test_ai_review_with_mock(self, client):
         """Test AI-powered MR review with mocked LLM."""
         # Mock MR and changes
-        client.get_merge_request = AsyncMock(return_value=AsyncMock(
-            iid=45,
-            title="Test MR",
-            description="Test description",
-            source_branch="feature/test",
-            target_branch="main",
-        ))
+        client.get_merge_request = AsyncMock(
+            return_value=AsyncMock(
+                iid=45,
+                title="Test MR",
+                description="Test description",
+                source_branch="feature/test",
+                target_branch="main",
+            )
+        )
 
-        client.get_mr_changes = AsyncMock(return_value={
-            "changes": [
-                {
-                    "new_path": "test.py",
-                    "diff": "+def test():\n+    pass\n",
-                }
-            ]
-        })
+        client.get_mr_changes = AsyncMock(
+            return_value={
+                "changes": [
+                    {
+                        "new_path": "test.py",
+                        "diff": "+def test():\n+    pass\n",
+                    }
+                ]
+            }
+        )
 
         # Mock LLM response
-        with patch('src.discovery.gitlab_enhanced.LiteLLMRouter') as mock_router:
-            mock_router.return_value.complete = AsyncMock(return_value=json.dumps({
-                "approved": True,
-                "comments": ["Good implementation", "Tests are missing"],
-                "suggestions": ["Add unit tests"],
-                "confidence": 0.8,
-            }))
+        with patch("src.discovery.gitlab_enhanced.LiteLLMRouter") as mock_router:
+            mock_router.return_value.complete = AsyncMock(
+                return_value=json.dumps(
+                    {
+                        "approved": True,
+                        "comments": ["Good implementation", "Tests are missing"],
+                        "suggestions": ["Add unit tests"],
+                        "confidence": 0.8,
+                    }
+                )
+            )
 
             client.add_mr_comment = AsyncMock()
 
@@ -194,11 +202,13 @@ class TestGitLabEnhanced:
     async def test_wait_for_pipeline(self, client):
         """Test waiting for pipeline completion."""
         # Mock pipeline responses
-        client.get_pipeline = AsyncMock(side_effect=[
-            AsyncMock(id=789, status="running"),
-            AsyncMock(id=789, status="running"),
-            AsyncMock(id=789, status="success"),
-        ])
+        client.get_pipeline = AsyncMock(
+            side_effect=[
+                AsyncMock(id=789, status="running"),
+                AsyncMock(id=789, status="running"),
+                AsyncMock(id=789, status="success"),
+            ]
+        )
 
         # Wait for completion
         pipeline = await client.wait_for_pipeline(
@@ -319,7 +329,11 @@ class TestGitLabEnhanced:
     async def test_link_issue_to_mr(self, client):
         """Test linking an issue to a merge request."""
         # Mock API response
-        mock_response = {"id": 789, "source_issue": {"id": 123}, "target_issue": {"id": 456}}
+        mock_response = {
+            "id": 789,
+            "source_issue": {"id": 123},
+            "target_issue": {"id": 456},
+        }
         client._request.return_value = mock_response
 
         # Link issue to MR
@@ -348,7 +362,9 @@ if __name__ == "__main__":
         test = TestGitLabEnhanced()
 
         try:
-            async with patch('src.discovery.gitlab_enhanced.GitLabClient.__init__') as mock_init:
+            async with patch(
+                "src.discovery.gitlab_enhanced.GitLabClient.__init__"
+            ) as mock_init:
                 mock_init.return_value = None
                 client = GitLabEnhanced()
                 client._request = AsyncMock()
@@ -380,6 +396,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"\nTest failed: {e}")
             import traceback
+
             traceback.print_exc()
             sys.exit(1)
 

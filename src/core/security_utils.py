@@ -26,10 +26,10 @@ def validate_command_args(args: list[str]) -> list[str]:
     for arg in args:
         # Check for dangerous patterns
         dangerous_patterns = [
-            r'[;&|`$()]',  # Shell metacharacters
-            r'\.\./',      # Directory traversal
-            r'--\s*exec',  # Dangerous exec flags
-            r'--\s*system', # Dangerous system flags
+            r"[;&|`$()]",  # Shell metacharacters
+            r"\.\./",  # Directory traversal
+            r"--\s*exec",  # Dangerous exec flags
+            r"--\s*system",  # Dangerous system flags
         ]
 
         for pattern in dangerous_patterns:
@@ -94,11 +94,11 @@ def validate_url(url: str) -> str:
         parsed = urlparse(url)
 
         # Require http or https
-        if parsed.scheme not in ['http', 'https']:
+        if parsed.scheme not in ["http", "https"]:
             raise ValueError(f"Invalid URL scheme: {parsed.scheme}")
 
         # Check for localhost/private IPs if needed
-        if parsed.hostname in ['localhost', '127.0.0.1']:
+        if parsed.hostname in ["localhost", "127.0.0.1"]:
             raise ValueError("Localhost URLs not allowed")
 
         # Limit URL length
@@ -130,11 +130,11 @@ def sanitize_template_string(template: str, max_length: int = 10000) -> str:
 
     # Check for dangerous patterns
     dangerous_patterns = [
-        r'\{\{.*\}\}',        # Jinja2 template injection
-        r'\{%.*%\}',          # Jinja2 control blocks
-        r'<\?.*\?>',          # PHP tags
-        r'<%.*%>',            # ERB tags
-        r'\$\{.*\}',          # Shell variable expansion
+        r"\{\{.*\}\}",  # Jinja2 template injection
+        r"\{%.*%\}",  # Jinja2 control blocks
+        r"<\?.*\?>",  # PHP tags
+        r"<%.*%>",  # ERB tags
+        r"\$\{.*\}",  # Shell variable expansion
     ]
 
     for pattern in dangerous_patterns:
@@ -145,10 +145,7 @@ def sanitize_template_string(template: str, max_length: int = 10000) -> str:
 
 
 def safe_subprocess_run(
-    cmd: list[str],
-    cwd: Path | None = None,
-    timeout: int = 30,
-    **kwargs
+    cmd: list[str], cwd: Path | None = None, timeout: int = 30, **kwargs
 ) -> Any:
     """
     Safely run subprocess with validation.
@@ -178,15 +175,10 @@ def safe_subprocess_run(
     validated_cwd = validate_path(cwd) if cwd else None
 
     # Ensure shell=False (default)
-    kwargs['shell'] = False
+    kwargs["shell"] = False
 
     # Run with timeout
-    return subprocess.run(
-        sanitized_cmd,
-        cwd=validated_cwd,
-        timeout=timeout,
-        **kwargs
-    )
+    return subprocess.run(sanitized_cmd, cwd=validated_cwd, timeout=timeout, **kwargs)
 
 
 def secure_filename(filename: str) -> str:
@@ -203,20 +195,20 @@ def secure_filename(filename: str) -> str:
     filename = filename.strip()
 
     # Replace path separators first
-    filename = filename.replace('/', '_').replace('\\', '_')
+    filename = filename.replace("/", "_").replace("\\", "_")
 
     # Remove path components
     filename = Path(filename).name
 
     # Replace dangerous characters
-    filename = re.sub(r'[<>:"|?*]', '_', filename)
+    filename = re.sub(r'[<>:"|?*]', "_", filename)
 
     # Remove control characters
-    filename = re.sub(r'[\x00-\x1f\x7f]', '', filename)
+    filename = re.sub(r"[\x00-\x1f\x7f]", "", filename)
 
     # Limit length
     if len(filename) > 255:
-        name, ext = filename.rsplit('.', 1) if '.' in filename else (filename, '')
-        filename = name[:255-len(ext)-1] + '.' + ext if ext else name[:255]
+        name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "")
+        filename = name[: 255 - len(ext) - 1] + "." + ext if ext else name[:255]
 
-    return filename or 'unnamed'
+    return filename or "unnamed"

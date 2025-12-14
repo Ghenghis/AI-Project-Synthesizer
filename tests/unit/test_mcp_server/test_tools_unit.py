@@ -51,7 +51,11 @@ class TestSynthesisJobManagement:
     def test_update_synthesis_job(self):
         """Test updating synthesis job."""
         job_id = "update_job"
-        tools._synthesis_jobs[job_id] = {"id": job_id, "status": "pending", "progress": 0}
+        tools._synthesis_jobs[job_id] = {
+            "id": job_id,
+            "status": "pending",
+            "progress": 0,
+        }
 
         tools.update_synthesis_job(job_id, progress=75, status="running")
 
@@ -73,7 +77,7 @@ class TestUnifiedSearch:
 
     def test_get_unified_search_creates_instance(self):
         """Test get_unified_search creates new instance."""
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_search = MagicMock()
             mock_create.return_value = mock_search
 
@@ -101,7 +105,7 @@ class TestDependencyAnalyzer:
 
     def test_get_dependency_analyzer_creates_instance(self):
         """Test get_dependency_analyzer creates new instance."""
-        with patch('src.mcp_server.tools.DependencyAnalyzer') as mock_class:
+        with patch("src.mcp_server.tools.DependencyAnalyzer") as mock_class:
             mock_analyzer = MagicMock()
             mock_class.return_value = mock_analyzer
 
@@ -137,19 +141,25 @@ class TestSearchRepositories:
     @pytest.mark.asyncio
     async def test_search_repositories_basic(self):
         """Test basic repository search."""
-        with patch.object(tools, 'get_unified_search') as mock_get_search:
+        with patch.object(tools, "get_unified_search") as mock_get_search:
             mock_search = MagicMock()
             # Mock the search method to return proper structure
-            mock_search.search = AsyncMock(return_value=MagicMock(
-                repositories=[{"name": "test-repo", "url": "https://github.com/test/repo"}]
-            ))
+            mock_search.search = AsyncMock(
+                return_value=MagicMock(
+                    repositories=[
+                        {"name": "test-repo", "url": "https://github.com/test/repo"}
+                    ]
+                )
+            )
             mock_get_search.return_value = mock_search
 
-            result = await tools.handle_search_repositories({
-                "query": "machine learning",
-                "platforms": ["github"],
-                "max_results": 10
-            })
+            result = await tools.handle_search_repositories(
+                {
+                    "query": "machine learning",
+                    "platforms": ["github"],
+                    "max_results": 10,
+                }
+            )
 
             # Result should be a dict (either success or error)
             assert isinstance(result, dict)
@@ -157,10 +167,9 @@ class TestSearchRepositories:
     @pytest.mark.asyncio
     async def test_search_repositories_empty_query(self):
         """Test search with empty query."""
-        result = await tools.handle_search_repositories({
-            "query": "",
-            "platforms": ["github"]
-        })
+        result = await tools.handle_search_repositories(
+            {"query": "", "platforms": ["github"]}
+        )
 
         # Should handle empty query gracefully
         assert result is not None
@@ -176,7 +185,7 @@ class TestAssistant:
 
     def test_get_assistant_creates_instance(self):
         """Test get_assistant creates new instance."""
-        with patch('src.assistant.core.ConversationalAssistant') as mock_class:
+        with patch("src.assistant.core.ConversationalAssistant") as mock_class:
             mock_assistant = MagicMock()
             mock_class.return_value = mock_assistant
 
@@ -270,7 +279,9 @@ class TestUpdateJob:
     def test_update_job_existing(self):
         """Test updating existing job."""
         job_id = "test_job"
-        tools.set_synthesis_job(job_id, {"id": job_id, "status": "pending", "progress": 0})
+        tools.set_synthesis_job(
+            job_id, {"id": job_id, "status": "pending", "progress": 0}
+        )
 
         tools._update_job(job_id, 50, "running")
 

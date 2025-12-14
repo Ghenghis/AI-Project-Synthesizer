@@ -23,6 +23,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class PlaybackResult:
     """Result of audio playback."""
+
     success: bool
     duration_ms: int = 0
     error: str | None = None
@@ -153,7 +154,9 @@ $player.Close()
         if wait:
             # Run synchronously
             process = await asyncio.create_subprocess_exec(
-                "powershell", "-Command", ps_script,
+                "powershell",
+                "-Command",
+                ps_script,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -251,7 +254,9 @@ def get_voice_player() -> VoicePlayer:
     return _player
 
 
-async def play_audio(audio_base64: str, format: str = "mp3", wait: bool = True) -> PlaybackResult:
+async def play_audio(
+    audio_base64: str, format: str = "mp3", wait: bool = True
+) -> PlaybackResult:
     """
     Convenience function to play base64 audio.
 

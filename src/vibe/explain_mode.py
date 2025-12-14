@@ -26,6 +26,7 @@ from src.memory.mem0_integration import MemorySystem
 
 class ExplanationType(Enum):
     """Types of explanations."""
+
     CODE_DECISION = "code_decision"
     ARCHITECTURAL = "architectural"
     REFACTORING = "refactoring"
@@ -38,6 +39,7 @@ class ExplanationType(Enum):
 
 class ExplanationLevel(Enum):
     """Detail levels for explanations."""
+
     BRIEF = "brief"  # One sentence explanation
     STANDARD = "standard"  # Paragraph with key points
     DETAILED = "detailed"  # Full explanation with examples
@@ -47,6 +49,7 @@ class ExplanationLevel(Enum):
 @dataclass
 class CodeChange:
     """Represents a code change."""
+
     file_path: str
     old_code: str | None
     new_code: str
@@ -57,6 +60,7 @@ class CodeChange:
 @dataclass
 class Explanation:
     """An explanation of code decisions."""
+
     id: str
     type: ExplanationType
     level: ExplanationLevel
@@ -94,9 +98,12 @@ class ExplainMode:
         self.default_level = ExplanationLevel.STANDARD
         self.max_examples = 3
 
-    async def explain_code_change(self, change: CodeChange,
-                                 context: dict[str, Any] | None = None,
-                                 level: ExplanationLevel | None = None) -> Explanation:
+    async def explain_code_change(
+        self,
+        change: CodeChange,
+        context: dict[str, Any] | None = None,
+        level: ExplanationLevel | None = None,
+    ) -> Explanation:
         """
         Explain a code change.
 
@@ -124,10 +131,13 @@ class ExplainMode:
 
         return explanation
 
-    async def explain_architectural_decision(self, decision: str,
-                                            components: list[str],
-                                            context: dict[str, Any] | None = None,
-                                            level: ExplanationLevel | None = None) -> Explanation:
+    async def explain_architectural_decision(
+        self,
+        decision: str,
+        components: list[str],
+        context: dict[str, Any] | None = None,
+        level: ExplanationLevel | None = None,
+    ) -> Explanation:
         """
         Explain an architectural decision.
 
@@ -153,10 +163,14 @@ class ExplainMode:
 
         return explanation
 
-    async def explain_refactoring(self, before: str, after: str,
-                                file_path: str,
-                                context: dict[str, Any] | None = None,
-                                level: ExplanationLevel | None = None) -> Explanation:
+    async def explain_refactoring(
+        self,
+        before: str,
+        after: str,
+        file_path: str,
+        context: dict[str, Any] | None = None,
+        level: ExplanationLevel | None = None,
+    ) -> Explanation:
         """
         Explain a refactoring decision.
 
@@ -186,7 +200,9 @@ class ExplainMode:
 
         return explanation
 
-    def _classify_change(self, change: CodeChange, context: dict[str, Any] | None) -> ExplanationType:
+    def _classify_change(
+        self, change: CodeChange, context: dict[str, Any] | None
+    ) -> ExplanationType:
         """Classify the type of change for explanation."""
         code_lower = change.new_code.lower()
 
@@ -216,10 +232,13 @@ class ExplainMode:
         # Default
         return ExplanationType.CODE_DECISION
 
-    async def _generate_explanation(self, change: CodeChange,
-                                   exp_type: ExplanationType,
-                                   level: ExplanationLevel,
-                                   context: dict[str, Any] | None) -> Explanation:
+    async def _generate_explanation(
+        self,
+        change: CodeChange,
+        exp_type: ExplanationType,
+        level: ExplanationLevel,
+        context: dict[str, Any] | None,
+    ) -> Explanation:
         """Generate explanation using LLM."""
         # Build prompt based on level
         if level == ExplanationLevel.BRIEF:
@@ -283,9 +302,7 @@ Return as JSON:
         try:
             # Get LLM response
             response = await self.llm_router.generate(
-                prompt=prompt,
-                model="claude-sonnet",
-                max_tokens=1500
+                prompt=prompt, model="claude-sonnet", max_tokens=1500
             )
 
             # Parse response
@@ -299,14 +316,18 @@ Return as JSON:
                 id=f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 type=exp_type,
                 level=level,
-                title=data.get("title", f"Code change in {Path(change.file_path).name}"),
+                title=data.get(
+                    "title", f"Code change in {Path(change.file_path).name}"
+                ),
                 summary=data.get("summary", response[:200]),
                 reasoning=data.get("reasoning", []),
                 alternatives=data.get("alternatives", []),
                 impact=data.get("impact", {}),
                 best_practices=data.get("best_practices", []),
-                examples=data.get("examples") if level != ExplanationLevel.BRIEF else None,
-                timestamp=datetime.now()
+                examples=data.get("examples")
+                if level != ExplanationLevel.BRIEF
+                else None,
+                timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -322,18 +343,21 @@ Return as JSON:
                 impact={},
                 best_practices=[],
                 examples=None,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
-    async def _generate_architectural_explanation(self, decision: str,
-                                                components: list[str],
-                                                level: ExplanationLevel,
-                                                context: dict[str, Any] | None) -> Explanation:
+    async def _generate_architectural_explanation(
+        self,
+        decision: str,
+        components: list[str],
+        level: ExplanationLevel,
+        context: dict[str, Any] | None,
+    ) -> Explanation:
         """Generate architectural decision explanation."""
         prompt = f"""Explain this architectural decision:
 
 Decision: {decision}
-Components: {', '.join(components)}
+Components: {", ".join(components)}
 Context: {json.dumps(context or {}, indent=2)}
 
 Provide explanation including:
@@ -359,9 +383,7 @@ Return as JSON:
 
         try:
             response = await self.llm_router.generate(
-                prompt=prompt,
-                model="claude-sonnet",
-                max_tokens=1000
+                prompt=prompt, model="claude-sonnet", max_tokens=1000
             )
 
             data = json.loads(response)
@@ -377,7 +399,7 @@ Return as JSON:
                 impact=data.get("impact", {}),
                 best_practices=data.get("best_practices", []),
                 examples=None,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -392,13 +414,16 @@ Return as JSON:
                 impact={},
                 best_practices=[],
                 examples=None,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
-    async def _generate_refactoring_explanation(self, changes: dict[str, Any],
-                                              file_path: str,
-                                              level: ExplanationLevel,
-                                              context: dict[str, Any] | None) -> Explanation:
+    async def _generate_refactoring_explanation(
+        self,
+        changes: dict[str, Any],
+        file_path: str,
+        level: ExplanationLevel,
+        context: dict[str, Any] | None,
+    ) -> Explanation:
         """Generate refactoring explanation."""
         prompt = f"""Explain this refactoring:
 
@@ -428,9 +453,7 @@ Return as JSON:
 
         try:
             response = await self.llm_router.generate(
-                prompt=prompt,
-                model="claude-sonnet",
-                max_tokens=1000
+                prompt=prompt, model="claude-sonnet", max_tokens=1000
             )
 
             data = json.loads(response)
@@ -446,7 +469,7 @@ Return as JSON:
                 impact=data.get("impact", {}),
                 best_practices=data.get("best_practices", []),
                 examples=None,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -461,20 +484,26 @@ Return as JSON:
                 impact={},
                 best_practices=[],
                 examples=None,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
-    def _parse_text_explanation(self, text: str, _level: ExplanationLevel) -> dict[str, Any]:
+    def _parse_text_explanation(
+        self, text: str, _level: ExplanationLevel
+    ) -> dict[str, Any]:
         """Parse text explanation into structured format."""
-        lines = text.strip().split('\n')
+        lines = text.strip().split("\n")
 
         return {
             "title": lines[0] if lines else "Code Change",
             "summary": "\n".join(lines[:3]) if lines else "",
-            "reasoning": [line.strip() for line in lines if line.strip() and not line.startswith(' ')],
+            "reasoning": [
+                line.strip()
+                for line in lines
+                if line.strip() and not line.startswith(" ")
+            ],
             "alternatives": [],
             "impact": {},
-            "best_practices": []
+            "best_practices": [],
         }
 
     def _analyze_refactoring(self, before: str, after: str) -> dict[str, Any]:
@@ -484,7 +513,7 @@ Return as JSON:
             "lines_removed": 0,
             "functions_added": [],
             "functions_removed": [],
-            "complexity_change": "unknown"
+            "complexity_change": "unknown",
         }
 
         try:
@@ -492,26 +521,37 @@ Return as JSON:
             after_tree = ast.parse(after)
 
             # Count functions
-            before_funcs = [node.name for node in ast.walk(before_tree) if isinstance(node, ast.FunctionDef)]
-            after_funcs = [node.name for node in ast.walk(after_tree) if isinstance(node, ast.FunctionDef)]
+            before_funcs = [
+                node.name
+                for node in ast.walk(before_tree)
+                if isinstance(node, ast.FunctionDef)
+            ]
+            after_funcs = [
+                node.name
+                for node in ast.walk(after_tree)
+                if isinstance(node, ast.FunctionDef)
+            ]
 
             changes["functions_added"] = list(set(after_funcs) - set(before_funcs))
             changes["functions_removed"] = list(set(before_funcs) - set(after_funcs))
 
             # Count lines
-            changes["lines_added"] = len(after.split('\n')) - len(before.split('\n'))
+            changes["lines_added"] = len(after.split("\n")) - len(before.split("\n"))
             changes["lines_removed"] = max(0, -changes["lines_added"])
 
         except Exception:
             # Fallback to line counting
-            changes["lines_added"] = len(after.split('\n'))
-            changes["lines_removed"] = len(before.split('\n'))
+            changes["lines_added"] = len(after.split("\n"))
+            changes["lines_removed"] = len(before.split("\n"))
 
         return changes
 
-    async def _save_explanation(self, explanation: Explanation,
-                               change_data: dict[str, Any],
-                               context: dict[str, Any] | None) -> None:
+    async def _save_explanation(
+        self,
+        explanation: Explanation,
+        change_data: dict[str, Any],
+        context: dict[str, Any] | None,
+    ) -> None:
         """Save explanation to memory for learning."""
         data = {
             "explanation": {
@@ -521,21 +561,23 @@ Return as JSON:
                 "title": explanation.title,
                 "summary": explanation.summary,
                 "reasoning": explanation.reasoning,
-                "best_practices": explanation.best_practices
+                "best_practices": explanation.best_practices,
             },
             "change": change_data,
             "context": context,
-            "timestamp": explanation.timestamp.isoformat()
+            "timestamp": explanation.timestamp.isoformat(),
         }
 
         await self.memory.add(
             content=json.dumps(data),
             category="EXPLANATION",
             tags=["explanation", explanation.type.value],
-            importance=0.6
+            importance=0.6,
         )
 
-    def get_explanation_history(self, exp_type: ExplanationType | None = None) -> list[Explanation]:
+    def get_explanation_history(
+        self, exp_type: ExplanationType | None = None
+    ) -> list[Explanation]:
         """Get explanation history."""
         if exp_type:
             return [e for e in self._explanations if e.type == exp_type]
@@ -594,21 +636,16 @@ if __name__ == "__main__":
         change = CodeChange(
             file_path="src/example.py",
             old_code="def add(a, b):\n    return a + b",
-            new_code="def add(a: int, b: int) -> int:\n    \"\"\"Add two integers.\"\"\"\n    return a + b",
+            new_code='def add(a: int, b: int) -> int:\n    """Add two integers."""\n    return a + b',
             change_type="modify",
-            line_numbers=(1, 3)
+            line_numbers=(1, 3),
         )
 
-        context = {
-            "task": "Add type hints to functions",
-            "project": "VIBE MCP"
-        }
+        context = {"task": "Add type hints to functions", "project": "VIBE MCP"}
 
         print("Generating explanation...")
         explanation = await explain.explain_code_change(
-            change,
-            context,
-            level=ExplanationLevel.STANDARD
+            change, context, level=ExplanationLevel.STANDARD
         )
 
         print(f"\nTitle: {explanation.title}")
@@ -630,7 +667,7 @@ if __name__ == "__main__":
         arch_exp = await explain.explain_architectural_decision(
             decision="Use microservices architecture for scalability",
             components=["API Gateway", "User Service", "Order Service"],
-            context={"scale": "high", "team_size": "large"}
+            context={"scale": "high", "team_size": "large"},
         )
 
         print(f"\nTitle: {arch_exp.title}")

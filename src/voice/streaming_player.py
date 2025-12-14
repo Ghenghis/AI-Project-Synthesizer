@@ -29,6 +29,7 @@ secure_logger = get_secure_logger(__name__)
 @dataclass
 class StreamConfig:
     """Configuration for streaming playback."""
+
     # Model selection (turbo = fastest)
     model: str = "eleven_turbo_v2_5"  # Fastest model
 
@@ -75,6 +76,7 @@ class StreamingVoicePlayer:
         """Get ElevenLabs API key."""
         try:
             from src.core.config import get_settings
+
             settings = get_settings()
             self._api_key = settings.elevenlabs.elevenlabs_api_key.get_secret_value()
         except Exception:
@@ -159,12 +161,15 @@ class StreamingVoicePlayer:
             "optimize_streaming_latency": self.config.optimize_streaming_latency,
         }
 
-        async with aiohttp.ClientSession() as session, session.post(
-            url,
-            headers=headers,
-            json=payload,
-            params=params,
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(
+                url,
+                headers=headers,
+                json=payload,
+                params=params,
+            ) as response,
+        ):
             if response.status != 200:
                 error = await response.text()
                 raise Exception(f"ElevenLabs API error: {response.status} - {error}")
@@ -246,11 +251,11 @@ class StreamingVoicePlayer:
             return
 
         # Save as WAV and play
-        audio_data = b''.join(chunks)
+        audio_data = b"".join(chunks)
         temp_file = Path(tempfile.gettempdir()) / "stream_voice.wav"
 
         # Write PCM data as WAV
-        with wave.open(str(temp_file), 'wb') as wav:
+        with wave.open(str(temp_file), "wb") as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)  # 16-bit
             wav.setframerate(24000)
@@ -259,7 +264,11 @@ class StreamingVoicePlayer:
         # Play the file
         if self.system == "Windows":
             subprocess.run(
-                ["powershell", "-Command", f'(New-Object Media.SoundPlayer "{temp_file}").PlaySync()'],
+                [
+                    "powershell",
+                    "-Command",
+                    f'(New-Object Media.SoundPlayer "{temp_file}").PlaySync()',
+                ],
                 capture_output=True,
             )
         elif self.system == "Darwin":

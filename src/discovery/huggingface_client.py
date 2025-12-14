@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class HFModelInfo:
     """HuggingFace model information."""
+
     model_id: str
     author: str
     sha: str
@@ -46,7 +47,9 @@ class HFModelInfo:
             platform="huggingface",
             id=self.model_id,
             url=f"https://huggingface.co/{self.model_id}",
-            name=self.model_id.split("/")[-1] if "/" in self.model_id else self.model_id,
+            name=self.model_id.split("/")[-1]
+            if "/" in self.model_id
+            else self.model_id,
             full_name=self.model_id,
             description=f"HuggingFace model: {self.pipeline_tag or 'general'}",
             owner=self.author,
@@ -69,6 +72,7 @@ class HFModelInfo:
 @dataclass
 class HFDatasetInfo:
     """HuggingFace dataset information."""
+
     dataset_id: str
     author: str
     sha: str
@@ -84,7 +88,9 @@ class HFDatasetInfo:
             platform="huggingface",
             id=f"datasets/{self.dataset_id}",
             url=f"https://huggingface.co/datasets/{self.dataset_id}",
-            name=self.dataset_id.split("/")[-1] if "/" in self.dataset_id else self.dataset_id,
+            name=self.dataset_id.split("/")[-1]
+            if "/" in self.dataset_id
+            else self.dataset_id,
             full_name=f"datasets/{self.dataset_id}",
             description="HuggingFace dataset",
             owner=self.author,
@@ -146,6 +152,7 @@ class HuggingFaceClient(PlatformClient):
         """Initialize huggingface_hub client."""
         try:
             from huggingface_hub import HfApi
+
             self._api = HfApi(token=self._token)
             logger.info("HuggingFace API client initialized")
         except ImportError:
@@ -194,9 +201,7 @@ class HuggingFaceClient(PlatformClient):
                         query, min_stars, max_results, sort_by
                     )
                 else:
-                    results = await self._search_spaces(
-                        query, max_results, sort_by
-                    )
+                    results = await self._search_spaces(query, max_results, sort_by)
 
                 return SearchResult(
                     query=query,
@@ -250,7 +255,7 @@ class HuggingFaceClient(PlatformClient):
         models = list(self._api.list_models(**kwargs))
 
         # Filter by likes
-        filtered = [m for m in models if getattr(m, 'likes', 0) >= min_likes]
+        filtered = [m for m in models if getattr(m, "likes", 0) >= min_likes]
 
         # Convert to RepositoryInfo
         repositories = []
@@ -259,20 +264,24 @@ class HuggingFaceClient(PlatformClient):
                 platform="huggingface",
                 id=model.modelId,
                 url=f"https://huggingface.co/{model.modelId}",
-                name=model.modelId.split("/")[-1] if "/" in model.modelId else model.modelId,
+                name=model.modelId.split("/")[-1]
+                if "/" in model.modelId
+                else model.modelId,
                 full_name=model.modelId,
-                description=getattr(model, 'pipeline_tag', '') or "HuggingFace model",
-                owner=model.modelId.split("/")[0] if "/" in model.modelId else "unknown",
-                stars=getattr(model, 'likes', 0),
+                description=getattr(model, "pipeline_tag", "") or "HuggingFace model",
+                owner=model.modelId.split("/")[0]
+                if "/" in model.modelId
+                else "unknown",
+                stars=getattr(model, "likes", 0),
                 forks=0,
-                watchers=getattr(model, 'downloads', 0),
+                watchers=getattr(model, "downloads", 0),
                 open_issues=0,
-                language=getattr(model, 'library_name', None),
+                language=getattr(model, "library_name", None),
                 license=None,
                 created_at=None,
-                updated_at=getattr(model, 'lastModified', None),
-                pushed_at=getattr(model, 'lastModified', None),
-                topics=tuple(getattr(model, 'tags', [])[:10]),
+                updated_at=getattr(model, "lastModified", None),
+                pushed_at=getattr(model, "lastModified", None),
+                topics=tuple(getattr(model, "tags", [])[:10]),
                 default_branch="main",
                 size_kb=0,
                 has_readme=True,
@@ -296,14 +305,16 @@ class HuggingFaceClient(PlatformClient):
         }
         sort_field = sort_map.get(sort_by, "likes")
 
-        datasets = list(self._api.list_datasets(
-            search=query,
-            sort=sort_field,
-            direction=-1,
-            limit=max_results * 2,
-        ))
+        datasets = list(
+            self._api.list_datasets(
+                search=query,
+                sort=sort_field,
+                direction=-1,
+                limit=max_results * 2,
+            )
+        )
 
-        filtered = [d for d in datasets if getattr(d, 'likes', 0) >= min_likes]
+        filtered = [d for d in datasets if getattr(d, "likes", 0) >= min_likes]
 
         repositories = []
         for dataset in filtered[:max_results]:
@@ -316,16 +327,16 @@ class HuggingFaceClient(PlatformClient):
                 full_name=f"datasets/{dataset_id}",
                 description="HuggingFace dataset",
                 owner=dataset_id.split("/")[0] if "/" in dataset_id else "unknown",
-                stars=getattr(dataset, 'likes', 0),
+                stars=getattr(dataset, "likes", 0),
                 forks=0,
-                watchers=getattr(dataset, 'downloads', 0),
+                watchers=getattr(dataset, "downloads", 0),
                 open_issues=0,
                 language="dataset",
                 license=None,
                 created_at=None,
-                updated_at=getattr(dataset, 'lastModified', None),
-                pushed_at=getattr(dataset, 'lastModified', None),
-                topics=tuple(getattr(dataset, 'tags', [])[:10]),
+                updated_at=getattr(dataset, "lastModified", None),
+                pushed_at=getattr(dataset, "lastModified", None),
+                topics=tuple(getattr(dataset, "tags", [])[:10]),
                 default_branch="main",
                 size_kb=0,
                 has_readme=True,
@@ -347,12 +358,14 @@ class HuggingFaceClient(PlatformClient):
         }
         sort_field = sort_map.get(sort_by, "likes")
 
-        spaces = list(self._api.list_spaces(
-            search=query,
-            sort=sort_field,
-            direction=-1,
-            limit=max_results,
-        ))
+        spaces = list(
+            self._api.list_spaces(
+                search=query,
+                sort=sort_field,
+                direction=-1,
+                limit=max_results,
+            )
+        )
 
         repositories = []
         for space in spaces:
@@ -365,16 +378,16 @@ class HuggingFaceClient(PlatformClient):
                 full_name=f"spaces/{space_id}",
                 description="HuggingFace Space",
                 owner=space_id.split("/")[0] if "/" in space_id else "unknown",
-                stars=getattr(space, 'likes', 0),
+                stars=getattr(space, "likes", 0),
                 forks=0,
                 watchers=0,
                 open_issues=0,
-                language=getattr(space, 'sdk', None),
+                language=getattr(space, "sdk", None),
                 license=None,
                 created_at=None,
-                updated_at=getattr(space, 'lastModified', None),
-                pushed_at=getattr(space, 'lastModified', None),
-                topics=tuple(getattr(space, 'tags', [])[:10]),
+                updated_at=getattr(space, "lastModified", None),
+                pushed_at=getattr(space, "lastModified", None),
+                topics=tuple(getattr(space, "tags", [])[:10]),
                 default_branch="main",
                 size_kb=0,
                 has_readme=True,
@@ -417,18 +430,18 @@ class HuggingFaceClient(PlatformClient):
             url=f"https://huggingface.co/{info.modelId}",
             name=info.modelId.split("/")[-1],
             full_name=info.modelId,
-            description=getattr(info, 'pipeline_tag', '') or "HuggingFace model",
+            description=getattr(info, "pipeline_tag", "") or "HuggingFace model",
             owner=info.modelId.split("/")[0],
-            stars=getattr(info, 'likes', 0),
+            stars=getattr(info, "likes", 0),
             forks=0,
-            watchers=getattr(info, 'downloads', 0),
+            watchers=getattr(info, "downloads", 0),
             open_issues=0,
-            language=getattr(info, 'library_name', None),
-            license=getattr(info, 'license', None),
-            created_at=getattr(info, 'created_at', None),
-            updated_at=getattr(info, 'lastModified', None),
-            pushed_at=getattr(info, 'lastModified', None),
-            topics=tuple(getattr(info, 'tags', [])[:10]),
+            language=getattr(info, "library_name", None),
+            license=getattr(info, "license", None),
+            created_at=getattr(info, "created_at", None),
+            updated_at=getattr(info, "lastModified", None),
+            pushed_at=getattr(info, "lastModified", None),
+            topics=tuple(getattr(info, "tags", [])[:10]),
             default_branch="main",
             size_kb=0,
             has_readme=True,
@@ -444,16 +457,16 @@ class HuggingFaceClient(PlatformClient):
             full_name=f"datasets/{info.id}",
             description="HuggingFace dataset",
             owner=info.id.split("/")[0],
-            stars=getattr(info, 'likes', 0),
+            stars=getattr(info, "likes", 0),
             forks=0,
-            watchers=getattr(info, 'downloads', 0),
+            watchers=getattr(info, "downloads", 0),
             open_issues=0,
             language="dataset",
-            license=getattr(info, 'license', None),
-            created_at=getattr(info, 'created_at', None),
-            updated_at=getattr(info, 'lastModified', None),
-            pushed_at=getattr(info, 'lastModified', None),
-            topics=tuple(getattr(info, 'tags', [])[:10]),
+            license=getattr(info, "license", None),
+            created_at=getattr(info, "created_at", None),
+            updated_at=getattr(info, "lastModified", None),
+            pushed_at=getattr(info, "lastModified", None),
+            topics=tuple(getattr(info, "tags", [])[:10]),
             default_branch="main",
             size_kb=0,
             has_readme=True,
@@ -469,16 +482,16 @@ class HuggingFaceClient(PlatformClient):
             full_name=f"spaces/{info.id}",
             description="HuggingFace Space",
             owner=info.id.split("/")[0],
-            stars=getattr(info, 'likes', 0),
+            stars=getattr(info, "likes", 0),
             forks=0,
             watchers=0,
             open_issues=0,
-            language=getattr(info, 'sdk', None),
-            license=getattr(info, 'license', None),
-            created_at=getattr(info, 'created_at', None),
-            updated_at=getattr(info, 'lastModified', None),
-            pushed_at=getattr(info, 'lastModified', None),
-            topics=tuple(getattr(info, 'tags', [])[:10]),
+            language=getattr(info, "sdk", None),
+            license=getattr(info, "license", None),
+            created_at=getattr(info, "created_at", None),
+            updated_at=getattr(info, "lastModified", None),
+            pushed_at=getattr(info, "lastModified", None),
+            topics=tuple(getattr(info, "tags", [])[:10]),
             default_branch="main",
             size_kb=0,
             has_readme=True,
@@ -515,25 +528,30 @@ class HuggingFaceClient(PlatformClient):
                 if path and not file_path.startswith(path):
                     continue
 
-                rel_path = file_path[len(path):].lstrip("/") if path else file_path
+                rel_path = file_path[len(path) :].lstrip("/") if path else file_path
 
                 if "/" in rel_path:
                     # It's in a subdirectory
                     dir_name = rel_path.split("/")[0]
                     directories.add(dir_name)
                 else:
-                    files.append({
-                        "name": rel_path,
-                        "path": file_path,
-                        "sha": "",
-                        "size": 0,
-                        "type": "file",
-                    })
+                    files.append(
+                        {
+                            "name": rel_path,
+                            "path": file_path,
+                            "sha": "",
+                            "size": 0,
+                            "type": "file",
+                        }
+                    )
 
             return DirectoryListing(
                 path=path,
                 files=files,
-                directories=[{"name": d, "path": f"{path}/{d}" if path else d, "type": "dir"} for d in directories],
+                directories=[
+                    {"name": d, "path": f"{path}/{d}" if path else d, "type": "dir"}
+                    for d in directories
+                ],
             )
         else:
             raise NotImplementedError("Fallback not implemented")

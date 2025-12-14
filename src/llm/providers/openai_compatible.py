@@ -103,7 +103,7 @@ class OpenAICompatibleProvider(LLMProvider):
                     "correlation_id": correlation_id,
                     "provider": self.name,
                     "model_count": model_count,
-                }
+                },
             )
 
             metrics.increment("llm_health_check_success", tags={"provider": self.name})
@@ -115,7 +115,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 extra={
                     "correlation_id": correlation_id,
                     "provider": self.name,
-                }
+                },
             )
             metrics.increment("llm_health_check_failure", tags={"provider": self.name})
             return False
@@ -140,7 +140,7 @@ class OpenAICompatibleProvider(LLMProvider):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> CompletionResult:
         """Generate completion using OpenAI-compatible API."""
         correlation_id = correlation_manager.get_correlation_id()
@@ -161,7 +161,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 "provider": self.name,
                 "model": model,
                 "prompt_length": len(prompt),
-            }
+            },
         )
 
         try:
@@ -170,7 +170,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                **kwargs
+                **kwargs,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)
@@ -178,7 +178,9 @@ class OpenAICompatibleProvider(LLMProvider):
             content = response.choices[0].message.content or ""
             tokens_used = response.usage.total_tokens if response.usage else 0
             prompt_tokens = response.usage.prompt_tokens if response.usage else 0
-            completion_tokens = response.usage.completion_tokens if response.usage else 0
+            completion_tokens = (
+                response.usage.completion_tokens if response.usage else 0
+            )
 
             secure_logger.info(
                 "Completion successful",
@@ -188,12 +190,18 @@ class OpenAICompatibleProvider(LLMProvider):
                     "model": model,
                     "tokens_used": tokens_used,
                     "duration_ms": duration_ms,
-                }
+                },
             )
 
             metrics.increment("llm_completions_success", tags={"provider": self.name})
-            metrics.record_histogram("llm_completion_tokens", tokens_used, tags={"provider": self.name})
-            metrics.record_timer("llm_completion_duration", duration_ms / 1000, tags={"provider": self.name})
+            metrics.record_histogram(
+                "llm_completion_tokens", tokens_used, tags={"provider": self.name}
+            )
+            metrics.record_timer(
+                "llm_completion_duration",
+                duration_ms / 1000,
+                tags={"provider": self.name},
+            )
 
             return CompletionResult(
                 content=content,
@@ -215,7 +223,7 @@ class OpenAICompatibleProvider(LLMProvider):
                     "provider": self.name,
                     "model": model,
                     "duration_ms": duration_ms,
-                }
+                },
             )
             metrics.increment("llm_completions_error", tags={"provider": self.name})
             raise
@@ -227,7 +235,7 @@ class OpenAICompatibleProvider(LLMProvider):
         system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        **kwargs
+        **kwargs,
     ) -> AsyncIterator[StreamChunk]:
         """Stream completion using OpenAI-compatible API."""
         model = model or self.config.default_model or "local-model"
@@ -244,7 +252,7 @@ class OpenAICompatibleProvider(LLMProvider):
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             async for chunk in stream:

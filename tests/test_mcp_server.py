@@ -20,17 +20,20 @@ class TestMCPServerImports:
     def test_import_mcp_server(self):
         """Verify MCP server module can be imported."""
         from src.mcp_server import server
+
         assert server is not None
 
     def test_import_mcp_tools(self):
         """Verify MCP tools module can be imported."""
         from src.mcp_server import tools
+
         assert tools is not None
 
     def test_import_fastmcp(self):
         """Verify FastMCP can be imported (no circular import)."""
         try:
             from fastmcp import FastMCP
+
             assert FastMCP is not None
         except ImportError:
             # FastMCP may not be installed in test environment
@@ -42,7 +45,7 @@ class TestMCPServerImports:
         import sys
 
         # Clear any cached imports
-        modules_to_clear = [k for k in sys.modules if k.startswith('src.mcp')]
+        modules_to_clear = [k for k in sys.modules if k.startswith("src.mcp")]
         for mod in modules_to_clear:
             del sys.modules[mod]
 
@@ -59,28 +62,34 @@ class TestMCPServerInitialization:
     def test_server_module_has_server_instance(self):
         """Verify server module exposes server instance."""
         from src.mcp_server import server
+
         # Check for server instance (lowercase 'server')
-        assert hasattr(server, 'server') or hasattr(server, 'Server') or hasattr(server, 'main')
+        assert (
+            hasattr(server, "server")
+            or hasattr(server, "Server")
+            or hasattr(server, "main")
+        )
 
     def test_tools_are_registered(self):
         """Verify all expected tools are registered."""
         from src.mcp_server import tools
 
         expected_tools = [
-            'search_repositories',
-            'analyze_repository',
-            'check_compatibility',
-            'resolve_dependencies',
-            'synthesize_project',
-            'generate_documentation',
-            'get_synthesis_status',
-            'get_platforms',
+            "search_repositories",
+            "analyze_repository",
+            "check_compatibility",
+            "resolve_dependencies",
+            "synthesize_project",
+            "generate_documentation",
+            "get_synthesis_status",
+            "get_platforms",
         ]
 
         # Check that tool functions exist
         for tool_name in expected_tools:
-            assert hasattr(tools, tool_name) or tool_name in dir(tools), \
+            assert hasattr(tools, tool_name) or tool_name in dir(tools), (
                 f"Tool {tool_name} not found in tools module"
+            )
 
 
 class TestSearchRepositoriesTool:
@@ -91,18 +100,16 @@ class TestSearchRepositoriesTool:
         """Test search with valid query returns results."""
         from src.mcp_server.tools import search_repositories
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
-            mock_instance.search = AsyncMock(return_value=[
-                {'name': 'test-repo', 'stars': 100, 'platform': 'github'}
-            ])
+            mock_instance.search = AsyncMock(
+                return_value=[{"name": "test-repo", "stars": 100, "platform": "github"}]
+            )
             mock_create.return_value = mock_instance
 
             # Call the tool
             result = await search_repositories(
-                query="machine learning",
-                platforms=["github"],
-                max_results=10
+                query="machine learning", platforms=["github"], max_results=10
             )
 
             assert result is not None
@@ -112,15 +119,13 @@ class TestSearchRepositoriesTool:
         """Test search with empty query handles gracefully."""
         from src.mcp_server.tools import search_repositories
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             result = await search_repositories(
-                query="",
-                platforms=["github"],
-                max_results=10
+                query="", platforms=["github"], max_results=10
             )
 
             # Should return empty results, not error
@@ -136,20 +141,21 @@ class TestAnalyzeRepositoryTool:
         from src.mcp_server.tools import analyze_repository
 
         # Mock at the source module level
-        with patch('src.mcp_server.tools.ASTParser') as mock_parser, \
-             patch('src.mcp_server.tools.DependencyAnalyzer') as mock_analyzer:
-
+        with (
+            patch("src.mcp_server.tools.ASTParser") as mock_parser,
+            patch("src.mcp_server.tools.DependencyAnalyzer") as mock_analyzer,
+        ):
             mock_parser_instance = MagicMock()
             mock_parser_instance.parse_file = MagicMock(return_value={})
             mock_parser.return_value = mock_parser_instance
 
             mock_analyzer_instance = MagicMock()
-            mock_analyzer_instance.analyze = AsyncMock(return_value={'dependencies': []})
+            mock_analyzer_instance.analyze = AsyncMock(
+                return_value={"dependencies": []}
+            )
             mock_analyzer.return_value = mock_analyzer_instance
 
-            result = await analyze_repository(
-                repo_url="https://github.com/test/repo"
-            )
+            result = await analyze_repository(repo_url="https://github.com/test/repo")
 
             assert result is not None
 
@@ -172,10 +178,11 @@ class TestSynthesisJobTracking:
         from src.mcp_server import tools
 
         # Check for job tracking mechanism
-        assert hasattr(tools, '_synthesis_jobs') or \
-               hasattr(tools, 'synthesis_jobs') or \
-               hasattr(tools, 'SynthesisJobManager'), \
-               "No synthesis job tracking found"
+        assert (
+            hasattr(tools, "_synthesis_jobs")
+            or hasattr(tools, "synthesis_jobs")
+            or hasattr(tools, "SynthesisJobManager")
+        ), "No synthesis job tracking found"
 
     @pytest.mark.asyncio
     async def test_get_synthesis_status_valid_id(self):
@@ -183,13 +190,12 @@ class TestSynthesisJobTracking:
         from src.mcp_server.tools import get_synthesis_status, set_synthesis_job
 
         # Create a test job
-        set_synthesis_job('test-id', {
-            'status': 'running',
-            'progress': 50,
-            'current_step': 'analyzing'
-        })
+        set_synthesis_job(
+            "test-id",
+            {"status": "running", "progress": 50, "current_step": "analyzing"},
+        )
 
-        result = await get_synthesis_status(synthesis_id='test-id')
+        result = await get_synthesis_status(synthesis_id="test-id")
         assert result is not None
 
     @pytest.mark.asyncio
@@ -197,7 +203,7 @@ class TestSynthesisJobTracking:
         """Test getting status of non-existent job."""
         from src.mcp_server.tools import get_synthesis_status
 
-        result = await get_synthesis_status(synthesis_id='non-existent-id')
+        result = await get_synthesis_status(synthesis_id="non-existent-id")
         # Should return error or not found status
         assert result is not None
 
@@ -214,15 +220,15 @@ class TestGetPlatformsTool:
 
         assert result is not None
         # Result is a dict with platforms as a dict
-        if isinstance(result, dict) and 'platforms' in result:
-            platforms = result['platforms']
+        if isinstance(result, dict) and "platforms" in result:
+            platforms = result["platforms"]
             # platforms is a dict, not a list
             if isinstance(platforms, dict):
                 platform_names = list(platforms.keys())
                 assert len(platform_names) > 0
                 # Check that expected platforms exist
-                assert 'github' in platform_names
-                assert 'huggingface' in platform_names
+                assert "github" in platform_names
+                assert "huggingface" in platform_names
         elif isinstance(result, list):
             if result:
                 assert len(result) > 0
@@ -236,7 +242,7 @@ class TestConcurrentRequests:
         """Test multiple concurrent search requests."""
         from src.mcp_server.tools import search_repositories
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
@@ -258,9 +264,9 @@ class TestConcurrentRequests:
         """Test multiple concurrent synthesis job creations."""
         from src.mcp_server.tools import synthesize_project
 
-        with patch('src.mcp_server.tools.ProjectBuilder') as mock_builder:
+        with patch("src.mcp_server.tools.ProjectBuilder") as mock_builder:
             mock_instance = MagicMock()
-            mock_instance.build = AsyncMock(return_value={'status': 'started'})
+            mock_instance.build = AsyncMock(return_value={"status": "started"})
             mock_builder.return_value = mock_instance
 
             # Create multiple synthesis jobs
@@ -268,7 +274,7 @@ class TestConcurrentRequests:
                 synthesize_project(
                     repositories=[f"https://github.com/test/repo{i}"],
                     project_name=f"project-{i}",
-                    output_path=f"/tmp/project-{i}"
+                    output_path=f"/tmp/project-{i}",
                 )
                 for i in range(3)
             ]
@@ -287,7 +293,7 @@ class TestErrorHandling:
         """Test search handles API errors gracefully."""
         from src.mcp_server.tools import search_repositories
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(side_effect=Exception("API Error"))
             mock_create.return_value = mock_instance
@@ -305,7 +311,7 @@ class TestErrorHandling:
         """Test analyze handles timeout gracefully."""
         from src.mcp_server.tools import analyze_repository
 
-        with patch('src.mcp_server.tools.ASTParser') as mock_parser:
+        with patch("src.mcp_server.tools.ASTParser") as mock_parser:
             mock_parser_instance = MagicMock()
             mock_parser_instance.parse_file = MagicMock(side_effect=TimeoutError())
             mock_parser.return_value = mock_parser_instance
@@ -327,15 +333,14 @@ class TestToolParameters:
         """Test search validates platform parameter."""
         from src.mcp_server.tools import search_repositories
 
-        with patch('src.mcp_server.tools.create_unified_search') as mock_create:
+        with patch("src.mcp_server.tools.create_unified_search") as mock_create:
             mock_instance = MagicMock()
             mock_instance.search = AsyncMock(return_value=[])
             mock_create.return_value = mock_instance
 
             # Valid platforms
             result = await search_repositories(
-                query="test",
-                platforms=["github", "huggingface"]
+                query="test", platforms=["github", "huggingface"]
             )
             assert result is not None
 
@@ -347,9 +352,7 @@ class TestToolParameters:
         # Empty repositories should be handled
         try:
             result = await synthesize_project(
-                repositories=[],
-                project_name="test",
-                output_path="/tmp/test"
+                repositories=[], project_name="test", output_path="/tmp/test"
             )
             # Should either return error or raise
             assert result is not None

@@ -25,6 +25,7 @@ from src.vibe.task_decomposer import TaskPlan
 
 class PhaseStatus(Enum):
     """Status of a phase in the task."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -35,6 +36,7 @@ class PhaseStatus(Enum):
 @dataclass
 class PhaseState:
     """State information for a single phase."""
+
     phase_id: str
     status: PhaseStatus
     started_at: datetime | None = None
@@ -53,6 +55,7 @@ class PhaseState:
 @dataclass
 class TaskContext:
     """Complete context for a task execution."""
+
     task_id: str
     plan: TaskPlan
     current_phase: str | None = None
@@ -75,6 +78,7 @@ class TaskContext:
 @dataclass
 class Checkpoint:
     """A saved state that can be restored."""
+
     checkpoint_id: str
     task_id: str
     phase_id: str
@@ -110,7 +114,9 @@ class ContextManager:
         self.auto_checkpoint = True
         self.persistence_ttl = timedelta(days=7)
 
-    async def create_context(self, plan: TaskPlan, initial_context: dict[str, Any] | None = None) -> TaskContext:
+    async def create_context(
+        self, plan: TaskPlan, initial_context: dict[str, Any] | None = None
+    ) -> TaskContext:
         """
         Create a new task context.
 
@@ -125,14 +131,13 @@ class ContextManager:
             task_id=plan.task_id,
             plan=plan,
             global_context=initial_context or {},
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         # Initialize phase states
         for phase in plan.phases:
             context.phase_states[phase.id] = PhaseState(
-                phase_id=phase.id,
-                status=PhaseStatus.PENDING
+                phase_id=phase.id, status=PhaseStatus.PENDING
             )
 
         # Store in memory
@@ -165,7 +170,9 @@ class ContextManager:
 
         return None
 
-    async def start_phase(self, task_id: str, phase_id: str, context: dict[str, Any] | None = None) -> bool:
+    async def start_phase(
+        self, task_id: str, phase_id: str, context: dict[str, Any] | None = None
+    ) -> bool:
         """
         Start a phase in the task.
 
@@ -212,9 +219,13 @@ class ContextManager:
 
         return True
 
-    async def complete_phase(self, task_id: str, phase_id: str,
-                           artifacts: dict[str, Any] | None = None,
-                           metadata: dict[str, Any] | None = None) -> bool:
+    async def complete_phase(
+        self,
+        task_id: str,
+        phase_id: str,
+        artifacts: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> bool:
         """
         Mark a phase as completed.
 
@@ -276,7 +287,9 @@ class ContextManager:
 
         return True
 
-    async def create_checkpoint(self, task_id: str, phase_id: str, checkpoint_name: str) -> str:
+    async def create_checkpoint(
+        self, task_id: str, phase_id: str, checkpoint_name: str
+    ) -> str:
         """
         Create a checkpoint of the current state.
 
@@ -302,14 +315,15 @@ class ContextManager:
             context_snapshot={
                 "global_context": task_context.global_context.copy(),
                 "phase_states": {
-                    pid: asdict(state) for pid, state in task_context.phase_states.items()
-                }
+                    pid: asdict(state)
+                    for pid, state in task_context.phase_states.items()
+                },
             },
             artifacts={
                 pid: state.artifacts.copy()
                 for pid, state in task_context.phase_states.items()
                 if state.artifacts
-            }
+            },
         )
 
         # Store checkpoint
@@ -365,8 +379,16 @@ class ContextManager:
                 # Update existing state
                 state = task_context.phase_states[pid]
                 state.status = PhaseStatus(state_data["status"])
-                state.started_at = datetime.fromisoformat(state_data["started_at"]) if state_data.get("started_at") else None
-                state.completed_at = datetime.fromisoformat(state_data["completed_at"]) if state_data.get("completed_at") else None
+                state.started_at = (
+                    datetime.fromisoformat(state_data["started_at"])
+                    if state_data.get("started_at")
+                    else None
+                )
+                state.completed_at = (
+                    datetime.fromisoformat(state_data["completed_at"])
+                    if state_data.get("completed_at")
+                    else None
+                )
                 state.error_message = state_data.get("error_message")
                 state.metadata = state_data.get("metadata", {})
 
@@ -399,15 +421,18 @@ class ContextManager:
 
         total_phases = len(task_context.plan.phases)
         completed = sum(
-            1 for state in task_context.phase_states.values()
+            1
+            for state in task_context.phase_states.values()
             if state.status == PhaseStatus.COMPLETED
         )
         failed = sum(
-            1 for state in task_context.phase_states.values()
+            1
+            for state in task_context.phase_states.values()
             if state.status == PhaseStatus.FAILED
         )
         in_progress = sum(
-            1 for state in task_context.phase_states.values()
+            1
+            for state in task_context.phase_states.values()
             if state.status == PhaseStatus.IN_PROGRESS
         )
 
@@ -418,9 +443,11 @@ class ContextManager:
             "failed": failed,
             "in_progress": in_progress,
             "pending": total_phases - completed - failed - in_progress,
-            "progress_percentage": (completed / total_phases * 100) if total_phases > 0 else 0,
+            "progress_percentage": (completed / total_phases * 100)
+            if total_phases > 0
+            else 0,
             "current_phase": task_context.current_phase,
-            "estimated_completion": self._estimate_completion(task_context)
+            "estimated_completion": self._estimate_completion(task_context),
         }
 
     def _estimate_completion(self, context: TaskContext) -> str | None:
@@ -430,7 +457,8 @@ class ContextManager:
 
         # Simple estimation based on completed phases
         completed_phases = [
-            p for p in context.phase_states.values()
+            p
+            for p in context.phase_states.values()
             if p.status == PhaseStatus.COMPLETED and p.started_at and p.completed_at
         ]
 
@@ -439,14 +467,14 @@ class ContextManager:
 
         # Calculate average phase duration
         total_duration = sum(
-            (p.completed_at - p.started_at).total_seconds()
-            for p in completed_phases
+            (p.completed_at - p.started_at).total_seconds() for p in completed_phases
         )
         avg_duration = total_duration / len(completed_phases)
 
         # Estimate remaining time
         remaining = sum(
-            1 for p in context.phase_states.values()
+            1
+            for p in context.phase_states.values()
             if p.status in [PhaseStatus.PENDING, PhaseStatus.IN_PROGRESS]
         )
 
@@ -467,30 +495,32 @@ class ContextManager:
             "created_at": context.created_at.isoformat(),
             "phase_states": {
                 pid: asdict(state) for pid, state in context.phase_states.items()
-            }
+            },
         }
 
         # Convert datetime objects
         for state_data in data["phase_states"].values():
             if state_data.get("started_at"):
-                state_data["started_at"] = datetime.fromisoformat(state_data["started_at"]).isoformat()
+                state_data["started_at"] = datetime.fromisoformat(
+                    state_data["started_at"]
+                ).isoformat()
             if state_data.get("completed_at"):
-                state_data["completed_at"] = datetime.fromisoformat(state_data["completed_at"]).isoformat()
+                state_data["completed_at"] = datetime.fromisoformat(
+                    state_data["completed_at"]
+                ).isoformat()
 
         await self.memory.add(
             content=json.dumps(data),
             category="CONTEXT",
             tags=["task", context.task_id],
-            importance=0.9
+            importance=0.9,
         )
 
     async def _load_context(self, task_id: str) -> TaskContext | None:
         """Load context from Mem0."""
         try:
             results = await self.memory.search(
-                query=task_id,
-                category="CONTEXT",
-                limit=1
+                query=task_id, category="CONTEXT", limit=1
             )
 
             if not results:
@@ -519,7 +549,7 @@ class ContextManager:
                     estimated_effort=phase_data["estimated_effort"],
                     files_to_create=phase_data["files_to_create"],
                     files_to_modify=phase_data["files_to_modify"],
-                    success_criteria=phase_data["success_criteria"]
+                    success_criteria=phase_data["success_criteria"],
                 )
                 phases.append(phase)
 
@@ -530,7 +560,7 @@ class ContextManager:
                 phases=phases,
                 total_effort=plan_data["total_effort"],
                 estimated_duration=plan_data["estimated_duration"],
-                metadata=plan_data["metadata"]
+                metadata=plan_data["metadata"],
             )
 
             # Reconstruct context
@@ -540,7 +570,7 @@ class ContextManager:
                 current_phase=data.get("current_phase"),
                 global_context=data.get("global_context", {}),
                 checkpoints=data.get("checkpoints", []),
-                created_at=datetime.fromisoformat(data["created_at"])
+                created_at=datetime.fromisoformat(data["created_at"]),
             )
 
             # Reconstruct phase states
@@ -548,11 +578,15 @@ class ContextManager:
                 state = PhaseState(
                     phase_id=state_data["phase_id"],
                     status=PhaseStatus(state_data["status"]),
-                    started_at=datetime.fromisoformat(state_data["started_at"]) if state_data.get("started_at") else None,
-                    completed_at=datetime.fromisoformat(state_data["completed_at"]) if state_data.get("completed_at") else None,
+                    started_at=datetime.fromisoformat(state_data["started_at"])
+                    if state_data.get("started_at")
+                    else None,
+                    completed_at=datetime.fromisoformat(state_data["completed_at"])
+                    if state_data.get("completed_at")
+                    else None,
                     artifacts=state_data.get("artifacts", {}),
                     metadata=state_data.get("metadata", {}),
-                    error_message=state_data.get("error_message")
+                    error_message=state_data.get("error_message"),
                 )
                 context.phase_states[pid] = state
 
@@ -571,16 +605,14 @@ class ContextManager:
             content=json.dumps(data),
             category="CHECKPOINT",
             tags=["checkpoint", checkpoint.task_id, checkpoint.phase_id],
-            importance=0.7
+            importance=0.7,
         )
 
     async def _load_checkpoint(self, checkpoint_id: str) -> Checkpoint | None:
         """Load checkpoint from Mem0."""
         try:
             results = await self.memory.search(
-                query=checkpoint_id,
-                category="CHECKPOINT",
-                limit=1
+                query=checkpoint_id, category="CHECKPOINT", limit=1
             )
 
             if not results:
@@ -594,7 +626,7 @@ class ContextManager:
                 phase_id=data["phase_id"],
                 timestamp=datetime.fromisoformat(data["timestamp"]),
                 context_snapshot=data["context_snapshot"],
-                artifacts=data["artifacts"]
+                artifacts=data["artifacts"],
             )
 
         except Exception as e:
@@ -608,8 +640,7 @@ class ContextManager:
 
         # Remove checkpoints
         to_remove = [
-            cid for cid, ckpt in self._checkpoints.items()
-            if ckpt.task_id == task_id
+            cid for cid, ckpt in self._checkpoints.items() if ckpt.task_id == task_id
         ]
         for cid in to_remove:
             self._checkpoints.pop(cid, None)
@@ -645,7 +676,7 @@ if __name__ == "__main__":
                     estimated_effort=2,
                     files_to_create=["main.py"],
                     files_to_modify=[],
-                    success_criteria=["Structure created"]
+                    success_criteria=["Structure created"],
                 ),
                 TaskPhase(
                     id="phase_2",
@@ -657,12 +688,12 @@ if __name__ == "__main__":
                     estimated_effort=5,
                     files_to_create=["api.py"],
                     files_to_modify=["main.py"],
-                    success_criteria=["API working"]
-                )
+                    success_criteria=["API working"],
+                ),
             ],
             total_effort=7,
             estimated_duration="3 hours",
-            metadata={}
+            metadata={},
         )
 
         # Create context
@@ -678,7 +709,7 @@ if __name__ == "__main__":
             context.task_id,
             "phase_1",
             artifacts={"main.py": "created"},
-            metadata={"lines": 50}
+            metadata={"lines": 50},
         )
 
         # Check progress
@@ -687,9 +718,7 @@ if __name__ == "__main__":
 
         # Create checkpoint
         checkpoint_id = await manager.create_checkpoint(
-            context.task_id,
-            "phase_1",
-            "after_phase_1"
+            context.task_id, "phase_1", "after_phase_1"
         )
         print(f"Created checkpoint: {checkpoint_id}")
 

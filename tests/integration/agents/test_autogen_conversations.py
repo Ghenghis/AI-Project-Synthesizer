@@ -12,6 +12,7 @@ import pytest
 # Mock AutoGen if not available
 try:
     from autogen_agentchat import ConversableAgent, GroupChat, GroupChatManager
+
     AUTOGEN_AVAILABLE = True
 except ImportError:
     AUTOGEN_AVAILABLE = False
@@ -52,7 +53,7 @@ def calculate_total(items):
         conversation_result = await integration.start_code_review(
             code=code_snippet,
             context="E-commerce checkout function",
-            participants=[reviewer, author, summarizer]
+            participants=[reviewer, author, summarizer],
         )
 
         # Verify conversation completed
@@ -63,8 +64,7 @@ def calculate_total(items):
         # Check for expected review points
         messages = conversation_result.messages
         has_security_comment = any(
-            "security" in msg.get("content", "").lower()
-            for msg in messages
+            "security" in msg.get("content", "").lower() for msg in messages
         )
         has_performance_comment = any(
             "performance" in msg.get("content", "").lower()
@@ -91,16 +91,9 @@ def calculate_total(items):
 
         # Set up group chat
         agents = [security_agent, performance_agent, documentation_agent]
-        group_chat = GroupChat(
-            agents=agents,
-            messages=[],
-            max_round=5
-        )
+        group_chat = GroupChat(agents=agents, messages=[], max_round=5)
 
-        manager = GroupChatManager(
-            groupchat=group_chat,
-            llm_config={"model": "mock"}
-        )
+        manager = GroupChatManager(groupchat=group_chat, llm_config={"model": "mock"})
 
         # Initiate group discussion
         task = "Review this authentication function for security, performance, and documentation:"
@@ -112,20 +105,27 @@ def authenticate_user(username, password):
 """
 
         # Mock LLM responses for each agent
-        with patch.object(LiteLLMRouter, 'complete') as mock_llm:
+        with patch.object(LiteLLMRouter, "complete") as mock_llm:
             mock_llm.side_effect = [
-                {"content": "This function has security vulnerabilities - plain text passwords", "provider": "mock"},
-                {"content": "Performance is fine for small user sets, consider hashing", "provider": "mock"},
+                {
+                    "content": "This function has security vulnerabilities - plain text passwords",
+                    "provider": "mock",
+                },
+                {
+                    "content": "Performance is fine for small user sets, consider hashing",
+                    "provider": "mock",
+                },
                 {"content": "Needs docstring and type hints", "provider": "mock"},
-                {"content": "Agreed, let's implement secure hashing", "provider": "mock"},
-                {"content": "I'll add proper documentation", "provider": "mock"}
+                {
+                    "content": "Agreed, let's implement secure hashing",
+                    "provider": "mock",
+                },
+                {"content": "I'll add proper documentation", "provider": "mock"},
             ]
 
             # Run group chat
             result = await manager.a_initiate_chat(
-                recipient=security_agent,
-                message=f"{task}\n\n{code}",
-                max_turns=5
+                recipient=security_agent, message=f"{task}\n\n{code}", max_turns=5
             )
 
             # Verify collaboration occurred
@@ -145,7 +145,7 @@ def authenticate_user(username, password):
         from src.memory.mem0_integration import MemoryCategory, MemorySystem
 
         # Mock memory system
-        with patch('src.memory.mem0_integration.MemorySystem') as mock_memory_class:
+        with patch("src.memory.mem0_integration.MemorySystem") as mock_memory_class:
             mock_memory = MagicMock()
             mock_memory_class.return_value = mock_memory
 
@@ -153,7 +153,7 @@ def authenticate_user(username, password):
             mock_memory.add.return_value = MagicMock(id="conv123")
             mock_memory.search.return_value = [
                 MagicMock(content="Previous security review noted SQL injection risks"),
-                MagicMock(content="Team prefers bcrypt for password hashing")
+                MagicMock(content="Team prefers bcrypt for password hashing"),
             ]
 
             integration = AutoGenIntegration()
@@ -163,7 +163,7 @@ def authenticate_user(username, password):
             result = await integration.start_code_review(
                 code="def login(user, pass): return user in database",
                 context="Login function",
-                use_memory=True
+                use_memory=True,
             )
 
             # Verify memory was consulted
@@ -171,10 +171,10 @@ def authenticate_user(username, password):
             mock_memory.add.assert_called()
 
             # Check memory influenced conversation
-            if hasattr(result, 'messages'):
+            if hasattr(result, "messages"):
                 memory_influenced = any(
-                    "bcrypt" in msg.get("content", "").lower() or
-                    "injection" in msg.get("content", "").lower()
+                    "bcrypt" in msg.get("content", "").lower()
+                    or "injection" in msg.get("content", "").lower()
                     for msg in result.messages
                 )
                 assert memory_influenced
@@ -191,8 +191,7 @@ def authenticate_user(username, password):
 
         # Test with invalid code
         result = await integration.start_code_review(
-            code="def invalid_syntax(:",
-            context="Invalid code test"
+            code="def invalid_syntax(:", context="Invalid code test"
         )
 
         assert result is not None
@@ -200,16 +199,18 @@ def authenticate_user(username, password):
         assert "syntax" in result.get("error", "").lower() or len(result.messages) > 0
 
         # Test with unresponsive agent
-        with patch.object(ConversableAgent, 'a_generate_reply') as mock_reply:
+        with patch.object(ConversableAgent, "a_generate_reply") as mock_reply:
             mock_reply.side_effect = TimeoutError("Agent not responding")
 
             result = await integration.start_code_review(
-                code="print('hello')",
-                context="Simple test"
+                code="print('hello')", context="Simple test"
             )
 
             assert result is not None
-            assert result.status != "completed" or "timeout" in result.get("error", "").lower()
+            assert (
+                result.status != "completed"
+                or "timeout" in result.get("error", "").lower()
+            )
 
         await integration.shutdown()
 
@@ -221,23 +222,39 @@ def authenticate_user(username, password):
         await integration.initialize()
 
         # Mock a detailed conversation
-        with patch.object(integration, 'start_code_review') as mock_review:
+        with patch.object(integration, "start_code_review") as mock_review:
             mock_review.return_value = CodeReviewResult(
                 status="completed",
                 messages=[
-                    {"agent": "reviewer", "content": "Consider using type hints", "timestamp": "2024-01-01T10:00:00"},
-                    {"agent": "author", "content": "Good point, I'll add them", "timestamp": "2024-01-01T10:01:00"},
-                    {"agent": "reviewer", "content": "Also add input validation", "timestamp": "2024-01-01T10:02:00"},
-                    {"agent": "author", "content": "Will validate all inputs", "timestamp": "2024-01-01T10:03:00"},
+                    {
+                        "agent": "reviewer",
+                        "content": "Consider using type hints",
+                        "timestamp": "2024-01-01T10:00:00",
+                    },
+                    {
+                        "agent": "author",
+                        "content": "Good point, I'll add them",
+                        "timestamp": "2024-01-01T10:01:00",
+                    },
+                    {
+                        "agent": "reviewer",
+                        "content": "Also add input validation",
+                        "timestamp": "2024-01-01T10:02:00",
+                    },
+                    {
+                        "agent": "author",
+                        "content": "Will validate all inputs",
+                        "timestamp": "2024-01-01T10:03:00",
+                    },
                 ],
                 summary="Code needs type hints and validation",
                 action_items=["Add type hints", "Add input validation"],
-                quality_score=8.5
+                quality_score=8.5,
             )
 
             result = await integration.start_code_review(
                 code="def process(data): return data",
-                context="Data processing function"
+                context="Data processing function",
             )
 
             # Verify quality metrics
@@ -251,7 +268,9 @@ def authenticate_user(username, password):
 
             # Verify actionable feedback
             actionable = any(
-                "add" in item.lower() or "implement" in item.lower() or "fix" in item.lower()
+                "add" in item.lower()
+                or "implement" in item.lower()
+                or "fix" in item.lower()
                 for item in result.action_items
             )
             assert actionable
@@ -272,7 +291,7 @@ def authenticate_user(username, password):
             conv = asyncio.create_task(
                 integration.start_code_review(
                     code=f"def function_{i}(): return {i}",
-                    context=f"Function {i} review"
+                    context=f"Function {i} review",
                 )
             )
             conversations.append(conv)
@@ -297,8 +316,7 @@ def authenticate_user(username, password):
 
         # Create a conversation
         result = await integration.start_code_review(
-            code="def example(): pass",
-            context="Example function"
+            code="def example(): pass", context="Example function"
         )
 
         # Export conversation

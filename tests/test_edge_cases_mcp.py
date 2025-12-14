@@ -37,28 +37,22 @@ class TestSearchRepositoriesEdgeCases:
     @pytest.mark.asyncio
     async def test_negative_max_results_handled(self):
         """Negative max_results should be handled gracefully."""
-        result = await handle_search_repositories({
-            "query": "test",
-            "max_results": -1
-        })
+        result = await handle_search_repositories({"query": "test", "max_results": -1})
         # Should either return error or handle gracefully
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_very_long_query_handled(self):
         """Very long query should be handled gracefully."""
-        result = await handle_search_repositories({
-            "query": "x" * 1000
-        })
+        result = await handle_search_repositories({"query": "x" * 1000})
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_invalid_platform_handled(self):
         """Invalid platform should be handled gracefully."""
-        result = await handle_search_repositories({
-            "query": "test",
-            "platforms": ["invalid_platform"]
-        })
+        result = await handle_search_repositories(
+            {"query": "test", "platforms": ["invalid_platform"]}
+        )
         assert isinstance(result, dict)
 
 
@@ -70,7 +64,10 @@ class TestAnalyzeRepositoryEdgeCases:
         """Missing repo_url should return an error."""
         result = await handle_analyze_repository({})
         assert result.get("error") is True
-        assert "url" in result.get("message", "").lower() or "required" in result.get("message", "").lower()
+        assert (
+            "url" in result.get("message", "").lower()
+            or "required" in result.get("message", "").lower()
+        )
 
     @pytest.mark.asyncio
     async def test_invalid_url_returns_error(self):
@@ -87,12 +84,16 @@ class TestAnalyzeRepositoryEdgeCases:
     @pytest.mark.asyncio
     async def test_nonexistent_repo_handled_gracefully(self):
         """Non-existent repo should be handled gracefully."""
-        result = await handle_analyze_repository({
-            "repo_url": "https://github.com/nonexistent-user-12345/nonexistent-repo-67890"
-        })
+        result = await handle_analyze_repository(
+            {
+                "repo_url": "https://github.com/nonexistent-user-12345/nonexistent-repo-67890"
+            }
+        )
         assert isinstance(result, dict)
         # Should return some response, not crash - could be error, status, or analysis
-        assert any(key in result for key in ["error", "status", "analysis", "message", "data"])
+        assert any(
+            key in result for key in ["error", "status", "analysis", "message", "data"]
+        )
 
 
 class TestSynthesizeProjectEdgeCases:
@@ -107,30 +108,34 @@ class TestSynthesizeProjectEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_repositories_list_returns_error(self):
         """Empty repositories list should return an error."""
-        result = await handle_synthesize_project({
-            "repositories": [],
-            "project_name": "test",
-            "output_path": "/tmp"
-        })
+        result = await handle_synthesize_project(
+            {"repositories": [], "project_name": "test", "output_path": "/tmp"}
+        )
         assert result.get("error") is True
 
     @pytest.mark.asyncio
     async def test_missing_project_name_returns_error(self):
         """Missing project_name should return an error."""
-        result = await handle_synthesize_project({
-            "repositories": [{"repo_url": "https://github.com/octocat/Hello-World"}],
-            "output_path": "/tmp"
-        })
+        result = await handle_synthesize_project(
+            {
+                "repositories": [
+                    {"repo_url": "https://github.com/octocat/Hello-World"}
+                ],
+                "output_path": "/tmp",
+            }
+        )
         assert result.get("error") is True
 
     @pytest.mark.asyncio
     async def test_invalid_repo_url_in_list_returns_error(self):
         """Invalid repo URL in list should return an error."""
-        result = await handle_synthesize_project({
-            "repositories": [{"repo_url": "invalid-url"}],
-            "project_name": "test",
-            "output_path": "/tmp"
-        })
+        result = await handle_synthesize_project(
+            {
+                "repositories": [{"repo_url": "invalid-url"}],
+                "project_name": "test",
+                "output_path": "/tmp",
+            }
+        )
         assert result.get("error") is True
 
 
@@ -152,9 +157,9 @@ class TestGenerateDocumentationEdgeCases:
     @pytest.mark.asyncio
     async def test_nonexistent_path_handled_gracefully(self):
         """Non-existent path should be handled gracefully."""
-        result = await handle_generate_documentation({
-            "project_path": "/nonexistent/path/12345"
-        })
+        result = await handle_generate_documentation(
+            {"project_path": "/nonexistent/path/12345"}
+        )
         assert isinstance(result, dict)
         assert "error" in result or "status" in result
 
@@ -177,17 +182,17 @@ class TestGetSynthesisStatusEdgeCases:
     @pytest.mark.asyncio
     async def test_invalid_id_handled_gracefully(self):
         """Invalid synthesis_id should be handled gracefully."""
-        result = await handle_get_synthesis_status({
-            "synthesis_id": "invalid-id-format"
-        })
+        result = await handle_get_synthesis_status(
+            {"synthesis_id": "invalid-id-format"}
+        )
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_nonexistent_id_handled_gracefully(self):
         """Non-existent synthesis_id should be handled gracefully."""
-        result = await handle_get_synthesis_status({
-            "synthesis_id": "00000000-0000-0000-0000-000000000000"
-        })
+        result = await handle_get_synthesis_status(
+            {"synthesis_id": "00000000-0000-0000-0000-000000000000"}
+        )
         assert isinstance(result, dict)
         # Should return not found or similar, not crash
         assert "error" in result or "status" in result
@@ -199,42 +204,32 @@ class TestInputBoundaries:
     @pytest.mark.asyncio
     async def test_unicode_query_handled(self):
         """Unicode characters in query should be handled."""
-        result = await handle_search_repositories({
-            "query": "机器学习 深度学习"
-        })
+        result = await handle_search_repositories({"query": "机器学习 深度学习"})
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_special_characters_in_query(self):
         """Special characters in query should be handled."""
-        result = await handle_search_repositories({
-            "query": "test@#$%^&*()"
-        })
+        result = await handle_search_repositories({"query": "test@#$%^&*()"})
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_whitespace_only_query(self):
         """Whitespace-only query should return error."""
-        result = await handle_search_repositories({
-            "query": "   "
-        })
+        result = await handle_search_repositories({"query": "   "})
         # Should either return error or handle gracefully
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_zero_max_results(self):
         """Zero max_results should be handled."""
-        result = await handle_search_repositories({
-            "query": "test",
-            "max_results": 0
-        })
+        result = await handle_search_repositories({"query": "test", "max_results": 0})
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_very_large_max_results(self):
         """Very large max_results should be handled."""
-        result = await handle_search_repositories({
-            "query": "test",
-            "max_results": 999999
-        })
+        result = await handle_search_repositories(
+            {"query": "test", "max_results": 999999}
+        )
         assert isinstance(result, dict)

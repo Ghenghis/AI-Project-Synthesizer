@@ -71,6 +71,7 @@ class GitHubClient(PlatformClient):
         """Initialize ghapi client."""
         try:
             from ghapi.all import GhApi
+
             self._api = GhApi(token=self._token)
             secure_logger.info("GitHub API client initialized")
         except ImportError:
@@ -91,7 +92,7 @@ class GitHubClient(PlatformClient):
         recovery_timeout=GITHUB_BREAKER_CONFIG.recovery_timeout,
         success_threshold=GITHUB_BREAKER_CONFIG.success_threshold,
         timeout=GITHUB_BREAKER_CONFIG.timeout,
-        expected_exception=Exception
+        expected_exception=Exception,
     )
     @track_performance("github_search")
     async def search(
@@ -122,7 +123,7 @@ class GitHubClient(PlatformClient):
             query=query[:100],  # Limit query length in logs
             language=language,
             min_stars=min_stars,
-            max_results=max_results
+            max_results=max_results,
         )
 
         # Wait for rate limit
@@ -155,7 +156,7 @@ class GitHubClient(PlatformClient):
                 )
 
                 repositories = []
-                for item in results['items'][:max_results]:
+                for item in results["items"][:max_results]:
                     repo = self._convert_repo(item)
                     repositories.append(repo)
 
@@ -173,11 +174,15 @@ class GitHubClient(PlatformClient):
                     correlation_id=correlation_id,
                     result_count=len(repositories),
                     total_count=results.total_count,
-                    search_time_ms=search_result.search_time_ms
+                    search_time_ms=search_result.search_time_ms,
                 )
 
-                metrics.increment("github_search_success_total", tags={"language": language or "none"})
-                metrics.record_histogram("github_search_results_count", len(repositories))
+                metrics.increment(
+                    "github_search_success_total", tags={"language": language or "none"}
+                )
+                metrics.record_histogram(
+                    "github_search_results_count", len(repositories)
+                )
 
                 return search_result
             else:
@@ -192,7 +197,7 @@ class GitHubClient(PlatformClient):
                 secure_logger.warning(
                     "GitHub rate limit exceeded",
                     correlation_id=correlation_id,
-                    error=str(e)[:200]
+                    error=str(e)[:200],
                 )
                 metrics.increment("github_rate_limit_total")
                 raise RateLimitError(
@@ -203,7 +208,7 @@ class GitHubClient(PlatformClient):
                 secure_logger.error(
                     "GitHub authentication failed",
                     correlation_id=correlation_id,
-                    error=str(e)[:200]
+                    error=str(e)[:200],
                 )
                 metrics.increment("github_auth_error_total")
                 raise AuthenticationError("GitHub authentication failed")
@@ -212,9 +217,11 @@ class GitHubClient(PlatformClient):
                     "GitHub search error",
                     correlation_id=correlation_id,
                     error=str(e)[:200],
-                    error_type=type(e).__name__
+                    error_type=type(e).__name__,
                 )
-                metrics.increment("github_search_error_total", tags={"error_type": type(e).__name__})
+                metrics.increment(
+                    "github_search_error_total", tags={"error_type": type(e).__name__}
+                )
                 raise
 
     async def get_repository(self, repo_id: str) -> RepositoryInfo:
@@ -466,7 +473,9 @@ class GitHubClient(PlatformClient):
             watchers=item.get("watchers_count", 0),
             open_issues=item.get("open_issues_count", 0),
             language=item.get("language") or "",
-            license=license_info.get("spdx_id") if isinstance(license_info, dict) else None,
+            license=license_info.get("spdx_id")
+            if isinstance(license_info, dict)
+            else None,
             created_at=item.get("created_at"),
             updated_at=item.get("updated_at"),
             pushed_at=item.get("pushed_at"),
@@ -501,9 +510,7 @@ class GitHubClient(PlatformClient):
 
         return self._convert_repo_dict(data)
 
-    async def _get_contents_fallback(
-        self, repo_id: str, path: str
-    ) -> DirectoryListing:
+    async def _get_contents_fallback(self, repo_id: str, path: str) -> DirectoryListing:
         """Fallback contents fetch using httpx."""
         import httpx
 
@@ -548,9 +555,7 @@ class GitHubClient(PlatformClient):
             directories=directories,
         )
 
-    async def _get_file_fallback(
-        self, repo_id: str, file_path: str
-    ) -> FileContent:
+    async def _get_file_fallback(self, repo_id: str, file_path: str) -> FileContent:
         """Fallback file fetch using httpx."""
         import base64
 
@@ -574,7 +579,9 @@ class GitHubClient(PlatformClient):
 
         content = ""
         if data.get("encoding") == "base64" and data.get("content"):
-            content = base64.b64decode(data["content"]).decode("utf-8", errors="replace")
+            content = base64.b64decode(data["content"]).decode(
+                "utf-8", errors="replace"
+            )
 
         return FileContent(
             path=file_path,

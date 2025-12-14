@@ -46,59 +46,71 @@ class AutomationAgent(BaseAgent):
 
     def _setup_tools(self):
         """Set up automation tools."""
-        self.register_tool(AgentTool(
-            name="run_workflow",
-            description="Execute an n8n workflow",
-            func=self._run_workflow,
-            parameters={
-                "workflow_id": {"type": "string"},
-                "data": {"type": "object"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="run_workflow",
+                description="Execute an n8n workflow",
+                func=self._run_workflow,
+                parameters={
+                    "workflow_id": {"type": "string"},
+                    "data": {"type": "object"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="schedule_task",
-            description="Schedule a task for later execution",
-            func=self._schedule_task,
-            parameters={
-                "task_id": {"type": "string"},
-                "task_type": {"type": "string"},
-                "schedule": {"type": "string", "description": "Cron expression"},
-                "data": {"type": "object"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="schedule_task",
+                description="Schedule a task for later execution",
+                func=self._schedule_task,
+                parameters={
+                    "task_id": {"type": "string"},
+                    "task_type": {"type": "string"},
+                    "schedule": {"type": "string", "description": "Cron expression"},
+                    "data": {"type": "object"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="check_health",
-            description="Check system health",
-            func=self._check_health,
-            parameters={},
-        ))
+        self.register_tool(
+            AgentTool(
+                name="check_health",
+                description="Check system health",
+                func=self._check_health,
+                parameters={},
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="recover_component",
-            description="Attempt to recover a failed component",
-            func=self._recover_component,
-            parameters={
-                "component": {"type": "string"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="recover_component",
+                description="Attempt to recover a failed component",
+                func=self._recover_component,
+                parameters={
+                    "component": {"type": "string"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="run_tests",
-            description="Run integration tests",
-            func=self._run_tests,
-            parameters={
-                "category": {"type": "string", "description": "Test category"},
-            },
-        ))
+        self.register_tool(
+            AgentTool(
+                name="run_tests",
+                description="Run integration tests",
+                func=self._run_tests,
+                parameters={
+                    "category": {"type": "string", "description": "Test category"},
+                },
+            )
+        )
 
-        self.register_tool(AgentTool(
-            name="get_metrics",
-            description="Get system metrics",
-            func=self._get_metrics,
-            parameters={},
-        ))
+        self.register_tool(
+            AgentTool(
+                name="get_metrics",
+                description="Get system metrics",
+                func=self._get_metrics,
+                parameters={},
+            )
+        )
 
     async def _run_workflow(
         self,
@@ -235,10 +247,9 @@ class AutomationAgent(BaseAgent):
         settings = get_settings_manager().settings.automation
 
         # Build prompt
-        tools_desc = "\n".join([
-            f"- {t.name}: {t.description}"
-            for t in self._tools.values()
-        ])
+        tools_desc = "\n".join(
+            [f"- {t.name}: {t.description}" for t in self._tools.values()]
+        )
 
         prompt = f"""You are an automation agent managing system workflows.
 
@@ -252,7 +263,7 @@ Settings:
 - Auto-retry: {settings.auto_retry_failed}
 - Health check interval: {settings.health_check_interval_s}s
 
-Previous context: {context.get('previous_step', 'None')}
+Previous context: {context.get("previous_step", "None")}
 
 Decide the next action. Respond in this format:
 TOOL: <tool_name>
@@ -287,6 +298,7 @@ SUMMARY: <summary>
 
         if "PARAMS:" in response:
             import json
+
             try:
                 params_str = response.split("PARAMS:")[1].split("\n")[0].strip()
                 params = json.loads(params_str)

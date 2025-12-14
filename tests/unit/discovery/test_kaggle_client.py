@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "testing"
 
 try:
     from src.discovery.kaggle_client import KaggleClient, KaggleResourceType
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for discovery.kaggle_client: {e}")
@@ -29,6 +30,5 @@ class TestKaggleResourceType:
         assert KaggleResourceType.NOTEBOOK.value == "notebook"
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

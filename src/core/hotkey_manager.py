@@ -22,6 +22,7 @@ secure_logger = get_secure_logger(__name__)
 # Try importing keyboard library
 try:
     import keyboard
+
     KEYBOARD_AVAILABLE = True
 except ImportError:
     KEYBOARD_AVAILABLE = False
@@ -30,6 +31,7 @@ except ImportError:
 
 class HotkeyAction(str, Enum):
     """Available hotkey actions."""
+
     # Voice
     VOICE_TOGGLE = "voice_toggle"
     VOICE_PUSH_TO_TALK = "voice_push_to_talk"
@@ -55,6 +57,7 @@ class HotkeyAction(str, Enum):
 @dataclass
 class HotkeyBinding:
     """Hotkey binding configuration."""
+
     action: HotkeyAction
     keys: str
     description: str

@@ -14,6 +14,7 @@ try:
         ProjectAssembler,
         ProjectResource,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for synthesis.project_assembler: {e}")
@@ -30,11 +31,12 @@ class TestProjectResource:
             name="test_resource",
             source="github",
             url="https://github.com/test/repo",
-            resource_type="code"
+            resource_type="code",
         )
         assert instance is not None
         assert instance.name == "test_resource"
         assert instance.source == "github"
+
 
 class TestAssembledProject:
     """Test AssembledProject."""
@@ -43,15 +45,17 @@ class TestAssembledProject:
     def test_create_assembledproject(self):
         """Should create AssembledProject."""
         from pathlib import Path
+
         instance = AssembledProject(
             name="Test Project",
             slug="test-project",
             description="A test project",
-            base_path=Path("G:/test-project")
+            base_path=Path("G:/test-project"),
         )
         assert instance is not None
         assert instance.name == "Test Project"
         assert instance.slug == "test-project"
+
 
 class TestAssemblerConfig:
     """Test AssemblerConfig."""
@@ -61,6 +65,7 @@ class TestAssemblerConfig:
         """Should create AssemblerConfig."""
         instance = AssemblerConfig()
         assert instance is not None
+
 
 class TestProjectAssembler:
     """Test ProjectAssembler."""
@@ -72,6 +77,5 @@ class TestProjectAssembler:
         assert instance is not None
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

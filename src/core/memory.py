@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class MemoryType(str, Enum):
     """Types of memory entries."""
+
     CONVERSATION = "conversation"
     SEARCH = "search"
     BOOKMARK = "bookmark"
@@ -38,6 +39,7 @@ class MemoryType(str, Enum):
 @dataclass
 class MemoryEntry:
     """Single memory entry."""
+
     id: str
     type: MemoryType
     content: dict[str, Any]
@@ -61,6 +63,7 @@ class MemoryEntry:
 @dataclass
 class SearchEntry:
     """Search history entry."""
+
     id: str
     query: str
     platforms: list[str]
@@ -75,6 +78,7 @@ class SearchEntry:
 @dataclass
 class Bookmark:
     """Bookmark entry."""
+
     id: str
     name: str
     url: str
@@ -173,9 +177,15 @@ class MemoryStore:
 
         # Create indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_searches_query ON searches(query)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bookmarks_type ON bookmarks(type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_searches_query ON searches(query)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_bookmarks_type ON bookmarks(type)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id)"
+        )
 
         conn.commit()
         conn.close()
@@ -192,19 +202,22 @@ class MemoryStore:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO memories
             (id, type, content, tags, created_at, updated_at, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            entry.id,
-            entry.type.value,
-            json.dumps(entry.content),
-            json.dumps(entry.tags),
-            entry.created_at,
-            datetime.now().isoformat(),
-            json.dumps(entry.metadata),
-        ))
+        """,
+            (
+                entry.id,
+                entry.type.value,
+                json.dumps(entry.content),
+                json.dumps(entry.tags),
+                entry.created_at,
+                datetime.now().isoformat(),
+                json.dumps(entry.metadata),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -295,18 +308,21 @@ class MemoryStore:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO searches
             (id, query, platforms, results_count, timestamp, filters)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            entry.id,
-            entry.query,
-            json.dumps(entry.platforms),
-            entry.results_count,
-            entry.timestamp,
-            json.dumps(entry.filters),
-        ))
+        """,
+            (
+                entry.id,
+                entry.query,
+                json.dumps(entry.platforms),
+                entry.results_count,
+                entry.timestamp,
+                json.dumps(entry.filters),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -318,8 +334,7 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT * FROM searches ORDER BY timestamp DESC LIMIT ?",
-            (limit,)
+            "SELECT * FROM searches ORDER BY timestamp DESC LIMIT ?", (limit,)
         )
         rows = cursor.fetchall()
         conn.close()
@@ -365,20 +380,23 @@ class MemoryStore:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO bookmarks
             (id, name, url, type, description, tags, created_at, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            bookmark.id,
-            bookmark.name,
-            bookmark.url,
-            bookmark.type,
-            bookmark.description,
-            json.dumps(bookmark.tags),
-            bookmark.created_at,
-            json.dumps(bookmark.metadata),
-        ))
+        """,
+            (
+                bookmark.id,
+                bookmark.name,
+                bookmark.url,
+                bookmark.type,
+                bookmark.description,
+                json.dumps(bookmark.tags),
+                bookmark.created_at,
+                json.dumps(bookmark.metadata),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -456,18 +474,21 @@ class MemoryStore:
 
         msg_id = f"msg_{datetime.now().timestamp()}"
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO conversations
             (id, session_id, role, content, timestamp, metadata)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            msg_id,
-            session_id,
-            role,
-            content,
-            datetime.now().isoformat(),
-            json.dumps(metadata or {}),
-        ))
+        """,
+            (
+                msg_id,
+                session_id,
+                role,
+                content,
+                datetime.now().isoformat(),
+                json.dumps(metadata or {}),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -482,13 +503,16 @@ class MemoryStore:
         conn = self._get_conn()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT role, content, timestamp, metadata
             FROM conversations
             WHERE session_id = ?
             ORDER BY timestamp ASC
             LIMIT ?
-        """, (session_id, limit))
+        """,
+            (session_id, limit),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -514,16 +538,19 @@ class MemoryStore:
 
         state_id = f"state_{workflow_id}"
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO workflow_states
             (id, workflow_id, state, updated_at)
             VALUES (?, ?, ?, ?)
-        """, (
-            state_id,
-            workflow_id,
-            json.dumps(state),
-            datetime.now().isoformat(),
-        ))
+        """,
+            (
+                state_id,
+                workflow_id,
+                json.dumps(state),
+                datetime.now().isoformat(),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -535,8 +562,7 @@ class MemoryStore:
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT state FROM workflow_states WHERE workflow_id = ?",
-            (workflow_id,)
+            "SELECT state FROM workflow_states WHERE workflow_id = ?", (workflow_id,)
         )
         row = cursor.fetchone()
         conn.close()

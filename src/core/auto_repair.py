@@ -27,6 +27,7 @@ secure_logger = get_secure_logger(__name__)
 
 class RepairAction(str, Enum):
     """Types of repair actions."""
+
     CREATE_FILE = "create_file"
     MODIFY_FILE = "modify_file"
     CREATE_DIR = "create_dir"
@@ -39,6 +40,7 @@ class RepairAction(str, Enum):
 @dataclass
 class RepairStep:
     """Single repair step."""
+
     action: RepairAction
     target: str
     params: dict[str, Any] = field(default_factory=dict)
@@ -61,6 +63,7 @@ class RepairStep:
 @dataclass
 class RepairPlan:
     """Plan for repairing gaps."""
+
     gap: Gap
     steps: list[RepairStep] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -206,7 +209,11 @@ class AutoRepair:
         """Install a Python package."""
         try:
             process = await asyncio.create_subprocess_exec(
-                sys.executable, "-m", "pip", "install", package,
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                package,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -266,28 +273,34 @@ class AutoRepair:
         plan = RepairPlan(gap=gap)
 
         if "missing_dir" in gap.id:
-            plan.steps.append(RepairStep(
-                action=RepairAction.CREATE_DIR,
-                target=gap.location,
-                description=f"Create directory: {gap.location}",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.CREATE_DIR,
+                    target=gap.location,
+                    description=f"Create directory: {gap.location}",
+                )
+            )
 
         elif "missing_init" in gap.id:
-            plan.steps.append(RepairStep(
-                action=RepairAction.CREATE_FILE,
-                target=f"{gap.location}/__init__.py",
-                params={"content": '"""Package."""\n'},
-                description=f"Create __init__.py in {gap.location}",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.CREATE_FILE,
+                    target=f"{gap.location}/__init__.py",
+                    params={"content": '"""Package."""\n'},
+                    description=f"Create __init__.py in {gap.location}",
+                )
+            )
 
         elif "missing" in gap.id.lower():
             # Generic missing file
-            plan.steps.append(RepairStep(
-                action=RepairAction.CREATE_FILE,
-                target=gap.location,
-                params={"content": ""},
-                description=f"Create file: {gap.location}",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.CREATE_FILE,
+                    target=gap.location,
+                    params={"content": ""},
+                    description=f"Create file: {gap.location}",
+                )
+            )
 
         return plan
 
@@ -296,12 +309,16 @@ class AutoRepair:
         plan = RepairPlan(gap=gap)
 
         if "settings" in gap.id:
-            plan.steps.append(RepairStep(
-                action=RepairAction.RUN_COMMAND,
-                target="settings",
-                params={"command": f"{sys.executable} -c \"from src.core.settings_manager import get_settings_manager; get_settings_manager().save()\""},
-                description="Create default settings file",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.RUN_COMMAND,
+                    target="settings",
+                    params={
+                        "command": f'{sys.executable} -c "from src.core.settings_manager import get_settings_manager; get_settings_manager().save()"'
+                    },
+                    description="Create default settings file",
+                )
+            )
 
         elif "env" in gap.id:
             env_content = """# AI Project Synthesizer Environment
@@ -312,12 +329,14 @@ ANTHROPIC_API_KEY=
 OLLAMA_HOST=http://localhost:11434
 LMSTUDIO_HOST=http://localhost:1234
 """
-            plan.steps.append(RepairStep(
-                action=RepairAction.CREATE_FILE,
-                target=".env",
-                params={"content": env_content},
-                description="Create .env file with defaults",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.CREATE_FILE,
+                    target=".env",
+                    params={"content": env_content},
+                    description="Create .env file with defaults",
+                )
+            )
 
         return plan
 
@@ -331,11 +350,13 @@ LMSTUDIO_HOST=http://localhost:1234
             match = re.search(r"No module named '([^']+)'", gap.description)
             if match:
                 package = match.group(1).split(".")[0]
-                plan.steps.append(RepairStep(
-                    action=RepairAction.INSTALL_PACKAGE,
-                    target=package,
-                    description=f"Install missing package: {package}",
-                ))
+                plan.steps.append(
+                    RepairStep(
+                        action=RepairAction.INSTALL_PACKAGE,
+                        target=package,
+                        description=f"Install missing package: {package}",
+                    )
+                )
 
         return plan
 
@@ -343,12 +364,16 @@ LMSTUDIO_HOST=http://localhost:1234
         """Create repair plan for dependency gaps."""
         plan = RepairPlan(gap=gap)
 
-        plan.steps.append(RepairStep(
-            action=RepairAction.RUN_COMMAND,
-            target="requirements",
-            params={"command": f"{sys.executable} -m pip install -r requirements.txt"},
-            description="Install all requirements",
-        ))
+        plan.steps.append(
+            RepairStep(
+                action=RepairAction.RUN_COMMAND,
+                target="requirements",
+                params={
+                    "command": f"{sys.executable} -m pip install -r requirements.txt"
+                },
+                description="Install all requirements",
+            )
+        )
 
         return plan
 
@@ -356,18 +381,24 @@ LMSTUDIO_HOST=http://localhost:1234
         """Create repair plan for database gaps."""
         plan = RepairPlan(gap=gap)
 
-        plan.steps.append(RepairStep(
-            action=RepairAction.CREATE_DIR,
-            target="data",
-            description="Create data directory",
-        ))
+        plan.steps.append(
+            RepairStep(
+                action=RepairAction.CREATE_DIR,
+                target="data",
+                description="Create data directory",
+            )
+        )
 
-        plan.steps.append(RepairStep(
-            action=RepairAction.RUN_COMMAND,
-            target="database",
-            params={"command": f"{sys.executable} -c \"from src.core.memory import get_memory_store; get_memory_store()\""},
-            description="Initialize database",
-        ))
+        plan.steps.append(
+            RepairStep(
+                action=RepairAction.RUN_COMMAND,
+                target="database",
+                params={
+                    "command": f'{sys.executable} -c "from src.core.memory import get_memory_store; get_memory_store()"'
+                },
+                description="Initialize database",
+            )
+        )
 
         return plan
 
@@ -379,12 +410,16 @@ LMSTUDIO_HOST=http://localhost:1234
         # but we can try some basic fixes
 
         if "llm" in gap.id.lower():
-            plan.steps.append(RepairStep(
-                action=RepairAction.RUN_COMMAND,
-                target="llm_check",
-                params={"command": f"{sys.executable} -c \"from src.llm import LLMRouter; print('LLM OK')\""},
-                description="Verify LLM module",
-            ))
+            plan.steps.append(
+                RepairStep(
+                    action=RepairAction.RUN_COMMAND,
+                    target="llm_check",
+                    params={
+                        "command": f"{sys.executable} -c \"from src.llm import LLMRouter; print('LLM OK')\""
+                    },
+                    description="Verify LLM module",
+                )
+            )
 
         return plan
 

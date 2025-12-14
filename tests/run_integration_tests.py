@@ -35,9 +35,9 @@ class TestRunner:
 
     async def run_test_suite(self, test_class, class_name: str) -> dict[str, Any]:
         """Run a test suite and return results."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Running {class_name}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         suite_results = {
             "class_name": class_name,
@@ -50,10 +50,10 @@ class TestRunner:
 
         # Get all test methods
         test_methods = [
-            method for method in dir(test_class)
-            if method.startswith("test_") and asyncio.iscoroutinefunction(
-                getattr(test_class, method)
-            )
+            method
+            for method in dir(test_class)
+            if method.startswith("test_")
+            and asyncio.iscoroutinefunction(getattr(test_class, method))
         ]
 
         # Create test instance
@@ -68,32 +68,38 @@ class TestRunner:
                 method = getattr(test_instance, test_method)
                 await method()
 
-                suite_results["tests"].append({
-                    "name": test_name,
-                    "status": "PASSED",
-                    "duration": 0.1,  # Placeholder
-                })
+                suite_results["tests"].append(
+                    {
+                        "name": test_name,
+                        "status": "PASSED",
+                        "duration": 0.1,  # Placeholder
+                    }
+                )
                 suite_results["passed"] += 1
                 print("    ✓ PASSED")
 
             except AssertionError as e:
-                suite_results["tests"].append({
-                    "name": test_name,
-                    "status": "FAILED",
-                    "error": str(e),
-                    "duration": 0.1,
-                })
+                suite_results["tests"].append(
+                    {
+                        "name": test_name,
+                        "status": "FAILED",
+                        "error": str(e),
+                        "duration": 0.1,
+                    }
+                )
                 suite_results["failed"] += 1
                 suite_results["errors"].append(f"{test_name}: {str(e)}")
                 print(f"    ✗ FAILED: {e}")
 
             except Exception as e:
-                suite_results["tests"].append({
-                    "name": test_name,
-                    "status": "ERROR",
-                    "error": str(e),
-                    "duration": 0.1,
-                })
+                suite_results["tests"].append(
+                    {
+                        "name": test_name,
+                        "status": "ERROR",
+                        "error": str(e),
+                        "duration": 0.1,
+                    }
+                )
                 suite_results["failed"] += 1
                 suite_results["errors"].append(f"{test_name}: {str(e)}")
                 print(f"    ✗ ERROR: {e}")
@@ -104,10 +110,10 @@ class TestRunner:
         """Run all integration test suites."""
         self.start_time = datetime.now()
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("VIBE MCP - Integration Test Suite")
         print(f"Started at: {self.start_time}")
-        print("="*80)
+        print("=" * 80)
 
         # Define test suites
         test_suites = [
@@ -126,7 +132,9 @@ class TestRunner:
         self.end_time = datetime.now()
 
         # Generate summary
-        total_tests = sum(r["passed"] + r["failed"] + r["skipped"] for r in self.results)
+        total_tests = sum(
+            r["passed"] + r["failed"] + r["skipped"] for r in self.results
+        )
         total_passed = sum(r["passed"] for r in self.results)
         total_failed = sum(r["failed"] for r in self.results)
         total_skipped = sum(r["skipped"] for r in self.results)
@@ -139,7 +147,9 @@ class TestRunner:
             "total_passed": total_passed,
             "total_failed": total_failed,
             "total_skipped": total_skipped,
-            "success_rate": (total_passed / total_tests * 100) if total_tests > 0 else 0,
+            "success_rate": (total_passed / total_tests * 100)
+            if total_tests > 0
+            else 0,
             "suites": self.results,
         }
 
@@ -148,9 +158,9 @@ class TestRunner:
     def generate_report(self, results: dict[str, Any]) -> str:
         """Generate a test report."""
         report = []
-        report.append("\n" + "="*80)
+        report.append("\n" + "=" * 80)
         report.append("INTEGRATION TEST REPORT")
-        report.append("="*80)
+        report.append("=" * 80)
 
         # Summary
         report.append("\nTest Run Summary:")
@@ -181,7 +191,9 @@ class TestRunner:
         if results["total_failed"] == 0:
             report.append("  ✓ All tests passed! System is ready for production.")
         else:
-            report.append(f"  ⚠ {results['total_failed']} test(s) failed. Review and fix issues.")
+            report.append(
+                f"  ⚠ {results['total_failed']} test(s) failed. Review and fix issues."
+            )
             report.append("  - Check API keys and credentials for external services")
             report.append("  - Verify network connectivity")
             report.append("  - Review error messages for specific issues")

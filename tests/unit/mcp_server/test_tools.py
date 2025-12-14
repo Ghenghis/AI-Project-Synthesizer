@@ -19,11 +19,11 @@ try:
         set_synthesis_job,
         update_synthesis_job,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for mcp_server.tools: {e}")
     IMPORTS_AVAILABLE = False
-
 
 
 @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
@@ -80,6 +80,5 @@ def test_register_all_prompts_exists():
     assert callable(register_all_prompts)
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

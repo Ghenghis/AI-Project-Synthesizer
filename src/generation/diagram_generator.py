@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DiagramConfig:
     """Configuration for diagram generation."""
+
     project_name: str
     components: list[str] = field(default_factory=list)
     dependencies: dict[str, list[str]] = field(default_factory=dict)
@@ -72,7 +73,7 @@ class DiagramGenerator:
         # Add components
         for _i, component in enumerate(config.components):
             safe_id = component.replace(" ", "_").replace("-", "_")
-            diagram += f"        {safe_id}[\"{component}\"]\n"
+            diagram += f'        {safe_id}["{component}"]\n'
 
         diagram += "    end\n"
 
@@ -84,9 +85,13 @@ class DiagramGenerator:
                 diagram += f"    {source_id} --> {target_id}\n"
 
         # Add styling
-        diagram += """
-    style """ + config.project_name.replace(" ", "_") + """ fill:#e1f5fe
+        diagram += (
+            """
+    style """
+            + config.project_name.replace(" ", "_")
+            + """ fill:#e1f5fe
 """
+        )
 
         return diagram
 
@@ -104,7 +109,7 @@ class DiagramGenerator:
         prev_id = "USER"
         for i, component in enumerate(config.components):
             safe_id = f"PROC_{i}"
-            diagram += f"        {safe_id}[\"{component}\"]\n"
+            diagram += f'        {safe_id}["{component}"]\n'
             diagram += f"    {prev_id} --> {safe_id}\n"
             prev_id = safe_id
 
@@ -128,7 +133,7 @@ class DiagramGenerator:
 
         for _i, component in enumerate(config.components):
             safe_id = component.replace(" ", "_").replace("-", "_")
-            diagram += f"        {safe_id}[[\"{component}\"]]\n"
+            diagram += f'        {safe_id}[["{component}"]]\n'
 
         diagram += "    end\n"
 

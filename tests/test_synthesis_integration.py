@@ -20,7 +20,9 @@ async def test_synthesize_project_from_idea():
         pytest.skip("handle_synthesize_from_idea not implemented yet")
 
     # Mock the ProjectAssembler
-    with patch('src.synthesis.project_assembler.ProjectAssembler') as mock_assembler_class:
+    with patch(
+        "src.synthesis.project_assembler.ProjectAssembler"
+    ) as mock_assembler_class:
         mock_assembler = AsyncMock()
         mock_assembler_class.return_value = mock_assembler
 
@@ -37,12 +39,14 @@ async def test_synthesize_project_from_idea():
         mock_assembler.assemble.return_value = mock_project
 
         # Call the handler
-        result = await handle_synthesize_from_idea({
-            "idea": "Create a web scraper using BeautifulSoup and requests",
-            "name": "Test Web Scraper",
-            "output_dir": "/tmp",
-            "create_github": False
-        })
+        result = await handle_synthesize_from_idea(
+            {
+                "idea": "Create a web scraper using BeautifulSoup and requests",
+                "name": "Test Web Scraper",
+                "output_dir": "/tmp",
+                "create_github": False,
+            }
+        )
 
         # Verify response
         assert result["success"] is True
@@ -76,14 +80,13 @@ async def test_project_assembler_integration():
         assembler = ProjectAssembler(config)
 
         # Mock the search to avoid real API calls
-        with patch.object(assembler, '_search_resources') as mock_search:
+        with patch.object(assembler, "_search_resources") as mock_search:
             # Mock search results
             mock_search.return_value = None
 
             # Assemble a project
             project = await assembler.assemble(
-                idea="Test project for integration testing",
-                name="Test Project"
+                idea="Test project for integration testing", name="Test Project"
             )
 
             # Verify project was created
@@ -116,7 +119,7 @@ async def test_requirements_merging():
             source="github",
             url="https://github.com/example/repo1",
             resource_type="code",
-            download_path=Path(temp_dir) / "repo1"
+            download_path=Path(temp_dir) / "repo1",
         )
 
         repo2 = ProjectResource(
@@ -124,7 +127,7 @@ async def test_requirements_merging():
             source="github",
             url="https://github.com/example/repo2",
             resource_type="code",
-            download_path=Path(temp_dir) / "repo2"
+            download_path=Path(temp_dir) / "repo2",
         )
 
         project = AssembledProject(
@@ -132,7 +135,7 @@ async def test_requirements_merging():
             slug="test",
             description="Test project",
             base_path=Path(temp_dir),
-            code_repos=[repo1, repo2]
+            code_repos=[repo1, repo2],
         )
 
         # Collect requirements

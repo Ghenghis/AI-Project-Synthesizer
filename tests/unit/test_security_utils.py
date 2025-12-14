@@ -103,6 +103,7 @@ class TestValidatePath:
             old_cwd = Path.cwd()
             try:
                 import os
+
                 os.chdir(tmpdir)
                 path = Path("file.txt")
                 result = validate_path(path)
@@ -202,7 +203,7 @@ class TestSanitizeTemplateString:
 class TestSafeSubprocessRun:
     """Test safe subprocess execution."""
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_safe_command(self, mock_run):
         """Safe commands should execute normally."""
         mock_run.return_value = MagicMock(returncode=0, stdout="success")
@@ -210,21 +211,18 @@ class TestSafeSubprocessRun:
         result = safe_subprocess_run(["echo", "hello"], timeout=30)
 
         mock_run.assert_called_once_with(
-            ["echo", "hello"],
-            cwd=None,
-            timeout=30,
-            shell=False
+            ["echo", "hello"], cwd=None, timeout=30, shell=False
         )
         assert result == mock_run.return_value
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_validates_args(self, mock_run):
         """Arguments should be validated before execution."""
         with pytest.raises(ValueError, match="dangerous pattern"):
             safe_subprocess_run(["echo; rm -rf /"], timeout=30)
         mock_run.assert_not_called()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_enforces_shell_false(self, mock_run):
         """Should always enforce shell=False."""
         mock_run.return_value = MagicMock(returncode=0)
@@ -232,9 +230,9 @@ class TestSafeSubprocessRun:
         safe_subprocess_run(["echo", "hello"], timeout=30)
 
         call_args = mock_run.call_args
-        assert call_args[1]['shell'] is False
+        assert call_args[1]["shell"] is False
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_handles_timeout(self, mock_run):
         """Should handle subprocess timeout."""
         mock_run.side_effect = subprocess.TimeoutExpired("cmd", 30)
@@ -291,7 +289,7 @@ class TestSecureFilename:
     def test_only_dangerous_chars(self):
         """Files with only dangerous chars become 'unnamed'."""
         # After stripping and replacing, we get underscores, not empty
-        assert secure_filename("<>\"") == "___"
+        assert secure_filename('<>"') == "___"
 
 
 if __name__ == "__main__":

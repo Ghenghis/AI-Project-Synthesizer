@@ -28,16 +28,19 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 # Request models
 class UpdateSettingsRequest(BaseModel):
     """Request to update settings."""
+
     updates: dict[str, Any]
 
 
 class ToggleFeatureRequest(BaseModel):
     """Request to toggle a feature."""
+
     feature: str
 
 
 class UpdateHotkeyRequest(BaseModel):
     """Request to update a hotkey."""
+
     action: str
     keys: str
 
@@ -45,6 +48,7 @@ class UpdateHotkeyRequest(BaseModel):
 # ============================================
 # Settings Endpoints
 # ============================================
+
 
 @router.get("")
 async def get_all_settings() -> dict[str, Any]:
@@ -82,7 +86,9 @@ async def get_tab_settings(tab: str) -> dict[str, Any]:
 
 
 @router.put("/{tab}")
-async def update_tab_settings(tab: str, request: UpdateSettingsRequest) -> dict[str, Any]:
+async def update_tab_settings(
+    tab: str, request: UpdateSettingsRequest
+) -> dict[str, Any]:
     """Update settings for a specific tab."""
     try:
         settings_tab = SettingsTab(tab)
@@ -164,6 +170,7 @@ async def import_settings(settings: dict[str, Any]) -> dict[str, Any]:
 # Hotkey Endpoints
 # ============================================
 
+
 @router.get("/hotkeys/bindings")
 async def get_hotkey_bindings() -> dict[str, Any]:
     """Get all hotkey bindings."""
@@ -216,6 +223,7 @@ async def disable_hotkey(action: str) -> dict[str, Any]:
 # Voice Settings Shortcuts
 # ============================================
 
+
 @router.get("/voice/quick")
 async def get_voice_quick_settings() -> dict[str, Any]:
     """Get quick voice settings."""
@@ -251,6 +259,7 @@ async def toggle_auto_speak() -> dict[str, Any]:
 # ============================================
 # Automation Settings Shortcuts
 # ============================================
+
 
 @router.get("/automation/quick")
 async def get_automation_quick_settings() -> dict[str, Any]:

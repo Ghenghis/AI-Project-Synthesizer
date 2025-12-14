@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Import:
     """Represents an import statement."""
+
     module: str
     names: list[str] = field(default_factory=list)
     alias: str | None = None
@@ -27,6 +28,7 @@ class Import:
 @dataclass
 class Function:
     """Represents a function definition."""
+
     name: str
     parameters: list[str]
     return_type: str | None = None
@@ -41,6 +43,7 @@ class Function:
 @dataclass
 class Class:
     """Represents a class definition."""
+
     name: str
     bases: list[str] = field(default_factory=list)
     methods: list[Function] = field(default_factory=list)
@@ -53,6 +56,7 @@ class Class:
 @dataclass
 class ParsedFile:
     """Result of parsing a single file."""
+
     path: str
     language: str
     imports: list[Import] = field(default_factory=list)
@@ -105,6 +109,7 @@ class ASTParser:
         """Check if tree-sitter is available."""
         try:
             import tree_sitter
+
             return True
         except ImportError:
             logger.warning("tree-sitter not available, using fallback parsing")
@@ -211,10 +216,22 @@ class ASTParser:
     def _should_skip(self, file_path: Path) -> bool:
         """Check if file should be skipped."""
         skip_dirs = {
-            "node_modules", "venv", ".venv", "env", ".env",
-            "__pycache__", ".git", ".svn", "dist", "build",
-            ".tox", ".eggs", "*.egg-info", ".mypy_cache",
-            ".pytest_cache", "site-packages",
+            "node_modules",
+            "venv",
+            ".venv",
+            "env",
+            ".env",
+            "__pycache__",
+            ".git",
+            ".svn",
+            "dist",
+            "build",
+            ".tox",
+            ".eggs",
+            "*.egg-info",
+            ".mypy_cache",
+            ".pytest_cache",
+            "site-packages",
         }
 
         for part in file_path.parts:
@@ -230,27 +247,32 @@ class ASTParser:
 
         try:
             import ast
+
             tree = ast.parse(content)
 
             for node in ast.walk(tree):
                 # Extract imports
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        imports.append(Import(
-                            module=alias.name,
-                            alias=alias.asname,
-                            line_number=node.lineno,
-                        ))
+                        imports.append(
+                            Import(
+                                module=alias.name,
+                                alias=alias.asname,
+                                line_number=node.lineno,
+                            )
+                        )
 
                 elif isinstance(node, ast.ImportFrom):
                     module = node.module or ""
                     names = [alias.name for alias in node.names]
-                    imports.append(Import(
-                        module=module,
-                        names=names,
-                        is_relative=node.level > 0,
-                        line_number=node.lineno,
-                    ))
+                    imports.append(
+                        Import(
+                            module=module,
+                            names=names,
+                            is_relative=node.level > 0,
+                            line_number=node.lineno,
+                        )
+                    )
 
                 # Extract functions
                 elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -260,7 +282,9 @@ class ASTParser:
                         is_async=isinstance(node, ast.AsyncFunctionDef),
                         line_start=node.lineno,
                         line_end=node.end_lineno or node.lineno,
-                        decorators=[self._get_decorator_name(d) for d in node.decorator_list],
+                        decorators=[
+                            self._get_decorator_name(d) for d in node.decorator_list
+                        ],
                     )
 
                     # Get docstring
@@ -277,7 +301,9 @@ class ASTParser:
                         bases=[self._get_base_name(b) for b in node.bases],
                         line_start=node.lineno,
                         line_end=node.end_lineno or node.lineno,
-                        decorators=[self._get_decorator_name(d) for d in node.decorator_list],
+                        decorators=[
+                            self._get_decorator_name(d) for d in node.decorator_list
+                        ],
                     )
 
                     # Get docstring
@@ -288,11 +314,13 @@ class ASTParser:
                     # Get methods
                     for item in node.body:
                         if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
-                            cls.methods.append(Function(
-                                name=item.name,
-                                parameters=[arg.arg for arg in item.args.args],
-                                is_async=isinstance(item, ast.AsyncFunctionDef),
-                            ))
+                            cls.methods.append(
+                                Function(
+                                    name=item.name,
+                                    parameters=[arg.arg for arg in item.args.args],
+                                    is_async=isinstance(item, ast.AsyncFunctionDef),
+                                )
+                            )
 
                     classes.append(cls)
 
@@ -304,7 +332,13 @@ class ASTParser:
         # Calculate line counts
         lines = content.splitlines()
         loc = len(lines)
-        sloc = len([line for line in lines if line.strip() and not line.strip().startswith("#")])
+        sloc = len(
+            [
+                line
+                for line in lines
+                if line.strip() and not line.strip().startswith("#")
+            ]
+        )
 
         return ParsedFile(
             path=str(file_path),
@@ -319,6 +353,7 @@ class ASTParser:
     def _get_decorator_name(self, node) -> str:
         """Extract decorator name from AST node."""
         import ast
+
         if isinstance(node, ast.Name):
             return node.id
         elif isinstance(node, ast.Attribute):
@@ -330,6 +365,7 @@ class ASTParser:
     def _get_base_name(self, node) -> str:
         """Extract base class name from AST node."""
         import ast
+
         if isinstance(node, ast.Name):
             return node.id
         elif isinstance(node, ast.Attribute):
@@ -352,8 +388,8 @@ class ASTParser:
         # Regex-based parsing for JS/TS
         # Import patterns
         import_pattern = re.compile(
-            r'''import\s+(?:(?:(\{[^}]+\})|(\*\s+as\s+\w+)|(\w+))\s+from\s+)?['"]([^'"]+)['"]''',
-            re.MULTILINE
+            r"""import\s+(?:(?:(\{[^}]+\})|(\*\s+as\s+\w+)|(\w+))\s+from\s+)?['"]([^'"]+)['"]""",
+            re.MULTILINE,
         )
 
         for match in import_pattern.finditer(content):
@@ -364,53 +400,74 @@ class ASTParser:
             if default:
                 names.append(default)
 
-            imports.append(Import(
-                module=module,
-                names=names,
-            ))
+            imports.append(
+                Import(
+                    module=module,
+                    names=names,
+                )
+            )
 
         # Function patterns
         func_pattern = re.compile(
-            r'''(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)''',
-            re.MULTILINE
+            r"""(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)""",
+            re.MULTILINE,
         )
 
         for match in func_pattern.finditer(content):
             name, params = match.groups()
-            functions.append(Function(
-                name=name,
-                parameters=[p.strip().split(":")[0].strip() for p in params.split(",") if p.strip()],
-            ))
+            functions.append(
+                Function(
+                    name=name,
+                    parameters=[
+                        p.strip().split(":")[0].strip()
+                        for p in params.split(",")
+                        if p.strip()
+                    ],
+                )
+            )
 
         # Arrow function patterns
         arrow_pattern = re.compile(
-            r'''(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>''',
-            re.MULTILINE
+            r"""(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>""",
+            re.MULTILINE,
         )
 
         for match in arrow_pattern.finditer(content):
             name, params = match.groups()
-            functions.append(Function(
-                name=name,
-                parameters=[p.strip().split(":")[0].strip() for p in params.split(",") if p.strip()],
-            ))
+            functions.append(
+                Function(
+                    name=name,
+                    parameters=[
+                        p.strip().split(":")[0].strip()
+                        for p in params.split(",")
+                        if p.strip()
+                    ],
+                )
+            )
 
         # Class patterns
         class_pattern = re.compile(
-            r'''class\s+(\w+)(?:\s+extends\s+(\w+))?''',
-            re.MULTILINE
+            r"""class\s+(\w+)(?:\s+extends\s+(\w+))?""", re.MULTILINE
         )
 
         for match in class_pattern.finditer(content):
             name, base = match.groups()
-            classes.append(Class(
-                name=name,
-                bases=[base] if base else [],
-            ))
+            classes.append(
+                Class(
+                    name=name,
+                    bases=[base] if base else [],
+                )
+            )
 
         lines = content.splitlines()
         loc = len(lines)
-        sloc = len([line for line in lines if line.strip() and not line.strip().startswith("//")])
+        sloc = len(
+            [
+                line
+                for line in lines
+                if line.strip() and not line.strip().startswith("//")
+            ]
+        )
 
         return ParsedFile(
             path=str(file_path),

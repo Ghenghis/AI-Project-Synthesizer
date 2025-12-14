@@ -107,14 +107,14 @@ class TestSecurityUtils:
 
     def test_safe_subprocess_run(self):
         """Test safe subprocess run prevents command injection."""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="success")
 
             # Safe command should work
             safe_subprocess_run(["echo", "hello"], timeout=30)
             mock_run.assert_called_once()
-            assert mock_run.call_args[1]['shell'] is False
-            assert mock_run.call_args[1]['timeout'] == 30
+            assert mock_run.call_args[1]["shell"] is False
+            assert mock_run.call_args[1]["timeout"] == 30
 
             # Dangerous command should be blocked
             with pytest.raises(ValueError):
@@ -179,7 +179,8 @@ class TestDependencyScannerSecurity:
         # Check that safe_subprocess_run is imported
         import src.quality.dependency_scanner as ds
         from src.quality.dependency_scanner import DependencyScanner
-        assert hasattr(ds, 'safe_subprocess_run')
+
+        assert hasattr(ds, "safe_subprocess_run")
 
         # Verify no direct subprocess.run calls remain
         with open(ds.__file__) as f:
@@ -187,15 +188,19 @@ class TestDependencyScannerSecurity:
 
         # Should not have direct subprocess.run calls
         import re
-        direct_calls = re.findall(r'subprocess\.run\(', content)
-        assert len(direct_calls) == 0, f"Found direct subprocess.run calls: {direct_calls}"
+
+        direct_calls = re.findall(r"subprocess\.run\(", content)
+        assert len(direct_calls) == 0, (
+            f"Found direct subprocess.run calls: {direct_calls}"
+        )
 
     def test_command_args_validation(self):
         """Test command arguments are validated before execution."""
-        with patch('src.quality.dependency_scanner.safe_subprocess_run') as mock_safe:
+        with patch("src.quality.dependency_scanner.safe_subprocess_run") as mock_safe:
             mock_safe.return_value = MagicMock(returncode=0, stdout="[]")
 
             from src.quality.dependency_scanner import DependencyScanner
+
             scanner = DependencyScanner()
 
             # Normal scan should work
@@ -205,7 +210,7 @@ class TestDependencyScannerSecurity:
 
             # The safe_subprocess_run should have been called with validated args
             call_args = mock_safe.call_args
-            assert 'timeout' in call_args[1]
+            assert "timeout" in call_args[1]
 
 
 class TestGitLabEnhancedSecurity:
@@ -216,16 +221,17 @@ class TestGitLabEnhancedSecurity:
         # Check that MR_FORMATTER is imported
         import src.discovery.gitlab_enhanced as ge
         from src.discovery.gitlab_enhanced import GitLabEnhanced
-        assert hasattr(ge, 'MR_FORMATTER')
+
+        assert hasattr(ge, "MR_FORMATTER")
 
         # Verify templates are formatted safely
-        with patch.object(ge.MR_FORMATTER, 'format_markdown') as mock_format:
+        with patch.object(ge.MR_FORMATTER, "format_markdown") as mock_format:
             mock_format.return_value = "Safe formatted string"
 
             gl = GitLabEnhanced()
 
             # Mock the API call
-            with patch.object(gl, '_request') as mock_request:
+            with patch.object(gl, "_request") as mock_request:
                 mock_request.return_value = {
                     "id": 123,
                     "iid": 45,
@@ -241,13 +247,16 @@ class TestGitLabEnhancedSecurity:
                 }
 
                 import asyncio
-                asyncio.run(gl.create_automated_mr(
-                    project_id="test/project",
-                    source_branch="feature/test",
-                    target_branch="main",
-                    template_type="feature",
-                    context=dangerous_context,
-                ))
+
+                asyncio.run(
+                    gl.create_automated_mr(
+                        project_id="test/project",
+                        source_branch="feature/test",
+                        target_branch="main",
+                        template_type="feature",
+                        context=dangerous_context,
+                    )
+                )
 
                 # Verify safe formatter was used
                 mock_format.assert_called()

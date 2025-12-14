@@ -25,6 +25,7 @@ from src.voice.tts.piper_client import PiperTTSClient
 # Mock problematic imports for GLM ASR
 try:
     from src.voice.asr.glm_asr_client import GLMASRClient
+
     GLM_ASR_AVAILABLE = True
 except (ImportError, RuntimeError, ModuleNotFoundError) as e:
     GLM_ASR_AVAILABLE = False
@@ -40,6 +41,7 @@ try:
     import tempfile
 
     from src.voice.tts.piper_client import PiperTTSClient
+
     client = PiperTTSClient()
     # Check if piper binary exists
     if os.path.exists(client.piper_path) or shutil.which("piper"):
@@ -72,7 +74,10 @@ class TestVoiceLoop:
         # No cleanup method available
 
     @pytest.fixture
-    @pytest.mark.skipif(not GLM_ASR_AVAILABLE, reason="GLM ASR not available due to missing dependencies")
+    @pytest.mark.skipif(
+        not GLM_ASR_AVAILABLE,
+        reason="GLM ASR not available due to missing dependencies",
+    )
     async def asr_client(self):
         """Create GLM ASR client for testing."""
         client = GLMASRClient()
@@ -132,7 +137,11 @@ class TestVoiceLoop:
             audio_data = await piper_client.synthesize(sample_text)
 
             # Save to file using soundfile
-            sf.write(output_path, np.frombuffer(audio_data, dtype=np.float32), piper_client.sample_rate)
+            sf.write(
+                output_path,
+                np.frombuffer(audio_data, dtype=np.float32),
+                piper_client.sample_rate,
+            )
 
             assert os.path.exists(output_path)
 
@@ -156,10 +165,7 @@ class TestVoiceLoop:
         # Test with first available voice
         if voices:
             voice_name = list(voices.keys())[0]
-            audio = await piper_client.synthesize(
-                "Testing voice",
-                voice=voice_name
-            )
+            audio = await piper_client.synthesize("Testing voice", voice=voice_name)
 
             assert audio is not None
             assert len(audio) > 0
@@ -169,7 +175,10 @@ class TestVoiceLoop:
     # ========================================================================
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(not GLM_ASR_AVAILABLE, reason="GLM ASR not available due to missing dependencies")
+    @pytest.mark.skipif(
+        not GLM_ASR_AVAILABLE,
+        reason="GLM ASR not available due to missing dependencies",
+    )
     async def test_glm_asr_basic(self, asr_client, test_audio_file):
         """Test basic GLM ASR functionality."""
         # Transcribe audio
@@ -182,12 +191,14 @@ class TestVoiceLoop:
         assert 0 <= result["confidence"] <= 1
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(not GLM_ASR_AVAILABLE, reason="GLM ASR not available due to missing dependencies")
+    @pytest.mark.skipif(
+        not GLM_ASR_AVAILABLE,
+        reason="GLM ASR not available due to missing dependencies",
+    )
     async def test_glm_asr_with_timestamps(self, asr_client, test_audio_file):
         """Test ASR with timestamp extraction."""
         result = await asr_client.transcribe_file(
-            test_audio_file,
-            include_timestamps=True
+            test_audio_file, include_timestamps=True
         )
 
         assert result is not None
@@ -201,7 +212,10 @@ class TestVoiceLoop:
             assert "text" in segment
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(not GLM_ASR_AVAILABLE, reason="GLM ASR not available due to missing dependencies")
+    @pytest.mark.skipif(
+        not GLM_ASR_AVAILABLE,
+        reason="GLM ASR not available due to missing dependencies",
+    )
     async def test_glm_asr_streaming(self, asr_client):
         """Test streaming ASR."""
         # Generate test audio chunks
@@ -262,16 +276,12 @@ class TestVoiceLoop:
         providers = await voice_manager.list_providers()
 
         if "piper" in providers["tts"]:
-            audio = await voice_manager.synthesize(
-                "Test",
-                tts_provider="piper"
-            )
+            audio = await voice_manager.synthesize("Test", tts_provider="piper")
             assert audio is not None
 
         if "glm_asr" in providers["asr"]:
             result = await voice_manager.transcribe(
-                test_audio_file,
-                asr_provider="glm_asr"
+                test_audio_file, asr_provider="glm_asr"
             )
             assert result is not None
 
@@ -302,7 +312,9 @@ class TestVoiceLoop:
             os.unlink(f.name)
 
     @pytest.mark.asyncio
-    async def test_complete_voice_loop_speech_to_text(self, voice_manager, test_audio_file):
+    async def test_complete_voice_loop_speech_to_text(
+        self, voice_manager, test_audio_file
+    ):
         """Test speech to text in the voice loop."""
         # Step 1: Speech to Text
         result = await voice_manager.transcribe(test_audio_file)
@@ -326,9 +338,7 @@ class TestVoiceLoop:
 
         # Step 2: Get LLM response
         llm_response = await llm_router.complete(
-            prompt=user_input,
-            task_type=TaskType.SIMPLE,
-            max_tokens=100
+            prompt=user_input, task_type=TaskType.SIMPLE, max_tokens=100
         )
 
         assert llm_response.content is not None
@@ -366,16 +376,13 @@ class TestVoiceLoop:
 
             # Get LLM response
             llm_response = await llm_router.chat(
-                messages=conversation_history,
-                task_type=TaskType.SIMPLE,
-                max_tokens=50
+                messages=conversation_history, task_type=TaskType.SIMPLE, max_tokens=50
             )
 
             # Add response to history
-            conversation_history.append({
-                "role": "assistant",
-                "content": llm_response.content
-            })
+            conversation_history.append(
+                {"role": "assistant", "content": llm_response.content}
+            )
 
             # Convert to speech
             audio = await voice_manager.synthesize(llm_response.content)
@@ -439,10 +446,7 @@ class TestVoiceLoop:
         ]
 
         # Process multiple requests concurrently
-        tasks = [
-            voice_manager.synthesize(text)
-            for text in texts
-        ]
+        tasks = [voice_manager.synthesize(text) for text in texts]
 
         results = await asyncio.gather(*tasks)
 
@@ -489,10 +493,10 @@ class VoiceLoopTestRunner:
         """Run all voice loop tests."""
         self.start_time = datetime.now()
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("VIBE MCP - Voice Loop E2E Test Suite")
         print(f"Started at: {self.start_time}")
-        print("="*80)
+        print("=" * 80)
 
         test_results = {
             "start_time": self.start_time.isoformat(),
@@ -509,9 +513,9 @@ class VoiceLoopTestRunner:
         ]
 
         for category_name, test_func in test_categories:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"Running {category_name}")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             try:
                 category_results = await test_func()
@@ -519,17 +523,21 @@ class VoiceLoopTestRunner:
                 print(f"\n✓ {category_name} completed")
             except Exception as e:
                 print(f"\n✗ {category_name} failed: {e}")
-                test_results["tests"].append({
-                    "category": category_name,
-                    "status": "FAILED",
-                    "error": str(e),
-                })
+                test_results["tests"].append(
+                    {
+                        "category": category_name,
+                        "status": "FAILED",
+                        "error": str(e),
+                    }
+                )
 
         self.end_time = datetime.now()
 
         # Generate summary
         total_tests = len(test_results["tests"])
-        passed_tests = sum(1 for t in test_results["tests"] if t.get("status") == "PASSED")
+        passed_tests = sum(
+            1 for t in test_results["tests"] if t.get("status") == "PASSED"
+        )
         failed_tests = total_tests - passed_tests
 
         test_results["end_time"] = self.end_time.isoformat()
@@ -538,7 +546,9 @@ class VoiceLoopTestRunner:
             "total": total_tests,
             "passed": passed_tests,
             "failed": failed_tests,
-            "success_rate": (passed_tests / total_tests * 100) if total_tests > 0 else 0,
+            "success_rate": (passed_tests / total_tests * 100)
+            if total_tests > 0
+            else 0,
         }
 
         return test_results
@@ -555,20 +565,24 @@ class VoiceLoopTestRunner:
             audio = await client.synthesize("Test message")
             assert audio is not None and len(audio) > 0
 
-            results.append({
-                "name": "Basic TTS",
-                "status": "PASSED",
-                "duration": 0.5,
-            })
+            results.append(
+                {
+                    "name": "Basic TTS",
+                    "status": "PASSED",
+                    "duration": 0.5,
+                }
+            )
 
             await client.cleanup()
 
         except Exception as e:
-            results.append({
-                "name": "Basic TTS",
-                "status": "FAILED",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "name": "Basic TTS",
+                    "status": "FAILED",
+                    "error": str(e),
+                }
+            )
 
         return results
 
@@ -596,20 +610,24 @@ class VoiceLoopTestRunner:
 
                 os.unlink(f.name)
 
-            results.append({
-                "name": "Basic ASR",
-                "status": "PASSED",
-                "duration": 1.0,
-            })
+            results.append(
+                {
+                    "name": "Basic ASR",
+                    "status": "PASSED",
+                    "duration": 1.0,
+                }
+            )
 
             await client.cleanup()
 
         except Exception as e:
-            results.append({
-                "name": "Basic ASR",
-                "status": "FAILED",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "name": "Basic ASR",
+                    "status": "FAILED",
+                    "error": str(e),
+                }
+            )
 
         return results
 
@@ -626,30 +644,36 @@ class VoiceLoopTestRunner:
             assert "tts" in providers
             assert "asr" in providers
 
-            results.append({
-                "name": "Voice Manager Initialization",
-                "status": "PASSED",
-                "duration": 0.5,
-            })
+            results.append(
+                {
+                    "name": "Voice Manager Initialization",
+                    "status": "PASSED",
+                    "duration": 0.5,
+                }
+            )
 
             # Test synthesis
             audio = await manager.synthesize("Test synthesis")
             assert audio is not None and len(audio) > 0
 
-            results.append({
-                "name": "Voice Manager Synthesis",
-                "status": "PASSED",
-                "duration": 1.0,
-            })
+            results.append(
+                {
+                    "name": "Voice Manager Synthesis",
+                    "status": "PASSED",
+                    "duration": 1.0,
+                }
+            )
 
             await manager.cleanup()
 
         except Exception as e:
-            results.append({
-                "name": "Voice Manager Tests",
-                "status": "FAILED",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "name": "Voice Manager Tests",
+                    "status": "FAILED",
+                    "error": str(e),
+                }
+            )
 
         return results
 
@@ -677,11 +701,13 @@ class VoiceLoopTestRunner:
 
                 os.unlink(f.name)
 
-            results.append({
-                "name": "Complete Voice Loop",
-                "status": "PASSED",
-                "duration": 2.0,
-            })
+            results.append(
+                {
+                    "name": "Complete Voice Loop",
+                    "status": "PASSED",
+                    "duration": 2.0,
+                }
+            )
 
             # Test performance
             start_time = time.time()
@@ -690,21 +716,25 @@ class VoiceLoopTestRunner:
 
             assert latency < 5.0
 
-            results.append({
-                "name": "Voice Loop Performance",
-                "status": "PASSED",
-                "duration": latency,
-                "metrics": {"latency": latency},
-            })
+            results.append(
+                {
+                    "name": "Voice Loop Performance",
+                    "status": "PASSED",
+                    "duration": latency,
+                    "metrics": {"latency": latency},
+                }
+            )
 
             await manager.cleanup()
 
         except Exception as e:
-            results.append({
-                "name": "E2E Tests",
-                "status": "FAILED",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "name": "E2E Tests",
+                    "status": "FAILED",
+                    "error": str(e),
+                }
+            )
 
         return results
 
@@ -718,9 +748,9 @@ async def main():
     results = await runner.run_voice_loop_tests()
 
     # Print summary
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("VOICE LOOP TEST SUMMARY")
-    print("="*80)
+    print("=" * 80)
     print(f"Total Tests: {results['summary']['total']}")
     print(f"Passed: {results['summary']['passed']}")
     print(f"Failed: {results['summary']['failed']}")
@@ -739,7 +769,7 @@ async def main():
 
     print(f"\nDetailed report saved to: {report_file}")
 
-    return results['summary']['failed'] == 0
+    return results["summary"]["failed"] == 0
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """Test fast streaming voice - optimized for speed and smooth playback."""
+
 import asyncio
 import time
 
@@ -24,6 +25,7 @@ async def test():
         print("   Model: eleven_turbo_v2_5 (fastest)")
     else:
         print("\n❌ Streaming failed")
+
 
 if __name__ == "__main__":
     asyncio.run(test())

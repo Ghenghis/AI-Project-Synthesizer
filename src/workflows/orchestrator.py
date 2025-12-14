@@ -25,6 +25,7 @@ secure_logger = get_secure_logger(__name__)
 
 class WorkflowType(str, Enum):
     """Types of workflows."""
+
     RESEARCH = "research"
     SYNTHESIS = "synthesis"
     CONVERSATION = "conversation"
@@ -34,6 +35,7 @@ class WorkflowType(str, Enum):
 
 class WorkflowEngine(str, Enum):
     """Workflow execution engines."""
+
     LANGCHAIN = "langchain"
     PYDANTIC_AI = "pydantic_ai"
     N8N = "n8n"
@@ -43,6 +45,7 @@ class WorkflowEngine(str, Enum):
 @dataclass
 class WorkflowStep:
     """A single step in a workflow."""
+
     name: str
     engine: WorkflowEngine
     action: str
@@ -54,6 +57,7 @@ class WorkflowStep:
 @dataclass
 class WorkflowDefinition:
     """Complete workflow definition."""
+
     id: str
     name: str
     workflow_type: WorkflowType
@@ -65,6 +69,7 @@ class WorkflowDefinition:
 @dataclass
 class WorkflowResult:
     """Result of workflow execution."""
+
     workflow_id: str
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
@@ -107,6 +112,7 @@ class WorkflowOrchestrator:
         """Get LangChain orchestrator."""
         if self._langchain is None:
             from src.workflows.langchain_integration import LangChainOrchestrator
+
             self._langchain = LangChainOrchestrator()
         return self._langchain
 
@@ -114,6 +120,7 @@ class WorkflowOrchestrator:
         """Get n8n client."""
         if self._n8n is None:
             from src.workflows.n8n_integration import N8NClient
+
             self._n8n = N8NClient()
         return self._n8n
 
@@ -147,6 +154,7 @@ class WorkflowOrchestrator:
 
             # Step 2: Search platforms
             from src.discovery.unified_search import create_unified_search
+
             search = create_unified_search()
             results = await search.search(query, platforms=platforms, max_results=10)
 
@@ -290,6 +298,7 @@ class WorkflowOrchestrator:
         try:
             # Step 1: Process with Pydantic AI
             from src.llm.pydantic_ai_agent import chat
+
             response = await chat(message, context)
 
             # Step 2: Execute action if detected
@@ -309,6 +318,7 @@ class WorkflowOrchestrator:
             audio_path = None
             if use_voice:
                 from src.voice.elevenlabs_client import ElevenLabsClient
+
                 client = ElevenLabsClient()
                 audio_path = await client.generate_speech(final_message)
 
@@ -375,7 +385,8 @@ class WorkflowOrchestrator:
         while pending:
             # Find steps with satisfied dependencies
             ready = [
-                name for name, step in pending.items()
+                name
+                for name, step in pending.items()
                 if all(dep in completed for dep in step.depends_on)
             ]
 
@@ -435,6 +446,7 @@ class WorkflowOrchestrator:
                 research_project,
                 synthesize_project,
             )
+
             if step.action == "research":
                 return await research_project(params.get("query", ""))
             elif step.action == "synthesize":
@@ -456,7 +468,9 @@ class WorkflowOrchestrator:
             # Execute native Python function
             func = params.get("_function")
             if callable(func):
-                return await func(**{k: v for k, v in params.items() if not k.startswith("_")})
+                return await func(
+                    **{k: v for k, v in params.items() if not k.startswith("_")}
+                )
 
         raise ValueError(f"Unknown engine/action: {step.engine}/{step.action}")
 

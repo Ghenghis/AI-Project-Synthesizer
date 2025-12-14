@@ -13,6 +13,7 @@ import pytest
 # Check if Swarm is available
 try:
     import swarm
+
     SWARM_AVAILABLE = True
 except ImportError:
     SWARM_AVAILABLE = False
@@ -48,14 +49,14 @@ class TestSwarmIntegration:
         """Create a Swarm integration instance for testing."""
         if not SWARM_AVAILABLE:
             pytest.skip("Swarm not installed")
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', True):
-            with patch('src.agents.swarm_integration.Swarm') as mock_swarm:
-                with patch('src.agents.swarm_integration.Agent') as mock_agent:
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", True):
+            with patch("src.agents.swarm_integration.Swarm") as mock_swarm:
+                with patch("src.agents.swarm_integration.Agent") as mock_agent:
                     # Create instance
                     integration = SwarmIntegration(
                         voice_manager=mock_voice_manager,
                         enable_voice_output=False,
-                        llm_router=mock_llm_router
+                        llm_router=mock_llm_router,
                     )
 
                     # Mock the client and agents
@@ -65,7 +66,7 @@ class TestSwarmIntegration:
                         "doc_generator": mock_agent(),
                         "task_decomposer": mock_agent(),
                         "quick_fixer": mock_agent(),
-                        "complex_reviewer": mock_agent()
+                        "complex_reviewer": mock_agent(),
                     }
 
                     return integration
@@ -73,11 +74,11 @@ class TestSwarmIntegration:
     @pytest.mark.skipif(not SWARM_AVAILABLE, reason="Swarm not installed")
     def test_init_without_swarm(self, mock_voice_manager, mock_llm_router):
         """Test initialization when Swarm is not available."""
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', False):
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", False):
             integration = SwarmIntegration(
                 voice_manager=mock_voice_manager,
                 enable_voice_output=True,
-                llm_router=mock_llm_router
+                llm_router=mock_llm_router,
             )
 
             assert integration.enable_voice_output is True
@@ -87,12 +88,12 @@ class TestSwarmIntegration:
     @pytest.mark.skipif(not SWARM_AVAILABLE, reason="Swarm not installed")
     def test_init_with_swarm(self, mock_voice_manager, mock_llm_router):
         """Test initialization when Swarm is available."""
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', True):
-            with patch('src.agents.swarm_integration.Swarm') as mock_swarm:
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", True):
+            with patch("src.agents.swarm_integration.Swarm") as mock_swarm:
                 integration = SwarmIntegration(
                     voice_manager=mock_voice_manager,
                     enable_voice_output=False,
-                    llm_router=mock_llm_router
+                    llm_router=mock_llm_router,
                 )
 
                 assert integration.client is not None
@@ -112,7 +113,7 @@ class TestSwarmIntegration:
         result = await swarm_integration.quick_handoff(
             agent_name="code_helper",
             message="What is Python?",
-            context_variables={"user": "test"}
+            context_variables={"user": "test"},
         )
 
         assert result.success is True
@@ -125,6 +126,7 @@ class TestSwarmIntegration:
     @pytest.mark.asyncio
     async def test_quick_handoff_streaming(self, swarm_integration):
         """Test agent handoff with streaming."""
+
         # Create async generator for streaming
         async def mock_stream():
             chunks = ["Here's", " your", " streaming", " answer!"]
@@ -136,9 +138,7 @@ class TestSwarmIntegration:
         swarm_integration.client.run_stream.return_value = mock_stream()
 
         result = await swarm_integration.quick_handoff(
-            agent_name="code_helper",
-            message="Stream me an answer",
-            stream=True
+            agent_name="code_helper", message="Stream me an answer", stream=True
         )
 
         assert result.success is True
@@ -147,16 +147,15 @@ class TestSwarmIntegration:
     @pytest.mark.asyncio
     async def test_quick_handoff_no_swarm(self, mock_voice_manager, mock_llm_router):
         """Test handoff when Swarm is not available."""
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', False):
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", False):
             integration = SwarmIntegration(
                 voice_manager=mock_voice_manager,
                 enable_voice_output=False,
-                llm_router=mock_llm_router
+                llm_router=mock_llm_router,
             )
 
             result = await integration.quick_handoff(
-                agent_name="code_helper",
-                message="Test message"
+                agent_name="code_helper", message="Test message"
             )
 
             assert result.success is False
@@ -168,8 +167,7 @@ class TestSwarmIntegration:
     async def test_quick_handoff_invalid_agent(self, swarm_integration):
         """Test handoff to non-existent agent."""
         result = await swarm_integration.quick_handoff(
-            agent_name="nonexistent_agent",
-            message="Test message"
+            agent_name="nonexistent_agent", message="Test message"
         )
 
         assert result.success is False
@@ -190,8 +188,7 @@ class TestSwarmIntegration:
         swarm_integration.client.run.return_value = mock_response
 
         await swarm_integration.quick_handoff(
-            agent_name="code_helper",
-            message="Test with voice"
+            agent_name="code_helper", message="Test with voice"
         )
 
         # Check voice was called for handoff announcement
@@ -203,12 +200,14 @@ class TestSwarmIntegration:
         """Test task decomposition."""
         # Mock the response
         mock_response = MagicMock()
-        mock_response.messages = [{
-            "content": """1. Write the function signature (code_helper)
+        mock_response.messages = [
+            {
+                "content": """1. Write the function signature (code_helper)
 2. Add docstring (doc_generator)
 3. Implement logic (code_helper)
 4. Add error handling (quick_fixer)"""
-        }]
+            }
+        ]
         mock_response.context_variables = {}
 
         swarm_integration.client.run.return_value = mock_response
@@ -228,17 +227,12 @@ class TestSwarmIntegration:
         """Test documentation generation."""
         # Mock response
         mock_response = MagicMock()
-        mock_response.messages = [{
-            "content": '"""This is a generated docstring."""'
-        }]
+        mock_response.messages = [{"content": '"""This is a generated docstring."""'}]
         mock_response.context_variables = {}
 
         swarm_integration.client.run.return_value = mock_response
 
-        docs = await swarm_integration.generate_docs(
-            "def test(): pass",
-            "docstring"
-        )
+        docs = await swarm_integration.generate_docs("def test(): pass", "docstring")
 
         assert "docstring" in docs
         assert docs == '"""This is a generated docstring."""'
@@ -249,16 +243,13 @@ class TestSwarmIntegration:
         """Test quick bug fixing."""
         # Mock response
         mock_response = MagicMock()
-        mock_response.messages = [{
-            "content": "def test():\n    return 'fixed'"
-        }]
+        mock_response.messages = [{"content": "def test():\n    return 'fixed'"}]
         mock_response.context_variables = {}
 
         swarm_integration.client.run.return_value = mock_response
 
         fixed_code = await swarm_integration.quick_fix(
-            "def test():\n    retrn 'broken'",
-            "SyntaxError: invalid syntax"
+            "def test():\n    retrn 'broken'", "SyntaxError: invalid syntax"
         )
 
         assert "return 'fixed'" in fixed_code
@@ -311,15 +302,15 @@ class TestSwarmIntegration:
     @pytest.mark.asyncio
     async def test_create_swarm_integration_success(self):
         """Test factory function creates integration successfully."""
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', True):
-            with patch('src.agents.swarm_integration.SwarmIntegration') as mock_class:
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", True):
+            with patch("src.agents.swarm_integration.SwarmIntegration") as mock_class:
                 mock_instance = MagicMock()
-                mock_instance.quick_handoff = AsyncMock(return_value=MagicMock(success=True))
+                mock_instance.quick_handoff = AsyncMock(
+                    return_value=MagicMock(success=True)
+                )
                 mock_class.return_value = mock_instance
 
-                integration = await create_swarm_integration(
-                    enable_voice_output=False
-                )
+                integration = await create_swarm_integration(enable_voice_output=False)
 
                 assert integration is not None
                 mock_instance.quick_handoff.assert_called_once()
@@ -328,9 +319,11 @@ class TestSwarmIntegration:
     @pytest.mark.asyncio
     async def test_create_swarm_integration_failure(self):
         """Test factory function handles initialization failure."""
-        with patch('src.agents.swarm_integration.SwarmIntegration') as mock_class:
+        with patch("src.agents.swarm_integration.SwarmIntegration") as mock_class:
             mock_instance = MagicMock()
-            mock_instance.quick_handoff = AsyncMock(return_value=MagicMock(success=False))
+            mock_instance.quick_handoff = AsyncMock(
+                return_value=MagicMock(success=False)
+            )
             mock_class.return_value = mock_instance
 
             integration = await create_swarm_integration()
@@ -341,8 +334,8 @@ class TestSwarmIntegration:
     @pytest.mark.asyncio
     async def test_create_swarm_integration_no_swarm(self):
         """Test factory function when Swarm is not available."""
-        with patch('src.agents.swarm_integration.SWARM_AVAILABLE', False):
-            with patch('src.agents.swarm_integration.SwarmIntegration') as mock_class:
+        with patch("src.agents.swarm_integration.SWARM_AVAILABLE", False):
+            with patch("src.agents.swarm_integration.SwarmIntegration") as mock_class:
                 mock_instance = MagicMock()
                 mock_class.return_value = mock_instance
 
@@ -359,8 +352,7 @@ class TestSwarmIntegration:
         await swarm_integration._speak_if_enabled("Test message")
 
         swarm_integration.voice_manager.speak.assert_called_with(
-            "Test message",
-            voice="piper_default"
+            "Test message", voice="piper_default"
         )
 
     @pytest.mark.skipif(not SWARM_AVAILABLE, reason="Swarm not installed")
@@ -380,8 +372,7 @@ class TestSwarmIntegration:
         swarm_integration.client.run.side_effect = Exception("API error")
 
         result = await swarm_integration.quick_handoff(
-            agent_name="code_helper",
-            message="Test message"
+            agent_name="code_helper", message="Test message"
         )
 
         assert result.success is False

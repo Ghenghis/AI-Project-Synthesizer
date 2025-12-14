@@ -23,6 +23,7 @@ from src.llm.litellm_router import LiteLLMRouter
 
 class PhaseType(Enum):
     """Types of phases in a task."""
+
     SETUP = "setup"
     IMPLEMENTATION = "implementation"
     INTEGRATION = "integration"
@@ -33,15 +34,17 @@ class PhaseType(Enum):
 
 class TaskComplexity(Enum):
     """Complexity levels for tasks."""
-    SIMPLE = "simple"      # Single function, < 50 lines
+
+    SIMPLE = "simple"  # Single function, < 50 lines
     MODERATE = "moderate"  # Multiple functions, < 200 lines
-    COMPLEX = "complex"    # Multiple files, interactions
-    SYSTEM = "system"      # Full feature/system
+    COMPLEX = "complex"  # Multiple files, interactions
+    SYSTEM = "system"  # Full feature/system
 
 
 @dataclass
 class TaskPhase:
     """Represents a single phase in a task."""
+
     id: str
     name: str
     type: PhaseType
@@ -57,6 +60,7 @@ class TaskPhase:
 @dataclass
 class TaskPlan:
     """Complete task decomposition plan."""
+
     task_id: str
     original_request: str
     complexity: TaskComplexity
@@ -89,7 +93,7 @@ class TaskDecomposer:
                     {"type": "setup", "name": "Setup API structure"},
                     {"type": "implementation", "name": "Implement endpoint logic"},
                     {"type": "testing", "name": "Write tests"},
-                    {"type": "documentation", "name": "Update API docs"}
+                    {"type": "documentation", "name": "Update API docs"},
                 ]
             },
             "database_feature": {
@@ -98,7 +102,7 @@ class TaskDecomposer:
                     {"type": "implementation", "name": "Create migration"},
                     {"type": "implementation", "name": "Implement models"},
                     {"type": "implementation", "name": "Create repositories"},
-                    {"type": "testing", "name": "Test database operations"}
+                    {"type": "testing", "name": "Test database operations"},
                 ]
             },
             "ui_component": {
@@ -107,7 +111,7 @@ class TaskDecomposer:
                     {"type": "implementation", "name": "Create component file"},
                     {"type": "implementation", "name": "Add styling"},
                     {"type": "testing", "name": "Write component tests"},
-                    {"type": "integration", "name": "Integrate with app"}
+                    {"type": "integration", "name": "Integrate with app"},
                 ]
             },
             "authentication": {
@@ -117,12 +121,14 @@ class TaskDecomposer:
                     {"type": "implementation", "name": "Create login/logout endpoints"},
                     {"type": "implementation", "name": "Add session management"},
                     {"type": "testing", "name": "Test auth flows"},
-                    {"type": "documentation", "name": "Document auth API"}
+                    {"type": "documentation", "name": "Document auth API"},
                 ]
-            }
+            },
         }
 
-    async def decompose(self, request: str, context: dict[str, Any] | None = None) -> TaskPlan:
+    async def decompose(
+        self, request: str, context: dict[str, Any] | None = None
+    ) -> TaskPlan:
         """
         Decompose a request into structured phases.
 
@@ -160,8 +166,8 @@ class TaskDecomposer:
             metadata={
                 "task_type": task_type,
                 "context": context,
-                "phase_count": len(phases)
-            }
+                "phase_count": len(phases),
+            },
         )
 
         return plan
@@ -178,7 +184,7 @@ class TaskDecomposer:
             "authentication": ["auth", "login", "logout", "session", "token", "oauth"],
             "testing": ["test", "spec", "coverage", "tdd"],
             "deployment": ["deploy", "build", "release", "production"],
-            "documentation": ["docs", "readme", "guide", "documentation"]
+            "documentation": ["docs", "readme", "guide", "documentation"],
         }
 
         for task_type, keywords in patterns.items():
@@ -187,7 +193,9 @@ class TaskDecomposer:
 
         return "general"
 
-    def _estimate_complexity(self, request: str, _context: dict[str, Any] | None) -> TaskComplexity:
+    def _estimate_complexity(
+        self, request: str, _context: dict[str, Any] | None
+    ) -> TaskComplexity:
         """Estimate task complexity based on request and context."""
         request_lower = request.lower()
 
@@ -208,17 +216,31 @@ class TaskDecomposer:
             complexity_score += 1
 
         # System-level indicators
-        system_keywords = ["system", "architecture", "infrastructure", "microservice", "full"]
+        system_keywords = [
+            "system",
+            "architecture",
+            "infrastructure",
+            "microservice",
+            "full",
+        ]
         if any(kw in request_lower for kw in system_keywords):
             complexity_score += 2
 
         # Integration indicators
-        integration_keywords = ["integrate", "connect", "combine", "multiple", "several"]
+        integration_keywords = [
+            "integrate",
+            "connect",
+            "combine",
+            "multiple",
+            "several",
+        ]
         if any(kw in request_lower for kw in integration_keywords):
             complexity_score += 1
 
         # New feature vs modification
-        if any(kw in request_lower for kw in ["create", "build", "implement", "design"]):
+        if any(
+            kw in request_lower for kw in ["create", "build", "implement", "design"]
+        ):
             complexity_score += 1
 
         # Map score to complexity
@@ -243,11 +265,16 @@ class TaskDecomposer:
             estimated_effort=3,
             files_to_create=[],
             files_to_modify=[],
-            success_criteria=["Code implements the requested functionality"]
+            success_criteria=["Code implements the requested functionality"],
         )
 
-    async def _llm_decompose(self, request: str, context: dict[str, Any] | None,
-                           task_type: str, complexity: TaskComplexity) -> list[TaskPhase]:
+    async def _llm_decompose(
+        self,
+        request: str,
+        context: dict[str, Any] | None,
+        task_type: str,
+        complexity: TaskComplexity,
+    ) -> list[TaskPhase]:
         """Use LLM to decompose complex tasks."""
         # Build prompt for LLM
         prompt = f"""Please decompose the following task into structured phases:
@@ -294,9 +321,7 @@ Return JSON format:
         try:
             # Get LLM response
             response = await self.llm_router.generate(
-                prompt=prompt,
-                model="claude-sonnet",
-                max_tokens=2000
+                prompt=prompt, model="claude-sonnet", max_tokens=2000
             )
 
             # Parse response
@@ -305,8 +330,8 @@ Return JSON format:
 
             for i, phase_data in enumerate(data.get("phases", [])):
                 phase = TaskPhase(
-                    id=phase_data.get("id", f"phase_{i+1}"),
-                    name=phase_data.get("name", f"Phase {i+1}"),
+                    id=phase_data.get("id", f"phase_{i + 1}"),
+                    name=phase_data.get("name", f"Phase {i + 1}"),
                     type=PhaseType(phase_data.get("type", "implementation")),
                     description=phase_data.get("description", ""),
                     prompt=phase_data.get("prompt", request),
@@ -314,7 +339,7 @@ Return JSON format:
                     estimated_effort=phase_data.get("estimated_effort", 3),
                     files_to_create=phase_data.get("files_to_create", []),
                     files_to_modify=phase_data.get("files_to_modify", []),
-                    success_criteria=phase_data.get("success_criteria", [])
+                    success_criteria=phase_data.get("success_criteria", []),
                 )
                 phases.append(phase)
 
@@ -336,7 +361,7 @@ Return JSON format:
 
             for i, phase_data in enumerate(pattern["phases"]):
                 phase = TaskPhase(
-                    id=f"phase_{i+1}",
+                    id=f"phase_{i + 1}",
                     name=phase_data["name"],
                     type=PhaseType(phase_data["type"]),
                     description=f"{phase_data['name']} for: {request}",
@@ -345,7 +370,7 @@ Return JSON format:
                     estimated_effort=3,
                     files_to_create=[],
                     files_to_modify=[],
-                    success_criteria=[f"Complete {phase_data['name'].lower()}"]
+                    success_criteria=[f"Complete {phase_data['name'].lower()}"],
                 )
                 phases.append(phase)
 
@@ -360,10 +385,7 @@ Return JSON format:
 
         for phase in phases:
             # Remove invalid dependencies
-            phase.dependencies = [
-                dep for dep in phase.dependencies
-                if dep in phase_ids
-            ]
+            phase.dependencies = [dep for dep in phase.dependencies if dep in phase_ids]
 
             # Ensure no circular dependencies (simple check)
             if phase.id in phase.dependencies:
@@ -374,6 +396,7 @@ Return JSON format:
     def _generate_task_id(self) -> str:
         """Generate unique task ID."""
         import uuid
+
         return f"task_{uuid.uuid4().hex[:8]}"
 
     def _estimate_duration(self, total_effort: int) -> str:
@@ -398,7 +421,8 @@ Return JSON format:
         while remaining:
             # Find phases with no unmet dependencies
             ready = [
-                p for p in remaining
+                p
+                for p in remaining
                 if all(dep in [o.id for o in ordered] for dep in p.dependencies)
             ]
 
@@ -423,7 +447,7 @@ Return JSON format:
         for phase in export_data["phases"]:
             phase["type"] = PhaseType(phase["type"]).value
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(export_data, f, indent=2)
 
     def create_template(self, task_type: str, output_path: str) -> None:
@@ -435,10 +459,10 @@ Return JSON format:
         template = {
             "task_type": task_type,
             "description": f"Template for {task_type} tasks",
-            "phases": self.patterns[task_type]
+            "phases": self.patterns[task_type],
         }
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(template, f, indent=2)
 
 
@@ -457,10 +481,7 @@ if __name__ == "__main__":
                 with open(request_file) as f:
                     request = f.read().strip()
 
-                context = {
-                    "tech_stack": ["Python", "FastAPI"],
-                    "project_type": "api"
-                }
+                context = {"tech_stack": ["Python", "FastAPI"], "project_type": "api"}
 
                 plan = await decomposer.decompose(request, context)
 
@@ -493,7 +514,7 @@ if __name__ == "__main__":
             demo_requests = [
                 "Create a user authentication API with OAuth and JWT tokens",
                 "Add a simple logging function",
-                "Build a complete e-commerce system with inventory, payments, and user management"
+                "Build a complete e-commerce system with inventory, payments, and user management",
             ]
 
             for request in demo_requests:

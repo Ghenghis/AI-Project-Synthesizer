@@ -19,6 +19,7 @@ try:
         RollbackStatus,
         RollbackStrategy,
     )
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Import error for vibe.auto_rollback: {e}")
@@ -67,12 +68,13 @@ class TestRollbackPoint:
     def test_create_rollbackpoint(self):
         """Should create RollbackPoint."""
         from datetime import datetime
+
         instance = RollbackPoint(
             checkpoint_id="cp_001",
             timestamp=datetime.now(),
             strategy=RollbackStrategy.GIT,
             metadata={},
-            artifacts={}
+            artifacts={},
         )
         assert instance is not None
         assert instance.checkpoint_id == "cp_001"
@@ -90,12 +92,11 @@ class TestRollbackResult:
             files_restored=[],
             commits_reverted=[],
             errors=[],
-            metadata={}
+            metadata={},
         )
         assert instance is not None
         assert instance.status == RollbackStatus.SUCCESS
 
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

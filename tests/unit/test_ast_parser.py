@@ -160,10 +160,10 @@ class Greeter:
     async def test_parse_python_syntax_error(self):
         """Test parsing Python code with syntax errors."""
         with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 def broken(
     # Missing closing parenthesis and colon
-''')
+""")
             temp_path = Path(f.name)
 
         try:
@@ -180,13 +180,13 @@ def broken(
     async def test_parse_async_functions(self):
         """Test parsing async functions."""
         with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 async def fetch_data(url):
     pass
 
 async def process():
     await fetch_data("http://example.com")
-''')
+""")
             temp_path = Path(f.name)
 
         try:
@@ -203,7 +203,7 @@ async def process():
     async def test_parse_decorators(self):
         """Test parsing functions with decorators."""
         with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 @staticmethod
 def static_func():
     pass
@@ -215,7 +215,7 @@ def prop(self):
 @app.route("/")
 def handler():
     pass
-''')
+""")
             temp_path = Path(f.name)
 
         try:
@@ -236,11 +236,11 @@ class TestASTParserJavaScriptParsing:
     async def test_parse_es6_imports(self):
         """Test parsing ES6 import statements."""
         with tempfile.NamedTemporaryFile(suffix=".js", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 import React from 'react';
 import { useState, useEffect } from 'react';
 import * as utils from './utils';
-''')
+""")
             temp_path = Path(f.name)
 
         try:
@@ -256,13 +256,13 @@ import * as utils from './utils';
     async def test_parse_arrow_functions(self):
         """Test parsing arrow functions."""
         with tempfile.NamedTemporaryFile(suffix=".js", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 const add = (a, b) => a + b;
 const greet = async (name) => {
     return `Hello, ${name}`;
 };
 let multiply = (x, y) => x * y;
-''')
+""")
             temp_path = Path(f.name)
 
         try:
@@ -279,7 +279,7 @@ let multiply = (x, y) => x * y;
     async def test_parse_js_classes(self):
         """Test parsing JavaScript classes."""
         with tempfile.NamedTemporaryFile(suffix=".js", delete=False, mode="w") as f:
-            f.write('''
+            f.write("""
 class Animal {
     constructor(name) {
         this.name = name;
@@ -291,7 +291,7 @@ class Dog extends Animal {
         console.log("Woof!");
     }
 }
-''')
+""")
             temp_path = Path(f.name)
 
         try:

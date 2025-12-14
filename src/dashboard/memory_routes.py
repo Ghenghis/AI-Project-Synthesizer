@@ -71,6 +71,7 @@ class MessageRequest(BaseModel):
 # Memory Endpoints
 # ============================================
 
+
 @router.post("/memory")
 async def save_memory(request: MemoryRequest) -> dict[str, Any]:
     """Save a memory entry."""
@@ -79,7 +80,9 @@ async def save_memory(request: MemoryRequest) -> dict[str, Any]:
     try:
         memory_type = MemoryType(request.type)
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid memory type: {request.type}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid memory type: {request.type}"
+        )
 
     entry = MemoryEntry(
         id=f"mem_{datetime.now().timestamp()}",
@@ -148,6 +151,7 @@ async def delete_memory(memory_id: str) -> dict[str, Any]:
 # Search History Endpoints
 # ============================================
 
+
 @router.post("/search-history")
 async def save_search(request: SearchHistoryRequest) -> dict[str, Any]:
     """Save a search to history."""
@@ -197,6 +201,7 @@ async def replay_search(search_id: str) -> dict[str, Any]:
 # Bookmark Endpoints
 # ============================================
 
+
 @router.post("/bookmarks")
 async def save_bookmark(request: BookmarkRequest) -> dict[str, Any]:
     """Save a bookmark."""
@@ -216,13 +221,17 @@ async def save_bookmark(request: BookmarkRequest) -> dict[str, Any]:
 
     # Emit event
     from src.core.realtime import EventType, get_event_bus
+
     bus = get_event_bus()
-    bus.emit(EventType.BOOKMARK_ADDED, {
-        "id": bookmark_id,
-        "name": request.name,
-        "url": request.url,
-        "type": request.type,
-    })
+    bus.emit(
+        EventType.BOOKMARK_ADDED,
+        {
+            "id": bookmark_id,
+            "name": request.name,
+            "url": request.url,
+            "type": request.type,
+        },
+    )
 
     return {"success": True, "id": bookmark_id}
 
@@ -261,6 +270,7 @@ async def delete_bookmark(bookmark_id: str) -> dict[str, Any]:
 # Conversation Endpoints
 # ============================================
 
+
 @router.post("/conversations/message")
 async def save_message(request: MessageRequest) -> dict[str, Any]:
     """Save a conversation message."""
@@ -293,6 +303,7 @@ async def get_conversation(session_id: str, limit: int = 100) -> dict[str, Any]:
 # Real-time Events (SSE)
 # ============================================
 
+
 @router.get("/events/stream")
 async def stream_events():
     """Server-Sent Events stream for real-time updates."""
@@ -308,7 +319,7 @@ async def stream_events():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-        }
+        },
     )
 
 
@@ -357,8 +368,11 @@ async def emit_event(data: dict[str, Any]) -> dict[str, Any]:
 # Workflow State Endpoints
 # ============================================
 
+
 @router.post("/workflow-state/{workflow_id}")
-async def save_workflow_state(workflow_id: str, state: dict[str, Any]) -> dict[str, Any]:
+async def save_workflow_state(
+    workflow_id: str, state: dict[str, Any]
+) -> dict[str, Any]:
     """Save workflow state."""
     store = get_memory_store()
     state_id = store.save_workflow_state(workflow_id, state)

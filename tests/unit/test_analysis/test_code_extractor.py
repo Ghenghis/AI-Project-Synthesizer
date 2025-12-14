@@ -22,7 +22,7 @@ class TestCodeExtractor:
         extractor = CodeExtractor()
         assert extractor is not None
         # Check it has some methods
-        methods = [m for m in dir(extractor) if not m.startswith('_')]
+        methods = [m for m in dir(extractor) if not m.startswith("_")]
         assert len(methods) > 0
 
 

@@ -25,6 +25,7 @@ from src.core.security_utils import safe_subprocess_run, validate_path
 
 class PackageManager(Enum):
     """Supported package managers."""
+
     PIP = "pip"
     POETRY = "poetry"
     NPM = "npm"
@@ -40,6 +41,7 @@ class PackageManager(Enum):
 
 class SeverityLevel(Enum):
     """Vulnerability severity levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -50,6 +52,7 @@ class SeverityLevel(Enum):
 @dataclass
 class Vulnerability:
     """Represents a security vulnerability."""
+
     id: str
     package: str
     installed_version: str
@@ -64,6 +67,7 @@ class Vulnerability:
 @dataclass
 class DependencyReport:
     """Report of dependency scan results."""
+
     package_manager: PackageManager
     total_packages: int
     vulnerabilities: list[Vulnerability]
@@ -127,14 +131,16 @@ class DependencyScanner:
         managers = self._detect_package_managers(project_path)
 
         if not managers:
-            return [DependencyReport(
-                package_manager=PackageManager.UNKNOWN,
-                total_packages=0,
-                vulnerabilities=[],
-                summary={},
-                scan_duration=0,
-                recommendations=["No supported package manager detected"]
-            )]
+            return [
+                DependencyReport(
+                    package_manager=PackageManager.UNKNOWN,
+                    total_packages=0,
+                    vulnerabilities=[],
+                    summary={},
+                    scan_duration=0,
+                    recommendations=["No supported package manager detected"],
+                )
+            ]
 
         # Scan each package manager
         for manager in managers:
@@ -142,14 +148,16 @@ class DependencyScanner:
                 report = await self.scanners[manager](project_path)
                 reports.append(report)
             except Exception as e:
-                reports.append(DependencyReport(
-                    package_manager=manager,
-                    total_packages=0,
-                    vulnerabilities=[],
-                    summary={},
-                    scan_duration=0,
-                    recommendations=[f"Scan failed: {str(e)}"]
-                ))
+                reports.append(
+                    DependencyReport(
+                        package_manager=manager,
+                        total_packages=0,
+                        vulnerabilities=[],
+                        summary={},
+                        scan_duration=0,
+                        recommendations=[f"Scan failed: {str(e)}"],
+                    )
+                )
 
         return reports
 
@@ -180,6 +188,7 @@ class DependencyScanner:
     async def _scan_pip(self, path: Path) -> DependencyReport:
         """Scan Python pip dependencies."""
         import time
+
         start = time.time()
 
         vulnerabilities = []
@@ -190,24 +199,29 @@ class DependencyScanner:
                 ["pip-audit", "--format", "json", "--requirement", "requirements.txt"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 data = json.loads(result.stdout)
                 for vuln in data.get("dependencies", []):
                     for vuln_info in vuln.get("vulnerabilities", []):
-                        vulnerabilities.append(Vulnerability(
-                            id=vuln_info.get("id", ""),
-                            package=vuln.get("name", ""),
-                            installed_version=vuln.get("version", ""),
-                            fixed_version=vuln_info.get("fix_versions", [None])[0],
-                            severity=self._parse_severity(vuln_info.get("severity", "unknown")),
-                            description=vuln_info.get("description", ""),
-                            cve_id=vuln_info.get("id", "").replace("PYSEC-", ""),
-                            references=vuln_info.get("references", []),
-                            advisory_data=vuln_info
-                        ))
+                        vulnerabilities.append(
+                            Vulnerability(
+                                id=vuln_info.get("id", ""),
+                                package=vuln.get("name", ""),
+                                installed_version=vuln.get("version", ""),
+                                fixed_version=vuln_info.get("fix_versions", [None])[0],
+                                severity=self._parse_severity(
+                                    vuln_info.get("severity", "unknown")
+                                ),
+                                description=vuln_info.get("description", ""),
+                                cve_id=vuln_info.get("id", "").replace("PYSEC-", ""),
+                                references=vuln_info.get("references", []),
+                                advisory_data=vuln_info,
+                            )
+                        )
         except FileNotFoundError:
             # Fallback to safety
             try:
@@ -216,23 +230,27 @@ class DependencyScanner:
                     capture_output=True,
                     text=True,
                     cwd=validate_path(path),
-                    timeout=30
+                    timeout=30,
                 )
 
                 if result.stdout:
                     data = json.loads(result.stdout)
                     for vuln in data:
-                        vulnerabilities.append(Vulnerability(
-                            id=vuln.get("id", ""),
-                            package=vuln.get("package", ""),
-                            installed_version=vuln.get("installed_version", ""),
-                            fixed_version=vuln.get("analyzed_version"),
-                            severity=self._parse_severity(vuln.get("vulnerability", "").split()[0]),
-                            description=vuln.get("advisory", ""),
-                            cve_id=vuln.get("cve", ""),
-                            references=[],
-                            advisory_data=vuln
-                        ))
+                        vulnerabilities.append(
+                            Vulnerability(
+                                id=vuln.get("id", ""),
+                                package=vuln.get("package", ""),
+                                installed_version=vuln.get("installed_version", ""),
+                                fixed_version=vuln.get("analyzed_version"),
+                                severity=self._parse_severity(
+                                    vuln.get("vulnerability", "").split()[0]
+                                ),
+                                description=vuln.get("advisory", ""),
+                                cve_id=vuln.get("cve", ""),
+                                references=[],
+                                advisory_data=vuln,
+                            )
+                        )
             except FileNotFoundError:
                 pass
 
@@ -240,13 +258,17 @@ class DependencyScanner:
         total_packages = 0
         if (path / "requirements.txt").exists():
             with open(path / "requirements.txt") as f:
-                total_packages = len([l for l in f if l.strip() and not l.startswith("#")])
+                total_packages = len(
+                    [l for l in f if l.strip() and not l.startswith("#")]
+                )
 
         # Generate summary
         summary = self._generate_summary(vulnerabilities)
 
         # Generate recommendations
-        recommendations = self._generate_recommendations(vulnerabilities, PackageManager.PIP)
+        recommendations = self._generate_recommendations(
+            vulnerabilities, PackageManager.PIP
+        )
 
         return DependencyReport(
             package_manager=PackageManager.PIP,
@@ -254,12 +276,13 @@ class DependencyScanner:
             vulnerabilities=vulnerabilities,
             summary=summary,
             scan_duration=time.time() - start,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     async def _scan_poetry(self, path: Path) -> DependencyReport:
         """Scan Python Poetry dependencies."""
         import time
+
         start = time.time()
 
         vulnerabilities = []
@@ -270,47 +293,67 @@ class DependencyScanner:
                 ["poetry", "show", "--tree", "--no-dev"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 # Parse poetry output and check with pip-audit
                 packages = []
-                for line in result.stdout.split('\n'):
-                    if line and not line.startswith(' ') and '├' not in line and '└' not in line:
+                for line in result.stdout.split("\n"):
+                    if (
+                        line
+                        and not line.startswith(" ")
+                        and "├" not in line
+                        and "└" not in line
+                    ):
                         parts = line.split()
                         if len(parts) >= 2:
                             packages.append(f"{parts[0]}=={parts[1]}")
 
                 # Create temporary requirements file
                 temp_req = path / "temp_poetry_deps.txt"
-                with open(temp_req, 'w') as f:
-                    f.write('\n'.join(packages))
+                with open(temp_req, "w") as f:
+                    f.write("\n".join(packages))
 
                 # Scan with pip-audit
                 try:
                     result = subprocess.run(
-                        ["pip-audit", "--format", "json", "--requirement", str(temp_req)],
+                        [
+                            "pip-audit",
+                            "--format",
+                            "json",
+                            "--requirement",
+                            str(temp_req),
+                        ],
                         capture_output=True,
                         text=True,
-                        cwd=path
+                        cwd=path,
                     )
 
                     if result.returncode == 0:
                         data = json.loads(result.stdout)
                         for vuln in data.get("dependencies", []):
                             for vuln_info in vuln.get("vulnerabilities", []):
-                                vulnerabilities.append(Vulnerability(
-                                    id=vuln_info.get("id", ""),
-                                    package=vuln.get("name", ""),
-                                    installed_version=vuln.get("version", ""),
-                                    fixed_version=vuln_info.get("fix_versions", [None])[0],
-                                    severity=self._parse_severity(vuln_info.get("severity", "unknown")),
-                                    description=vuln_info.get("description", ""),
-                                    cve_id=vuln_info.get("id", "").replace("PYSEC-", ""),
-                                    references=vuln_info.get("references", []),
-                                    advisory_data=vuln_info
-                                ))
+                                vulnerabilities.append(
+                                    Vulnerability(
+                                        id=vuln_info.get("id", ""),
+                                        package=vuln.get("name", ""),
+                                        installed_version=vuln.get("version", ""),
+                                        fixed_version=vuln_info.get(
+                                            "fix_versions", [None]
+                                        )[0],
+                                        severity=self._parse_severity(
+                                            vuln_info.get("severity", "unknown")
+                                        ),
+                                        description=vuln_info.get("description", ""),
+                                        cve_id=vuln_info.get("id", "").replace(
+                                            "PYSEC-", ""
+                                        ),
+                                        references=vuln_info.get("references", []),
+                                        advisory_data=vuln_info,
+                                    )
+                                )
                 finally:
                     temp_req.unlink(missing_ok=True)
 
@@ -324,15 +367,20 @@ class DependencyScanner:
                 ["poetry", "show", "--no-dev"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
             if result.returncode == 0:
-                total_packages = len([line for line in result.stdout.split('\n') if line.strip()])
+                total_packages = len(
+                    [line for line in result.stdout.split("\n") if line.strip()]
+                )
         except Exception:
             pass
 
         summary = self._generate_summary(vulnerabilities)
-        recommendations = self._generate_recommendations(vulnerabilities, PackageManager.POETRY)
+        recommendations = self._generate_recommendations(
+            vulnerabilities, PackageManager.POETRY
+        )
 
         return DependencyReport(
             package_manager=PackageManager.POETRY,
@@ -340,12 +388,13 @@ class DependencyScanner:
             vulnerabilities=vulnerabilities,
             summary=summary,
             scan_duration=time.time() - start,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     async def _scan_npm(self, path: Path) -> DependencyReport:
         """Scan Node.js npm dependencies."""
         import time
+
         start = time.time()
 
         vulnerabilities = []
@@ -356,25 +405,36 @@ class DependencyScanner:
                 ["npm", "audit", "--json"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
 
             if result.stdout:
                 data = json.loads(result.stdout)
 
                 # Process vulnerabilities
                 for vuln_id, vuln_data in data.get("vulnerabilities", {}).items():
-                    vulnerabilities.append(Vulnerability(
-                        id=vuln_id,
-                        package=vuln_data.get("name", ""),
-                        installed_version=vuln_data.get("via", [{}])[0].get("version", ""),
-                        fixed_version=vuln_data.get("fixAvailable", {}).get("version"),
-                        severity=self._parse_severity(vuln_data.get("severity", "unknown")),
-                        description=vuln_data.get("title", ""),
-                        cve_id=vuln_data.get("url", "").split("/")[-1] if vuln_data.get("url") else None,
-                        references=[vuln_data.get("url", "")],
-                        advisory_data=vuln_data
-                    ))
+                    vulnerabilities.append(
+                        Vulnerability(
+                            id=vuln_id,
+                            package=vuln_data.get("name", ""),
+                            installed_version=vuln_data.get("via", [{}])[0].get(
+                                "version", ""
+                            ),
+                            fixed_version=vuln_data.get("fixAvailable", {}).get(
+                                "version"
+                            ),
+                            severity=self._parse_severity(
+                                vuln_data.get("severity", "unknown")
+                            ),
+                            description=vuln_data.get("title", ""),
+                            cve_id=vuln_data.get("url", "").split("/")[-1]
+                            if vuln_data.get("url")
+                            else None,
+                            references=[vuln_data.get("url", "")],
+                            advisory_data=vuln_data,
+                        )
+                    )
 
         except FileNotFoundError:
             pass
@@ -385,12 +445,16 @@ class DependencyScanner:
             try:
                 with open(path / "package.json") as f:
                     data = json.load(f)
-                    total_packages = len(data.get("dependencies", {})) + len(data.get("devDependencies", {}))
+                    total_packages = len(data.get("dependencies", {})) + len(
+                        data.get("devDependencies", {})
+                    )
             except:
                 pass
 
         summary = self._generate_summary(vulnerabilities)
-        recommendations = self._generate_recommendations(vulnerabilities, PackageManager.NPM)
+        recommendations = self._generate_recommendations(
+            vulnerabilities, PackageManager.NPM
+        )
 
         return DependencyReport(
             package_manager=PackageManager.NPM,
@@ -398,12 +462,13 @@ class DependencyScanner:
             vulnerabilities=vulnerabilities,
             summary=summary,
             scan_duration=time.time() - start,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     async def _scan_yarn(self, path: Path) -> DependencyReport:
         """Scan Node.js Yarn dependencies."""
         import time
+
         start = time.time()
 
         vulnerabilities = []
@@ -414,27 +479,36 @@ class DependencyScanner:
                 ["yarn", "audit", "--json"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
 
             # Parse yarn audit JSON output
-            for line in result.stdout.split('\n'):
-                if line.strip() and line.startswith('{'):
+            for line in result.stdout.split("\n"):
+                if line.strip() and line.startswith("{"):
                     try:
                         data = json.loads(line)
                         if data.get("type") == "auditAdvisory":
                             advisory = data.get("data", {})
-                            vulnerabilities.append(Vulnerability(
-                                id=advisory.get("id", ""),
-                                package=advisory.get("module_name", ""),
-                                installed_version=advisory.get("findings", [{}])[0].get("version", ""),
-                                fixed_version=advisory.get("patched_versions", [None])[0],
-                                severity=self._parse_severity(advisory.get("severity", "unknown")),
-                                description=advisory.get("title", ""),
-                                cve_id=advisory.get("cve", ""),
-                                references=advisory.get("url", []),
-                                advisory_data=advisory
-                            ))
+                            vulnerabilities.append(
+                                Vulnerability(
+                                    id=advisory.get("id", ""),
+                                    package=advisory.get("module_name", ""),
+                                    installed_version=advisory.get("findings", [{}])[
+                                        0
+                                    ].get("version", ""),
+                                    fixed_version=advisory.get(
+                                        "patched_versions", [None]
+                                    )[0],
+                                    severity=self._parse_severity(
+                                        advisory.get("severity", "unknown")
+                                    ),
+                                    description=advisory.get("title", ""),
+                                    cve_id=advisory.get("cve", ""),
+                                    references=advisory.get("url", []),
+                                    advisory_data=advisory,
+                                )
+                            )
                     except json.JSONDecodeError:
                         continue
 
@@ -448,8 +522,9 @@ class DependencyScanner:
                 ["yarn", "list", "--json"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
             if result.stdout:
                 data = json.loads(result.stdout)
                 total_packages = len(data.get("trees", []))
@@ -457,7 +532,9 @@ class DependencyScanner:
             pass
 
         summary = self._generate_summary(vulnerabilities)
-        recommendations = self._generate_recommendations(vulnerabilities, PackageManager.YARN)
+        recommendations = self._generate_recommendations(
+            vulnerabilities, PackageManager.YARN
+        )
 
         return DependencyReport(
             package_manager=PackageManager.YARN,
@@ -465,12 +542,13 @@ class DependencyScanner:
             vulnerabilities=vulnerabilities,
             summary=summary,
             scan_duration=time.time() - start,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     async def _scan_pipenv(self, path: Path) -> DependencyReport:
         """Scan Pipenv dependencies."""
         import time
+
         start = time.time()
 
         vulnerabilities = []
@@ -481,38 +559,53 @@ class DependencyScanner:
                 ["pipenv", "requirements"],
                 capture_output=True,
                 text=True,
-                cwd=validate_path(path)
-            , timeout=30)
+                cwd=validate_path(path),
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 # Create temp file and scan with pip-audit
                 temp_req = path / "temp_pipenv_deps.txt"
-                with open(temp_req, 'w') as f:
+                with open(temp_req, "w") as f:
                     f.write(result.stdout)
 
                 try:
                     result = subprocess.run(
-                        ["pip-audit", "--format", "json", "--requirement", str(temp_req)],
+                        [
+                            "pip-audit",
+                            "--format",
+                            "json",
+                            "--requirement",
+                            str(temp_req),
+                        ],
                         capture_output=True,
                         text=True,
-                        cwd=path
+                        cwd=path,
                     )
 
                     if result.returncode == 0:
                         data = json.loads(result.stdout)
                         for vuln in data.get("dependencies", []):
                             for vuln_info in vuln.get("vulnerabilities", []):
-                                vulnerabilities.append(Vulnerability(
-                                    id=vuln_info.get("id", ""),
-                                    package=vuln.get("name", ""),
-                                    installed_version=vuln.get("version", ""),
-                                    fixed_version=vuln_info.get("fix_versions", [None])[0],
-                                    severity=self._parse_severity(vuln_info.get("severity", "unknown")),
-                                    description=vuln_info.get("description", ""),
-                                    cve_id=vuln_info.get("id", "").replace("PYSEC-", ""),
-                                    references=vuln_info.get("references", []),
-                                    advisory_data=vuln_info
-                                ))
+                                vulnerabilities.append(
+                                    Vulnerability(
+                                        id=vuln_info.get("id", ""),
+                                        package=vuln.get("name", ""),
+                                        installed_version=vuln.get("version", ""),
+                                        fixed_version=vuln_info.get(
+                                            "fix_versions", [None]
+                                        )[0],
+                                        severity=self._parse_severity(
+                                            vuln_info.get("severity", "unknown")
+                                        ),
+                                        description=vuln_info.get("description", ""),
+                                        cve_id=vuln_info.get("id", "").replace(
+                                            "PYSEC-", ""
+                                        ),
+                                        references=vuln_info.get("references", []),
+                                        advisory_data=vuln_info,
+                                    )
+                                )
                 finally:
                     temp_req.unlink(missing_ok=True)
 
@@ -525,13 +618,20 @@ class DependencyScanner:
             try:
                 with open(path / "Pipfile") as f:
                     content = f.read()
-                    total_packages = len([line for line in content.split('\n')
-                                        if line.strip() and '=' in line and not line.startswith('#')])
+                    total_packages = len(
+                        [
+                            line
+                            for line in content.split("\n")
+                            if line.strip() and "=" in line and not line.startswith("#")
+                        ]
+                    )
             except:
                 pass
 
         summary = self._generate_summary(vulnerabilities)
-        recommendations = self._generate_recommendations(vulnerabilities, PackageManager.PIPENV)
+        recommendations = self._generate_recommendations(
+            vulnerabilities, PackageManager.PIPENV
+        )
 
         return DependencyReport(
             package_manager=PackageManager.PIPENV,
@@ -539,7 +639,7 @@ class DependencyScanner:
             vulnerabilities=vulnerabilities,
             summary=summary,
             scan_duration=time.time() - start,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     async def _scan_gradle(self, path: Path) -> DependencyReport:
@@ -551,7 +651,7 @@ class DependencyScanner:
             vulnerabilities=[],
             summary={},
             scan_duration=0,
-            recommendations=["Gradle scanning not yet implemented"]
+            recommendations=["Gradle scanning not yet implemented"],
         )
 
     async def _scan_maven(self, path: Path) -> DependencyReport:
@@ -563,7 +663,7 @@ class DependencyScanner:
             vulnerabilities=[],
             summary={},
             scan_duration=0,
-            recommendations=["Maven scanning not yet implemented"]
+            recommendations=["Maven scanning not yet implemented"],
         )
 
     async def _scan_cargo(self, path: Path) -> DependencyReport:
@@ -575,7 +675,7 @@ class DependencyScanner:
             vulnerabilities=[],
             summary={},
             scan_duration=0,
-            recommendations=["Cargo scanning not yet implemented"]
+            recommendations=["Cargo scanning not yet implemented"],
         )
 
     async def _scan_go_mod(self, path: Path) -> DependencyReport:
@@ -587,7 +687,7 @@ class DependencyScanner:
             vulnerabilities=[],
             summary={},
             scan_duration=0,
-            recommendations=["Go modules scanning not yet implemented"]
+            recommendations=["Go modules scanning not yet implemented"],
         )
 
     async def _scan_composer(self, path: Path) -> DependencyReport:
@@ -599,7 +699,7 @@ class DependencyScanner:
             vulnerabilities=[],
             summary={},
             scan_duration=0,
-            recommendations=["Composer scanning not yet implemented"]
+            recommendations=["Composer scanning not yet implemented"],
         )
 
     def _parse_severity(self, severity_str: str) -> SeverityLevel:
@@ -624,7 +724,7 @@ class DependencyScanner:
             "high": 0,
             "medium": 0,
             "low": 0,
-            "total": len(vulnerabilities)
+            "total": len(vulnerabilities),
         }
 
         for vuln in vulnerabilities:
@@ -639,8 +739,9 @@ class DependencyScanner:
 
         return summary
 
-    def _generate_recommendations(self, vulnerabilities: list[Vulnerability],
-                                 manager: PackageManager) -> list[str]:
+    def _generate_recommendations(
+        self, vulnerabilities: list[Vulnerability], manager: PackageManager
+    ) -> list[str]:
         """Generate fix recommendations."""
         recommendations = []
 
@@ -654,15 +755,23 @@ class DependencyScanner:
         if fixable > 0:
             recommendations.append(f"Update {fixable} packages to fix vulnerabilities")
 
-            if manager in [PackageManager.PIP, PackageManager.POETRY, PackageManager.PIPENV]:
+            if manager in [
+                PackageManager.PIP,
+                PackageManager.POETRY,
+                PackageManager.PIPENV,
+            ]:
                 recommendations.append("Run: pip install --upgrade <package>")
             elif manager in [PackageManager.NPM, PackageManager.YARN]:
                 recommendations.append("Run: npm update <package>")
 
         # Critical vulnerabilities
-        critical = sum(1 for v in vulnerabilities if v.severity == SeverityLevel.CRITICAL)
+        critical = sum(
+            1 for v in vulnerabilities if v.severity == SeverityLevel.CRITICAL
+        )
         if critical > 0:
-            recommendations.append(f"URGENT: Fix {critical} critical vulnerabilities immediately")
+            recommendations.append(
+                f"URGENT: Fix {critical} critical vulnerabilities immediately"
+            )
 
         # High vulnerabilities
         high = sum(1 for v in vulnerabilities if v.severity == SeverityLevel.HIGH)
@@ -692,7 +801,9 @@ class DependencyScanner:
         # Return score as percentage (0-100)
         return (total_score / max_score) * 100
 
-    def get_most_critical(self, reports: list[DependencyReport], limit: int = 5) -> list[Vulnerability]:
+    def get_most_critical(
+        self, reports: list[DependencyReport], limit: int = 5
+    ) -> list[Vulnerability]:
         """Get the most critical vulnerabilities across all reports."""
         all_vulns = []
 
@@ -700,10 +811,7 @@ class DependencyScanner:
             all_vulns.extend(report.vulnerabilities)
 
         # Sort by severity weight
-        all_vulns.sort(
-            key=lambda v: self.severity_weights[v.severity],
-            reverse=True
-        )
+        all_vulns.sort(key=lambda v: self.severity_weights[v.severity], reverse=True)
 
         return all_vulns[:limit]
 
@@ -731,7 +839,9 @@ if __name__ == "__main__":
 
                 print("\nTop vulnerabilities:")
                 for vuln in report.vulnerabilities[:3]:
-                    print(f"  - {vuln.package}@{vuln.installed_version} ({vuln.severity.value})")
+                    print(
+                        f"  - {vuln.package}@{vuln.installed_version} ({vuln.severity.value})"
+                    )
                     print(f"    {vuln.description[:100]}...")
 
             print("\nRecommendations:")

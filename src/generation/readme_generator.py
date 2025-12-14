@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProjectInfo:
     """Extracted project information."""
+
     name: str
     description: str | None = None
     version: str | None = None
@@ -51,7 +52,7 @@ class ReadmeGenerator:
     """
 
     # README template
-    TEMPLATE = '''# {name}
+    TEMPLATE = """# {name}
 
 {badges}
 
@@ -106,7 +107,7 @@ class ReadmeGenerator:
 ## 📄 License
 
 {license}
-'''
+"""
 
     def __init__(self, use_llm: bool = True):
         """
@@ -121,6 +122,7 @@ class ReadmeGenerator:
         if use_llm:
             try:
                 from src.llm.ollama_client import OllamaClient
+
                 self._llm_client = OllamaClient()
             except Exception as e:
                 logger.warning(f"LLM not available: {e}")
@@ -180,19 +182,17 @@ class ReadmeGenerator:
         info.frameworks = self._detect_frameworks(project_path)
 
         # Check for tests
-        info.has_tests = (
-            (project_path / "tests").exists() or
-            (project_path / "test").exists()
-        )
+        info.has_tests = (project_path / "tests").exists() or (
+            project_path / "test"
+        ).exists()
 
         # Check for docs
         info.has_docs = (project_path / "docs").exists()
 
         # Check for CI
-        info.has_ci = (
-            (project_path / ".github" / "workflows").exists() or
-            (project_path / ".gitlab-ci.yml").exists()
-        )
+        info.has_ci = (project_path / ".github" / "workflows").exists() or (
+            project_path / ".gitlab-ci.yml"
+        ).exists()
 
         # Check for LICENSE
         for lic_name in ["LICENSE", "LICENSE.md", "LICENSE.txt"]:
@@ -207,6 +207,7 @@ class ReadmeGenerator:
         """Parse pyproject.toml for project info."""
         try:
             import toml
+
             data = toml.load(path)
 
             project = data.get("project", {})
@@ -216,7 +217,9 @@ class ReadmeGenerator:
             info.language = "python"
 
             deps = project.get("dependencies", [])
-            info.dependencies = [d.split("[")[0].split("<")[0].split(">")[0].split("=")[0] for d in deps]
+            info.dependencies = [
+                d.split("[")[0].split("<")[0].split(">")[0].split("=")[0] for d in deps
+            ]
 
         except Exception as e:
             logger.debug(f"Failed to parse pyproject.toml: {e}")
@@ -249,6 +252,7 @@ class ReadmeGenerator:
         """Parse package.json for project info."""
         try:
             import json
+
             data = json.loads(path.read_text())
 
             info.name = data.get("name", info.name)
@@ -423,15 +427,21 @@ class ReadmeGenerator:
         badges = []
 
         if info.language == "python":
-            badges.append("![Python](https://img.shields.io/badge/python-3.11+-blue.svg)")
+            badges.append(
+                "![Python](https://img.shields.io/badge/python-3.11+-blue.svg)"
+            )
         elif info.language == "javascript":
             badges.append("![Node.js](https://img.shields.io/badge/node-18+-green.svg)")
 
         if info.license:
-            badges.append(f"![License](https://img.shields.io/badge/license-{info.license}-yellow.svg)")
+            badges.append(
+                f"![License](https://img.shields.io/badge/license-{info.license}-yellow.svg)"
+            )
 
         if info.has_tests:
-            badges.append("![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)")
+            badges.append(
+                "![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)"
+            )
 
         return " ".join(badges) if badges else ""
 
@@ -473,9 +483,14 @@ class ReadmeGenerator:
     def _generate_installation(self, info: ProjectInfo) -> str:
         """Generate installation instructions."""
         if info.language == "python":
-            return '''# Clone the repository
-git clone https://github.com/username/''' + info.name + '''.git
-cd ''' + info.name + '''
+            return (
+                """# Clone the repository
+git clone https://github.com/username/"""
+                + info.name
+                + """.git
+cd """
+                + info.name
+                + """
 
 # Create virtual environment
 python -m venv .venv
@@ -483,33 +498,40 @@ source .venv/bin/activate  # Linux/macOS
 .venv\\Scripts\\activate   # Windows
 
 # Install dependencies
-pip install -r requirements.txt'''
+pip install -r requirements.txt"""
+            )
 
         elif info.language == "javascript":
-            return '''# Clone the repository
-git clone https://github.com/username/''' + info.name + '''.git
-cd ''' + info.name + '''
+            return (
+                """# Clone the repository
+git clone https://github.com/username/"""
+                + info.name
+                + """.git
+cd """
+                + info.name
+                + """
 
 # Install dependencies
-npm install'''
+npm install"""
+            )
 
         return "# See documentation for installation instructions"
 
     def _generate_usage(self, info: ProjectInfo) -> str:
         """Generate usage example."""
         if info.language == "python":
-            return f'''from {info.name.replace("-", "_")} import main
+            return f"""from {info.name.replace("-", "_")} import main
 
 # Example usage
 result = main.run()
-print(result)'''
+print(result)"""
 
         elif info.language == "javascript":
-            return f'''import {{ main }} from '{info.name}';
+            return f"""import {{ main }} from '{info.name}';
 
 // Example usage
 const result = await main();
-console.log(result);'''
+console.log(result);"""
 
         return "// See documentation for usage examples"
 
@@ -521,7 +543,10 @@ console.log(result);'''
         items = sorted(project_path.iterdir(), key=lambda x: (not x.is_dir(), x.name))
 
         for i, item in enumerate(items[:15]):  # Limit to 15 items
-            if item.name.startswith(".") and item.name not in [".github", ".env.example"]:
+            if item.name.startswith(".") and item.name not in [
+                ".github",
+                ".env.example",
+            ]:
                 continue
 
             prefix = "├── " if i < len(items) - 1 else "└── "
@@ -534,26 +559,26 @@ console.log(result);'''
 
     def _generate_configuration(self, info: ProjectInfo) -> str:
         """Generate configuration section."""
-        return '''Configuration options can be set via:
+        return """Configuration options can be set via:
 - Environment variables (see `.env.example`)
 - Configuration files (see `config/` directory)
-'''
+"""
 
     def _generate_testing(self, info: ProjectInfo) -> str:
         """Generate testing instructions."""
         if info.language == "python":
-            return '''# Run all tests
+            return """# Run all tests
 pytest tests/ -v
 
 # Run with coverage
-pytest tests/ --cov=src --cov-report=html'''
+pytest tests/ --cov=src --cov-report=html"""
 
         elif info.language == "javascript":
-            return '''# Run tests
+            return """# Run tests
 npm test
 
 # Run with coverage
-npm run test:coverage'''
+npm run test:coverage"""
 
         return "# See documentation for testing instructions"
 
@@ -565,13 +590,13 @@ npm run test:coverage'''
 
     def _generate_contributing(self, info: ProjectInfo) -> str:
         """Generate contributing section."""
-        return '''Contributions are welcome! Please:
+        return """Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing`)
-5. Open a Pull Request'''
+5. Open a Pull Request"""
 
     def _generate_license_section(self, info: ProjectInfo) -> str:
         """Generate license section."""
@@ -591,7 +616,7 @@ npm run test:coverage'''
         prompt = f"""Write a brief, professional description for a software project with these details:
 - Name: {info.name}
 - Language: {info.language}
-- Frameworks: {', '.join(info.frameworks) if info.frameworks else 'None specified'}
+- Frameworks: {", ".join(info.frameworks) if info.frameworks else "None specified"}
 - Has tests: {info.has_tests}
 - Has CI/CD: {info.has_ci}
 

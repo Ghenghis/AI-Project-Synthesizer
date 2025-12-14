@@ -61,7 +61,7 @@ class TestRepositoryInfo:
             description="A test repository",
             stars=100,
             forks=50,
-            language="Python"
+            language="Python",
         )
         assert info.stars == 100
         assert info.forks == 50
@@ -90,7 +90,7 @@ class TestRepositoryInfo:
             url="https://example.com",
             name="test",
             full_name="user/test",
-            stars=10
+            stars=10,
         )
         d = info.to_dict()
         assert d["platform"] == "github"
@@ -115,7 +115,7 @@ class TestSearchResult:
             platform="github",
             total_count=1,
             repositories=[repo],
-            search_time_ms=100
+            search_time_ms=100,
         )
         assert len(result.repositories) == 1
         assert result.total_count == 1
@@ -128,7 +128,7 @@ class TestSearchResult:
             platform="github",
             total_count=0,
             repositories=[],
-            search_time_ms=50
+            search_time_ms=50,
         )
         assert len(result.repositories) == 0
         assert result.total_count == 0
@@ -140,7 +140,7 @@ class TestSearchResult:
             platform="github",
             total_count=0,
             repositories=[],
-            search_time_ms=10
+            search_time_ms=10,
         )
         d = result.to_dict()
         assert d["query"] == "test"
@@ -153,10 +153,7 @@ class TestFileContent:
     def test_create_file_content(self):
         """Should create file content."""
         content = FileContent(
-            path="src/main.py",
-            name="main.py",
-            content=b"print('hello')",
-            size=14
+            path="src/main.py", name="main.py", content=b"print('hello')", size=14
         )
         assert content.path == "src/main.py"
         assert content.name == "main.py"
@@ -164,12 +161,7 @@ class TestFileContent:
 
     def test_default_encoding(self):
         """Should have utf-8 default encoding."""
-        content = FileContent(
-            path="test.py",
-            name="test.py",
-            content=b"",
-            size=0
-        )
+        content = FileContent(path="test.py", name="test.py", content=b"", size=0)
         assert content.encoding == "utf-8"
 
 

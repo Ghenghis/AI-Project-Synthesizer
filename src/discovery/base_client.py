@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class Platform(str, Enum):
     """Supported platforms for repository discovery."""
+
     GITHUB = "github"
     GITLAB = "gitlab"
     HUGGINGFACE = "huggingface"
@@ -28,11 +29,13 @@ class Platform(str, Enum):
 
 class DiscoveryError(Exception):
     """Base exception for discovery errors."""
+
     pass
 
 
 class AuthenticationError(DiscoveryError):
     """Authentication failed."""
+
     pass
 
 
@@ -46,6 +49,7 @@ class RateLimitError(DiscoveryError):
 
 class RepositoryNotFoundError(DiscoveryError):
     """Repository not found."""
+
     pass
 
 
@@ -57,6 +61,7 @@ class RepositoryInfo:
     This is the unified data model that all platform clients
     convert their responses to.
     """
+
     # Identity
     platform: str
     id: str
@@ -129,6 +134,7 @@ class RepositoryInfo:
 @dataclass
 class SearchResult:
     """Result of a search operation."""
+
     query: str
     platform: str
     total_count: int
@@ -152,6 +158,7 @@ class SearchResult:
 @dataclass
 class FileContent:
     """Content of a file from a repository."""
+
     path: str
     name: str
     content: bytes
@@ -168,6 +175,7 @@ class FileContent:
 @dataclass
 class DirectoryListing:
     """Listing of files in a repository directory."""
+
     path: str
     files: list[dict[str, Any]]
     directories: list[dict[str, Any]]

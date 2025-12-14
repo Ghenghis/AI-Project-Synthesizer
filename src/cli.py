@@ -66,33 +66,27 @@ def run_async(coro):
 # SEARCH COMMANDS
 # ============================================
 
+
 @app.command("search")
 def search_repositories(
     query: str = typer.Argument(..., help="Search query for repositories"),
     platforms: str = typer.Option(
         "github,huggingface",
-        "--platforms", "-p",
-        help="Comma-separated platforms to search (github,huggingface,kaggle,arxiv)"
+        "--platforms",
+        "-p",
+        help="Comma-separated platforms to search (github,huggingface,kaggle,arxiv)",
     ),
     max_results: int = typer.Option(
-        20,
-        "--max-results", "-n",
-        help="Maximum number of results per platform"
+        20, "--max-results", "-n", help="Maximum number of results per platform"
     ),
     language: str | None = typer.Option(
-        None,
-        "--language", "-l",
-        help="Filter by programming language"
+        None, "--language", "-l", help="Filter by programming language"
     ),
     min_stars: int = typer.Option(
-        10,
-        "--min-stars", "-s",
-        help="Minimum star count for repositories"
+        10, "--min-stars", "-s", help="Minimum star count for repositories"
     ),
     output_format: str = typer.Option(
-        "table",
-        "--format", "-f",
-        help="Output format: table, json, or simple"
+        "table", "--format", "-f", help="Output format: table, json, or simple"
     ),
 ) -> None:
     """
@@ -116,7 +110,9 @@ def search_repositories(
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-            task = progress.add_task(f"Searching {', '.join(platform_list)}...", total=None)
+            task = progress.add_task(
+                f"Searching {', '.join(platform_list)}...", total=None
+            )
 
             results = await search.search(
                 query=query,
@@ -151,7 +147,7 @@ def search_repositories(
                         "platform": r.platform,
                     }
                     for r in results.repositories
-                ]
+                ],
             }
             console.print(Syntax(json.dumps(output, indent=2), "json"))
         elif output_format == "simple":
@@ -172,12 +168,16 @@ def search_repositories(
                     repo.platform,
                     str(repo.stars),
                     repo.language or "N/A",
-                    (repo.description[:37] + "...") if repo.description and len(repo.description) > 40 else (repo.description or ""),
+                    (repo.description[:37] + "...")
+                    if repo.description and len(repo.description) > 40
+                    else (repo.description or ""),
                 )
 
             console.print(table)
 
-        console.print(f"\n✅ Found [bold green]{len(results.repositories)}[/bold green] repositories")
+        console.print(
+            f"\n✅ Found [bold green]{len(results.repositories)}[/bold green] repositories"
+        )
 
     except Exception as e:
         console.print(f"[red]Error during search: {e}[/red]")
@@ -189,28 +189,21 @@ def search_repositories(
 # ANALYZE COMMANDS
 # ============================================
 
+
 @app.command("analyze")
 def analyze_repository(
     repo_url: str = typer.Argument(..., help="Repository URL to analyze"),
     include_deps: bool = typer.Option(
-        True,
-        "--include-deps/--no-deps",
-        help="Include dependency analysis"
+        True, "--include-deps/--no-deps", help="Include dependency analysis"
     ),
     include_quality: bool = typer.Option(
-        True,
-        "--include-quality/--no-quality",
-        help="Include code quality scoring"
+        True, "--include-quality/--no-quality", help="Include code quality scoring"
     ),
     extract_components: bool = typer.Option(
-        False,
-        "--extract-components", "-e",
-        help="Identify extractable code components"
+        False, "--extract-components", "-e", help="Identify extractable code components"
     ),
     output_format: str = typer.Option(
-        "rich",
-        "--format", "-f",
-        help="Output format: rich, json, or summary"
+        "rich", "--format", "-f", help="Output format: rich, json, or summary"
     ),
 ) -> None:
     """
@@ -226,11 +219,13 @@ def analyze_repository(
     async def _analyze():
         from src.mcp_server.tools import handle_analyze_repository
 
-        return await handle_analyze_repository({
-            "repo_url": repo_url,
-            "include_transitive_deps": include_deps,
-            "extract_components": extract_components,
-        })
+        return await handle_analyze_repository(
+            {
+                "repo_url": repo_url,
+                "include_transitive_deps": include_deps,
+                "extract_components": extract_components,
+            }
+        )
 
     try:
         with Progress(
@@ -262,19 +257,21 @@ def analyze_repository(
 
             # Repository info panel
             repo_info = f"""
-[bold]Name:[/bold] {repo.get('name')}
-[bold]Platform:[/bold] {repo.get('platform')}
-[bold]Language:[/bold] {repo.get('language')}
-[bold]Stars:[/bold] ⭐ {repo.get('stars')}
-[bold]URL:[/bold] {repo.get('url')}
-[bold]Description:[/bold] {repo.get('description', 'N/A')}
+[bold]Name:[/bold] {repo.get("name")}
+[bold]Platform:[/bold] {repo.get("platform")}
+[bold]Language:[/bold] {repo.get("language")}
+[bold]Stars:[/bold] ⭐ {repo.get("stars")}
+[bold]URL:[/bold] {repo.get("url")}
+[bold]Description:[/bold] {repo.get("description", "N/A")}
             """
-            console.print(Panel(repo_info, title="📦 Repository Info", border_style="blue"))
+            console.print(
+                Panel(repo_info, title="📦 Repository Info", border_style="blue")
+            )
 
             # Analysis stats
             stats = f"""
-[bold]Files Analyzed:[/bold] {result.get('files_analyzed', 0)}
-[bold]Lines of Code:[/bold] {result.get('lines_of_code', 0)}
+[bold]Files Analyzed:[/bold] {result.get("files_analyzed", 0)}
+[bold]Lines of Code:[/bold] {result.get("lines_of_code", 0)}
             """
             console.print(Panel(stats, title="📊 Analysis Stats", border_style="green"))
 
@@ -282,13 +279,25 @@ def analyze_repository(
             deps = result.get("dependencies", {})
             if deps:
                 dep_count = deps.get("direct_count", 0)
-                console.print(Panel(f"Direct Dependencies: {dep_count}", title="📚 Dependencies", border_style="yellow"))
+                console.print(
+                    Panel(
+                        f"Direct Dependencies: {dep_count}",
+                        title="📚 Dependencies",
+                        border_style="yellow",
+                    )
+                )
 
             # Quality score
             quality = result.get("quality_score", {})
             if quality:
                 score = quality.get("overall_score", 0)
-                console.print(Panel(f"Overall Score: {score}/100", title="✨ Code Quality", border_style="magenta"))
+                console.print(
+                    Panel(
+                        f"Overall Score: {score}/100",
+                        title="✨ Code Quality",
+                        border_style="magenta",
+                    )
+                )
 
         console.print("\n✅ Analysis complete!")
 
@@ -302,27 +311,23 @@ def analyze_repository(
 # SYNTHESIZE COMMANDS
 # ============================================
 
+
 @app.command("synthesize")
 def synthesize_project(
     repos: str = typer.Option(
-        ...,
-        "--repos", "-r",
-        help="Comma-separated repository URLs"
+        ..., "--repos", "-r", help="Comma-separated repository URLs"
     ),
     project_name: str = typer.Option(
-        ...,
-        "--name", "-n",
-        help="Name for the synthesized project"
+        ..., "--name", "-n", help="Name for the synthesized project"
     ),
     output_path: str = typer.Option(
-        "./output",
-        "--output", "-o",
-        help="Output directory path"
+        "./output", "--output", "-o", help="Output directory path"
     ),
     template: str = typer.Option(
         "python-default",
-        "--template", "-t",
-        help="Project template (python-default, python-ml, python-web, minimal)"
+        "--template",
+        "-t",
+        help="Project template (python-default, python-ml, python-web, minimal)",
     ),
 ) -> None:
     """
@@ -339,12 +344,14 @@ def synthesize_project(
     async def _synthesize():
         from src.mcp_server.tools import handle_synthesize_project
 
-        return await handle_synthesize_project({
-            "repositories": [{"repo_url": url} for url in repo_list],
-            "project_name": project_name,
-            "output_path": output_path,
-            "template": template,
-        })
+        return await handle_synthesize_project(
+            {
+                "repositories": [{"repo_url": url} for url in repo_list],
+                "project_name": project_name,
+                "output_path": output_path,
+                "template": template,
+            }
+        )
 
     try:
         with Progress(
@@ -352,7 +359,9 @@ def synthesize_project(
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-            task = progress.add_task("Synthesizing project (this may take a few minutes)...", total=None)
+            task = progress.add_task(
+                "Synthesizing project (this may take a few minutes)...", total=None
+            )
             result = run_async(_synthesize())
             progress.update(task, completed=True)
 
@@ -360,13 +369,19 @@ def synthesize_project(
             console.print(f"[red]Synthesis failed: {result.get('message')}[/red]")
             raise typer.Exit(code=1)
 
-        console.print(Panel(f"""
+        console.print(
+            Panel(
+                f"""
 [bold green]✅ Project synthesized successfully![/bold green]
 
-[bold]Project Path:[/bold] {result.get('project_path')}
+[bold]Project Path:[/bold] {result.get("project_path")}
 [bold]Template:[/bold] {template}
 [bold]Sources:[/bold] {len(repo_list)} repositories
-        """, title="🎉 Synthesis Complete", border_style="green"))
+        """,
+                title="🎉 Synthesis Complete",
+                border_style="green",
+            )
+        )
 
     except Exception as e:
         console.print(f"[red]Error during synthesis: {e}[/red]")
@@ -378,22 +393,17 @@ def synthesize_project(
 # RESOLVE COMMANDS
 # ============================================
 
+
 @app.command("resolve")
 def resolve_dependencies(
     repos: str = typer.Option(
-        ...,
-        "--repos", "-r",
-        help="Comma-separated repository URLs"
+        ..., "--repos", "-r", help="Comma-separated repository URLs"
     ),
     python_version: str = typer.Option(
-        "3.11",
-        "--python", "-p",
-        help="Target Python version"
+        "3.11", "--python", "-p", help="Target Python version"
     ),
     output_file: str | None = typer.Option(
-        None,
-        "--output", "-o",
-        help="Output file for resolved requirements"
+        None, "--output", "-o", help="Output file for resolved requirements"
     ),
 ) -> None:
     """
@@ -409,10 +419,12 @@ def resolve_dependencies(
     async def _resolve():
         from src.mcp_server.tools import handle_resolve_dependencies
 
-        return await handle_resolve_dependencies({
-            "repositories": repo_list,
-            "python_version": python_version,
-        })
+        return await handle_resolve_dependencies(
+            {
+                "repositories": repo_list,
+                "python_version": python_version,
+            }
+        )
 
     try:
         with Progress(
@@ -451,7 +463,9 @@ def resolve_dependencies(
             Path(output_file).write_text(requirements_txt)
             console.print(f"\n✅ Requirements saved to [bold]{output_file}[/bold]")
 
-        console.print(f"\n✅ Resolved [bold green]{len(packages)}[/bold green] packages")
+        console.print(
+            f"\n✅ Resolved [bold green]{len(packages)}[/bold green] packages"
+        )
 
         if result.get("warnings"):
             console.print("\n⚠️ Warnings:")
@@ -468,18 +482,18 @@ def resolve_dependencies(
 # DOCS COMMANDS
 # ============================================
 
+
 @app.command("docs")
 def generate_documentation(
     project_path: str = typer.Argument(..., help="Path to the project to document"),
     doc_types: str = typer.Option(
         "readme,architecture,api",
-        "--types", "-t",
-        help="Comma-separated documentation types to generate"
+        "--types",
+        "-t",
+        help="Comma-separated documentation types to generate",
     ),
     llm_enhanced: bool = typer.Option(
-        True,
-        "--llm/--no-llm",
-        help="Use LLM for enhanced documentation quality"
+        True, "--llm/--no-llm", help="Use LLM for enhanced documentation quality"
     ),
 ) -> None:
     """
@@ -490,16 +504,20 @@ def generate_documentation(
         ai-synthesizer docs ./my-project --types readme,api
         ai-synthesizer docs ./my-project --no-llm
     """
-    console.print(f"\n📝 Generating documentation for: [bold cyan]{project_path}[/bold cyan]\n")
+    console.print(
+        f"\n📝 Generating documentation for: [bold cyan]{project_path}[/bold cyan]\n"
+    )
 
     async def _generate():
         from src.mcp_server.tools import handle_generate_documentation
 
-        return await handle_generate_documentation({
-            "project_path": project_path,
-            "doc_types": [t.strip() for t in doc_types.split(",")],
-            "llm_enhanced": llm_enhanced,
-        })
+        return await handle_generate_documentation(
+            {
+                "project_path": project_path,
+                "doc_types": [t.strip() for t in doc_types.split(",")],
+                "llm_enhanced": llm_enhanced,
+            }
+        )
 
     try:
         with Progress(
@@ -512,17 +530,25 @@ def generate_documentation(
             progress.update(task, completed=True)
 
         if result.get("error"):
-            console.print(f"[red]Documentation generation failed: {result.get('message')}[/red]")
+            console.print(
+                f"[red]Documentation generation failed: {result.get('message')}[/red]"
+            )
             raise typer.Exit(code=1)
 
         documents = result.get("documents", [])
 
-        console.print(Panel(f"""
+        console.print(
+            Panel(
+                f"""
 [bold green]✅ Documentation generated successfully![/bold green]
 
 [bold]Documents Created:[/bold] {len(documents)}
-[bold]LLM Enhanced:[/bold] {'Yes' if result.get('llm_enhanced') else 'No'}
-        """, title="📚 Documentation Complete", border_style="green"))
+[bold]LLM Enhanced:[/bold] {"Yes" if result.get("llm_enhanced") else "No"}
+        """,
+                title="📚 Documentation Complete",
+                border_style="green",
+            )
+        )
 
         for doc in documents:
             console.print(f"  • {doc}")
@@ -537,12 +563,11 @@ def generate_documentation(
 # CONFIG COMMANDS
 # ============================================
 
+
 @app.command("config")
 def show_config(
     show_all: bool = typer.Option(
-        False,
-        "--all", "-a",
-        help="Show all configuration including sensitive values"
+        False, "--all", "-a", help="Show all configuration including sensitive values"
     ),
 ) -> None:
     """
@@ -563,10 +588,10 @@ def show_config(
 [bold]Log Level:[/bold] {settings.app.log_level}
 
 [bold]Enabled Platforms:[/bold]
-  • GitHub: {'✅' if 'github' in enabled_platforms else '❌'}
-  • HuggingFace: {'✅' if 'huggingface' in enabled_platforms else '❌'}
-  • Kaggle: {'✅' if 'kaggle' in enabled_platforms else '❌'}
-  • arXiv: {'✅' if 'arxiv' in enabled_platforms else '❌'}
+  • GitHub: {"✅" if "github" in enabled_platforms else "❌"}
+  • HuggingFace: {"✅" if "huggingface" in enabled_platforms else "❌"}
+  • Kaggle: {"✅" if "kaggle" in enabled_platforms else "❌"}
+  • arXiv: {"✅" if "arxiv" in enabled_platforms else "❌"}
 
 [bold]LLM Settings:[/bold]
   • Ollama Host: {settings.llm.ollama_host}
@@ -581,8 +606,16 @@ def show_config(
 
     if show_all:
         console.print("\n[yellow]⚠️ Sensitive values:[/yellow]")
-        github_token = settings.platforms.github_token.get_secret_value() if settings.platforms.github_token else ""
-        hf_token = settings.platforms.huggingface_token.get_secret_value() if settings.platforms.huggingface_token else ""
+        github_token = (
+            settings.platforms.github_token.get_secret_value()
+            if settings.platforms.github_token
+            else ""
+        )
+        hf_token = (
+            settings.platforms.huggingface_token.get_secret_value()
+            if settings.platforms.huggingface_token
+            else ""
+        )
         console.print(f"  GitHub Token: {'Set' if github_token else 'Not set'}")
         console.print(f"  HuggingFace Token: {'Set' if hf_token else 'Not set'}")
 
@@ -590,6 +623,7 @@ def show_config(
 # ============================================
 # VERSION AND INFO
 # ============================================
+
 
 @app.command("version")
 def show_version() -> None:
@@ -634,18 +668,11 @@ analyzing, and synthesizing code from multiple repositories into unified project
 # MCP SERVER COMMAND
 # ============================================
 
+
 @app.command("check")
 def run_gap_check(
-    fix: bool = typer.Option(
-        True,
-        "--fix/--no-fix",
-        help="Auto-fix issues"
-    ),
-    report: bool = typer.Option(
-        False,
-        "--report", "-r",
-        help="Save markdown report"
-    ),
+    fix: bool = typer.Option(True, "--fix/--no-fix", help="Auto-fix issues"),
+    report: bool = typer.Option(False, "--report", "-r", help="Save markdown report"),
 ) -> None:
     """
     Run gap analysis and auto-repair.
@@ -704,19 +731,25 @@ def run_gap_check(
                 GapSeverity.HIGH: "yellow",
                 GapSeverity.MEDIUM: "blue",
             }.get(gap.severity, "dim")
-            console.print(f"  {status} [{severity_color}]{gap.severity.value}[/{severity_color}] {gap.description}")
+            console.print(
+                f"  {status} [{severity_color}]{gap.severity.value}[/{severity_color}] {gap.description}"
+            )
     else:
         console.print("\n[bold green]✅ No gaps found![/bold green]")
 
     # Save report
     if report:
-        report_path = Path(f"reports/gap_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
+        report_path = Path(
+            f"reports/gap_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        )
         report_path.parent.mkdir(exist_ok=True)
         report_path.write_text(result.to_markdown(), encoding="utf-8")
         console.print(f"\n[dim]Report saved: {report_path}[/dim]")
 
     # Exit code
-    if result.unfixed_gaps and any(g.severity == GapSeverity.CRITICAL for g in result.unfixed_gaps):
+    if result.unfixed_gaps and any(
+        g.severity == GapSeverity.CRITICAL for g in result.unfixed_gaps
+    ):
         raise typer.Exit(code=1)
 
 
@@ -736,6 +769,7 @@ def start_tui() -> None:
 
     try:
         from src.tui import run_tui
+
         run_tui()
     except KeyboardInterrupt:
         console.print("\n👋 TUI closed.")
@@ -748,29 +782,20 @@ def start_tui() -> None:
 def manage_settings(
     tab: str = typer.Option(
         "general",
-        "--tab", "-t",
-        help="Settings tab (general, voice, automation, hotkeys, ai_ml, workflows, advanced)"
+        "--tab",
+        "-t",
+        help="Settings tab (general, voice, automation, hotkeys, ai_ml, workflows, advanced)",
     ),
     show: bool = typer.Option(
-        False,
-        "--show", "-s",
-        help="Show current settings for the tab"
+        False, "--show", "-s", help="Show current settings for the tab"
     ),
     toggle: str | None = typer.Option(
-        None,
-        "--toggle",
-        help="Toggle a boolean setting (e.g., auto_save)"
+        None, "--toggle", help="Toggle a boolean setting (e.g., auto_save)"
     ),
     set_value: str | None = typer.Option(
-        None,
-        "--set",
-        help="Set a value (format: key=value)"
+        None, "--set", help="Set a value (format: key=value)"
     ),
-    reset: bool = typer.Option(
-        False,
-        "--reset",
-        help="Reset tab to defaults"
-    ),
+    reset: bool = typer.Option(False, "--reset", help="Reset tab to defaults"),
 ) -> None:
     """
     Manage system settings from the command line.
@@ -790,7 +815,9 @@ def manage_settings(
         settings_tab = SettingsTab(tab)
     except ValueError:
         console.print(f"[red]Invalid tab: {tab}[/red]")
-        console.print("Valid tabs: general, voice, automation, hotkeys, ai_ml, workflows, advanced")
+        console.print(
+            "Valid tabs: general, voice, automation, hotkeys, ai_ml, workflows, advanced"
+        )
         raise typer.Exit(code=1)
 
     if reset:
@@ -852,6 +879,7 @@ def start_mcp_server() -> None:
 
     try:
         from src.mcp_server.server import main as server_main
+
         asyncio.run(server_main())
     except KeyboardInterrupt:
         console.print("\n👋 MCP Server stopped.")
@@ -864,6 +892,7 @@ def start_mcp_server() -> None:
 # ============================================
 # WIZARD COMMAND
 # ============================================
+
 
 @app.command("wizard")
 def wizard_command() -> None:
@@ -903,19 +932,16 @@ def wizard_command() -> None:
 # RECIPE COMMANDS
 # ============================================
 
+
 @app.command("recipe")
 def recipe_command(
     action: str = typer.Argument(..., help="Action: list, show, run, validate"),
     name: str | None = typer.Argument(None, help="Recipe name (for show/run/validate)"),
     output: str | None = typer.Option(
-        None,
-        "--output", "-o",
-        help="Output directory for run action"
+        None, "--output", "-o", help="Output directory for run action"
     ),
     dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help="Show what would be done without executing"
+        False, "--dry-run", help="Show what would be done without executing"
     ),
 ) -> None:
     """
@@ -953,8 +979,10 @@ def recipe_command(
             table.add_row(
                 recipe["name"],
                 recipe["version"],
-                recipe["description"][:50] + "..." if len(recipe["description"]) > 50 else recipe["description"],
-                ", ".join(recipe["tags"][:3])
+                recipe["description"][:50] + "..."
+                if len(recipe["description"]) > 50
+                else recipe["description"],
+                ", ".join(recipe["tags"][:3]),
             )
 
         console.print(table)
@@ -969,7 +997,9 @@ def recipe_command(
             console.print(f"[red]Recipe not found: {name}[/red]")
             raise typer.Exit(code=1)
 
-        console.print(Panel(f"[bold]{recipe.name}[/bold] v{recipe.version}", title="Recipe"))
+        console.print(
+            Panel(f"[bold]{recipe.name}[/bold] v{recipe.version}", title="Recipe")
+        )
         console.print(f"\n[bold]Description:[/bold] {recipe.description}")
         console.print(f"[bold]Author:[/bold] {recipe.author or 'Unknown'}")
         console.print(f"[bold]Tags:[/bold] {', '.join(recipe.tags)}")
@@ -985,13 +1015,17 @@ def recipe_command(
         console.print(f"  Template: {recipe.synthesis.template}")
 
         if recipe.post_synthesis:
-            console.print(f"\n[bold]Post-synthesis:[/bold] {', '.join(recipe.post_synthesis)}")
+            console.print(
+                f"\n[bold]Post-synthesis:[/bold] {', '.join(recipe.post_synthesis)}"
+            )
 
         if recipe.variables:
             console.print("\n[bold]Variables:[/bold]")
             for var_name, var_config in recipe.variables.items():
                 default = var_config.get("default", "")
-                console.print(f"  - {var_name}: {var_config.get('description', '')} (default: {default})")
+                console.print(
+                    f"  - {var_name}: {var_config.get('description', '')} (default: {default})"
+                )
 
     elif action == "run":
         if not name:
@@ -1009,11 +1043,13 @@ def recipe_command(
         ) as progress:
             progress.add_task(f"Running recipe: {name}...", total=None)
 
-            result = asyncio.run(runner.run(
-                recipe_name=name,
-                output_path=output_path,
-                dry_run=dry_run,
-            ))
+            result = asyncio.run(
+                runner.run(
+                    recipe_name=name,
+                    output_path=output_path,
+                    dry_run=dry_run,
+                )
+            )
 
         if result.success:
             console.print("\n[green]✅ Recipe completed successfully![/green]")
@@ -1060,6 +1096,7 @@ def recipe_command(
 # ============================================
 # MAIN ENTRY POINT
 # ============================================
+
 
 def main() -> None:
     """Main entry point for the CLI application."""

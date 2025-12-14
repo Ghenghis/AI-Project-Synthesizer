@@ -39,6 +39,7 @@ class ResourceManager:
 
         # Register cleanup on exit
         import atexit
+
         atexit.register(self.cleanup_all)
 
     def register(self, resource: Any, resource_type: str) -> None:
@@ -82,16 +83,16 @@ class ResourceManager:
 
         for resource in resources:
             try:
-                if hasattr(resource, 'close'):
+                if hasattr(resource, "close"):
                     if asyncio.iscoroutinefunction(resource.close):
                         await resource.close()
                     else:
                         resource.close()
                     count += 1
-                elif hasattr(resource, 'terminate'):
+                elif hasattr(resource, "terminate"):
                     resource.terminate()
                     count += 1
-                elif hasattr(resource, 'cancel'):
+                elif hasattr(resource, "cancel"):
                     resource.cancel()
                     count += 1
             except Exception as e:
@@ -132,13 +133,13 @@ class ResourceManager:
 
         for resource in resources:
             try:
-                if hasattr(resource, 'close'):
+                if hasattr(resource, "close"):
                     resource.close()
                     count += 1
-                elif hasattr(resource, 'terminate'):
+                elif hasattr(resource, "terminate"):
                     resource.terminate()
                     count += 1
-                elif hasattr(resource, 'cancel'):
+                elif hasattr(resource, "cancel"):
                     resource.cancel()
                     count += 1
             except Exception as e:
@@ -239,7 +240,7 @@ class ResourceLeakDetector:
         """Get current resource usage."""
         process = psutil.Process(os.getpid())
         return {
-            "fds": process.num_fds() if hasattr(process, 'num_fds') else 0,
+            "fds": process.num_fds() if hasattr(process, "num_fds") else 0,
             "threads": process.num_threads(),
             "memory_mb": process.memory_info().rss / 1024 / 1024,
             "cpu_percent": process.cpu_percent(),
