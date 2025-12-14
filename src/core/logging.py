@@ -35,9 +35,10 @@ def setup_logging(
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
 
     # Configure standard library logging
+    # IMPORTANT: Use stderr, NOT stdout - MCP protocol uses stdout for JSON
     logging.basicConfig(
         format="%(message)s",
-        stream=sys.stdout,
+        stream=sys.stderr,
         level=numeric_level,
     )
 
@@ -62,11 +63,12 @@ def setup_logging(
         )
 
     # Configure structlog
+    # Use stderr for MCP compatibility (stdout reserved for JSON protocol)
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(numeric_level),
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
         cache_logger_on_first_use=True,
     )
 
