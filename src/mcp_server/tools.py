@@ -1091,6 +1091,16 @@ async def handle_speak_fast(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"error": True, "message": f"Streaming error: {str(e)}"}
 
 
+async def handle_synthesize_from_idea(arguments: dict[str, Any]) -> dict[str, Any]:
+    """
+    Alias for handle_assemble_project for backward compatibility.
+    
+    This function synthesizes a project from an idea by searching,
+    downloading, and assembling compatible resources.
+    """
+    return await handle_assemble_project(arguments)
+
+
 async def handle_assemble_project(arguments: dict[str, Any]) -> dict[str, Any]:
     """
     Assemble a complete project from an idea.
