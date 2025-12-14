@@ -2,41 +2,41 @@
 Mock external API services for testing.
 """
 
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
 
 
 class MockGitLabClient:
     """Mock GitLab client for testing."""
-    
+
     def __init__(self):
         self.projects = []
         self.merge_requests = []
         self.issues = []
         self.pipelines = []
         self.webhooks = []
-        
-    def add_project(self, project: Dict[str, Any]):
+
+    def add_project(self, project: dict[str, Any]):
         """Add a mock project."""
         self.projects.append(project)
-        
-    def add_merge_request(self, mr: Dict[str, Any]):
+
+    def add_merge_request(self, mr: dict[str, Any]):
         """Add a mock merge request."""
         self.merge_requests.append(mr)
-        
-    async def get_project(self, project_id: int) -> Dict[str, Any]:
+
+    async def get_project(self, project_id: int) -> dict[str, Any]:
         """Mock get project."""
         for project in self.projects:
             if project["id"] == project_id:
                 return project
         return None
-        
-    async def get_merge_requests(self, project_id: int, state: str = "opened") -> List[Dict[str, Any]]:
+
+    async def get_merge_requests(self, project_id: int, state: str = "opened") -> list[dict[str, Any]]:
         """Mock get merge requests."""
         return [mr for mr in self.merge_requests if mr["project_id"] == project_id and mr["state"] == state]
-        
-    async def create_merge_request(self, project_id: int, title: str, source_branch: str, target_branch: str) -> Dict[str, Any]:
+
+    async def create_merge_request(self, project_id: int, title: str, source_branch: str, target_branch: str) -> dict[str, Any]:
         """Mock create merge request."""
         mr = {
             "id": len(self.merge_requests) + 1,
@@ -49,15 +49,15 @@ class MockGitLabClient:
         }
         self.merge_requests.append(mr)
         return mr
-        
-    async def get_pipeline(self, project_id: int, pipeline_id: int) -> Dict[str, Any]:
+
+    async def get_pipeline(self, project_id: int, pipeline_id: int) -> dict[str, Any]:
         """Mock get pipeline."""
         for pipeline in self.pipelines:
             if pipeline["id"] == pipeline_id and pipeline["project_id"] == project_id:
                 return pipeline
         return None
-        
-    async def create_pipeline(self, project_id: int, ref: str) -> Dict[str, Any]:
+
+    async def create_pipeline(self, project_id: int, ref: str) -> dict[str, Any]:
         """Mock create pipeline."""
         pipeline = {
             "id": len(self.pipelines) + 1,
@@ -72,17 +72,17 @@ class MockGitLabClient:
 
 class MockFirecrawlClient:
     """Mock Firecrawl client for testing."""
-    
+
     def __init__(self):
         self.crawled_urls = []
         self.scraped_content = {}
         self.crawl_results = []
-        
-    def set_scraped_content(self, url: str, content: Dict[str, Any]):
+
+    def set_scraped_content(self, url: str, content: dict[str, Any]):
         """Set scraped content for a URL."""
         self.scraped_content[url] = content
-        
-    async def scrape_url(self, url: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def scrape_url(self, url: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
         """Mock scrape URL."""
         self.crawled_urls.append(url)
         if url in self.scraped_content:
@@ -98,8 +98,8 @@ class MockFirecrawlClient:
                 "pageError": None
             }
         }
-        
-    async def crawl_urls(self, urls: List[str], options: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+
+    async def crawl_urls(self, urls: list[str], options: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """Mock crawl URLs."""
         results = []
         for url in urls:
@@ -107,8 +107,8 @@ class MockFirecrawlClient:
             results.append(result)
         self.crawl_results.extend(results)
         return results
-        
-    async def search(self, query: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def search(self, query: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
         """Mock search."""
         return {
             "success": True,
@@ -131,7 +131,7 @@ class MockFirecrawlClient:
 
 class MockSupabaseClient:
     """Mock Supabase client for testing."""
-    
+
     def __init__(self):
         self.tables = {
             "projects": [],
@@ -140,12 +140,12 @@ class MockSupabaseClient:
         }
         self.auth = MagicMock()
         self.auth.user = lambda: {"id": "mock_user_id"}
-        
+
     def table(self, table_name: str):
         """Get table reference."""
         return MockTable(self.tables.get(table_name, []))
-        
-    async def rpc(self, function_name: str, params: Dict[str, Any]) -> Any:
+
+    async def rpc(self, function_name: str, params: dict[str, Any]) -> Any:
         """Mock RPC call."""
         if function_name == "get_project_stats":
             return {
@@ -158,50 +158,50 @@ class MockSupabaseClient:
 
 class MockTable:
     """Mock database table."""
-    
-    def __init__(self, data: List[Dict[str, Any]]):
+
+    def __init__(self, data: list[dict[str, Any]]):
         self.data = data
-        
+
     def select(self, columns: str = "*"):
         """Mock select."""
         return self
-        
-    def insert(self, record: Dict[str, Any]):
+
+    def insert(self, record: dict[str, Any]):
         """Mock insert."""
         if isinstance(record, list):
             self.data.extend(record)
         else:
             self.data.append(record)
         return self
-        
-    def update(self, updates: Dict[str, Any]):
+
+    def update(self, updates: dict[str, Any]):
         """Mock update."""
         return self
-        
+
     def delete(self):
         """Mock delete."""
         return self
-        
+
     def eq(self, column: str, value: Any):
         """Mock equals filter."""
         filtered_data = [row for row in self.data if row.get(column) == value]
         return MockTable(filtered_data)
-        
-    async def execute(self) -> List[Dict[str, Any]]:
+
+    async def execute(self) -> list[dict[str, Any]]:
         """Mock execute."""
         return self.data.copy()
 
 
 class MockGitHubClient:
     """Mock GitHub client for testing."""
-    
+
     def __init__(self):
         self.repositories = []
         self.issues = []
         self.pull_requests = []
         self.commits = []
-        
-    async def get_repository(self, owner: str, repo: str) -> Dict[str, Any]:
+
+    async def get_repository(self, owner: str, repo: str) -> dict[str, Any]:
         """Mock get repository."""
         for repo_data in self.repositories:
             if repo_data["owner"] == owner and repo_data["name"] == repo:
@@ -214,8 +214,8 @@ class MockGitHubClient:
             "stars": 100,
             "forks": 50
         }
-        
-    async def create_pull_request(self, owner: str, repo: str, title: str, head: str, base: str) -> Dict[str, Any]:
+
+    async def create_pull_request(self, owner: str, repo: str, title: str, head: str, base: str) -> dict[str, Any]:
         """Mock create pull request."""
         pr = {
             "id": len(self.pull_requests) + 1,
@@ -228,7 +228,7 @@ class MockGitHubClient:
         }
         self.pull_requests.append(pr)
         return pr
-        
-    async def get_commits(self, owner: str, repo: str, sha: Optional[str] = None) -> List[Dict[str, Any]]:
+
+    async def get_commits(self, owner: str, repo: str, sha: str | None = None) -> list[dict[str, Any]]:
         """Mock get commits."""
         return self.commits.copy()

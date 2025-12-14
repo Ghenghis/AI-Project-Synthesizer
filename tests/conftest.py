@@ -26,7 +26,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-
 # ============================================
 # Optional Dependency Checks
 # ============================================
@@ -50,9 +49,10 @@ def _has_swarm():
 def _has_piper():
     """Check if Piper TTS binary is available."""
     try:
-        from src.voice.tts.piper_client import PiperTTSClient
         import os
         import shutil
+
+        from src.voice.tts.piper_client import PiperTTSClient
         client = PiperTTSClient()
         return os.path.exists(client.piper_path) or shutil.which("piper")
     except Exception:

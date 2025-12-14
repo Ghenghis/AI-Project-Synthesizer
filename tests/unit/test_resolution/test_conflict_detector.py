@@ -2,8 +2,9 @@
 Unit tests for resolution conflict detector module.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.resolution.conflict_detector import (
     ConflictInfo,
@@ -13,7 +14,7 @@ from src.resolution.conflict_detector import (
 
 class TestConflictInfo:
     """Test ConflictInfo dataclass."""
-    
+
     def test_create_conflict_info(self):
         """Should create conflict info."""
         conflict = ConflictInfo(
@@ -26,7 +27,7 @@ class TestConflictInfo:
         )
         assert conflict.package_name == "requests"
         assert conflict.conflict_type == "version"
-    
+
     def test_conflict_with_suggestion(self):
         """Should accept resolution suggestion."""
         conflict = ConflictInfo(
@@ -43,7 +44,7 @@ class TestConflictInfo:
 
 class TestConflictReport:
     """Test ConflictReport dataclass."""
-    
+
     def test_create_report(self):
         """Should create conflict report."""
         report = ConflictReport(
@@ -53,7 +54,7 @@ class TestConflictReport:
             resolvable_count=0
         )
         assert report.total_packages == 10
-    
+
     def test_has_blocking_conflicts_empty(self):
         """Should return False when no conflicts."""
         report = ConflictReport(
@@ -63,7 +64,7 @@ class TestConflictReport:
             resolvable_count=0
         )
         assert report.has_blocking_conflicts is False
-    
+
     def test_to_dict(self):
         """Should convert to dictionary."""
         report = ConflictReport(

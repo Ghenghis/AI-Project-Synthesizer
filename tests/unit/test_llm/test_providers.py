@@ -2,25 +2,26 @@
 Unit tests for LLM providers module.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 from src.llm.providers.base import (
+    ProviderCapabilities,
     ProviderConfig,
     ProviderStatus,
-    ProviderCapabilities,
     ProviderType,
 )
 
 
 class TestProviderType:
     """Test ProviderType enum."""
-    
+
     def test_local_providers(self):
         """Should have local provider types."""
         assert ProviderType.OLLAMA.value == "ollama"
         assert ProviderType.LMSTUDIO.value == "lmstudio"
-    
+
     def test_cloud_providers(self):
         """Should have cloud provider types."""
         assert ProviderType.OPENAI.value == "openai"
@@ -29,7 +30,7 @@ class TestProviderType:
 
 class TestProviderConfig:
     """Test ProviderConfig dataclass."""
-    
+
     def test_create_provider_config(self):
         """Should create provider config."""
         config = ProviderConfig(
@@ -39,7 +40,7 @@ class TestProviderConfig:
         )
         assert config.name == "test_provider"
         assert config.host == "http://localhost:11434"
-    
+
     def test_config_defaults(self):
         """Should have correct defaults."""
         config = ProviderConfig(
@@ -53,7 +54,7 @@ class TestProviderConfig:
 
 class TestProviderStatus:
     """Test ProviderStatus enum."""
-    
+
     def test_status_values(self):
         """Should have all status values."""
         assert ProviderStatus.HEALTHY.value == "healthy"
@@ -63,7 +64,7 @@ class TestProviderStatus:
 
 class TestProviderCapabilities:
     """Test ProviderCapabilities dataclass."""
-    
+
     def test_create_capabilities(self):
         """Should create capabilities."""
         caps = ProviderCapabilities(
@@ -73,7 +74,7 @@ class TestProviderCapabilities:
         )
         assert caps.streaming is True
         assert caps.function_calling is False
-    
+
     def test_capability_defaults(self):
         """Should have correct defaults."""
         caps = ProviderCapabilities()

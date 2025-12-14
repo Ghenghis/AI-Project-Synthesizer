@@ -167,7 +167,7 @@ class ArchitectAgent:
 
         return max(pattern_scores, key=pattern_scores.get)
 
-    def _generate_architectural_plan(self, requirements: str, context: dict[str, Any] | None,
+    async def _generate_architectural_plan(self, requirements: str, context: dict[str, Any] | None,
                                          pattern: ArchitecturePattern) -> ArchitecturePlan:
         """Generate detailed architectural plan using LLM."""
         # Build prompt

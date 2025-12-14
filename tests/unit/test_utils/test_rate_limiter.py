@@ -2,8 +2,9 @@
 Unit tests for utils rate limiter module.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.utils.rate_limiter import (
     RateLimiter,
@@ -13,13 +14,13 @@ from src.utils.rate_limiter import (
 
 class TestRateLimitState:
     """Test RateLimitState dataclass."""
-    
+
     def test_create_state(self):
         """Should create rate limit state."""
         state = RateLimitState(tokens=100.0, last_update=0.0)
         assert state.tokens == 100.0
         assert state.last_update == 0.0
-    
+
     def test_state_defaults(self):
         """Should have correct defaults."""
         state = RateLimitState(tokens=50.0, last_update=1.0)
@@ -29,23 +30,23 @@ class TestRateLimitState:
 
 class TestRateLimiter:
     """Test RateLimiter functionality."""
-    
+
     def test_create_limiter(self):
         """Should create rate limiter instance."""
         limiter = RateLimiter()
         assert limiter is not None
-    
+
     def test_create_limiter_with_params(self):
         """Should create limiter with custom params."""
         limiter = RateLimiter(requests_per_hour=1000, burst_size=50)
         assert limiter.requests_per_hour == 1000
         assert limiter.burst_size == 50
-    
+
     def test_limiter_has_acquire_method(self):
         """Should have acquire method."""
         limiter = RateLimiter()
         assert hasattr(limiter, 'acquire')
-    
+
     @pytest.mark.asyncio
     async def test_acquire_token(self):
         """Should acquire token successfully."""

@@ -2,19 +2,20 @@
 Unit tests for core health module.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 from src.core.health import (
-    HealthStatus,
     ComponentHealth,
     HealthChecker,
+    HealthStatus,
 )
 
 
 class TestHealthStatus:
     """Test health status enum."""
-    
+
     def test_status_values(self):
         """Should have all status values."""
         assert HealthStatus.HEALTHY is not None
@@ -24,7 +25,7 @@ class TestHealthStatus:
 
 class TestComponentHealth:
     """Test component health dataclass."""
-    
+
     def test_create_healthy_component(self):
         """Should create healthy component."""
         health = ComponentHealth(
@@ -34,7 +35,7 @@ class TestComponentHealth:
         )
         assert health.name == "test_component"
         assert health.status == HealthStatus.HEALTHY
-    
+
     def test_create_unhealthy_component(self):
         """Should create unhealthy component."""
         health = ComponentHealth(
@@ -48,19 +49,19 @@ class TestComponentHealth:
 
 class TestHealthChecker:
     """Test health checker functionality."""
-    
+
     def test_create_health_checker(self):
         """Should create health checker instance."""
         checker = HealthChecker()
         assert checker is not None
-    
+
     @pytest.mark.asyncio
     async def test_check_all(self):
         """Should check all components health."""
         checker = HealthChecker()
         result = await checker.check_all()
         assert result is not None
-    
+
     def test_has_check_all_method(self):
         """Should have check_all method."""
         checker = HealthChecker()

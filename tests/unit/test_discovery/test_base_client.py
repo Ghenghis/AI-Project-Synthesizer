@@ -2,24 +2,25 @@
 Unit tests for discovery base client module.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 from src.discovery.base_client import (
-    Platform,
-    RepositoryInfo,
-    SearchResult,
-    FileContent,
-    DiscoveryError,
     AuthenticationError,
+    DiscoveryError,
+    FileContent,
+    Platform,
     RateLimitError,
+    RepositoryInfo,
     RepositoryNotFoundError,
+    SearchResult,
 )
 
 
 class TestPlatform:
     """Test Platform enum."""
-    
+
     def test_platform_values(self):
         """Should have all platform values."""
         assert Platform.GITHUB.value == "github"
@@ -27,7 +28,7 @@ class TestPlatform:
         assert Platform.HUGGINGFACE.value == "huggingface"
         assert Platform.KAGGLE.value == "kaggle"
         assert Platform.ARXIV.value == "arxiv"
-    
+
     def test_platform_is_string(self):
         """Platform should be usable as string."""
         assert str(Platform.GITHUB) == "Platform.GITHUB"
@@ -35,7 +36,7 @@ class TestPlatform:
 
 class TestRepositoryInfo:
     """Test RepositoryInfo dataclass."""
-    
+
     def test_create_basic_repo_info(self):
         """Should create repository info with required fields."""
         info = RepositoryInfo(
@@ -48,7 +49,7 @@ class TestRepositoryInfo:
         assert info.name == "test-repo"
         assert info.full_name == "user/test-repo"
         assert info.platform == "github"
-    
+
     def test_repo_info_with_optional_fields(self):
         """Should create repo info with optional fields."""
         info = RepositoryInfo(
@@ -66,7 +67,7 @@ class TestRepositoryInfo:
         assert info.forks == 50
         assert info.language == "Python"
         assert info.description == "A test repository"
-    
+
     def test_repo_info_defaults(self):
         """Should have correct defaults."""
         info = RepositoryInfo(
@@ -80,7 +81,7 @@ class TestRepositoryInfo:
         assert info.forks == 0
         assert info.description is None
         assert info.language is None
-    
+
     def test_to_dict(self):
         """Should convert to dictionary."""
         info = RepositoryInfo(
@@ -99,7 +100,7 @@ class TestRepositoryInfo:
 
 class TestSearchResult:
     """Test SearchResult dataclass."""
-    
+
     def test_create_search_result(self):
         """Should create search result."""
         repo = RepositoryInfo(
@@ -119,7 +120,7 @@ class TestSearchResult:
         assert len(result.repositories) == 1
         assert result.total_count == 1
         assert result.query == "test query"
-    
+
     def test_empty_search_result(self):
         """Should create empty search result."""
         result = SearchResult(
@@ -131,7 +132,7 @@ class TestSearchResult:
         )
         assert len(result.repositories) == 0
         assert result.total_count == 0
-    
+
     def test_to_dict(self):
         """Should convert to dictionary."""
         result = SearchResult(
@@ -148,7 +149,7 @@ class TestSearchResult:
 
 class TestFileContent:
     """Test FileContent dataclass."""
-    
+
     def test_create_file_content(self):
         """Should create file content."""
         content = FileContent(
@@ -160,7 +161,7 @@ class TestFileContent:
         assert content.path == "src/main.py"
         assert content.name == "main.py"
         assert content.size == 14
-    
+
     def test_default_encoding(self):
         """Should have utf-8 default encoding."""
         content = FileContent(
@@ -174,29 +175,29 @@ class TestFileContent:
 
 class TestDiscoveryErrors:
     """Test discovery error classes."""
-    
+
     def test_discovery_error(self):
         """Should create base discovery error."""
         error = DiscoveryError("Base error")
         assert "Base error" in str(error)
-    
+
     def test_authentication_error(self):
         """Should create authentication error."""
         error = AuthenticationError("Invalid token")
         assert "Invalid token" in str(error)
         assert isinstance(error, DiscoveryError)
-    
+
     def test_rate_limit_error(self):
         """Should create rate limit error."""
         error = RateLimitError("Rate limited")
         assert "Rate limited" in str(error)
         assert isinstance(error, DiscoveryError)
-    
+
     def test_rate_limit_error_with_retry(self):
         """Should create rate limit error with retry_after."""
         error = RateLimitError("Rate limited", retry_after=60)
         assert error.retry_after == 60
-    
+
     def test_repository_not_found_error(self):
         """Should create not found error."""
         error = RepositoryNotFoundError("user/repo")

@@ -1,24 +1,25 @@
 """Tests for workflows.langchain_integration."""
 
-import os
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 import asyncio
-from typing import List, Dict, Any
+import os
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 os.environ["APP_ENV"] = "testing"
 
 try:
     from src.workflows.langchain_integration import (
-        LangChainWorkflow,
-        WorkflowStep,
-        WorkflowStatus,
         ChainType,
-        PromptTemplate,
+        LangChainWorkflow,
         LLMConfig,
+        PromptTemplate,
+        ToolIntegration,
         WorkflowContext,
         WorkflowResult,
-        ToolIntegration
+        WorkflowStatus,
+        WorkflowStep,
     )
     IMPORTS_AVAILABLE = True
 except ImportError as e:
@@ -28,7 +29,7 @@ except ImportError as e:
 
 class TestWorkflowStatus:
     """Test WorkflowStatus enum."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_workflow_status_values(self):
         """Should have correct WorkflowStatus values."""
@@ -41,7 +42,7 @@ class TestWorkflowStatus:
 
 class TestChainType:
     """Test ChainType enum."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_chain_type_values(self):
         """Should have correct ChainType values."""
@@ -53,7 +54,7 @@ class TestChainType:
 
 class TestWorkflowStep:
     """Test WorkflowStep dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_workflow_step(self):
         """Should create WorkflowStep with all fields."""
@@ -73,7 +74,7 @@ class TestWorkflowStep:
 
 class TestPromptTemplate:
     """Test PromptTemplate dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_prompt_template(self):
         """Should create PromptTemplate."""
@@ -89,7 +90,7 @@ class TestPromptTemplate:
 
 class TestLLMConfig:
     """Test LLMConfig dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_llm_config(self):
         """Should create LLMConfig."""
@@ -109,7 +110,7 @@ class TestLLMConfig:
 
 class TestWorkflowContext:
     """Test WorkflowContext dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_workflow_context(self):
         """Should create WorkflowContext."""
@@ -125,7 +126,7 @@ class TestWorkflowContext:
 
 class TestWorkflowResult:
     """Test WorkflowResult dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_workflow_result(self):
         """Should create WorkflowResult."""
@@ -145,7 +146,7 @@ class TestWorkflowResult:
 
 class TestToolIntegration:
     """Test ToolIntegration."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_tool_integration(self):
         """Should create ToolIntegration."""
@@ -163,7 +164,7 @@ class TestToolIntegration:
 
 class TestLangChainWorkflow:
     """Test LangChainWorkflow."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_workflow(self):
         """Should create workflow with steps."""
@@ -175,7 +176,7 @@ class TestLangChainWorkflow:
         assert workflow.description == "A test workflow"
         assert workflow.status == WorkflowStatus.PENDING
         assert len(workflow.steps) == 0
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_add_step(self):
         """Should add step to workflow."""
@@ -185,12 +186,12 @@ class TestLangChainWorkflow:
             name="Step 1",
             chain_type=ChainType.LLM_CHAIN
         )
-        
+
         workflow.add_step(step)
-        
+
         assert len(workflow.steps) == 1
         assert workflow.steps[0] == step
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_remove_step(self):
         """Should remove step from workflow."""
@@ -201,11 +202,11 @@ class TestLangChainWorkflow:
             chain_type=ChainType.LLM_CHAIN
         )
         workflow.add_step(step)
-        
+
         workflow.remove_step("step1")
-        
+
         assert len(workflow.steps) == 0
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     @patch('src.workflows.langchain_integration.LLMChain')
     @patch('src.workflows.langchain_integration.ChatOpenAI')
@@ -214,11 +215,11 @@ class TestLangChainWorkflow:
         # Mock LLM and chain
         mock_model = MagicMock()
         mock_llm.return_value = mock_model
-        
+
         mock_chain_instance = MagicMock()
         mock_chain_instance.arun.return_value = "Hello World!"
         mock_chain.return_value = mock_chain_instance
-        
+
         # Create workflow
         workflow = LangChainWorkflow("Test")
         step = WorkflowStep(
@@ -234,18 +235,18 @@ class TestLangChainWorkflow:
             }
         )
         workflow.add_step(step)
-        
+
         # Execute
         context = WorkflowContext(
             inputs={"name": "World"},
             variables={}
         )
         result = await workflow.execute_step(step, context)
-        
+
         assert isinstance(result, WorkflowResult)
         assert result.status == WorkflowStatus.COMPLETED
         assert "Hello World!" in str(result.outputs)
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     @patch('src.workflows.langchain_integration.SequentialChain')
     async def test_execute_sequential_chain(self, mock_sequential):
@@ -254,7 +255,7 @@ class TestLangChainWorkflow:
         mock_chain = MagicMock()
         mock_chain.arun.return_value = {"output": "Final result"}
         mock_sequential.return_value = mock_chain
-        
+
         # Create workflow with sequential step
         workflow = LangChainWorkflow("Test")
         step = WorkflowStep(
@@ -269,13 +270,13 @@ class TestLangChainWorkflow:
             }
         )
         workflow.add_step(step)
-        
+
         # Execute
         context = WorkflowContext(inputs={"input": "test"})
         result = await workflow.execute_step(step, context)
-        
+
         assert result.status == WorkflowStatus.COMPLETED
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     @patch('src.workflows.langchain_integration.AgentExecutor')
     @patch('src.workflows.langchain_integration.initialize_agent')
@@ -284,11 +285,11 @@ class TestLangChainWorkflow:
         # Mock agent
         mock_agent = MagicMock()
         mock_init_agent.return_value = mock_agent
-        
+
         mock_exec = MagicMock()
         mock_exec.arun.return_value = "Agent response"
         mock_executor.return_value = mock_exec
-        
+
         # Create workflow with agent step
         workflow = LangChainWorkflow("Test")
         tools = [
@@ -309,18 +310,18 @@ class TestLangChainWorkflow:
             }
         )
         workflow.add_step(step)
-        
+
         # Execute
         context = WorkflowContext(inputs={"task": "Calculate 2+2"})
         result = await workflow.execute_step(step, context)
-        
+
         assert result.status == WorkflowStatus.COMPLETED
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     async def test_execute_workflow(self):
         """Should execute entire workflow."""
         workflow = LangChainWorkflow("Test")
-        
+
         # Mock step execution
         workflow.execute_step = AsyncMock(side_effect=[
             WorkflowResult(
@@ -334,55 +335,55 @@ class TestLangChainWorkflow:
                 execution_time=1.0
             )
         ])
-        
+
         # Add steps
         step1 = WorkflowStep(step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN)
         step2 = WorkflowStep(step_id="step2", name="Step 2", chain_type=ChainType.LLM_CHAIN)
         workflow.add_step(step1)
         workflow.add_step(step2)
-        
+
         # Execute
         context = WorkflowContext(inputs={})
         result = await workflow.execute(context)
-        
+
         assert result.status == WorkflowStatus.COMPLETED
         assert workflow.status == WorkflowStatus.COMPLETED
         assert workflow.execute_step.call_count == 2
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     async def test_handle_workflow_error(self):
         """Should handle errors in workflow execution."""
         workflow = LangChainWorkflow("Test")
-        
+
         # Mock step execution with error
         workflow.execute_step = AsyncMock(side_effect=Exception("Step failed"))
-        
+
         step = WorkflowStep(step_id="step1", name="Step 1", chain_type=ChainType.LLM_CHAIN)
         workflow.add_step(step)
-        
+
         # Execute
         context = WorkflowContext(inputs={})
         result = await workflow.execute(context)
-        
+
         assert result.status == WorkflowStatus.FAILED
         assert workflow.status == WorkflowStatus.FAILED
         assert "Step failed" in str(result.error)
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     async def test_cancel_workflow(self):
         """Should cancel running workflow."""
         workflow = LangChainWorkflow("Test")
         workflow.status = WorkflowStatus.RUNNING
-        
+
         # Mock running task
         workflow._execution_task = MagicMock()
         workflow._execution_task.cancel = MagicMock()
-        
+
         await workflow.cancel()
-        
+
         assert workflow.status == WorkflowStatus.CANCELLED
         workflow._execution_task.cancel.assert_called_once()
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_get_workflow_stats(self):
         """Should return workflow statistics."""
@@ -390,24 +391,24 @@ class TestLangChainWorkflow:
         workflow._start_time = 1234567890.0
         workflow._total_tokens = 1000
         workflow._execution_count = 5
-        
+
         stats = workflow.get_stats()
-        
+
         assert stats['name'] == "Test"
         assert stats['status'] == WorkflowStatus.PENDING
         assert stats['step_count'] == 0
         assert stats['total_tokens'] == 1000
         assert stats['execution_count'] == 5
         assert 'start_time' in stats
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_validate_workflow(self):
         """Should validate workflow configuration."""
         workflow = LangChainWorkflow("Test")
-        
+
         # Empty workflow should be invalid
         assert workflow.validate() is False
-        
+
         # Add valid step
         step = WorkflowStep(
             step_id="step1",
@@ -422,15 +423,15 @@ class TestLangChainWorkflow:
             }
         )
         workflow.add_step(step)
-        
+
         assert workflow.validate() is True
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_export_workflow(self):
         """Should export workflow to dictionary."""
         workflow = LangChainWorkflow("Test Workflow")
         workflow.description = "A test workflow"
-        
+
         step = WorkflowStep(
             step_id="step1",
             name="Step 1",
@@ -439,15 +440,15 @@ class TestLangChainWorkflow:
             config={"temperature": 0.7}
         )
         workflow.add_step(step)
-        
+
         exported = workflow.export()
-        
+
         assert exported['name'] == "Test Workflow"
         assert exported['description'] == "A test workflow"
         assert len(exported['steps']) == 1
         assert exported['steps'][0]['step_id'] == "step1"
         assert exported['steps'][0]['chain_type'] == "llm_chain"
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_import_workflow(self):
         """Should import workflow from dictionary."""
@@ -463,9 +464,9 @@ class TestLangChainWorkflow:
                 }
             ]
         }
-        
+
         workflow = LangChainWorkflow.import_workflow(workflow_dict)
-        
+
         assert workflow.name == "Imported Workflow"
         assert workflow.description == "Imported from dict"
         assert len(workflow.steps) == 1

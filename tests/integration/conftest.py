@@ -2,10 +2,12 @@
 Integration test configuration and fixtures.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 import docker
 from docker.client import DockerClient
 
@@ -28,7 +30,7 @@ def test_stack(docker_client):
     compose_file = Path("docker/docker-compose.test.yml")
     if not compose_file.exists():
         pytest.skip("Test docker-compose file not found")
-    
+
     # For now, just return a mock stack
     # // DONE: Implement actual docker-compose integration
     return {"status": "mocked"}
@@ -42,9 +44,9 @@ def temp_workspace():
         # Initialize as git repo
         import subprocess
         subprocess.run(["git", "init"], cwd=workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], 
+        subprocess.run(["git", "config", "user.email", "test@example.com"],
                       cwd=workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], 
+        subprocess.run(["git", "config", "user.name", "Test User"],
                       cwd=workspace, capture_output=True)
         yield workspace
 
@@ -55,7 +57,7 @@ def sample_repository(temp_workspace):
     # Create basic Python project structure
     (temp_workspace / "src").mkdir()
     (temp_workspace / "tests").mkdir()
-    
+
     # Create sample Python files
     (temp_workspace / "src" / "main.py").write_text("""
 def hello_world():
@@ -71,7 +73,7 @@ class Calculator:
     def multiply(self, x, y):
         return x * y
 """)
-    
+
     (temp_workspace / "tests" / "test_main.py").write_text("""
 from src.main import hello_world, calculate_sum, Calculator
 
@@ -86,10 +88,10 @@ def test_calculator():
     assert calc.add(1, 2) == 3
     assert calc.multiply(3, 4) == 12
 """)
-    
+
     # Create requirements.txt
     (temp_workspace / "requirements.txt").write_text("pytest==7.4.3\n")
-    
+
     # Create README
     (temp_workspace / "README.md").write_text("""
 # Sample Project
@@ -112,13 +114,13 @@ from src.main import hello_world
 print(hello_world())
 ```
 """)
-    
+
     # Initial git commit
     import subprocess
     subprocess.run(["git", "add", "."], cwd=temp_workspace, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "Initial commit"], 
+    subprocess.run(["git", "commit", "-m", "Initial commit"],
                   cwd=temp_workspace, capture_output=True)
-    
+
     return temp_workspace
 
 

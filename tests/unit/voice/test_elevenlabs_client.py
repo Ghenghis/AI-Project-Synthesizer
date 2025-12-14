@@ -1,17 +1,18 @@
 """Tests for voice.elevenlabs_client."""
 
 import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 os.environ["APP_ENV"] = "testing"
 
 try:
     from src.voice.elevenlabs_client import (
+        PREMADE_VOICES,
         ElevenLabsClient,
-        VoiceSettings,
         Voice,
-        PREMADE_VOICES
+        VoiceSettings,
     )
     IMPORTS_AVAILABLE = True
 except ImportError as e:
@@ -21,7 +22,7 @@ except ImportError as e:
 
 class TestPREMADE_VOICES:
     """Test PREMADE_VOICES constant."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_premade_voices_exists(self):
         """Should have PREMADE_VOICES dict."""
@@ -34,7 +35,7 @@ class TestPREMADE_VOICES:
 
 class TestVoiceSettings:
     """Test VoiceSettings dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_voice_settings(self):
         """Should create VoiceSettings with all fields."""
@@ -52,7 +53,7 @@ class TestVoiceSettings:
 
 class TestVoice:
     """Test Voice dataclass."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_voice(self):
         """Should create Voice with all fields."""
@@ -70,7 +71,7 @@ class TestVoice:
 
 class TestElevenLabsClient:
     """Test ElevenLabsClient."""
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_create_client(self):
         """Should create client with API key."""
@@ -79,7 +80,7 @@ class TestElevenLabsClient:
             client = ElevenLabsClient(api_key="test_key")
             assert client._api_key == "test_key"
             assert client.BASE_URL == "https://api.elevenlabs.io/v1"
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     @patch('src.voice.elevenlabs_client.aiohttp.ClientSession')
     async def test_get_voices(self, mock_session):
@@ -102,47 +103,47 @@ class TestElevenLabsClient:
                 }
             ]
         }
-        
+
         mock_session_instance = MagicMock()
         mock_session_instance.get.return_value.__aenter__.return_value = mock_response
         mock_session.return_value = mock_session_instance
-        
+
         client = ElevenLabsClient(api_key="test_key")
         session = await client._get_session()
         assert session is not None
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     @patch('src.voice.elevenlabs_client.aiohttp.ClientSession')
     async def test_validate_api_key(self, mock_session):
         """Should validate API key."""
         mock_session_instance = MagicMock()
         mock_session.return_value = mock_session_instance
-        
+
         client = ElevenLabsClient(api_key="test_key")
         assert client._api_key == "test_key"
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     async def test_error_handling(self):
         """Should handle errors gracefully."""
         client = ElevenLabsClient(api_key="invalid_key")
         # Should not raise exception on creation
         assert client._api_key == "invalid_key"
-    
+
     @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason="Module not available")
     def test_resolve_voice_id(self):
         """Should resolve voice names to IDs."""
         client = ElevenLabsClient(api_key="test_key")
-        
+
         # Test with None (should return default)
         with patch.object(client, '_default_voice_id', 'default_voice'):
             assert client._resolve_voice_id(None) == 'default_voice'
-        
+
         # Test with known voice name
         assert client._resolve_voice_id('rachel') == '21m00Tcm4TlvDq8ikWAM'
-        
+
         # Test with unknown voice name (should return as-is)
         assert client._resolve_voice_id('unknown_voice') == 'unknown_voice'
-        
+
         # Test with voice ID directly (should return as-is)
         assert client._resolve_voice_id('custom_voice_id') == 'custom_voice_id'
 

@@ -2,9 +2,10 @@
 Smoke test for MCP server functionality.
 """
 
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.mark.asyncio
@@ -22,15 +23,15 @@ async def test_mcp_server_imports():
 async def test_mcp_server_initialization():
     """Test that MCP server initializes correctly."""
     from src.mcp_server.server import MCPServer
-    
+
     # Create server instance
     mcp_server = MCPServer()
-    
+
     # Verify attributes exist
     assert hasattr(mcp_server, 'llm_router')
     assert hasattr(mcp_server, 'memory_system')
     assert hasattr(mcp_server, 'server')
-    
+
     # Verify server info
     info = mcp_server.get_server_info()
     assert info["name"] == "AI Project Synthesizer"
@@ -50,12 +51,12 @@ async def test_mcp_tool_handlers_import():
     """Test that all tool handlers can be imported."""
     try:
         from src.mcp_server.tools import (
-            handle_search_repositories,
             handle_analyze_repository,
             handle_check_compatibility,
-            handle_resolve_dependencies,
-            handle_synthesize_project,
             handle_generate_documentation,
+            handle_resolve_dependencies,
+            handle_search_repositories,
+            handle_synthesize_project,
         )
         assert handle_search_repositories is not None
         assert handle_analyze_repository is not None
@@ -71,7 +72,7 @@ async def test_mcp_tool_handlers_import():
 async def test_unified_search_import():
     """Test that unified search can be imported."""
     try:
-        from src.discovery.unified_search import create_unified_search, UnifiedSearch
+        from src.discovery.unified_search import UnifiedSearch, create_unified_search
         search = create_unified_search()
         assert search is not None
         assert isinstance(search, UnifiedSearch)
