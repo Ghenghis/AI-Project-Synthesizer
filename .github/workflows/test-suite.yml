@@ -104,7 +104,7 @@ jobs:
       
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: unit-results-${{ matrix.shard }}
           path: |
@@ -166,7 +166,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/test_db
       
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: integration-results
@@ -203,7 +203,7 @@ jobs:
             --junitxml=results-e2e.xml \
             -v
       
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: e2e-results
@@ -246,7 +246,7 @@ jobs:
           coverage report --fail-under=20
       
       - name: Upload combined coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: combined-coverage
           path: combined-coverage.xml
