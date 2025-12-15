@@ -30,7 +30,7 @@ jobs:
     outputs:
       unit_shards: ${{ steps.shards.outputs.unit }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - id: shards
         run: |
@@ -49,7 +49,7 @@ jobs:
         shard: ${{ fromJson(needs.prepare.outputs.unit_shards) }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -137,7 +137,7 @@ jobs:
           - 5432:5432
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - uses: actions/setup-python@v6
         with:
@@ -181,7 +181,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - uses: actions/setup-python@v6
         with:
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Download all test results
         uses: actions/download-artifact@v4
