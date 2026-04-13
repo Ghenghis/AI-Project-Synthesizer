@@ -67,7 +67,7 @@ dependencies = [
     "ollama>=0.3.0",
     "openai>=1.0.0",
     "anthropic>=0.30.0",
-    "langchain>=0.2.0",
+    "langchain>=1.2.15",
     "langchain-ollama>=0.1.0",
     
     # Documentation Generation
